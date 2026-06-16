@@ -187,6 +187,7 @@ body{
 
 /* ---------- フィールド会話（戦闘UIを流用し 敵ヘッダだけ隠す） ---------- */
 #ui-battle.talk .b-top{ display:none; }
+#ui-battle.talk .b-bottom{ align-items:flex-start; } /* shop等の長メニュー：stretchを切りcmdwinのmax-height/overflowを効かせる(Safari対策) */
 
 /* ---------- ミュート ---------- */
 #savebtn{ position:absolute; top:max(12px, env(safe-area-inset-top)); right:62px; z-index:70;
