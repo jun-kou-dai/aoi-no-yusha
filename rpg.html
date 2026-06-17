@@ -123,7 +123,7 @@ body{
   animation:advblink 1s ease-in-out infinite; }
 #msgwin.done .adv{ opacity:1; }
 @keyframes advblink{ 0%,100%{ transform:translateY(0); opacity:.9 } 50%{ transform:translateY(3px); opacity:.4 } }
-#cmdwin{ width:min(300px,54vw); max-height:80vh; max-height:80dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; pointer-events:auto; padding:10px 10px 12px; display:none; flex-direction:column; }
+#cmdwin{ width:min(300px,54vw); max-height:80vh; max-height:80dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; pointer-events:auto; padding:10px 10px 12px; display:none; flex-direction:column; align-self:flex-start; }
 #cmdwin.on{ display:flex; }
 .mtitle{ font-size:clamp(11px,1.8vmin,13px); letter-spacing:.28em; color:#aeb8de; text-align:center;
   padding:2px 0 8px; border-bottom:1px solid rgba(236,229,207,.14); margin-bottom:6px; }
@@ -188,7 +188,7 @@ body{
 /* ---------- フィールド会話（戦闘UIを流用し 敵ヘッダだけ隠す） ---------- */
 #ui-battle.talk .b-top{ display:none; }
 #ui-battle.talk .b-bottom{ align-items:flex-start; }
-#ui-battle.talk #cmdwin .mi:last-child{ position:sticky; bottom:-12px; margin-top:4px; background:linear-gradient(180deg,rgba(7,9,19,0),rgba(7,9,19,.97) 42%); } /* shop等の長メニュー：stretchを切りcmdwinのmax-height/overflowを効かせる(Safari対策) */
+#ui-battle #cmdwin .mi:last-child{ position:sticky; bottom:-12px; margin-top:4px; background:linear-gradient(180deg,rgba(7,9,19,0),rgba(7,9,19,.97) 42%); } /* shop等の長メニュー：stretchを切りcmdwinのmax-height/overflowを効かせる(Safari対策) */
 
 /* ---------- ミュート ---------- */
 #savebtn{ position:absolute; top:max(12px, env(safe-area-inset-top)); right:62px; z-index:70;
