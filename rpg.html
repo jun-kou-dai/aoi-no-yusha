@@ -1534,12 +1534,12 @@ function say(txt){
 function updateMsg(dt){
   if(!MSG)return;
   if(!MSG.done){
-    MSG.shown+=dt*210;
+    MSG.shown+=dt*(Game.scene==='battle'?75:42); // 文字送り：戦闘75/物語42 字per秒
     if(MSG.shown>=MSG.full.length){MSG.shown=MSG.full.length;MSG.done=true;MSG.timer=0;msgwinEl.classList.add('done');}
     msgtextEl.textContent=MSG.full.slice(0,Math.floor(MSG.shown));
   }else{
     MSG.timer+=dt;
-    if(MSG.timer>0.19)finishMsg();
+    const adv=(Game.scene==='battle')?0.4+MSG.full.length*0.05:1.2+MSG.full.length*0.13; if(MSG.timer>adv)finishMsg(); // 自動送り：戦闘速め/物語たっぷり（タップで早送り可）
   }
 }
 function finishMsg(){
