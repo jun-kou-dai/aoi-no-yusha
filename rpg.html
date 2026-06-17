@@ -1534,12 +1534,9 @@ function say(txt){
 function updateMsg(dt){
   if(!MSG)return;
   if(!MSG.done){
-    MSG.shown+=dt*(Game.scene==='battle'?75:42); // 文字送り：戦闘75/物語42 字per秒
+    MSG.shown+=dt*180; // 文字送りは速くてOK。全表示後は自動送りせず止めてタップ/キー待ち
     if(MSG.shown>=MSG.full.length){MSG.shown=MSG.full.length;MSG.done=true;MSG.timer=0;msgwinEl.classList.add('done');}
     msgtextEl.textContent=MSG.full.slice(0,Math.floor(MSG.shown));
-  }else{
-    MSG.timer+=dt;
-    const adv=(Game.scene==='battle')?0.4+MSG.full.length*0.05:1.2+MSG.full.length*0.13; if(MSG.timer>adv)finishMsg(); // 自動送り：戦闘速め/物語たっぷり（タップで早送り可）
   }
 }
 function finishMsg(){
@@ -1619,6 +1616,7 @@ window.addEventListener('keydown',e=>{
   if(DIRS[k]&&!held.includes(k))held.push(k);
   const confirm=(e.key==='Enter'||e.key==='z'||e.key==='Z'||e.key===' ');
   const cancel=(e.key==='x'||e.key==='X'||e.key==='Escape');
+  if(MSG&&!MENU&&confirm){ if(!e.repeat||MSG.done)msgConfirm(); return; } // メッセージ表示中はキーで送り（全場面・固まり防止）
   if(Game.scene==='title'&&confirm&&!e.repeat){(hasSave()?continueGame:startGame)();return;}
   if(Game.scene==='field'&&!Game.talking&&!Game.battling&&!Game.transiting&&confirm&&!e.repeat&&tryOpenChest())return;
   if(Game.scene==='field'&&!Game.talking&&!Game.battling&&cancel&&!e.repeat){fieldSave();return;}
@@ -1641,6 +1639,7 @@ window.addEventListener('keyup',e=>{
 stage.addEventListener('pointerdown',e=>{
   firstGesture();
   if(e.target.closest('.btn,.mi,#mute'))return;
+  if(MSG&&!MENU){msgConfirm();return;} // メッセージ表示中はタップで送り（全場面・固まり防止）
   if(Game.scene==='field'&&!Game.talking){ptr={x:e.clientX,y:e.clientY};swipeVec=null;}
   else if((Game.scene==='battle'||Game.talking)&&!MENU)msgConfirm();
 });
