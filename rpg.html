@@ -641,11 +641,12 @@ const DIFF={
  2:{name:'ふつう',     ehp:1.0,  eatk:1.0,  bhp:1.0,  batk:1.0,  exp:1.0,  gold:1.0,  capNorm:0.50, capHeavy:0.70, crit:1/24, bspecial:0.30, pcrit:0.10},
  3:{name:'むずかしい', ehp:1.15, eatk:1.15, bhp:1.15, batk:1.12, exp:0.95, gold:0.95, capNorm:0.55, capHeavy:0.78, crit:1/20, bspecial:0.34, pcrit:0.115},
  4:{name:'ごくむず',   ehp:1.3,  eatk:1.3,  bhp:1.3,  batk:1.25, exp:0.85, gold:0.9,  capNorm:0.60, capHeavy:0.85, crit:1/18, bspecial:0.38, pcrit:0.13},
- 5:{name:'でんせつ',   ehp:1.5,  eatk:1.45, bhp:1.5,  batk:1.4,  exp:0.8,  gold:0.85, capNorm:0.65, capHeavy:0.90, crit:1/16, bspecial:0.42, pcrit:0.15}};
+ 5:{name:'でんせつ',   ehp:1.5,  eatk:1.45, bhp:1.5,  batk:1.4,  exp:0.8,  gold:0.85, capNorm:0.65, capHeavy:0.90, crit:1/16, bspecial:0.42, pcrit:0.15},
+ 6:{name:'しんわ',     ehp:1.8,  eatk:1.7,  bhp:1.9,  batk:1.6,  exp:0.55, gold:0.6,  capNorm:0.80, capHeavy:0.95, crit:1/11, bspecial:0.52, pcrit:0.07, giantHp:1.2, giantAtk:1.4}};
 function curDiff(){return DIFF[Game.diff]||DIFF[2];}
 // 稼ぎ敵(メタル/金スラ)は係数なし。中ボス・ボスはbhp/batk、通常はehp/eatk
-function diffEnemyHP(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();return(foe.boss||foe.mboss)?D.bhp:D.ehp;}
-function diffEnemyAtk(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();return(foe.boss||foe.mboss)?D.batk:D.eatk;}
+function diffEnemyHP(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.bhp:D.ehp;if(foe.giant&&D.giantHp)m*=D.giantHp;return m;}
+function diffEnemyAtk(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.batk:D.eatk;if(foe.giant&&D.giantAtk)m*=D.giantAtk;return m;}
 const FOES={
   slime:{name:'スライム',     hp:14, atk:7,  def:2, exp:11, g:4,  col:'#8fd0a0', draw:'slime', physMul:1,   fireMul:1,   iceMul:1,   dodge:0},
   crow: {name:'おおがらす',   hp:19, atk:10, def:3, exp:16, g:6,  col:'#a9b7ff', draw:'crow',  physMul:1,   fireMul:1,   iceMul:1,   dodge:0.18},
@@ -668,8 +669,8 @@ const FOES={
   lslime:{name:'ようがんスライム', hp:34, atk:16, def:7,  exp:34, g:13, col:'#ff9a5a', draw:'slime', v:'lava',  physMul:1,   fireMul:0.3, iceMul:1.8, dodge:0.05},
   ecrow:{name:'ほのおがらす',   hp:46, atk:20, def:8,  exp:44, g:18, col:'#ff8a6a', draw:'crow',  v:'ember', physMul:1,   fireMul:0.4, iceMul:1.7, dodge:0.22},
   mgolem:{name:'ようがんの きょじん', hp:104,atk:23, def:12, exp:96, g:66, col:'#e87a4a', draw:'golem', v:'magma', mboss:true, still:true, winMsg:'ようがんの きょじんは マグマの うみに しずんでいった。\nゆくてに そびえる まおうの しろが、その すがたを あらわす…！', physMul:0.7, fireMul:0, iceMul:2.0, dodge:0},
-  frostlord:{name:'さまよう ひょうじん', hp:74, atk:24, def:10, exp:95, g:55, col:'#bfe6ff', draw:'golem', v:'frost', hunter:true, huge:true, physMul:0.8, fireMul:1.9, iceMul:0, dodge:0},
-  magmalord:{name:'さまよう マグマじん', hp:88, atk:28, def:12, exp:120, g:70, col:'#ff7a3a', draw:'golem', v:'magma', hunter:true, huge:true, physMul:0.8, fireMul:0, iceMul:1.9, dodge:0}};
+  frostlord:{name:'さまよう ひょうじん', hp:74, atk:32, def:10, exp:95, g:55, col:'#bfe6ff', draw:'golem', v:'frost', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.9, iceMul:0, dodge:0},
+  magmalord:{name:'さまよう マグマじん', hp:88, atk:36, def:12, exp:120, g:70, col:'#ff7a3a', draw:'golem', v:'magma', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:0, iceMul:1.9, dodge:0}};
 const SHOP=[
   {id:'w1',label:'どうのつるぎ',cost:30,atk:5},
   {id:'w2',label:'はがねのつるぎ',cost:90,atk:12},
@@ -765,7 +766,7 @@ function loadGame(){
   if(!d||!LEVELS[d.lv])return false;
   resetGame();
   const p=Game.p;
-  Game.diff=(d.diff>=1&&d.diff<=5)?d.diff:2; // なんいど（範囲外・未定義はふつう）
+  Game.diff=(d.diff>=1&&d.diff<=6)?d.diff:2; // なんいど（範囲外・未定義はふつう）
   p.lv=Math.min(MAXLV,d.lv);p.exp=d.exp||0;p.bonusAtk=d.bonusAtk||0;
   Game.gold=d.gold||0;Game.weaponAtk=d.weaponAtk||0;Game.shield=!!d.shield;
   Game.mbossDown=!!d.mbossDown;Game.springUsed=(d.springUsed&&typeof d.springUsed==='object')?d.springUsed:{};Game.saidYes=!!d.saidYes;
@@ -1421,7 +1422,7 @@ function renderBook(){
   h+='<div class="bsec-note">※ HP・こうげき・けいけんち・おかねは いまの なんいど「'+curDiff().name+'」・昼の あたい（よるは さらに ふえる）。しゅびは なんいど共通。EXP＝けいけんち／G＝おかね。</div>';
   h+='<h3 class="bisle">なんいど 係数（この値を 素の値に かけている）</h3>';
   h+='<div class="bdtbl"><table><thead><tr><th>なんいど</th><th>敵HP</th><th>敵こうげき</th><th>ボスHP</th><th>ボス攻撃</th><th>けいけんち</th><th>おかね</th></tr></thead><tbody>';
-  for(let d=1;d<=5;d++){ const DD=DIFF[d]; if(!DD)continue; const cur=(Game.diff===d)?' class="cur"':''; h+='<tr'+cur+'><td>'+DD.name+'</td><td>×'+DD.ehp+'</td><td>×'+DD.eatk+'</td><td>×'+DD.bhp+'</td><td>×'+DD.batk+'</td><td>×'+DD.exp+'</td><td>×'+DD.gold+'</td></tr>'; }
+  for(let d=1;d<=6;d++){ const DD=DIFF[d]; if(!DD)continue; const cur=(Game.diff===d)?' class="cur"':''; h+='<tr'+cur+'><td>'+DD.name+'</td><td>×'+DD.ehp+'</td><td>×'+DD.eatk+'</td><td>×'+DD.bhp+'</td><td>×'+DD.batk+'</td><td>×'+DD.exp+'</td><td>×'+DD.gold+'</td></tr>'; }
   h+='</tbody></table><div class="bsec-note">しゅびは どの なんいども 同じ。色つきの 行が いまの なんいど。</div></div>';
   for(const pair of BOOK_ISLES){ h+='<h3 class="bisle">'+pair[0]+'</h3>'+pair[1].map(bookMonCard).join(''); }
   h+='<h3 class="bisle">とくべつな まもの</h3>'+BOOK_SPECIAL.map(bookMonCard).join('');
@@ -6251,8 +6252,8 @@ async function startGame(){
   await say('おうさま「おお、めざめたか ゆうしゃよ。まっておったぞ。」');
   await say('おうさま「たびの まえに、この ぼうけんの てごわさを きめておこう。」');
   // なんいど せんたく（Lv1〜5・Lv2=きじゅん）
-  const dl=await ask([{id:'1',label:'やさしい'},{id:'2',label:'ふつう（おすすめ）'},{id:'3',label:'むずかしい'},{id:'4',label:'ごくむず'},{id:'5',label:'でんせつ'}],'なんいど');
-  Game.diff=(+dl>=1&&+dl<=5)?+dl:2;
+  const dl=await ask([{id:'1',label:'やさしい'},{id:'2',label:'ふつう（おすすめ）'},{id:'3',label:'むずかしい'},{id:'4',label:'ごくむず'},{id:'5',label:'でんせつ'},{id:'6',label:'しんわ'}],'なんいど');
+  Game.diff=(+dl>=1&&+dl<=6)?+dl:2;
   await say('おうさま「やみのおう ヴォルガが ひかりのたまを うばい、\nせかいは ながい よるに のまれようと している。」');
   await say('おうさま「きたの どうくつの おくの しろに ヴォルガは いる。\nひかりのたまを とりもどしてくれ！」');
   await say('おうさま「むらの みなも ちからに なってくれよう。\nそなたの たびに しゅくふくを！」');
