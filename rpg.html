@@ -645,8 +645,8 @@ const DIFF={
  2:{name:'ふつう',     ehp:1.0,  eatk:1.0,  bhp:1.0,  batk:1.0,  exp:1.0,  gold:1.0,  capNorm:0.50, capHeavy:0.70, crit:1/24, bspecial:0.30, pcrit:0.10},
  3:{name:'むずかしい', ehp:1.15, eatk:1.15, bhp:1.15, batk:1.12, exp:0.95, gold:0.95, capNorm:0.55, capHeavy:0.78, crit:1/20, bspecial:0.34, pcrit:0.115},
  4:{name:'ごくむず',   ehp:1.3,  eatk:1.3,  bhp:1.3,  batk:1.25, exp:0.85, gold:0.9,  capNorm:0.60, capHeavy:0.85, crit:1/18, bspecial:0.38, pcrit:0.13},
- 5:{name:'でんせつ',   ehp:1.5,  eatk:1.45, bhp:1.5,  batk:1.4,  exp:0.8,  gold:0.85, capNorm:0.65, capHeavy:0.90, crit:1/16, bspecial:0.42, pcrit:0.15},
- 6:{name:'しんわ',     ehp:1.8,  eatk:1.7,  bhp:1.9,  batk:1.6,  exp:0.55, gold:0.6,  capNorm:0.80, capHeavy:0.95, crit:1/11, bspecial:0.52, pcrit:0.07, giantHp:1.2, giantAtk:1.4}};
+ 5:{name:'でんせつ',   ehp:1.5,  eatk:1.8,  bhp:1.5,  batk:2.4,  exp:0.8,  gold:0.85, capNorm:0.65, capHeavy:0.90, crit:1/16, bspecial:0.42, pcrit:0.15, minFrac:0.30},
+ 6:{name:'しんわ',     ehp:1.8,  eatk:2.2,  bhp:1.9,  batk:2.9,  exp:0.55, gold:0.6,  capNorm:0.80, capHeavy:0.95, crit:1/11, bspecial:0.52, pcrit:0.07, minFrac:0.45, giantHp:1.2, giantAtk:1.5}};
 function curDiff(){return DIFF[Game.diff]||DIFF[2];}
 // 稼ぎ敵(メタル/金スラ)は係数なし。中ボス・ボスはbhp/batk、通常はehp/eatk
 function diffEnemyHP(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.bhp:D.ehp;if(foe.giant&&D.giantHp)m*=D.giantHp;return m;}
@@ -4831,6 +4831,7 @@ async function enemyAction(){
   flash('#c83030',fire||holy||heavy?0.36:0.22,0.45);
   if(foe.boss)playerBloodFx(fire||holy||heavy);
   let d=calcDmg(atk,p.def);
+  d=Math.max(d,Math.round(atk*(curDiff().minFrac||0))); // なんいど：被ダメ下限（守備で消し切れない・minFracある難易度のみ）
   {const Dc=curDiff();d=Math.min(d,Math.max(1,Math.round(p.mhp*((fire||holy||heavy)?Dc.capHeavy:Dc.capNorm))));} // なんいど：被ダメ上限（即死防止・大技は高め天井）
   if(bt.guard)d=Math.max(1,Math.ceil(d*0.45)); // ぼうぎょで 55%カット
   p.hp=Math.max(0,p.hp-d);
