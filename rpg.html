@@ -105,7 +105,7 @@ body{
 /* ---------- 戦闘 ---------- */
 #ui-battle{ flex-direction:column; justify-content:space-between;
   padding:max(10px, env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom)); }
-.b-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; width:100%; }
+.b-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; width:100%; padding-right:48px; } /* 右上の🔊ボタンとHP/MPチップの重なり防止 */
 #ename{ font-size:clamp(13px,2.2vmin,17px); letter-spacing:.08em; }
 .b-bottom{ display:flex; gap:12px; align-items:stretch; width:100%; }
 /* DQふう：くろじに しろの にじゅうわく */
@@ -331,7 +331,7 @@ body{
     </div>
     <div class="btn" id="btn-continue" style="display:none">▶ つづきから</div>
     <div class="btn main" id="btn-start">▶ はじめる</div>
-    <div id="title-hint">いどう：矢印キー / WASD / スワイプ（ななめスワイプ・2キーどうじおしで みちなりに あるける）　　けってい：Enter / Z / タップ</div>
+    <div id="title-hint"><span style="white-space:nowrap">いどう：矢印キー / WASD / スワイプ</span><wbr><span style="white-space:nowrap">（ななめスワイプ・2キーどうじおしで みちなりに あるける）</span>　　<span style="white-space:nowrap">けってい：Enter / Z / タップ</span></div>
   </div>
 
   <div id="ui-field" class="ui">
@@ -663,7 +663,7 @@ const LEVELS=[null,
   {exp:815, hp:172,mp:95, atk:51, def:36},
   {exp:1175,hp:193,mp:106,atk:57, def:41}];
 // ============================================================
-// なんいど Lv1〜5（Lv2=げんこうバランス=1.0）。敵HP/攻撃・経験値・ゴールド・被ダメ上限・痛恨/特殊頻度を一括制御
+// なんいど Lv1〜7（Lv2=げんこうバランス=1.0）。敵HP/攻撃・経験値・ゴールド・被ダメ上限・痛恨/特殊頻度を一括制御
 // ============================================================
 const DIFF={
  1:{name:'やさしい',   ehp:0.85, eatk:0.75, bhp:0.9,  batk:0.8,  exp:1.25, gold:1.15, capNorm:0.40, capHeavy:0.55, crit:1/32, bspecial:0.25, pcrit:0.10},
@@ -6371,7 +6371,7 @@ async function openingSequence(){
   startTalk();
   await say('おうさま「おお、めざめたか ゆうしゃよ。まっておったぞ。」');
   await say('おうさま「たびの まえに、この ぼうけんの てごわさを きめておこう。」');
-  // なんいど せんたく（Lv1〜5・Lv2=きじゅん）
+  // なんいど せんたく（Lv1〜7・Lv2=きじゅん）
   const dl=await ask([{id:'1',label:'やさしい'},{id:'2',label:'ふつう（おすすめ）'},{id:'3',label:'むずかしい'},{id:'4',label:'ごくむず'},{id:'5',label:'でんせつ'},{id:'6',label:'しんわ'},{id:'7',label:'しんぱん'}],'なんいど');
   Game.diff=(+dl>=1&&+dl<=7)?+dl:2;
   await say('おうさま「やみのおう ヴォルガが ひかりのたまを うばい、\nせかいは ながい よるに のまれかけて おる。」');
