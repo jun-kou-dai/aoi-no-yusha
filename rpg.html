@@ -469,7 +469,7 @@ grass:{
    msg3:['むらびと「かざんには ようがんの きょじんが おるらしい。\nこおりの じゅもんを わすれるでないぞ！」','むらびと「さまよう おおきな かげを みたら にげるんじゃ。\nいや… そなたなら たおせるかも しれんな！」'],
    msg4:['むらびと「ついに まおうの しろまで いったのか…！\nむらの みんなが おうえんしとるぞ！」'],
    msgNight:['むらびと「よるは まものが つよくなる…。\nじゃが けいけんちも おおい らしいぞ。ふふ。」']},
-  {x:5,y:10,kind:'musume',col:'#9ad0c0',msg:['むらびと「どうくつの ほねの まものは\nほのおの じゅもんが にがて らしい。」'],
+  {x:5,y:10,kind:'musume',goneKid:true,msgRescued:['むすめ「たすけてくれて ほんとうに ありがとう…！」','むすめ「あのかた… たまを 『とりもどす』と いっていたわ。\nまるで もともと じぶんの ものだった みたいに…」'],col:'#9ad0c0',msg:['むらびと「どうくつの ほねの まものは\nほのおの じゅもんが にがて らしい。」'],
    msg2:['むらびと「しろには やみの まものが うようよ いるって…。\nやくそうを わすれずに ね！」'],
    msg3:['むらびと「こおりの せかいには さまよう きょじんが いるって…。\nちかづくと おいかけて くるらしいわ！」'],
    msg4:['むらびと「ヴォルガって もとは わるいひとじゃ なかったって\nおばあちゃんが いってたけど… ほんとう かしら。」']},
@@ -595,13 +595,15 @@ ice:{
   {x:3,y:9,kind:'musume',col:'#bfe0ff',msg:['たびびと「さまよう ひょうじんを みたわ…！\nちかづくと おいかけて くるのよ！」','たびびと「こおりの まものには ほのおの じゅもんが きくわ。\nメラより ギラ、ギラより ベギラマよ！」'],
    msg4:['たびびと「しろに いどむのね…。\nあなたなら きっと やれるわ！」'],
    msgNight:['たびびと「よるの こおりは しんと しずか…。\nきょじんの あしおとだけが きこえるの。こわいわ…。」']},
-  {x:13,y:11,kind:'stone',col:'#9aa4b8',stoneKey:'t4',msg:['せきひ「こたえなき まま、かれは やみに こたえを もとめた。\nひとびとは かれの なを わすれた。」']}],
+  {x:13,y:11,kind:'stone',col:'#9aa4b8',stoneKey:'t4',msg:['せきひ「こたえなき まま、かれは やみに こたえを もとめた。\nひとびとは かれの なを わすれた。」']},
+  {x:17,y:2,kind:'musume',captive:true,col:'#9ad0c0',msg:[]}],
  spawns:[
   {id:'islime',x:9, y:6},
   {id:'islime',x:13,y:9},
   {id:'scrow', x:6, y:10},
   {id:'fgolem',x:14,y:4},
-  {id:'frostlord',x:10,y:3}],
+  {id:'frostlord',x:10,y:3},
+  {id:'icewarden',x:15,y:2,need:'k1',gone:'k2'}],
  chests:[
   {x:17,y:11,item:'yakuso'},
   {x:5, y:2, item:'taneD'}],
@@ -649,7 +651,14 @@ const tileAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?'T':MAP[y][x];
 // R(やみの台地)は がけ：のぼれない。みちなりに あるけるように する
 const walkable=(x,y)=>{const t=tileAt(x,y);return t==='G'||t==='P'||t==='F'||t==='S'||t==='E'||t==='M'||t==='N'||t==='K';};
 const exitAt=(x,y)=>{const w=WORLDS[Game.mapId];return w.exits&&w.exits.find(e=>e.x===x&&e.y===y);};
-const npcAt=(x,y)=>{const w=WORLDS[Game.mapId];return w.npcs&&w.npcs.find(n=>n.x===x&&n.y===y&&!(n.child&&Game.qChild>=2));};
+// 物語フラグつきNPCの表示判定（child=ポポ救出後は消える／goneKid=さらわれ中は消える／captive=とらわれ中だけ現れる）
+const npcGone=n=>{
+  if(n.child&&Game.qChild>=2)return true;
+  if(n.goneKid&&Game.hidden.k1&&!Game.hidden.k2)return true;
+  if(n.captive&&!(Game.hidden.k1&&!Game.hidden.k2))return true;
+  return false;
+};
+const npcAt=(x,y)=>{const w=WORLDS[Game.mapId];return w.npcs&&w.npcs.find(n=>n.x===x&&n.y===y&&!npcGone(n));};
 
 // ============================================================
 // レベル・敵データ
@@ -708,6 +717,7 @@ const FOES={
   mgolem:{name:'ようがんの きょじん', hp:104,atk:23, def:12, exp:96, g:66, col:'#e87a4a', draw:'golem', v:'magma', mboss:true, still:true, winMsg:'ようがんの きょじんは マグマの うみに しずんでいった。\nゆくてに そびえる まおうの しろが、その すがたを あらわす…！', physMul:0.7, fireMul:0, iceMul:2.0, dodge:0},
   frostlord:{name:'さまよう ひょうじん', hp:74, atk:32, def:10, exp:95, g:55, col:'#bfe6ff', draw:'golem', v:'frost', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.9, iceMul:0, dodge:0},
   magmalord:{name:'さまよう マグマじん', hp:88, atk:36, def:12, exp:120, g:70, col:'#ff7a3a', draw:'golem', v:'magma', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:0, iceMul:1.9, dodge:0},
+  icewarden:{name:'こおりの ばんへい', hp:110, atk:27, def:13, exp:110, g:80, col:'#8fc8e8', draw:'golem', v:'ice', hunter:true, huge:true, mboss:true, winMsg:'ばんへいは こおりの かけらと なって くだけちった！\nむすめを たすけださねば！'},
   chaoslord:{name:'こんとんの きょじん', hp:120, atk:40, def:14, exp:200, g:150, col:'#a88ae8', draw:'golem', v:'iron', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.2, iceMul:1.2, dodge:0}};
 const SHOP=[
   {id:'w1',label:'どうのつるぎ',cost:30,atk:5},
@@ -747,7 +757,7 @@ function loadMap(id){
   Game.mapId=id;
   Game.visited=Game.visited||{};Game.visited[id]=true; // 訪問記録（どこでもドアの 行き先かいきん）
   MAP=w.map;SPAWNS=w.spawns;CHESTS=w.chests;SPRING=w.spring||null;BZONE=w.bzone||null;
-  Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
+  Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!Game.hidden[s.need])&&!(s.gone&&Game.hidden[s.gone])).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
     seed:rnd(9),timer:rnd(0.5,1.5),moving:null}));
   Game.respawnQ=[];
   Game.inVillage=false;
@@ -1405,7 +1415,7 @@ const BOOK_ISLES=[
   ['むらの そうげん',['slime','crow','golem']],
   ['ふかい もり',['mslime','yamabato','ent']],
   ['どうくつ',['bat','hslime','skel','mboss']],
-  ['こおりの せかい',['islime','scrow','fgolem','frostlord']],
+  ['こおりの せかい',['islime','scrow','fgolem','icewarden','frostlord']],
   ['かざんの しま',['lslime','ecrow','mgolem','magmalord']],
   ['まおうの しろ',['dslime','dcrow','chaoslord','boss','boss2']]];
 const BOOK_SPECIAL=['gslime','metal'];
@@ -1422,6 +1432,7 @@ const BOOK_TRAITS={
   boss:['ねむりを つける','HP半分で かくせい','つよい とくぎ'],
   boss2:['ヴォルガの しんのすがた','つよい とくぎ'],
   frostlord:['ちかづくと きづいて おいかけてくる','なんいど「しんわ」で さらに つよくなる'],
+  icewarden:['ヴォルガの めいで むすめを さらった ばんにん','とうめいマントも みやぶって おいかけてくる'],
   magmalord:['ちかづくと きづいて おいかけてくる','なんいど「しんわ」で さらに つよくなる'],
   gslime:['たたかわず すぐ にげる','守備が 高く 攻撃が きかない','たおすと 大金'],
   metal:['すぐ にげる','守備が 非常に 高い','たおすと 経験値 特大']};
@@ -1856,6 +1867,20 @@ function endTalk(){
 async function talkNpc(n){
   if(Game.talking)return;
   startTalk();sfxSel();
+  if(n.captive){
+    if(Game.enemies.some(e=>e.id==='icewarden')){
+      await say('むすめ「きて くれたのね…！ でも あぶない！\nこおりの ばんへいが みはっているの…！」');
+      endTalk();return;
+    }
+    await say('むすめ「うぅ… こわかったよう…！」');
+    await say('むすめ「おねがい、むらへ つれてかえって…！」');
+    Game.hidden.k2=true;
+    endTalk();
+    const st=WORLDS.grass.start;
+    await transitMap({to:'grass',tx:st.x,ty:st.y,msg:'むすめの てを ひいて むらへ もどった！'});
+    saveGame();
+    return;
+  }
   if(n.shop){await runShop();saveGame();}
   else if(n.child){
     // まいごの ポポ（どうくつ）
@@ -1899,6 +1924,7 @@ async function talkNpc(n){
 }
 // 進行ステージ＋夜で むらびとの セリフが かわる（msgNight＞msg4..msg1＞msg の順で採用）
 function pickNpcLines(n){
+  if(n.msgRescued&&Game.hidden.k3)return n.msgRescued; // 救出後は てがかりを 最優先で 語る
   if(n.msgNight&&n.msgNight.length&&isNightNow())return n.msgNight;
   const st=Game.visited.castle?4:(Game.visited.volcano?3:(Game.mbossDown?2:(Game.visited.cave?1:0)));
   for(let i=st;i>=1;i--){const a=n['msg'+i];if(a&&a.length)return a;}
@@ -1930,6 +1956,34 @@ async function talkKing(){
   saveGame();
   await say('おうさま「そなたの ぼうけんを ぼうけんのしょに\nきろくして おいたぞ。」');
   endTalk();
+}
+// 物語2幕「さらわれた むすめ」：中ボス後に こおりへ 入ると 発生（フラグ先行セットで再入防止）
+async function kidnapScene(){
+  Game.hidden.k1=true;
+  startTalk();
+  Game.fieldShake=Math.max(Game.fieldShake||0,10);
+  flash('#ffd0d0',0.3,0.8);sfxEnc();
+  await say('とおくで ひめいが きこえた…！');
+  await say('こおりの おおおとこが、むらの むすめを かかえて\nきたの おくへ きえていく…！');
+  await say('ばんへい「じゃまする やつは、まとめて\nこおりづけに してやるわい！」');
+  endTalk();
+  toast('むすめが さらわれた！ こおりの おくを さがせ！');
+  loadMap('ice'); // ばんへい(need:k1)を いま わかせる
+  saveGame();
+}
+// 救出後、むらへ もどると じいさんの おれい＋むすめが 動機の てがかりを 語る
+async function thanksScene(){
+  Game.hidden.k3=true;
+  startTalk();sfxSel();
+  await say('じいさん「おお…！ まごを たすけて くれたのか！\nなんと れいを いえば よいか…！」');
+  Game.bonusDef+=3;recalcStats();Game.gold+=200;updateBars();
+  sfxChest();flash('#ffe9b0',0.3,0.7);
+  await say('いのりのおまもりを さずかった！ しゅびりょくが 3 あがった！\nさらに 200ゴールドを もらった！');
+  await say('むすめ「ありがとう、ゆうしゃさま。…それとね、きいて。」');
+  await say('むすめ「あのかた… ひかりのたまを 『とりもどす』って\nなんども いっていたわ。まるで じぶんの ものみたいに…」');
+  endTalk();
+  toast('てがかり：ヴォルガは たまを「とりもどす」と いっていた…？');
+  saveGame();
 }
 // やどや：6Gで とまると ぜんかいふく＋よあけに なる＋きろく
 async function runInn(){
@@ -2030,6 +2084,8 @@ function fieldCam(){
 function questText(){
   if(Game.qChild===1)return Game.mapId==='cave'?'もくてき：どうくつの ひだりおくで ポポを さがせ':'もくてき：どうくつで まいごの ポポを さがせ';
   if(Game.qChild===2)return 'もくてき：ポポを むらの おかあさんの もとへ';
+  if(Game.hidden.k1&&!Game.hidden.k2)return Game.mapId==='ice'?'もくてき：こおりの おくで むすめを すくいだせ！':'もくてき：さらわれた むすめを おえ！ こおりの せかいへ！';
+  if(Game.hidden.k2&&!Game.hidden.k3)return 'もくてき：むらの じいさんの もとへ';
   if(Game.mapId==='castle')return 'もくてき：やみのおう ヴォルガを たおせ！';
   if(Game.mbossDown)return Game.mapId==='volcano'?'もくてき：火山の おくの しろへ すすめ':'もくてき：こおりと ほのおの おくの しろへ';
   if(Game.mapId==='cave')return 'もくてき：どうくつの おくへ（くろがねゴーレムが まちうける）';
@@ -2201,6 +2257,11 @@ function updateField(dt){
   if(Game.mapId==='grass'&&!Game.battling&&!Game.transiting){
     const inV=p.tx>=1&&p.tx<=6&&p.ty>=8&&p.ty<=12;
     if(inV!==Game.inVillage){Game.inVillage=inV;playSong(inV?'village':'field');}
+  }
+  // 物語イベントの自動発火（会話・戦闘・遷移中は発火しない）
+  if(!Game.talking&&!Game.battling&&!Game.transiting&&Game.scene==='field'){
+    if(Game.mapId==='ice'&&Game.mbossDown&&!Game.hidden.k1)kidnapScene();
+    else if(Game.inVillage&&Game.hidden.k2&&!Game.hidden.k3)thanksScene();
   }
   if(p.bump){
     p.bump.t+=dt;
@@ -3141,7 +3202,7 @@ function drawFieldScene(){
     }
     for(const c of CHESTS)if(c.x+c.y===d)drawChest(c);
     if(SPRING&&SPRING.x+SPRING.y===d)drawSpring();
-    if(wld.npcs)for(const n of wld.npcs)if(n.x+n.y===d&&!(n.child&&Game.qChild>=2))drawNpc(n);
+    if(wld.npcs)for(const n of wld.npcs)if(n.x+n.y===d&&!npcGone(n))drawNpc(n);
     for(const e of Game.enemies)if(Math.round(e.px+e.py)===d)drawFieldFoe(e);
     if(pd===d){drawPopo();drawFieldHero();}
   }
