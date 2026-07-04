@@ -6454,6 +6454,9 @@ stage.addEventListener('scroll',()=>{stage.scrollTop=0;stage.scrollLeft=0;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(actx)actx.suspend();}else resumeAudio();});
 let last=performance.now();
 function loop(ts){
+  // 60fps上限：120Hz端末(iPad Pro等)で仕事量を半減させ発熱/電池を抑える。60Hz環境では素通り＝見た目不変
+  if(ts-(Game._lastFrame||0)<15.5){requestAnimationFrame(loop);return;}
+  Game._lastFrame=ts;
   const dt=Math.min(0.05,(ts-last)/1000)||0.016;
   last=ts;TM+=dt;
   updateMsg(dt);
