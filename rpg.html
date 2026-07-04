@@ -666,10 +666,10 @@ const LEVELS=[null,
 const DIFF={
  1:{name:'やさしい',   ehp:0.85, eatk:0.75, bhp:0.9,  batk:0.8,  exp:1.25, gold:1.15, capNorm:0.40, capHeavy:0.55, crit:1/32, bspecial:0.25, pcrit:0.10},
  2:{name:'ふつう',     ehp:1.0,  eatk:1.0,  bhp:1.0,  batk:1.0,  exp:1.0,  gold:1.0,  capNorm:0.50, capHeavy:0.70, crit:1/24, bspecial:0.30, pcrit:0.10},
- 3:{name:'むずかしい', ehp:1.15, eatk:1.15, bhp:1.15, batk:1.12, exp:0.95, gold:0.95, capNorm:0.55, capHeavy:0.78, crit:1/20, bspecial:0.34, pcrit:0.115},
- 4:{name:'ごくむず',   ehp:1.3,  eatk:1.3,  bhp:1.3,  batk:1.25, exp:0.85, gold:0.9,  capNorm:0.60, capHeavy:0.85, crit:1/18, bspecial:0.38, pcrit:0.13},
- 5:{name:'でんせつ',   ehp:1.5,  eatk:1.8,  bhp:1.5,  batk:2.4,  exp:0.8,  gold:0.85, capNorm:0.65, capHeavy:0.90, crit:1/16, bspecial:0.42, pcrit:0.15, minFrac:0.30},
- 6:{name:'しんわ',     ehp:1.8,  eatk:2.2,  bhp:1.9,  batk:2.9,  exp:0.55, gold:0.6,  capNorm:0.80, capHeavy:0.95, crit:1/11, bspecial:0.52, pcrit:0.07, minFrac:0.45, giantHp:1.2, giantAtk:1.5},
+ 3:{name:'むずかしい', ehp:1.15, eatk:1.15, bhp:1.15, batk:1.12, exp:0.95, gold:0.95, capNorm:0.55, capHeavy:0.78, crit:1/20, bspecial:0.34, pcrit:0.115, baiki:1.45},
+ 4:{name:'ごくむず',   ehp:1.3,  eatk:1.3,  bhp:1.3,  batk:1.25, exp:0.85, gold:0.9,  capNorm:0.60, capHeavy:0.85, crit:1/18, bspecial:0.38, pcrit:0.13,  baiki:1.4},
+ 5:{name:'でんせつ',   ehp:1.5,  eatk:1.8,  bhp:1.5,  batk:2.4,  exp:0.8,  gold:0.85, capNorm:0.65, capHeavy:0.90, crit:1/16, bspecial:0.42, pcrit:0.15, minFrac:0.30, baiki:1.35},
+ 6:{name:'しんわ',     ehp:1.8,  eatk:2.2,  bhp:1.9,  batk:2.9,  exp:0.55, gold:0.6,  capNorm:0.80, capHeavy:0.95, crit:1/11, bspecial:0.52, pcrit:0.07, minFrac:0.45, giantHp:1.2, giantAtk:1.5, baiki:1.3},
  7:{name:'しんぱん',   ehp:2.1,  eatk:2.6,  bhp:2.6,  batk:3.4,  exp:0.4,  gold:0.5,  capNorm:0.88, capHeavy:0.97, crit:1/9,  bspecial:0.60, pcrit:0.05, minFrac:0.55, giantHp:1.3, giantAtk:1.6, baiki:1.25}};
 function curDiff(){return DIFF[Game.diff]||DIFF[2];}
 // 稼ぎ敵(メタル/金スラ)は係数なし。中ボス・ボスはbhp/batk、通常はehp/eatk
