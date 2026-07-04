@@ -96,7 +96,7 @@ body{
 #ui-field{ flex-direction:column; align-items:flex-start; }
 #fstat{ position:absolute; top:max(12px, env(safe-area-inset-top)); left:12px; flex-wrap:wrap; }
 #fstat .lv{ white-space:nowrap; } /* 狭幅で難易度名が縦に潰れないよう＋次行に回す */
-#toast{ position:absolute; top:max(14px, env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+#toast{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 58px); left:50%; transform:translateX(-50%); /* チップの下＝HP/なんいど表示を隠さない */
   padding:10px 22px; font-size:clamp(12px,2.1vmin,15px); letter-spacing:.06em; color:#f4eedb;
   opacity:0; max-width:86vw; text-align:center; z-index:260; }
 #toast.show{ animation:toast 4.6s ease forwards; }
@@ -295,7 +295,6 @@ body{
   .num{ min-width:3.6em; }
   .chip{ gap:6px; padding:8px 10px; }
   #mute{ width:36px; height:36px; }
-  #toast{ top:calc(max(12px, env(safe-area-inset-top)) + 58px); }
 }
 </style>
 </head>
