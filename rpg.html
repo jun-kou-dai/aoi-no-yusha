@@ -244,6 +244,7 @@ body{
 .bdg.imm{ background:rgba(120,128,150,.85); color:#f0f2f7; }
 .bdg.boss{ background:rgba(160,90,220,.9); color:#f6ecff; }
 .bdg.mboss{ background:rgba(150,120,90,.92); color:#fff3e0; }
+.bdg.hunt{ background:rgba(198,62,102,.92); color:#ffe9f0; }
 .bdg.unk{ background:rgba(90,98,130,.6); color:#aab2d4; }
 .bmon.unseen{ border-style:dashed; opacity:.96; }
 .bmon.unseen .bsw{ background:#3c4263 !important; box-shadow:none; }
@@ -1361,7 +1362,7 @@ function buyFoeInfo(id){
   const bb=document.getElementById('bookbody');if(bb)bb.innerHTML=renderBook();
 }
 function bookUnknownCard(id,f){
-  const role=f.boss?'<span class="bdg boss">ボス</span>':(f.mboss?'<span class="bdg mboss">中ボス</span>':'');
+  const role=f.boss?'<span class="bdg boss">ボス</span>':(f.mboss?'<span class="bdg mboss">中ボス</span>':(f.hunter?'<span class="bdg hunt">さまよう巨人</span>':''));
   const cost=foeInfoCost(f);
   const buy=cost>0?'<div class="bbuy" data-buy="'+id+'">💰 '+cost+'Gで しらべてもらう</div>':'';
   const cls='bmon unseen'+((f.boss||f.mboss)?' bunkboss':'');
@@ -1371,8 +1372,8 @@ const BOOK_ISLES=[
   ['むらの そうげん',['slime','crow','golem']],
   ['ふかい もり',['mslime','yamabato','ent']],
   ['どうくつ',['bat','skel','mboss']],
-  ['こおりの せかい',['islime','scrow','fgolem']],
-  ['かざんの しま',['lslime','ecrow','mgolem']],
+  ['こおりの せかい',['islime','scrow','fgolem','frostlord']],
+  ['かざんの しま',['lslime','ecrow','mgolem','magmalord']],
   ['まおうの しろ',['dslime','dcrow','boss','boss2']]];
 const BOOK_SPECIAL=['gslime','metal'];
 const BOOK_TRAITS={
@@ -1385,6 +1386,8 @@ const BOOK_TRAITS={
   dcrow:['そらを とぶ','どくを つける'],
   boss:['ねむりを つける','HP半分で かくせい','つよい とくぎ'],
   boss2:['ヴォルガの しんのすがた','つよい とくぎ'],
+  frostlord:['ちかづくと きづいて おいかけてくる','なんいど「しんわ」で さらに つよくなる'],
+  magmalord:['ちかづくと きづいて おいかけてくる','なんいど「しんわ」で さらに つよくなる'],
   gslime:['たたかわず すぐ にげる','守備が 高く 攻撃が きかない','たおすと 大金'],
   metal:['すぐ にげる','守備が 非常に 高い','たおすと 経験値 特大']};
 function bookElemBadges(f){
@@ -1412,7 +1415,7 @@ function bookMonCard(id){
   const tags=(BOOK_TRAITS[id]||[]).slice();
   if(f.dodge)tags.unshift('回避 '+Math.round(f.dodge*100)+'%');
   const badges=bookElemBadges(f).map(x=>'<span class="bdg '+x[0]+'">'+x[1]+'</span>').join('');
-  const role=f.boss?'<span class="bdg boss">ボス</span>':(f.mboss?'<span class="bdg mboss">中ボス</span>':'');
+  const role=f.boss?'<span class="bdg boss">ボス</span>':(f.mboss?'<span class="bdg mboss">中ボス</span>':(f.hunter?'<span class="bdg hunt">さまよう巨人</span>':''));
   return '<div class="bmon"><div class="bmh"><span class="bsw" style="background:'+f.col+'"></span><b>'+f.name+'</b>'+role+'</div>'
     +'<div class="bstat">'+stat+(gain?'　｜　'+gain:'')+'</div>'
     +(badges?'<div class="bbadges">'+badges+'</div>':'')
