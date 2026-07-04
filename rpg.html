@@ -501,7 +501,7 @@ forest:{
   {id:'ent',  x:9, y:11}],
  chests:[
   {x:2, y:1, item:'yakuso'},
-  {x:17,y:2, item:'tane'}],
+  {x:17,y:2, item:'taneD'}],
  exits:[
   {x:0, y:3, to:'grass',tx:16,ty:3,msg:'そうげんに もどってきた。'},
   {x:18,y:12,to:'cave', tx:3, ty:1,msg:'くらい どうくつに ふみこんだ…'}]},
@@ -530,7 +530,7 @@ cave:{
   {id:'skel',x:15,y:3},
   {id:'mboss',x:15,y:12}],
  chests:[
-  {x:6, y:3,  item:'tane'},
+  {x:6, y:3,  item:'taneH'},
   {x:4, y:8,  item:'yakuso'},
   {x:10,y:10, item:'seisui'}],
  exits:[
@@ -561,7 +561,7 @@ castle:{
   {id:'dcrow', x:14,y:8},
   {id:'dslime',x:9, y:5},
   {id:'boss',x:10,y:2}],
- chests:[{x:2,y:10,item:'tane'}],
+ chests:[{x:2,y:10,item:'taneM'}],
  exits:[{x:9,y:12,to:'volcano',tx:17,ty:6,msg:'ねっぷうの せかいへ もどってきた。'}]},
 ice:{
  song:'ice', bg:['#0e1d2b','#1a3048'],
@@ -595,7 +595,7 @@ ice:{
   {id:'frostlord',x:10,y:3}],
  chests:[
   {x:17,y:11,item:'yakuso'},
-  {x:5, y:2, item:'tane'}],
+  {x:5, y:2, item:'taneD'}],
  exits:[
   {x:2,y:7,to:'cave',tx:2,ty:9,msg:'くらい どうくつに もどった。'},
   {x:17,y:7,to:'volcano',tx:2,ty:6,msg:'ねっぷうの ふきだす われめへ ふみこんだ…'}]},
@@ -630,7 +630,7 @@ volcano:{
   {id:'magmalord',x:10,y:2}],
  chests:[
   {x:17,y:11,item:'yakuso'},
-  {x:5, y:2, item:'tane'}],
+  {x:5, y:2, item:'taneH'}],
  exits:[
   {x:1,y:6,to:'ice',tx:16,ty:7,msg:'こおりの せかいへ もどってきた。'},
   {x:18,y:6,to:'castle',tx:10,ty:11,msg:'ほのおの おくに そびえる まおうのしろに たどりついた…！'}]}};
@@ -726,7 +726,7 @@ const CLOAK_MAX=60; // とうめいマントの 最大歩数（歩数制バッ�
 const Game={scene:'boot', p:null, enemies:[], bt:null, grace:0, kills:0, battling:false, endT:0, introShown:false, started:false,
   items:{yakuso:0,seisui:0,dokukesi:0}, chestsOpen:[], springUsed:{}, dmgTaken:0, t0:0, respawnQ:[], goldT:12,
   gold:0, mapId:'grass', weaponAtk:0, armorDef:0, shield:false, mbossDown:false, talking:false, transiting:false,
-  saidYes:false, dayT:0, metalT:20, qChild:0, bonusDef:0, bonusHp:0, hidden:{}, popo:null, popoT:null, stats:{battles:0,crits:0,deaths:0}, diff:2, door:false, visited:{}, cloak:false, invisible:false, cloakSteps:0, book:false, seen:{}, fieldShake:0};
+  saidYes:false, dayT:0, metalT:20, qChild:0, bonusDef:0, bonusHp:0, bonusMp:0, gheart:0, hidden:{}, popo:null, popoT:null, stats:{battles:0,crits:0,deaths:0}, diff:2, door:false, visited:{}, cloak:false, invisible:false, cloakSteps:0, book:false, seen:{}, fieldShake:0};
 window.G=Game;
 function newPlayer(){const L=LEVELS[1],st=WORLDS.grass.start;return{lv:1,exp:0,hp:L.hp,mhp:L.hp,mp:L.mp,mmp:L.mp,atk:L.atk,def:L.def,bonusAtk:0,poison:false,poisonT:0,
   tx:st.x,ty:st.y,px:st.x,py:st.y,face:1,dir:'D',moving:null,bump:null};}
@@ -754,7 +754,7 @@ function resetGame(){
   Game.bt=null;Game.grace=0;Game.kills=0;Game.battling=false;Game.endT=0;Game.introShown=false;
   Game.items={yakuso:0,seisui:0,dokukesi:0};Game.chestsOpen=[];Game.springUsed={};Game.dmgTaken=0;Game.t0=0;
   Game.goldT=12;Game.saidYes=false;Game.dayT=DAY_START;Game.metalT=20;Game.stats={battles:0,crits:0,deaths:0};
-  Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.hidden={};Game.popo=null;Game.popoT=null;
+  Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.hidden={};Game.popo=null;Game.popoT=null;
   Game.door=false;Game.visited={};Game.cloak=false;Game.invisible=false;Game.cloakSteps=0;Game.book=false;Game.seen={};
   loadMap('grass');
   P.length=0;fxL.innerHTML='';
@@ -775,7 +775,7 @@ function saveGame(){
       gold:Game.gold,items:Game.items,weaponAtk:Game.weaponAtk,shield:Game.shield,
       mbossDown:Game.mbossDown,springUsed:Game.springUsed,mapId:Game.mapId,door:Game.door,visited:Game.visited,cloak:Game.cloak,book:Game.book,seen:Game.seen,
       kills:Game.kills,dmgTaken:Game.dmgTaken,goldT:Game.goldT,saidYes:Game.saidYes,day:Game.dayT,
-      qChild:Game.qChild,bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,hidden:Game.hidden,
+      qChild:Game.qChild,bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,bonusMp:Game.bonusMp,gheart:Game.gheart,hidden:Game.hidden,
       stats:Game.stats,chests:Game.chestsOpen.map(chestKey).filter(Boolean),
       playMs:Math.max(0,performance.now()-Game.t0)}));
   }catch(e){}
@@ -800,7 +800,7 @@ function loadGame(){
   if(d.items)for(const k in Game.items)if(d.items[k])Game.items[k]=d.items[k];
   Game.kills=d.kills||0;Game.dmgTaken=d.dmgTaken||0;Game.goldT=d.goldT||12;
   Game.dayT=(typeof d.day==='number')?d.day:DAY_START;
-  Game.qChild=d.qChild||0;Game.bonusDef=d.bonusDef||0;Game.bonusHp=d.bonusHp||0;
+  Game.qChild=d.qChild||0;Game.bonusDef=d.bonusDef||0;Game.bonusHp=d.bonusHp||0;Game.bonusMp=d.bonusMp||0;Game.gheart=d.gheart||0;
   Game.hidden=d.hidden||{};
   Game.door=!!d.door; // どこでもドア 所持
   Game.cloak=!!d.cloak;Game.book=!!d.book;Game.invisible=false;Game.cloakSteps=CLOAK_MAX;Game.seen=(d.seen&&typeof d.seen==='object')?d.seen:{}; // とうめいマント（所持のみ永続・透明状態は持ち越さない・バッテリー満タン）
@@ -810,7 +810,7 @@ function loadGame(){
   Game.chestsOpen=[];
   for(const id in WORLDS){const w=WORLDS[id];if(w.chests)for(const c of w.chests)if(keys.includes(id+':'+c.x+':'+c.y))Game.chestsOpen.push(c);}
   loadMap(WORLDS[d.mapId]?d.mapId:'grass');
-  const L=LEVELS[p.lv];p.mhp=L.hp+(Game.bonusHp||0);p.mmp=L.mp;recalcStats();
+  const L=LEVELS[p.lv];p.mhp=L.hp+(Game.bonusHp||0);p.mmp=L.mp+(Game.bonusMp||0);recalcStats();
   p.hp=Math.max(1,Math.min(p.mhp,d.hp||1));
   p.mp=Math.max(0,Math.min(p.mmp,d.mp||0));
   const ok=walkable(d.tx,d.ty),st=WORLDS[Game.mapId].start;
@@ -1853,6 +1853,13 @@ async function talkKing(){
   startTalk();sfxSel();
   const p=Game.p;
   await say('おうさま「おお ゆうしゃよ、よくぞ きた。」');
+  {const zAll=[].concat.apply([],BOOK_ISLES.map(pr=>pr[1])).concat(BOOK_SPECIAL);
+   const zk=zAll.filter(id=>Game.seen&&Game.seen[id]).length;
+   if(zk>=zAll.length&&!Game.hidden.zkomp){
+     Game.hidden.zkomp=true;Game.gold+=300;updateBars();sfxChest();
+     await say('おうさま「なんと！ すべての まものを しらべつくしたのか！」');
+     await say('おうさま「そなたに まものはかせ の しょうごうを さずけ、\nほうびに 300ゴールドを とらせよう！」');
+   }}
   if(p.hp<p.mhp||p.mp<p.mmp){
     p.hp=p.mhp;p.mp=p.mmp;Game.cloakSteps=CLOAK_MAX;updateBars();
     sfxHeal();flash('#9fe8b0',0.2,0.6);
@@ -1975,7 +1982,13 @@ function questText(){
 // かくしざいほう：それっぽい ばしょを ふむと みつかる
 const HIDDENS=[
  {map:'grass',x:8,y:3,key:'h1',gold:50,msg:'みずうみの ひがしの くさむらに ふくろが うまっていた！\n50ゴールドを てにいれた！'},
- {map:'cave',x:18,y:10,key:'h2',item:'seisui',msg:'いわかげに まほうのせいすいが おちていた！'}];
+ {map:'cave',x:18,y:10,key:'h2',item:'seisui',msg:'いわかげに まほうのせいすいが おちていた！'},
+ {map:'grass',x:16,y:8,key:'h3',gold:35,msg:'くさむらの おくで キラリ… ちいさな ふくろだ！\n35ゴールドを てにいれた！'},
+ {map:'forest',x:16,y:9,key:'h4',item:'yakuso',n:2,msg:'きの ねもとに たびびとの わすれもの…\nやくそうを 2つ てにいれた！'},
+ {map:'cave',x:16,y:3,key:'h5',item:'seisui',msg:'いわの すきまが あおく ひかっている…\nまほうのせいすいを てにいれた！'},
+ {map:'ice',x:7,y:11,key:'h6',taneM:true,msg:'ゆきの したから ふしぎなたねが…！\nさいだいMPが 6 あがった！'},
+ {map:'volcano',x:11,y:10,key:'h7',gold:80,msg:'ようがんの そばに とけのこった ふくろ…\n80ゴールドも はいっている！'},
+ {map:'castle',x:2,y:3,key:'h8',gold:120,msg:'いにしえの ゆうしゃの さいふだ…！\n120ゴールドを てにいれた！'}];
 function openChest(c){
   const p=Game.p;
   if(Game.chestsOpen.includes(c))return;
@@ -1985,6 +1998,15 @@ function openChest(c){
   if(c.item==='tane'){
     p.bonusAtk+=3;recalcStats();
     toast('たからばこを あけた！ ちからのたね！ こうげきりょくが 3 あがった！');
+  }else if(c.item==='taneD'){
+    Game.bonusDef+=2;recalcStats();
+    toast('たからばこを あけた！ まもりのたね！ しゅびりょくが 2 あがった！');
+  }else if(c.item==='taneH'){
+    Game.bonusHp+=8;p.mhp+=8;p.hp=Math.min(p.mhp,p.hp+8);updateBars();
+    toast('たからばこを あけた！ いのちのたね！ さいだいHPが 8 あがった！');
+  }else if(c.item==='taneM'){
+    Game.bonusMp=(Game.bonusMp||0)+6;p.mmp+=6;p.mp=Math.min(p.mmp,p.mp+6);updateBars();
+    toast('たからばこを あけた！ ふしぎなたね！ さいだいMPが 6 あがった！');
   }else{
     Game.items[c.item]++;
     toast('たからばこを あけた！ '+ITEMS[c.item].name+'を てにいれた！');
@@ -2140,12 +2162,14 @@ function updateField(dt){
   if(!p.moving&&!Game.battling){
     for(const hd of HIDDENS){
       if(hd.map!==Game.mapId||Game.hidden[hd.key])continue;
+      if(Game.cam&&Math.random()<dt*0.55){const gq=isoCtr(hd.x,hd.y);P.push({x:gq.x+rnd(-5,5),y:gq.y-rnd(2,12),vx:0,vy:-16,life:0.7,t:0,size:2.2,col:'rgba(255,250,205,.95)',grav:0,light:true,drag:1});}
       if(hd.x===p.tx&&hd.y===p.ty){
         Game.hidden[hd.key]=true;
         sfxChest();
         if(Game.cam){const q=isoCtr(hd.x,hd.y);puff(q.x,q.y,'rgba(255,235,160,.95)',22,110,1,{up:true,s0:2,s1:4});}
         if(hd.gold){Game.gold+=hd.gold;}
-        if(hd.item){Game.items[hd.item]++;}
+        if(hd.item){Game.items[hd.item]=(Game.items[hd.item]||0)+(hd.n||1);}
+        if(hd.taneM){Game.bonusMp=(Game.bonusMp||0)+6;p.mmp+=6;p.mp=Math.min(p.mmp,p.mp+6);}
         updateBars();toast(hd.msg);
         saveGame();
       }
@@ -4916,6 +4940,10 @@ async function victory(){
     if(foe===FOES.mboss)Game.mbossDown=true;
     if(foe.winMsg)await say(foe.winMsg);
   }
+  if(grantGiantHeart(foe)){
+    sfxChest();
+    await say('きょじんのこころを てにいれた！！\nさいだいHPが 10 あがった！（'+Game.gheart+'／5）');
+  }
   if(Math.random()<0.08){
     sfxChest();
     p.bonusAtk+=3;recalcStats();
@@ -4924,7 +4952,7 @@ async function victory(){
   while(p.lv<MAXLV&&p.exp>=LEVELS[p.lv+1].exp){
     const old=LEVELS[p.lv],nw=LEVELS[p.lv+1];
     p.lv++;
-    p.mhp=nw.hp+(Game.bonusHp||0);p.mmp=nw.mp;recalcStats();
+    p.mhp=nw.hp+(Game.bonusHp||0);p.mmp=nw.mp+(Game.bonusMp||0);recalcStats();
     p.hp=p.mhp;p.mp=p.mmp;
     updateBars();
     sfxLevel();
@@ -5050,6 +5078,16 @@ async function bossDefeat(){
   await fadeTo(0,1.8);
   fadeColor('#070b1e');
   Game.battling=false;
+}
+// さまよう巨人のレア泥「きょじんのこころ」：20%・さいだい5こ・+10さいだいHP
+function grantGiantHeart(foe){
+  if(!foe||!foe.giant)return false;
+  Game.gheart=Game.gheart||0;
+  if(Game.gheart>=5)return false;
+  if(Math.random()>=0.2)return false;
+  Game.gheart++;Game.bonusHp+=10;
+  const p=Game.p;p.mhp+=10;p.hp=Math.min(p.mhp,p.hp+10);updateBars();
+  return true;
 }
 // エンディング成績表（テスト可能に関数化）：なんいど・ずかん・せきひ入り
 function edStatsText(sec){
