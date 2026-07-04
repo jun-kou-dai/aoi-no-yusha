@@ -5013,7 +5013,7 @@ async function enemyAction(){
     return;
   }
   // とり系：まいあがって つぎの こうげきを かわす
-  if((foe===FOES.crow||foe===FOES.bat||foe===FOES.dcrow)&&!bt.soar&&Math.random()<0.25){
+  if((foe===FOES.crow||foe===FOES.bat||foe===FOES.dcrow||foe===FOES.dbat)&&!bt.soar&&Math.random()<0.25){
     bt.soar=true;
     sfxSoar();
     await say(foe.name+'は そらたかく まいあがった！');
