@@ -527,7 +527,7 @@ cave:{
  'CEFCFFFFFFCFFFCFFFFC',
  'CFFFFFCFFFFFFFCFFCFC',
  'CCFFFCCCFFFCCFFFCCFC',
- 'CCCCFFFFFFFCCCFFFCCC',
+ 'CCCCFFFFFFFCCCFFECCC',
  'CCCCCCCCCCCCCCCCCCCC'],
  start:{x:3,y:1},
  spawns:[
@@ -543,7 +543,8 @@ cave:{
   {x:10,y:10, item:'seisui'}],
  exits:[
   {x:2,y:1,to:'forest',tx:17,ty:12,msg:'うっそうとした もりに でた。'},
-  {x:1,y:9,to:'ice',tx:3,ty:7,msg:'しろい こおりの せかいへ つづく あなが あった…'}],
+  {x:1,y:9,to:'ice',tx:3,ty:7,msg:'しろい こおりの せかいへ つづく あなが あった…'},
+  {x:16,y:12,to:'cave2',tx:16,ty:1,msg:'ふかい たてあなを おりていく…'}],
  npcs:[{x:1,y:9,kind:'musume',small:true,child:true,col:'#f0d8a0',msg:[]},
   {x:10,y:6,kind:'stone',col:'#9aa4b8',stoneKey:'t3',msg:['せきひ「されど ひとりが といた。\n── なぜ ひかりは すべてを すくわぬのか、と。」']}]},
 castle:{
@@ -644,7 +645,37 @@ volcano:{
   {x:5, y:2, item:'taneH'}],
  exits:[
   {x:1,y:6,to:'ice',tx:16,ty:7,msg:'こおりの せかいへ もどってきた。'},
-  {x:18,y:6,to:'castle',tx:10,ty:11,msg:'ほのおの おくに そびえる まおうのしろに たどりついた…！'}]}};
+  {x:18,y:6,to:'castle',tx:10,ty:11,msg:'ほのおの おくに そびえる まおうのしろに たどりついた…！'}]},
+cave2:{
+ song:'cave', bg:['#050308','#0c0712'], dark:true, darkR:2.7,
+ map:[
+ 'CCCCCCCCCCCCCCCCCCCC',
+ 'CCCCCCCCCCCCCCCFFECC',
+ 'CCCCCCCCCFFFCCCFFFCC',
+ 'CCCCCCCCCFFFFFFFFFCC',
+ 'CCCCCCCCCFFFCCCCCCCC',
+ 'CCFFFCCCCCFCCCCCCCCC',
+ 'CCFFFCCCFFFFFCCCCCCC',
+ 'CCFFFFFFFFFFFCCCCCCC',
+ 'CCCFCCCCFFFFFCCCCCCC',
+ 'CCCFCCCCCCCCCCFFFFCC',
+ 'CCFFFFCCCFFFCCFFFFCC',
+ 'CCFFFFFFFFFFFFFFFFCC',
+ 'CCCCCCCCCFFFCCFFFFCC',
+ 'CCCCCCCCCCCCCCCCCCCC'],
+ start:{x:16,y:1},
+ spawns:[
+  {id:'dbat', x:12,y:3},
+  {id:'dbat', x:9, y:7},
+  {id:'gskel',x:3, y:10},
+  {id:'gskel',x:10,y:11},
+  {id:'bonewarden',x:15,y:11}],
+ chests:[
+  {x:2, y:5,  item:'taneH'},
+  {x:11,y:12, item:'seisui'},
+  {x:17,y:9,  item:'tane'}],
+ exits:[
+  {x:17,y:1,to:'cave',tx:14,ty:12,msg:'どうくつ B1に もどってきた。'}]}};
 let MAP=WORLDS.grass.map,SPAWNS=WORLDS.grass.spawns,CHESTS=WORLDS.grass.chests,
     SPRING=WORLDS.grass.spring,BZONE=WORLDS.grass.bzone;
 const tileAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?'T':MAP[y][x];
@@ -718,7 +749,10 @@ const FOES={
   frostlord:{name:'さまよう ひょうじん', hp:74, atk:32, def:10, exp:95, g:55, col:'#bfe6ff', draw:'golem', v:'frost', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.9, iceMul:0, dodge:0},
   magmalord:{name:'さまよう マグマじん', hp:88, atk:36, def:12, exp:120, g:70, col:'#ff7a3a', draw:'golem', v:'magma', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:0, iceMul:1.9, dodge:0},
   icewarden:{name:'こおりの ばんへい', hp:110, atk:27, def:13, exp:110, g:80, col:'#8fc8e8', draw:'golem', v:'ice', hunter:true, huge:true, mboss:true, winMsg:'ばんへいは こおりの かけらと なって くだけちった！\nむすめを たすけださねば！'},
-  chaoslord:{name:'こんとんの きょじん', hp:120, atk:40, def:14, exp:200, g:150, col:'#a88ae8', draw:'golem', v:'iron', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.2, iceMul:1.2, dodge:0}};
+  chaoslord:{name:'こんとんの きょじん', hp:120, atk:40, def:14, exp:200, g:150, col:'#a88ae8', draw:'golem', v:'iron', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.2, iceMul:1.2, dodge:0},
+  dbat:{name:'やみこうもり', hp:36, atk:17, def:6, exp:38, g:15, col:'#b090e0', draw:'crow', v:'bat', physMul:1, fireMul:1.3, iceMul:1, dodge:0.28},
+  gskel:{name:'がいこつけんし', hp:52, atk:19, def:8, exp:52, g:22, col:'#e0d8c8', draw:'golem', v:'bone', physMul:0.6, fireMul:1.5, iceMul:1, dodge:0},
+  bonewarden:{name:'ほねの きょへい', hp:96, atk:24, def:11, exp:115, g:95, col:'#d8d0b8', draw:'golem', v:'bone', huge:true, mboss:true, still:true, winMsg:'ほねの きょへいは がらがらと くずれおちた。\nおくに たからばこが みえる…！', physMul:0.6, fireMul:1.6, iceMul:0.8, dodge:0}};
 const SHOP=[
   {id:'w1',label:'どうのつるぎ',cost:30,atk:5},
   {id:'w2',label:'はがねのつるぎ',cost:90,atk:12},
@@ -1414,7 +1448,7 @@ function bookUnknownCard(id,f){
 const BOOK_ISLES=[
   ['むらの そうげん',['slime','crow','golem']],
   ['ふかい もり',['mslime','yamabato','ent']],
-  ['どうくつ',['bat','hslime','skel','mboss']],
+  ['どうくつ',['bat','hslime','skel','mboss','dbat','gskel','bonewarden']],
   ['こおりの せかい',['islime','scrow','fgolem','icewarden','frostlord']],
   ['かざんの しま',['lslime','ecrow','mgolem','magmalord']],
   ['まおうの しろ',['dslime','dcrow','chaoslord','boss','boss2']]];
@@ -1435,7 +1469,10 @@ const BOOK_TRAITS={
   icewarden:['ヴォルガの めいで むすめを さらった ばんにん','とうめいマントも みやぶって おいかけてくる'],
   magmalord:['ちかづくと きづいて おいかけてくる','なんいど「しんわ」で さらに つよくなる'],
   gslime:['たたかわず すぐ にげる','守備が 高く 攻撃が きかない','たおすと 大金'],
-  metal:['すぐ にげる','守備が 非常に 高い','たおすと 経験値 特大']};
+  metal:['すぐ にげる','守備が 非常に 高い','たおすと 経験値 特大'],
+  dbat:['そらを とぶ','どくを つける'],
+  gskel:['かたい ほねは ぶきが ききにくい','ほのおの じゅもんが よくきく'],
+  bonewarden:['ちからを ためる','ちそこの たからを まもる ばんにん']};
 function bookElemBadges(f){
   const b=[];
   if(f.def>=20)b.push(['imm','物理 ほぼ無効']);
@@ -2087,6 +2124,7 @@ function questText(){
   if(Game.hidden.k1&&!Game.hidden.k2)return Game.mapId==='ice'?'もくてき：こおりの おくで むすめを すくいだせ！':'もくてき：さらわれた むすめを おえ！ こおりの せかいへ！';
   if(Game.hidden.k2&&!Game.hidden.k3)return 'もくてき：むらの じいさんの もとへ';
   if(Game.mapId==='castle')return 'もくてき：やみのおう ヴォルガを たおせ！';
+  if(Game.mapId==='cave2')return 'もくてき：ちそこ どうくつを たんけんせよ';
   if(Game.mbossDown)return Game.mapId==='volcano'?'もくてき：火山の おくの しろへ すすめ':'もくてき：こおりと ほのおの おくの しろへ';
   if(Game.mapId==='cave')return 'もくてき：どうくつの おくへ（くろがねゴーレムが まちうける）';
   return 'もくてき：きたの だいちの どうくつへ むかえ';
@@ -2100,7 +2138,8 @@ const HIDDENS=[
  {map:'cave',x:16,y:3,key:'h5',item:'seisui',msg:'いわの すきまが あおく ひかっている…\nまほうのせいすいを てにいれた！'},
  {map:'ice',x:7,y:11,key:'h6',taneM:true,msg:'ゆきの したから ふしぎなたねが…！\nさいだいMPが 6 あがった！'},
  {map:'volcano',x:11,y:10,key:'h7',gold:80,msg:'ようがんの そばに とけのこった ふくろ…\n80ゴールドも はいっている！'},
- {map:'castle',x:2,y:3,key:'h8',gold:120,msg:'いにしえの ゆうしゃの さいふだ…！\n120ゴールドを てにいれた！'}];
+ {map:'castle',x:2,y:3,key:'h8',gold:120,msg:'いにしえの ゆうしゃの さいふだ…！\n120ゴールドを てにいれた！'},
+ {map:'cave2',x:2,y:11,key:'h9',gold:100,msg:'ほねの やまの かげに ふるびた ふくろが…\n100ゴールドを てにいれた！'}];
 function openChest(c){
   const p=Game.p;
   if(Game.chestsOpen.includes(c))return;
@@ -3280,7 +3319,7 @@ function drawFieldScene(){
   if(wld.dark){
     const pc=isoCtr(Game.p.px,Game.p.py);
     const pcy=pc.y-entLift(Game.p)-TW*0.2;
-    const r=TW*(3.6+Math.sin(TM*5.3)*0.10+Math.sin(TM*9.1)*0.06);
+    const r=TW*((wld.darkR||3.6)+Math.sin(TM*5.3)*0.10+Math.sin(TM*9.1)*0.06);
     const dg2=ctx.createRadialGradient(pc.x,pcy,TW*0.8,pc.x,pcy,r);
     dg2.addColorStop(0,'rgba(3,2,9,0)');
     dg2.addColorStop(0.55,'rgba(3,2,9,0.34)');
@@ -4600,6 +4639,8 @@ async function runBattle(ref){
   else if(foe===FOES.ent)await say('こけむした きょじんが ゆくてを ふさいでいる…！');
   else if(foe===FOES.fgolem)await say('こおりの きょじんが ゆくてを ふさいでいる…！');
   else if(foe===FOES.mgolem)await say('ようがんの きょじんが ゆくてを ふさいでいる…！');
+  else if(foe===FOES.icewarden)await say('こおりの ばんへいが むすめを かばうように たちはだかる…！');
+  else if(foe===FOES.bonewarden)await say('しろい きょへいが たからを まもるように たちはだかる…！');
   else if(foe.mboss)await say('くろがねの きょたいが ゆくてを ふさいでいる…！');
   while(true){
     const skip=await playerStatusTick();
@@ -4661,7 +4702,7 @@ async function playerStatusTick(){
 async function tryInflict(foe){
   const p=Game.p,bt=Game.bt;
   let type=null,prob=0;
-  if(foe===FOES.bat){type='poison';prob=0.35;}
+  if(foe===FOES.bat||foe===FOES.dbat){type='poison';prob=0.35;}
   else if(foe===FOES.dcrow){type='poison';prob=0.42;}
   else if(foe===FOES.dslime){type=(Math.random()<0.5?'sleep':'para');prob=0.5;}
   else if(foe===FOES.mboss){type='para';prob=0.3;}
@@ -4784,7 +4825,7 @@ async function playerAction(act){
     }
     if(!crit&&(bt.foe.physMul||1)<0.9&&!bt.hintP){
       bt.hintP=true;
-      await say('いわの からだは こうげきを はんぶんに してしまう…！');
+      await say((bt.foe.v==='bone'?'かたい ほねは':'いわの からだは')+' こうげきを はんぶんに してしまう…！');
     }
   }else if(act.kind==='mera'){
     p.mp-=3;updateBars();
@@ -4979,7 +5020,7 @@ async function enemyAction(){
     return;
   }
   // ゴーレム系：3ターンしゅうきで ちからを ためる
-  if((foe===FOES.golem||foe===FOES.mboss)&&!bt.charge&&bt.turn%3===2){
+  if((foe===FOES.golem||foe===FOES.mboss||foe===FOES.bonewarden)&&!bt.charge&&bt.turn%3===2){
     bt.charge=true;
     sfxCharge();
     shakeBattle(4,0.4);
@@ -5380,7 +5421,7 @@ const BT_VOLCANO={sky:[[0,'#1c0606'],[0.30,'#3a0e0a'],[0.50,'#7a1f10'],[0.60,'#c
   mtn:['#4e1a10','#2e0d08','#1a0605'],ground:['#42160f','#2c0f0a','#170806'],stars:0,
   pg:'255,148,66',fog:'150,72,52',bokeh:'255,170,92'};
 function battleTheme(bt){
-  if(Game.mapId==='cave')return BT_CAVE;
+  if(Game.mapId==='cave'||Game.mapId==='cave2')return BT_CAVE;
   if(Game.mapId==='castle')return BT_CASTLE;
   if(Game.mapId==='forest')return BT_FOREST;
   if(Game.mapId==='ice')return BT_ICE;
