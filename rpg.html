@@ -239,6 +239,20 @@ body{
 #bookclose:active{ transform:scale(.92); }
 #bookbody{ padding:6px 16px; }
 .bsec-note{ font-size:.85em; line-height:1.8; color:#cdd5ef; margin:10px 2px 4px; }
+#statuswin{ position:fixed; inset:0; z-index:200; display:none; justify-content:center; align-items:flex-start;
+  background:rgba(6,10,28,.82); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); overflow:auto; padding:20px 10px; }
+#statuswin.show{ display:flex; }
+#statuspanel{ width:100%; max-width:520px; max-height:94vh; overflow-y:auto; padding:0 0 18px; color:var(--text); }
+#statushead{ position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between;
+  padding:13px 18px; font-size:1.12em; font-weight:700; letter-spacing:.06em;
+  background:var(--indigo); border-bottom:1px solid var(--line); border-radius:10px 10px 0 0; }
+#statusclose{ cursor:pointer; padding:4px 12px; border-radius:8px; background:rgba(255,255,255,.10); font-size:.82em; }
+#statusclose:active{ transform:scale(.92); }
+#statusbody{ padding:6px 16px; }
+.strow{ display:flex; justify-content:space-between; align-items:baseline; padding:7px 4px; border-bottom:1px dashed rgba(160,170,210,.18); font-size:.95em; }
+.strow .stlabel{ color:#cdd5ef; }
+.strow .stval{ font-weight:700; letter-spacing:.04em; }
+.strow .stsub{ font-size:.78em; color:#9aa6cc; font-weight:400; margin-left:8px; }
 .bisle{ margin:18px 0 8px; font-size:1.05em; color:#ffe6a8; letter-spacing:.08em;
   border-left:4px solid var(--amber); padding-left:9px; }
 .bmon{ background:rgba(255,255,255,.045); border:1px solid var(--line); border-radius:10px; padding:9px 12px; margin:7px 0; }
@@ -396,6 +410,7 @@ body{
   </div>
 
   <div id="bookwin"><div id="bookpanel" class="glass"><div id="bookhead"><span>📕 冒険の書</span><span id="bookclose">✕ とじる</span></div><div id="bookbody"></div></div></div>
+  <div id="statuswin"><div id="statuspanel" class="glass"><div id="statushead"><span>💪 つよさ</span><span id="statusclose">✕ とじる</span></div><div id="statusbody"></div></div></div>
   <div id="mute" class="glass" title="サウンド">
     <svg viewBox="0 0 24 24" fill="none" stroke="#e7e0c8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="4,9 8,9 13,4.5 13,19.5 8,15 4,15" fill="rgba(231,224,200,.85)" stroke="none"/>
@@ -1570,6 +1585,48 @@ function renderBook(){
     +'</div>';
   return h;
 }
+function renderStatus(){
+  const p=Game.p,lv=p.lv;
+  const row=(l,v,sub)=>'<div class="strow"><span class="stlabel">'+l+'</span><span class="stval">'+v+(sub?'<span class="stsub">'+sub+'</span>':'')+'</span></div>';
+  const wname=Game.weaponAtk>=26?'ゆうしゃのつるぎ':Game.weaponAtk>=20?'ほのおのつるぎ':Game.weaponAtk>=12?'はがねのつるぎ':Game.weaponAtk>=5?'どうのつるぎ':'すで';
+  const aname=(Game.armorDef||0)>=16?'はがねのよろい':(Game.armorDef||0)>=9?'くさりかたびら':(Game.armorDef||0)>=4?'かわのよろい':'ぬののふく';
+  const nextExp=lv<MAXLV?(LEVELS[lv+1].exp-p.exp):null;
+  let h='<h3 class="bisle">のうりょく</h3>';
+  h+=row('レベル',lv);
+  h+=row('けいけんち',p.exp,(nextExp!=null?'つぎまで あと '+nextExp:'さいだいレベル'));
+  h+=row('HP',p.hp+' / '+p.mhp);
+  h+=row('MP',p.mp+' / '+p.mmp);
+  h+=row('こうげき',p.atk,'Lv'+LEVELS[lv].atk+(Game.weaponAtk?' + ぶき'+Game.weaponAtk:'')+(p.bonusAtk?' + たね'+p.bonusAtk:''));
+  h+=row('しゅび',p.def,'Lv'+LEVELS[lv].def+((Game.armorDef||0)?' + よろい'+Game.armorDef:'')+(Game.shield?' + たて6':'')+((Game.bonusDef||0)?' + まもり'+Game.bonusDef:''));
+  h+='<h3 class="bisle">そうび</h3>';
+  h+=row('ぶき',wname,Game.weaponAtk?('こうげき +'+Game.weaponAtk):'');
+  h+=row('よろい',aname,(Game.armorDef||0)?('しゅび +'+Game.armorDef):'');
+  h+=row('たて',Game.shield?'てつのたて':'なし',Game.shield?'しゅび +6':'');
+  {const dj=[];if(Game.door)dj.push('どこでもドア');if(Game.cloak)dj.push('とうめいマント');if(Game.book)dj.push('冒険の書');if(Game.mkey)dj.push('まほうのかぎ');
+   h+='<h3 class="bisle">だいじなもの</h3>'+row('',dj.length?dj.join('　'):'なし');}
+  {const sp=[['メラ',1],['キアリー',2],['ギラ',3],['ヒャド',4],['ベホイミ',5],['バイキルト',6],['ベギラマ',7],['ヒャダルコ',8]];
+   const learned=['ホイミ'].concat(sp.filter(s=>lv>=s[1]).map(s=>s[0]));
+   h+='<h3 class="bisle">おぼえた じゅもん</h3>'+row('',learned.join('　'));}
+  {const zAll=[].concat.apply([],BOOK_ISLES.map(pr=>pr[1])).concat(BOOK_SPECIAL);
+   const zk=zAll.filter(id=>Game.seen&&Game.seen[id]).length;
+   const sk=['t1','t2','t3','t4','t5'].filter(k=>Game.hidden&&Game.hidden[k]).length;
+   h+='<h3 class="bisle">きろく</h3>';
+   h+=row('なんいど',curDiff().name,(Game.ng?(Game.ng+1)+'しゅうめ':''));
+   h+=row('ずかん',zk+' / '+zAll.length);
+   h+=row('せきひ',sk+' / 5');
+   h+=row('きょじんのこころ',(Game.gheart||0)+' / 5');
+   h+=row('しょうごう',(Game.hidden&&Game.hidden.zkomp)?'まものはかせ':'──');}
+  return h;
+}
+function openStatus(){
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
+  const w=document.getElementById('statuswin');if(!w)return;
+  document.getElementById('statusbody').innerHTML=renderStatus();
+  w.classList.add('show');Game.statusOpen=true;
+  held.length=0;swipeVec=null;ptr=null;
+  if(typeof sfxSel==='function')sfxSel();
+}
+function closeStatus(){const w=document.getElementById('statuswin');if(w)w.classList.remove('show');Game.statusOpen=false;}
 function openBook(){
   const w=document.getElementById('bookwin');if(!w)return;
   document.getElementById('bookbody').innerHTML=renderBook();
@@ -1814,6 +1871,12 @@ $('#bookbtn').addEventListener('pointerdown',e=>{
 });
 $('#bookclose').addEventListener('pointerdown',e=>{
   e.stopPropagation();closeBook();
+});
+$('#fstat').addEventListener('pointerdown',e=>{
+  e.stopPropagation();firstGesture();openStatus();
+});
+$('#statusclose').addEventListener('pointerdown',e=>{
+  e.stopPropagation();closeStatus();
 });
 $('#bookbody').addEventListener('pointerdown',e=>{
   const b=e.target.closest('[data-buy]');
@@ -2478,7 +2541,7 @@ function updateField(dt){
     }
   }
   // エンカウント
-  if(!Game.battling&&!Game.talking&&!Game.transiting&&!Game.bookOpen&&Game.grace<=0){
+  if(!Game.battling&&!Game.talking&&!Game.transiting&&!Game.bookOpen&&!Game.statusOpen&&Game.grace<=0){
     for(const e of Game.enemies){
       if(Game.invisible&&e.def&&!e.def.boss&&!e.def.mboss)continue; // とうめい中は つうじょうの てきが はんのうしない（ボス/中ボスは のぞく）
       if(Math.hypot(p.px-e.px,p.py-e.py)<0.85){startEncounter(e);break;}
