@@ -467,7 +467,8 @@ grass:{
    msg3:['むらびと「こおりの せかいには さまよう きょじんが いるって…。\nちかづくと おいかけて くるらしいわ！」'],
    msg4:['むらびと「ヴォルガって もとは わるいひとじゃ なかったって\nおばあちゃんが いってたけど… ほんとう かしら。」']},
   {x:5,y:9,shop:true,kind:'shop',col:'#e8c880',msg:[]},
-  {x:1,y:11,kind:'musume',role:'haha',col:'#e8b0c0',msg:[]}],
+  {x:1,y:11,kind:'musume',role:'haha',col:'#e8b0c0',msg:[]},
+  {x:14,y:9,kind:'stone',col:'#9aa4b8',stoneKey:'t1',msg:['せきひ「ひかりのたまは よを てらす。\nこれを まもる ものを ── けいしょうしゃ と よぶ。」']}],
  king:{x:3,y:10}},
 forest:{
  song:'field', bg:['#0a1f12','#13301d'],
@@ -491,7 +492,8 @@ forest:{
  npcs:[
   {x:4,y:3,kind:'ojii',col:'#a8c86a',msg:['きこり「もりの おくに ぬしが おる。レベル5に なったら\nみちを ふさぐ きが どいて くれるじゃろう。」','きこり「やまばとは すばしっこいぞ。\nじゅもんなら かわされんがな！」'],
    msg2:['きこり「ぬしを しずめたか、たいしたもんじゃ！\nどうくつの おくは ひえる。あたたかくして ゆけ。」'],
-   msg4:['きこり「まおうの しろへ いくのか…。\nむりは するな。かならず もどって こいよ！」']}],
+   msg4:['きこり「まおうの しろへ いくのか…。\nむりは するな。かならず もどって こいよ！」']},
+  {x:11,y:6,kind:'stone',col:'#9aa4b8',stoneKey:'t2',msg:['せきひ「けいしょうしゃは ふたり おった。\nひかりを わけあい、せかいを まもって おった。」']}],
  spawns:[
   {id:'mslime', x:8, y:8},
   {id:'yamabato',x:13,y:8},
@@ -534,7 +536,8 @@ cave:{
  exits:[
   {x:2,y:1,to:'forest',tx:17,ty:12,msg:'うっそうとした もりに でた。'},
   {x:1,y:9,to:'ice',tx:3,ty:7,msg:'しろい こおりの せかいへ つづく あなが あった…'}],
- npcs:[{x:1,y:9,kind:'musume',small:true,child:true,col:'#f0d8a0',msg:[]}]},
+ npcs:[{x:1,y:9,kind:'musume',small:true,child:true,col:'#f0d8a0',msg:[]},
+  {x:10,y:6,kind:'stone',col:'#9aa4b8',stoneKey:'t3',msg:['せきひ「されど ひとりが といた。\n── なぜ ひかりは すべてを すくわぬのか、と。」']}]},
 castle:{
  song:'castle', bg:['#0a0410','#15071c'],
  map:[
@@ -582,7 +585,8 @@ ice:{
  npcs:[
   {x:3,y:9,kind:'musume',col:'#bfe0ff',msg:['たびびと「さまよう ひょうじんを みたわ…！\nちかづくと おいかけて くるのよ！」','たびびと「こおりの まものには ほのおの じゅもんが きくわ。\nメラより ギラ、ギラより ベギラマよ！」'],
    msg4:['たびびと「しろに いどむのね…。\nあなたなら きっと やれるわ！」'],
-   msgNight:['たびびと「よるの こおりは しんと しずか…。\nきょじんの あしおとだけが きこえるの。こわいわ…。」']}],
+   msgNight:['たびびと「よるの こおりは しんと しずか…。\nきょじんの あしおとだけが きこえるの。こわいわ…。」']},
+  {x:13,y:11,kind:'stone',col:'#9aa4b8',stoneKey:'t4',msg:['せきひ「こたえなき まま、かれは やみに こたえを もとめた。\nひとびとは かれの なを わすれた。」']}],
  spawns:[
   {id:'islime',x:9, y:6},
   {id:'islime',x:13,y:9},
@@ -616,7 +620,8 @@ volcano:{
  spring:{x:16,y:11},
  npcs:[
   {x:3,y:5,kind:'ojii',col:'#e8a86a',msg:['ほりびと「ようがんの きょじんが うろついとるぞ！\nひえた こころで ヒャドを ぶちこむんじゃ！」','ほりびと「ひがしの おくが まおうの しろの いりぐちだ。\nようがんの きょじんが ばんを しとるがな。」'],
-   msg4:['ほりびと「しろの まものは やみの けはいを まとっとる。\nせいすいを もって いくと いいぞ。」']}],
+   msg4:['ほりびと「しろの まものは やみの けはいを まとっとる。\nせいすいを もって いくと いいぞ。」']},
+  {x:9,y:5,kind:'stone',col:'#9aa4b8',stoneKey:'t5',msg:['せきひ「もし つぎの けいしょうしゃに あえたら つたえてくれ。\n── かれは、ないて いた と。」']}],
  spawns:[
   {id:'lslime',x:15,y:6},
   {id:'lslime',x:4, y:10},
@@ -1830,6 +1835,7 @@ async function talkNpc(n){
   }
   else{
     // ゴーレムを たおしたあとは セリフが かわる
+    if(n.kind==='stone'&&n.stoneKey&&!Game.hidden[n.stoneKey]){Game.hidden[n.stoneKey]=true;sfxChest();toast('こだいの せきひを みつけた！');}
     const lines=pickNpcLines(n); // 進行ステージ＋夜ぶんき
     for(const m of lines)await say(m);
   }
@@ -3865,6 +3871,21 @@ function drawNpc(n){
   ctx.beginPath();ctx.ellipse(c.x+ts*0.02,fy,ts*0.19,ts*0.065,0,0,Math.PI*2);ctx.fill();
   ctx.save();
   ctx.translate(c.x,fy);
+  if(n.kind==='stone'){
+    // せきひ：いしばん＋ひかる きざみもじ（ひとの からだは えがかない）
+    const sg=ctx.createLinearGradient(0,-ts*0.62,0,0);
+    sg.addColorStop(0,'#9aa4b8');sg.addColorStop(1,'#4a5468');
+    ctx.fillStyle=sg;
+    ctx.beginPath();
+    ctx.moveTo(-ts*0.16,0);ctx.lineTo(-ts*0.16,-ts*0.44);
+    ctx.quadraticCurveTo(0,-ts*0.66,ts*0.16,-ts*0.44);
+    ctx.lineTo(ts*0.16,0);ctx.closePath();ctx.fill();
+    ctx.strokeStyle=OL;ctx.lineWidth=olw;ctx.stroke();
+    const sglow=0.5+Math.sin(TM*2.2+n.x)*0.25;
+    ctx.fillStyle='rgba(140,220,255,'+sglow.toFixed(2)+')';
+    for(let si=0;si<3;si++)ctx.fillRect(-ts*0.085,-ts*(0.5-si*0.115),ts*0.17,ts*0.028);
+    ctx.restore();return;
+  }
   // からだ（ローブ）
   const bg=ctx.createLinearGradient(0,-ts*0.55,0,0);
   bg.addColorStop(0,n.col);bg.addColorStop(1,mix(n.col,'#101428',0.45));
@@ -5015,20 +5036,29 @@ async function bossDefeat(){
   MSG=null;msgtextEl.textContent='';
   showUI('ui-ending');
   const sec=Math.max(1,Math.round((performance.now()-Game.t0)/1000));
-  const mm=Math.floor(sec/60),ss=String(sec%60).padStart(2,'0');
   let rank='B';
   if(sec<=480&&Game.dmgTaken<=80)rank='S';
   else if(sec<=720&&Game.dmgTaken<=160)rank='A';
   $('#erank').textContent=rank;
   $('#erank').className='eline rank-'+rank.toLowerCase();
-  $('#estats').textContent='クリアタイム '+mm+':'+ss+'　／　うけたダメージ '+Game.dmgTaken+'　／　レベル '+Game.p.lv+'　まもの '+Game.kills+'たい';
-  $('#estats2').textContent='ぼうけんのきろく：たたかい '+Game.stats.battles+'かい　／　かいしんのいちげき '+Game.stats.crits+'かい　／　ぜんめつ '+Game.stats.deaths+'かい　／　たからばこ '+Game.chestsOpen.length+'こ';
+  const _ed=edStatsText(sec);
+  $('#estats').textContent=_ed[0];
+  $('#estats2').textContent=_ed[1];
   for(const id of['el1','el2','el3','erank','estats','estats2','eend'])$('#'+id).classList.remove('show');
   $('#btn-title2').classList.remove('shown');
   playSong('ending');
   await fadeTo(0,1.8);
   fadeColor('#070b1e');
   Game.battling=false;
+}
+// エンディング成績表（テスト可能に関数化）：なんいど・ずかん・せきひ入り
+function edStatsText(sec){
+  const mm=Math.floor(sec/60),ss=String(sec%60).padStart(2,'0');
+  const zAll=[].concat.apply([],BOOK_ISLES.map(pr=>pr[1])).concat(BOOK_SPECIAL);
+  const zk=zAll.filter(id=>Game.seen&&Game.seen[id]).length;
+  const sk=['t1','t2','t3','t4','t5'].filter(k=>Game.hidden&&Game.hidden[k]).length;
+  return ['なんいど '+curDiff().name+'　／　クリアタイム '+mm+':'+ss+'　／　うけたダメージ '+Game.dmgTaken+'　／　レベル '+Game.p.lv+'　まもの '+Game.kills+'たい',
+    'たたかい '+Game.stats.battles+'かい　／　かいしん '+Game.stats.crits+'かい　／　ぜんめつ '+Game.stats.deaths+'かい　／　たから '+Game.chestsOpen.length+'こ　／　ずかん '+zk+'/'+zAll.length+'　／　せきひ '+sk+'/5'];
 }
 // ぜんめつ：ゴールドはんぶんを うしない おうのやかたの まえで いきかえる
 async function defeat(){
