@@ -562,6 +562,7 @@ castle:{
   {id:'dslime',x:5, y:8},
   {id:'dcrow', x:14,y:8},
   {id:'dslime',x:9, y:5},
+  {id:'chaoslord',x:16,y:10,ng:1},
   {id:'boss',x:10,y:2}],
  chests:[{x:2,y:10,item:'taneM'}],
  exits:[{x:9,y:12,to:'volcano',tx:17,ty:6,msg:'ねっぷうの せかいへ もどってきた。'}]},
@@ -700,7 +701,8 @@ const FOES={
   ecrow:{name:'ほのおがらす',   hp:46, atk:20, def:8,  exp:44, g:18, col:'#ff8a6a', draw:'crow',  v:'ember', physMul:1,   fireMul:0.4, iceMul:1.7, dodge:0.22},
   mgolem:{name:'ようがんの きょじん', hp:104,atk:23, def:12, exp:96, g:66, col:'#e87a4a', draw:'golem', v:'magma', mboss:true, still:true, winMsg:'ようがんの きょじんは マグマの うみに しずんでいった。\nゆくてに そびえる まおうの しろが、その すがたを あらわす…！', physMul:0.7, fireMul:0, iceMul:2.0, dodge:0},
   frostlord:{name:'さまよう ひょうじん', hp:74, atk:32, def:10, exp:95, g:55, col:'#bfe6ff', draw:'golem', v:'frost', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.9, iceMul:0, dodge:0},
-  magmalord:{name:'さまよう マグマじん', hp:88, atk:36, def:12, exp:120, g:70, col:'#ff7a3a', draw:'golem', v:'magma', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:0, iceMul:1.9, dodge:0}};
+  magmalord:{name:'さまよう マグマじん', hp:88, atk:36, def:12, exp:120, g:70, col:'#ff7a3a', draw:'golem', v:'magma', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:0, iceMul:1.9, dodge:0},
+  chaoslord:{name:'こんとんの きょじん', hp:120, atk:40, def:14, exp:200, g:150, col:'#a88ae8', draw:'golem', v:'iron', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.2, iceMul:1.2, dodge:0}};
 const SHOP=[
   {id:'w1',label:'どうのつるぎ',cost:30,atk:5},
   {id:'w2',label:'はがねのつるぎ',cost:90,atk:12},
@@ -739,7 +741,7 @@ function loadMap(id){
   Game.mapId=id;
   Game.visited=Game.visited||{};Game.visited[id]=true; // 訪問記録（どこでもドアの 行き先かいきん）
   MAP=w.map;SPAWNS=w.spawns;CHESTS=w.chests;SPRING=w.spring||null;BZONE=w.bzone||null;
-  Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
+  Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
     seed:rnd(9),timer:rnd(0.5,1.5),moving:null}));
   Game.respawnQ=[];
   Game.inVillage=false;
@@ -1399,7 +1401,7 @@ const BOOK_ISLES=[
   ['どうくつ',['bat','hslime','skel','mboss']],
   ['こおりの せかい',['islime','scrow','fgolem','frostlord']],
   ['かざんの しま',['lslime','ecrow','mgolem','magmalord']],
-  ['まおうの しろ',['dslime','dcrow','boss','boss2']]];
+  ['まおうの しろ',['dslime','dcrow','chaoslord','boss','boss2']]];
 const BOOK_SPECIAL=['gslime','metal'];
 const BOOK_TRAITS={
   slime:['たまに にげだす'],
@@ -1407,6 +1409,7 @@ const BOOK_TRAITS={
   golem:['ちからを ためる（つよい いちげき）'],
   bat:['そらを とぶ','どくを つける'],
   hslime:['HPが へると ホイミで じぶんを かいふくする','はやめに たたみかけよう'],
+  chaoslord:['2しゅうめ いこうにだけ あらわれる','ちかづくと きづいて おいかけてくる'],
   mboss:['ちからを ためる','まひを つける'],
   dslime:['ねむり・まひを つける'],
   dcrow:['そらを とぶ','どくを つける'],
