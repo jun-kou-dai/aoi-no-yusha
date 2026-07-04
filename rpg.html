@@ -197,14 +197,20 @@ body{
   font-size:clamp(12px,1.9vmin,14px); letter-spacing:.1em; color:#e8e2cc; gap:6px; }
 #savebtn:hover{ opacity:1; }
 #savebtn:active{ transform:scale(.94); }
-#doorbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 50px); right:12px; z-index:70;
+#itembtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 50px); right:12px; z-index:70;
+  height:42px; padding:0 16px; border-radius:21px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; pointer-events:auto; opacity:.92; transition:opacity .2s, transform .12s;
+  font-size:clamp(12px,1.9vmin,14px); letter-spacing:.1em; color:#e8e2cc; gap:6px; }
+#itembtn:hover{ opacity:1; }
+#itembtn:active{ transform:scale(.94); }
+#doorbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 100px); right:12px; z-index:70;
   height:42px; padding:0 16px; border-radius:21px; display:none; align-items:center; justify-content:center;
   cursor:pointer; pointer-events:auto; opacity:.92; transition:opacity .2s, transform .12s;
   font-size:clamp(12px,1.9vmin,14px); letter-spacing:.1em; color:#e8e2cc; gap:6px; }
 #doorbtn.show{ display:flex; }
 #doorbtn:hover{ opacity:1; }
 #doorbtn:active{ transform:scale(.94); }
-#cloakbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 100px); right:12px; z-index:70;
+#cloakbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 150px); right:12px; z-index:70;
   height:42px; padding:0 16px; border-radius:21px; display:none; align-items:center; justify-content:center;
   cursor:pointer; pointer-events:auto; opacity:.92; transition:opacity .2s, transform .12s, box-shadow .2s, color .2s;
   font-size:clamp(12px,1.9vmin,14px); letter-spacing:.1em; color:#e8e2cc; gap:6px; }
@@ -212,7 +218,7 @@ body{
 #cloakbtn.on{ color:#cdbcff; box-shadow:0 0 0 2px rgba(150,120,255,.55), 0 0 16px rgba(140,110,255,.45); }
 #cloakbtn:hover{ opacity:1; }
 #cloakbtn:active{ transform:scale(.94); }
-#bookbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 150px); right:12px; z-index:70;
+#bookbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 200px); right:12px; z-index:70;
   display:none; align-items:center; gap:6px; padding:8px 12px; font-size:clamp(12px,2vmin,15px);
   color:#f2e6c2; cursor:pointer; pointer-events:auto; opacity:.92; user-select:none; transition:opacity .2s, transform .12s; }
 #bookbtn.show{ display:flex; }
@@ -346,6 +352,7 @@ body{
     <div id="toast" class="glass"></div>
     <div id="quest"></div>
     <div id="savebtn" class="glass">📖 きろく</div>
+    <div id="itembtn" class="glass">🧪 どうぐ</div>
     <div id="doorbtn" class="glass">🚪 どこでもドア</div>
     <div id="cloakbtn" class="glass">👻 とうめい</div>
     <div id="bookbtn" class="glass">📕 ずかん</div>
@@ -1703,6 +1710,9 @@ function getDirVec(){
 $('#savebtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();firstGesture();fieldSave();
 });
+$('#itembtn').addEventListener('pointerdown',e=>{
+  e.stopPropagation();firstGesture();useFieldItem();
+});
 $('#doorbtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();firstGesture();useDoor();
 });
@@ -1770,6 +1780,46 @@ async function useDoor(){
   const name=(ISLE.find(([id])=>id===sel)||[])[1]||'';
   const st=WORLDS[sel].start;
   await transitMap({to:sel,tx:st.x,ty:st.y,msg:name+'へ ドアを くぐった！'});
+}
+// フィールドで どうぐを つかう：🧪ボタン（やくそう／せいすい／どくけしそう・回復量は戦闘と同じ）
+async function useFieldItem(){
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
+  const p=Game.p;
+  startTalk();sfxSel();
+  while(true){
+    const usable=['yakuso','seisui','dokukesi'].filter(k=>(Game.items[k]||0)>0);
+    if(!usable.length){await say('つかえる どうぐを もっていない。\nおみせで やくそうを かっておこう。');break;}
+    const list=usable.map(k=>({id:k,label:(k==='seisui'?'せいすい':ITEMS[k].name)+' ×'+Game.items[k]}));
+    list.push({id:'back',label:'もどる'});
+    const c=await ask(list,'どうぐ（HP '+p.hp+'/'+p.mhp+'　MP '+p.mp+'/'+p.mmp+'）');
+    if(c==='back'||!c)break;
+    if(c==='yakuso'){
+      if(p.hp>=p.mhp){await say('HPは まんたんだ！');continue;}
+      Game.items.yakuso--;
+      sfxHeal();
+      const n=Math.min(p.mhp-p.hp,28+ri(0,6));
+      p.hp+=n;updateBars();flash('#9fe8b0',0.18,0.5);
+      {const q=playerChipPos();popup(q.x,q.y,'+'+n,'heal');}
+      await say('やくそうを つかった！\nHPが '+n+' かいふくした！');
+    }else if(c==='seisui'){
+      if(p.mp>=p.mmp){await say('MPは まんたんだ！');continue;}
+      Game.items.seisui--;
+      sfxHeal();
+      const n=Math.min(p.mmp-p.mp,14+ri(0,4));
+      p.mp+=n;updateBars();flash('#9fb6ff',0.18,0.5);
+      {const q=playerChipPos();popup(q.x,q.y,'+'+n,'heal');}
+      await say('せいすいを のんだ！\nMPが '+n+' かいふくした！');
+    }else if(c==='dokukesi'){
+      if(!p.poison){await say('いまは どくに かかっていない。');continue;}
+      Game.items.dokukesi--;
+      sfxHeal();
+      p.poison=false;updateBadge();flash('#c2f0c0',0.18,0.5);
+      {const q=playerChipPos();popup(q.x,q.y,'どく かいふく','heal');}
+      await say('どくけしそうを つかった！\nどくが すっかり きえさった！');
+    }
+  }
+  endTalk();
+  saveGame();
 }
 // とうめいマント：フィールドの 👻ボタンで ON/OFF。透明中は通常の敵が反応しない（歩数制）
 function toggleCloak(){
