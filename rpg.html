@@ -647,7 +647,8 @@ const DIFF={
  3:{name:'むずかしい', ehp:1.15, eatk:1.15, bhp:1.15, batk:1.12, exp:0.95, gold:0.95, capNorm:0.55, capHeavy:0.78, crit:1/20, bspecial:0.34, pcrit:0.115},
  4:{name:'ごくむず',   ehp:1.3,  eatk:1.3,  bhp:1.3,  batk:1.25, exp:0.85, gold:0.9,  capNorm:0.60, capHeavy:0.85, crit:1/18, bspecial:0.38, pcrit:0.13},
  5:{name:'でんせつ',   ehp:1.5,  eatk:1.8,  bhp:1.5,  batk:2.4,  exp:0.8,  gold:0.85, capNorm:0.65, capHeavy:0.90, crit:1/16, bspecial:0.42, pcrit:0.15, minFrac:0.30},
- 6:{name:'しんわ',     ehp:1.8,  eatk:2.2,  bhp:1.9,  batk:2.9,  exp:0.55, gold:0.6,  capNorm:0.80, capHeavy:0.95, crit:1/11, bspecial:0.52, pcrit:0.07, minFrac:0.45, giantHp:1.2, giantAtk:1.5}};
+ 6:{name:'しんわ',     ehp:1.8,  eatk:2.2,  bhp:1.9,  batk:2.9,  exp:0.55, gold:0.6,  capNorm:0.80, capHeavy:0.95, crit:1/11, bspecial:0.52, pcrit:0.07, minFrac:0.45, giantHp:1.2, giantAtk:1.5},
+ 7:{name:'しんぱん',   ehp:2.1,  eatk:2.6,  bhp:2.6,  batk:3.4,  exp:0.4,  gold:0.5,  capNorm:0.88, capHeavy:0.97, crit:1/9,  bspecial:0.60, pcrit:0.05, minFrac:0.55, giantHp:1.3, giantAtk:1.6, baiki:1.25}};
 function curDiff(){return DIFF[Game.diff]||DIFF[2];}
 // 稼ぎ敵(メタル/金スラ)は係数なし。中ボス・ボスはbhp/batk、通常はehp/eatk
 function diffEnemyHP(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.bhp:D.ehp;if(foe.giant&&D.giantHp)m*=D.giantHp;return m;}
@@ -771,7 +772,7 @@ function loadGame(){
   if(!d||!LEVELS[d.lv])return false;
   resetGame();
   const p=Game.p;
-  Game.diff=(d.diff>=1&&d.diff<=6)?d.diff:2; // なんいど（範囲外・未定義はふつう）
+  Game.diff=(d.diff>=1&&d.diff<=7)?d.diff:2; // なんいど（範囲外・未定義はふつう）
   p.lv=Math.min(MAXLV,d.lv);p.exp=d.exp||0;p.bonusAtk=d.bonusAtk||0;
   Game.gold=d.gold||0;Game.weaponAtk=d.weaponAtk||0;Game.shield=!!d.shield;
   Game.mbossDown=!!d.mbossDown;Game.springUsed=(d.springUsed&&typeof d.springUsed==='object')?d.springUsed:{};Game.saidYes=!!d.saidYes;
@@ -1429,7 +1430,7 @@ function renderBook(){
   h+='<div class="bsec-note">※ HP・こうげき・けいけんち・おかねは いまの なんいど「'+curDiff().name+'」・昼の あたい（よるは さらに ふえる）。しゅびは なんいど共通。EXP＝けいけんち／G＝おかね。</div>';
   h+='<h3 class="bisle">なんいど 係数（この値を 素の値に かけている）</h3>';
   h+='<div class="bdtbl"><table><thead><tr><th>なんいど</th><th>敵HP</th><th>敵こうげき</th><th>ボスHP</th><th>ボス攻撃</th><th>けいけんち</th><th>おかね</th></tr></thead><tbody>';
-  for(let d=1;d<=6;d++){ const DD=DIFF[d]; if(!DD)continue; const cur=(Game.diff===d)?' class="cur"':''; h+='<tr'+cur+'><td>'+DD.name+'</td><td>×'+DD.ehp+'</td><td>×'+DD.eatk+'</td><td>×'+DD.bhp+'</td><td>×'+DD.batk+'</td><td>×'+DD.exp+'</td><td>×'+DD.gold+'</td></tr>'; }
+  for(let d=1;d<=7;d++){ const DD=DIFF[d]; if(!DD)continue; const cur=(Game.diff===d)?' class="cur"':''; h+='<tr'+cur+'><td>'+DD.name+'</td><td>×'+DD.ehp+'</td><td>×'+DD.eatk+'</td><td>×'+DD.bhp+'</td><td>×'+DD.batk+'</td><td>×'+DD.exp+'</td><td>×'+DD.gold+'</td></tr>'; }
   h+='</tbody></table><div class="bsec-note">しゅびは どの なんいども 同じ。色つきの 行が いまの なんいど。</div></div>';
   for(const pair of BOOK_ISLES){ h+='<h3 class="bisle">'+pair[0]+'</h3>'+pair[1].map(bookMonCard).join(''); }
   h+='<h3 class="bisle">とくべつな まもの</h3>'+BOOK_SPECIAL.map(bookMonCard).join('');
@@ -4732,7 +4733,7 @@ async function playerAction(act){
   }else if(act.kind==='baikiruto'){
     p.mp-=6;updateBars();
     await say('ゆうしゃは バイキルトを となえた！');
-    sfxHeal();bt.atkUp=1.5;
+    sfxHeal();bt.atkUp=(curDiff().baiki||1.5); // なんいど：しんぱんは×1.25
     flash('#ffd27a',0.22,0.55);
     const c=playerChipPos();
     popup(c.x,c.y,'こうげき UP','heal');
@@ -6260,8 +6261,8 @@ async function startGame(){
   await say('おうさま「おお、めざめたか ゆうしゃよ。まっておったぞ。」');
   await say('おうさま「たびの まえに、この ぼうけんの てごわさを きめておこう。」');
   // なんいど せんたく（Lv1〜5・Lv2=きじゅん）
-  const dl=await ask([{id:'1',label:'やさしい'},{id:'2',label:'ふつう（おすすめ）'},{id:'3',label:'むずかしい'},{id:'4',label:'ごくむず'},{id:'5',label:'でんせつ'},{id:'6',label:'しんわ'}],'なんいど');
-  Game.diff=(+dl>=1&&+dl<=6)?+dl:2;
+  const dl=await ask([{id:'1',label:'やさしい'},{id:'2',label:'ふつう（おすすめ）'},{id:'3',label:'むずかしい'},{id:'4',label:'ごくむず'},{id:'5',label:'でんせつ'},{id:'6',label:'しんわ'},{id:'7',label:'しんぱん'}],'なんいど');
+  Game.diff=(+dl>=1&&+dl<=7)?+dl:2;
   await say('おうさま「やみのおう ヴォルガが ひかりのたまを うばい、\nせかいは ながい よるに のまれようと している。」');
   await say('おうさま「きたの どうくつの おくの しろに ヴォルガは いる。\nひかりのたまを とりもどしてくれ！」');
   await say('おうさま「むらの みなも ちからに なってくれよう。\nそなたの たびに しゅくふくを！」');
