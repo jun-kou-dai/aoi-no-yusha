@@ -944,7 +944,7 @@ function resetGame(){
   Game.items={yakuso:0,seisui:0,dokukesi:0};Game.chestsOpen=[];Game.springUsed={};Game.dmgTaken=0;Game.t0=0;
   Game.goldT=35;Game.saidYes=false;Game.dayT=DAY_START;Game.metalT=20;Game.stats={battles:0,crits:0,deaths:0};
   Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.hidden={};Game.popo=null;Game.popoT=null;
-  Game.door=false;Game.mkey=false;Game.visited={};Game.cloak=false;Game.invisible=false;Game.cloakSteps=0;Game.book=false;Game.seen={};
+  Game.door=false;Game.mkey=false;Game.chCard=null;Game.visited={};Game.cloak=false;Game.invisible=false;Game.cloakSteps=0;Game.book=false;Game.seen={};
   loadMap('grass');
   P.length=0;fxL.innerHTML='';
   MSG=null;MENU=null;cmdwinEl.classList.remove('on');msgtextEl.textContent='';msgwinEl.classList.remove('done');
@@ -2393,6 +2393,7 @@ async function talkNpc(n){
       await say('じいさん「おとうとの こきょうを たずねて くれぬか。\nわしらの うまれた さとは、あの よる、うみに しずんだ。」');
       await say('じいさん「たまは もどった。じゃが、やみに のまれた ものたちが、\nまだ あそこに のこっとる きが するんじゃ。」');
       toast('どこでもドアに「しずみの さと」が あらわれた！');
+      showChapter('だい 2 ぶ','すくいのこしを すくう');
       endTalk();
       saveGame();
       return;
@@ -2477,6 +2478,7 @@ async function thanksScene(){
   await say('むすめ「あのかた… ひかりのたまを 『とりもどす』って\nなんども いっていたわ。まるで じぶんの ものみたいに…」');
   endTalk();
   toast('てがかり：ヴォルガは たまを「とりもどす」と いっていた…？');
+  showChapter('だい 3 しょう','ちいさな きせき');
   saveGame();
 }
 // ちそこの とびら：まほうのかぎで ひらく（かぎゲート）
@@ -2518,6 +2520,20 @@ async function runInn(){
   stopSong();
   await fadeTo(1,0.9);
   await wait(0.7);
+  // ゆめ：たおすべき あいてが、といを なげてくる（ものがたりの しんぞうを 序盤に うえる）
+  if(Game.mbossDown&&!Game.hidden.dream1){
+    Game.hidden.dream1=true;
+    await say('――くらやみの なかで、こえが した。');
+    await say('『ゆうしゃよ。なぜ たたかう。』');
+    await say('『ひかりは すべてを すくうと、\nおまえは しんじて いるのか。』');
+    await say('こえは とおざかり、とおくで かねの ねが きこえた……');
+  }else if(Game.hidden.k3&&!Game.hidden.dream2){
+    Game.hidden.dream2=true;
+    await say('――また、あの こえの ゆめを みた。');
+    await say('『むすめを すくったか。……やさしい な。』');
+    await say('『わしにも かつて、すくいたい ものが あった。\n……いや、わすれてくれ。』');
+    await say('めざめの まぎわ、かなしい こもりうたが きこえた きが した。');
+  }
   p.hp=p.mhp;p.mp=p.mmp;p.poison=false;Game.cloakSteps=CLOAK_MAX;updateBars();
   Game.dayT=DAWN_T;            // よあけに めざめる
   sfxMorning();
@@ -2763,6 +2779,7 @@ function updateField(dt){
   if(Game.grace>0)Game.grace-=dt;
   const qt=questText();
   if(qt!==Game._qt){Game._qt=qt;questEl.textContent=qt;}
+  if(Game.chCard){Game.chCard.t+=dt;if(Game.chCard.t>Game.chCard.dur)Game.chCard=null;}
   if(Game.mapId==='castle'&&Game.hidden.cleared&&!Game.hidden.cTip&&!Game.talking&&!Game.battling){
     Game.hidden.cTip=true;
     toast('やみのおうは もう いない。みなみに ひかる でぐちが ある──「どこでもドア」でも とべるぞ');
@@ -2850,6 +2867,7 @@ function updateField(dt){
     if(Game.mapId==='ice'&&Game.mbossDown&&!Game.hidden.k1)kidnapScene();
     else if(Game.inVillage&&Game.hidden.k2&&!Game.hidden.k3)thanksScene();
     else if(Game.mapId==='sunken'&&Game.hidden.sn1&&!Game.hidden.sn2)satonushiScene();
+    else if(Game.mapId==='castle'&&!Game.hidden.cleared&&!Game.hidden.ch4c){Game.hidden.ch4c=true;showChapter('だい 4 しょう','やみの おうざ');saveGame();}
   }
   if(p.bump){
     p.bump.t+=dt;
@@ -3938,6 +3956,7 @@ function drawFieldScene(){
   else if(MAP===WORLDS.castle.map)drawCastleAtmos();
   drawVignette();
   drawExitBeacons(); // でぐちビーコンは さいごに えがく＝くらやみ/よる/きりに つぶされない
+  drawChapterCard(); // しょうタイトルは さいじょうそう
 }
 function drawIsoBlock(x,y,cam){
   const t=MAP[y][x];
@@ -5251,6 +5270,33 @@ function drawExitBeacons(){
     ctx.restore();
   }
 }
+// しょうタイトルカード：ものがたりの ふしめを がめんぜんたいで しめす（じどうで きえる・そうさは ふさがない）
+function showChapter(num,title){
+  Game.chCard={num,title,t:0,dur:3.8};
+  sfxLevel();
+}
+function drawChapterCard(){
+  const c=Game.chCard;if(!c)return;
+  const a=Math.max(0,Math.min(1,c.t/0.5,(c.dur-c.t)/0.8));
+  if(a<=0)return;
+  ctx.save();
+  ctx.fillStyle='rgba(6,8,20,'+(0.78*a).toFixed(3)+')';
+  ctx.fillRect(0,0,W,H);
+  ctx.globalAlpha=a;
+  ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  const fs=Math.max(15,Math.round(Math.min(W,H)*0.030));
+  ctx.font='600 '+fs+'px sans-serif';
+  ctx.fillStyle='#c8b478';
+  ctx.fillText(c.num,W/2,H*0.42);
+  ctx.font='bold '+Math.round(fs*1.9)+'px sans-serif';
+  ctx.fillStyle='#ffeec2';
+  ctx.fillText(c.title,W/2,H*0.42+fs*2.4);
+  ctx.strokeStyle='rgba(200,180,120,'+(0.85*a).toFixed(2)+')';ctx.lineWidth=1.5;
+  const lw=Math.min(W,H)*0.16;
+  ctx.beginPath();ctx.moveTo(W/2-lw,H*0.42-fs*1.6);ctx.lineTo(W/2+lw,H*0.42-fs*1.6);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W/2-lw,H*0.42+fs*3.4);ctx.lineTo(W/2+lw,H*0.42+fs*3.4);ctx.stroke();
+  ctx.restore();
+}
 // ============================================================
 // 戦闘：フロー（async）
 // ============================================================
@@ -5781,7 +5827,7 @@ async function victory(){
     await say(ggold+'ゴールドを てにいれた！');
   }
   if(foe.mboss){
-    if(foe===FOES.mboss)Game.mbossDown=true;
+    if(foe===FOES.mboss){Game.mbossDown=true;showChapter('だい 2 しょう','こおりと ほのおの みち');}
     if(foe.winMsg)await say(foe.winMsg);
     if(foe===FOES.satonushi)Game.hidden.sn1=true; // 章2b: さとぬし解放→フィールドで核心開示
   }
@@ -7376,6 +7422,7 @@ async function openingSequence(){
   await say('おうさま「きたの はての しろから たまを とりもどせ！\nむらの みなも ちからに なって くれよう。」');
   endTalk();
   toast('ひかりのたまを とりもどせ！ むらの ひとに はなしを きいてみよう。');
+  showChapter('だい 1 しょう','ひかりなき よあけ');
   Game.started=false;
 }
 // つよくて ニューゲーム：つよさ・おかね・そうび・ずかん・しょうごうを もちこして さいしょから
