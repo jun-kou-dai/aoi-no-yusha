@@ -2495,7 +2495,7 @@ function questText(){
   if(Game.qChild===2)return 'もくてき：ポポを むらの おかあさんの もとへ';
   if(Game.hidden.k1&&!Game.hidden.k2)return Game.mapId==='ice'?'もくてき：こおりの おくで むすめを すくいだせ！':'もくてき：さらわれた むすめを おえ！ こおりの せかいへ！';
   if(Game.hidden.k2&&!Game.hidden.k3)return 'もくてき：むらの じいさんの もとへ';
-  if(Game.hidden.cleared)return Game.mapId==='edge'?'もくてき：とわの といに こたえよ':(Game.hidden.elderTold?'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている':'もくてき：5つの せきひと むらの こえが、つぎの みちを しめす');
+  if(Game.hidden.cleared)return Game.mapId==='edge'?'もくてき：とわの といに こたえよ':Game.mapId==='castle'?'もくてき：しろに ようは ない──「どこでもドア」ボタンで そとへ':(Game.hidden.elderTold?'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている':'もくてき：5つの せきひと むらの こえが、つぎの みちを しめす');
   if(Game.mapId==='castle')return 'もくてき：やみのおう ヴォルガを たおせ！';
   if(Game.mapId==='edge')return 'もくてき：とわの といに こたえよ';
   if(Game.mapId==='cave2')return 'もくてき：ちそこ どうくつを たんけんせよ';
@@ -2648,6 +2648,11 @@ function updateField(dt){
   if(Game.grace>0)Game.grace-=dt;
   const qt=questText();
   if(qt!==Game._qt){Game._qt=qt;questEl.textContent=qt;}
+  if(Game.mapId==='castle'&&Game.hidden.cleared&&!Game.hidden.cTip&&!Game.talking&&!Game.battling){
+    Game.hidden.cTip=true;
+    toast('やみのおうは もう いない。この しろに ようは ない──みぎの「どこでもドア」で つぎの ちへ');
+    saveGame();
+  }
   // 主人公の移動：キーの みための ほうこう（ひし形では ななめ）へ。
   // ふさがれていたら ちかい たて・よこの マスへ そって すすむ
   if(!p.moving&&!Game.battling&&!Game.talking&&!Game.transiting){
