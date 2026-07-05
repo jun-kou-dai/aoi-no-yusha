@@ -2495,7 +2495,7 @@ function questText(){
   if(Game.qChild===2)return 'もくてき：ポポを むらの おかあさんの もとへ';
   if(Game.hidden.k1&&!Game.hidden.k2)return Game.mapId==='ice'?'もくてき：こおりの おくで むすめを すくいだせ！':'もくてき：さらわれた むすめを おえ！ こおりの せかいへ！';
   if(Game.hidden.k2&&!Game.hidden.k3)return 'もくてき：むらの じいさんの もとへ';
-  if(Game.hidden.cleared)return Game.mapId==='edge'?'もくてき：とわの といに こたえよ':Game.mapId==='castle'?'もくてき：しろに ようは ない──「どこでもドア」ボタンで そとへ':(Game.hidden.elderTold?'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている':'もくてき：5つの せきひと むらの こえが、つぎの みちを しめす');
+  if(Game.hidden.cleared)return Game.mapId==='edge'?'もくてき：とわの といに こたえよ':Game.mapId==='castle'?'もくてき：みなみの ひかる でぐちから しろを あとに しよう':(Game.hidden.elderTold?'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている':'もくてき：5つの せきひと むらの こえが、つぎの みちを しめす');
   if(Game.mapId==='castle')return 'もくてき：やみのおう ヴォルガを たおせ！';
   if(Game.mapId==='edge')return 'もくてき：とわの といに こたえよ';
   if(Game.mapId==='cave2')return 'もくてき：ちそこ どうくつを たんけんせよ';
@@ -2650,7 +2650,7 @@ function updateField(dt){
   if(qt!==Game._qt){Game._qt=qt;questEl.textContent=qt;}
   if(Game.mapId==='castle'&&Game.hidden.cleared&&!Game.hidden.cTip&&!Game.talking&&!Game.battling){
     Game.hidden.cTip=true;
-    toast('やみのおうは もう いない。この しろに ようは ない──みぎの「どこでもドア」で つぎの ちへ');
+    toast('やみのおうは もう いない。みなみに ひかる でぐちが ある──「どこでもドア」でも とべるぞ');
     saveGame();
   }
   // 主人公の移動：キーの みための ほうこう（ひし形では ななめ）へ。
@@ -3542,11 +3542,11 @@ function drawCastleAtmos(){
     let flick=0.82+0.12*Math.sin(TM*7.3)+0.07*Math.sin(TM*13.1);
     if(Math.sin(TM*2.07)>0.93)flick-=0.34;          // ときどき あかりが フッと おちる
     flick=Math.max(0.46,flick);
-    const r=Game.cam.TW*4.3*flick;
+    const r=Game.cam.TW*5.6*flick;
     const dg=ctx.createRadialGradient(pc.x,pcy,Game.cam.TW*0.5,pc.x,pcy,r);
     dg.addColorStop(0,'rgba(4,1,9,0)');
-    dg.addColorStop(0.5,'rgba(4,1,9,0.55)');
-    dg.addColorStop(1,'rgba(4,1,9,0.985)');
+    dg.addColorStop(0.5,'rgba(4,1,9,0.42)');
+    dg.addColorStop(1,'rgba(4,1,9,0.80)');
     ctx.fillStyle=dg;ctx.fillRect(0,0,W,H);
     ctx.globalCompositeOperation='lighter';
     const lg=ctx.createRadialGradient(pc.x,pcy,Game.cam.TW*0.3,pc.x,pcy,r*0.85);
@@ -3732,8 +3732,8 @@ function drawFieldScene(){
     fogG.addColorStop(0.5,'rgba(150,66,44,0.10)');
     fogG.addColorStop(1,'rgba(150,66,44,0)');
   }else if(MAP===WORLDS.castle.map){
-    fogG.addColorStop(0,'rgba(64,26,88,0.36)');
-    fogG.addColorStop(0.5,'rgba(64,26,88,0.13)');
+    fogG.addColorStop(0,'rgba(64,26,88,0.22)');
+    fogG.addColorStop(0.5,'rgba(64,26,88,0.08)');
     fogG.addColorStop(1,'rgba(64,26,88,0)');
   }else{
     fogG.addColorStop(0,'rgba(46,64,128,0.22)');
@@ -3769,7 +3769,7 @@ function drawFieldScene(){
   }else if(MAP===WORLDS.castle.map){
     lg.addColorStop(0,'rgba(150,80,200,0.14)');
     lg.addColorStop(0.5,'rgba(128,128,128,0)');
-    lg.addColorStop(1,'rgba(40,10,56,0.46)');
+    lg.addColorStop(1,'rgba(40,10,56,0.22)');
   }else{
     lg.addColorStop(0,'rgba(255,238,205,0.18)');
     lg.addColorStop(0.5,'rgba(128,128,128,0)');
@@ -3802,6 +3802,21 @@ function drawFieldScene(){
     tg.addColorStop(0,'rgba(255,180,90,0.12)');tg.addColorStop(1,'rgba(255,180,90,0)');
     ctx.fillStyle=tg;ctx.beginPath();ctx.arc(pc.x,pcy,r*0.55,0,Math.PI*2);ctx.fill();
     ctx.restore();
+  }
+  // でぐちの ひかりの はしら：いりぐち/でぐちを とおくからでも しめす（ぜんマップの exits共通）
+  {
+    const wx=WORLDS[Game.mapId];
+    if(wx.exits)for(const ex of wx.exits){
+      const q=isoCtr(ex.x,ex.y);
+      ctx.save();ctx.globalCompositeOperation='lighter';
+      const ba=0.15+0.07*Math.sin(TM*2.2+ex.x);
+      const bgg=ctx.createLinearGradient(0,q.y-TH*7,0,q.y);
+      bgg.addColorStop(0,'rgba(150,200,255,0)');
+      bgg.addColorStop(1,'rgba(150,200,255,'+ba.toFixed(3)+')');
+      ctx.fillStyle=bgg;
+      ctx.fillRect(q.x-TW*0.20,q.y-TH*7,TW*0.40,TH*7);
+      ctx.restore();
+    }
   }
   // タップいどうの めじるし（もくてきちに あわい リング）
   if(Game.autoPath&&Game.autoPath.length){
