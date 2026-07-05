@@ -2037,9 +2037,13 @@ function say(txt){
 function updateMsg(dt){
   if(!MSG)return;
   if(!MSG.done){
-    MSG.shown+=dt*180; // 文字送りは速くてOK。全表示後は自動送りせず止めてタップ/キー待ち
+    MSG.shown+=dt*180; // 文字送りは速くてOK。かいわ/フィールドは全表示後に停止してタップ/キー待ち
     if(MSG.shown>=MSG.full.length){MSG.shown=MSG.full.length;MSG.done=true;MSG.timer=0;msgwinEl.classList.add('done');}
     msgtextEl.textContent=MSG.full.slice(0,Math.floor(MSG.shown));
+  }else if(Game.scene==='battle'){
+    // せんとうだけ じどうで ながれる（よみじかんは ながさに ひれい・タップで そくざに おくれるのは そのまま）
+    MSG.timer+=dt;
+    if(MSG.timer>=Math.max(0.55,0.26+MSG.full.length*0.045))finishMsg();
   }
 }
 function finishMsg(){
