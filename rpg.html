@@ -3960,6 +3960,22 @@ function drawFieldScene(){
     for(const e of Game.enemies)if(Math.round(e.px+e.py)===d)drawFieldFoe(e);
     if(pd===d){drawPopo();drawFieldHero();}
   }
+  // くもの かげ（ひるの くさはらだけ・しまの うえを ゆっくり ながれる）
+  if(dm&&dm.sun>0.25){
+    const cs=(MW+MH)*TW*0.5;
+    for(let ci=0;ci<2;ci++){
+      const sp=0.016+ci*0.008;
+      const t2=(TM*sp+ci*0.53)%1.3-0.15;
+      const cxp=ox+(t2*(MW+MH)-MH)*TW/2;
+      const cyp=oy+((MW+MH)/4)*TH+(ci?TH*2.5:-TH*1.5);
+      const ca=0.13*Math.min(1,(dm.sun-0.25)*4);
+      const cg2=ctx.createRadialGradient(cxp,cyp,cs*0.05,cxp,cyp,cs*0.24);
+      cg2.addColorStop(0,'rgba(18,34,30,'+ca.toFixed(3)+')');cg2.addColorStop(1,'rgba(18,34,30,0)');
+      ctx.fillStyle=cg2;
+      ctx.save();ctx.translate(cxp,cyp);ctx.scale(1,0.5);ctx.translate(-cxp,-cyp);
+      ctx.beginPath();ctx.arc(cxp,cyp,cs*0.24,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+  }
   // くうきえんきん：とおく（がめんの うえ）ほど うすあおく かすむ
   const fogG=ctx.createLinearGradient(0,oy-lift*2.2,0,oy+((MW+MH-2)/2)*TH+TH);
   if(MAP===WORLDS.forest.map){
@@ -4201,15 +4217,19 @@ function drawIsoBlock(x,y,cam){
         ctx.stroke();ctx.restore();
       }
     }else{
-      ctx.fillStyle='rgba(255,255,255,0.06)';
-      for(let i=0;i<3;i++){
-        const u=0.18+((hsh*7+i*0.31)%1)*0.64,v=0.18+((hsh*13+i*0.47)%1)*0.64;
+      // くさはら：みえる くさむら（こい/あかるいの 2しょく・かたむきと たかさは タイルごとに かわる）
+      ctx.lineCap='round';
+      for(let i=0;i<4;i++){
+        const u=0.15+((hsh*7+i*0.31)%1)*0.7,v=0.15+((hsh*13+i*0.47)%1)*0.7;
         const qx=bx+(u-v)*TW/2,qy=by+(u+v)*TH/2-z;
-        ctx.fillRect(qx,qy,TW*0.025,TH*0.16);
+        const hgt=TH*(0.15+((hsh*9+i)%1)*0.13), lean=((hsh*11+i*0.7)%1-0.5)*TW*0.07;
+        ctx.strokeStyle=(i%2?'rgba(50,94,58,0.48)':'rgba(152,204,122,0.42)');
+        ctx.lineWidth=Math.max(1,TW*0.016);
+        ctx.beginPath();ctx.moveTo(qx,qy);ctx.quadraticCurveTo(qx+lean*0.4,qy-hgt*0.6,qx+lean,qy-hgt);ctx.stroke();
       }
-      if(t==='G'&&hsh>0.93){
-        const r=TW*0.032;
-        ctx.fillStyle=hsh>0.97?'#e8c89a':'#ece5cf';
+      if(t==='G'&&hsh>(MAP===WORLDS.grass.map?0.80:0.93)){
+        const r=TW*0.030;
+        ctx.fillStyle=MAP===WORLDS.grass.map?(hsh>0.94?'#f2c7d8':(hsh>0.87?'#f4e29a':'#f0ece0')):(hsh>0.97?'#e8c89a':'#ece5cf');
         for(let i=0;i<4;i++){
           const a=i*Math.PI/2+hsh*6;
           ctx.beginPath();ctx.ellipse(cx+Math.cos(a)*r*1.7,cy+Math.sin(a)*r*0.95,r,r*0.6,0,0,Math.PI*2);ctx.fill();
@@ -4225,6 +4245,13 @@ function drawIsoBlock(x,y,cam){
       const qx=bx+(u-v)*TW/2,qy=by+(u+v)*TH/2-z;
       ctx.beginPath();ctx.ellipse(qx,qy,TW*0.022,TW*0.013,0,0,Math.PI*2);ctx.fill();
     }
+    // あかるい こいし（ふまれて みがかれた いし）
+    ctx.fillStyle='rgba(232,218,175,0.55)';
+    for(let i=0;i<2;i++){
+      const u=0.2+((hsh*11+i*0.37)%1)*0.6,v=0.2+((hsh*7+i*0.53)%1)*0.6;
+      const qx=bx+(u-v)*TW/2,qy=by+(u+v)*TH/2-z;
+      ctx.beginPath();ctx.arc(qx,qy,TW*0.013,0,Math.PI*2);ctx.fill();
+    }
   }else if(t==='W'){
     ctx.strokeStyle='rgba(215,235,255,0.18)';ctx.lineWidth=Math.max(1,TW*0.018);
     for(let k=0;k<2;k++){
@@ -4238,6 +4265,27 @@ function drawIsoBlock(x,y,cam){
       ctx.fillStyle='rgba(235,245,255,0.55)';
       ctx.beginPath();ctx.arc(cx+(hsh-0.5)*TW*0.4,cy+(hsh*0.3-0.15)*TH,TW*0.018,0,Math.PI*2);ctx.fill();
     }
+    // みずぎわの あわ：りくに せっする へんに そって しろい すじが ゆらめく
+    ctx.lineCap='round';
+    const shoreE=[[x,y-1,N,E],[x+1,y,E,S],[x,y+1,S,Wp],[x-1,y,Wp,N]];
+    for(const[ex,ey,P1,P2]of shoreE){
+      if(ex<0||ey<0||ex>=MW||ey>=MH)continue;
+      if(hv(ex,ey)<=hv(x,y))continue;
+      const ph=TM*1.8+x*1.7+y*2.3;
+      ctx.strokeStyle='rgba(230,244,255,'+(0.40+0.22*Math.sin(ph)).toFixed(3)+')';
+      ctx.lineWidth=Math.max(1.4,TW*0.045);
+      const q1x=P1.x+(cx-P1.x)*0.10,q1y=P1.y+(cy-P1.y)*0.10;
+      const q2x=P2.x+(cx-P2.x)*0.10,q2y=P2.y+(cy-P2.y)*0.10;
+      const mx=(q1x+q2x)/2+(cx-(q1x+q2x)/2)*0.14,my=(q1y+q2y)/2+(cy-(q1y+q2y)/2)*0.14;
+      const wob=Math.sin(ph*1.3)*TW*0.012;
+      ctx.beginPath();ctx.moveTo(q1x,q1y);ctx.quadraticCurveTo(mx+wob,my+wob*0.5,q2x,q2y);ctx.stroke();
+    }
+    // ながれる こうてん（すいめんの きらめき）
+    {const gp=(TM*(0.10+hsh*0.10)+hsh*7)%1;
+     const u2=0.2+gp*0.6,v2=0.25+((hsh*5)%1)*0.5;
+     const gx=bx+(u2-v2)*TW/2,gy=by+(u2+v2)*TH/2-z;
+     const ga=0.35+0.35*Math.sin(TM*2.2+hsh*9);
+     if(ga>0.4){ctx.fillStyle='rgba(240,250,255,'+(ga*0.6).toFixed(3)+')';ctx.beginPath();ctx.arc(gx,gy,TW*0.016,0,Math.PI*2);ctx.fill();}}
   }else if(t==='I'){
     ctx.strokeStyle='rgba(255,255,255,0.32)';ctx.lineWidth=Math.max(1,TW*0.012);
     ctx.beginPath();
@@ -6401,6 +6449,7 @@ function drawFoeTinted(bt,ep){
   const dpr2=Math.min(2,window.devicePixelRatio||1);
   const pad=ep.s*(bt.dying?260:150);
   const w=Math.ceil(pad*2*dpr2),h=Math.ceil(pad*2*dpr2);
+  if(!(w>0&&h>0)){drawFoe(bt,ep);return;} // viewport縮退(回転/非表示)の瞬間は0サイズcanvasになりdrawImageが例外→素のdrawFoeへ退避
   if(foeCv.width!==w||foeCv.height!==h){foeCv.width=w;foeCv.height=h;}
   foeCtx.setTransform(dpr2,0,0,dpr2,0,0);
   foeCtx.globalCompositeOperation='source-over';
