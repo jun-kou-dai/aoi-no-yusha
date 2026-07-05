@@ -5673,7 +5673,7 @@ async function playerAction(act){
   }
   if(act.kind==='fight'){
     await say('ゆうしゃの こうげき！');
-    bt.slash={t:0};sfxSlash();
+    bt.slash={t:0};bt.heroAtk=1;sfxSlash();
     await wait(0.08);
     const crit=Math.random()<(curDiff().pcrit||0.1);
     const dodgeP=bt.soar?0.5:(bt.foe.dodge||0);
@@ -5973,6 +5973,7 @@ async function enemyAction(){
   updateBars();
   const c=playerChipPos();
   popup(c.x,c.y,d,'player');
+  bt.heroHit=1;
   await wait(0.12);
   if(bt.guard)await say('みを まもって しのいだ！ うけた ダメージは '+d+'！');
   else await say('ゆうしゃは '+d+'の ダメージを うけた！');
@@ -6264,6 +6265,8 @@ function updateBattle(dt){
   if(bt.flash>0)bt.flash=Math.max(0,bt.flash-dt*3);
   if(bt.recoil>0)bt.recoil=Math.max(0,bt.recoil-dt*3.8);
   if(bt.blink>0)bt.blink=Math.max(0,bt.blink-dt*6.5);
+  if(bt.heroAtk>0)bt.heroAtk=Math.max(0,bt.heroAtk-dt*3.2);
+  if(bt.heroHit>0)bt.heroHit=Math.max(0,bt.heroHit-dt*3.4);
   if(bt.lunge>0)bt.lunge=Math.max(0,bt.lunge-dt*2.4);
   if(bt.shakeT>0)bt.shakeT-=dt;
   if(bt.slash){bt.slash.t+=dt*3.4;if(bt.slash.t>=1)bt.slash=null;}
@@ -6456,6 +6459,7 @@ function drawBattleScene(){
   if(bt.foe.boss)bossBack(bt,ep);
   if(bt.foe.tint||bt.blink>0)drawFoeTinted(bt,ep);
   else drawFoe(bt,ep);
+  drawHeroBack(bt);
   if(bt.slash)drawSlash(bt.slash.t,ep);
   drawP();
   drawBattleFore(th.bokeh);
@@ -6527,6 +6531,84 @@ function drawFoe(bt,ep){
     dg.addColorStop(1,'rgba(255,250,235,0)');
     ctx.fillStyle=dg;
     ctx.beginPath();ctx.arc(0,-s*20,s*(120+glow*120),0,Math.PI*2);ctx.fill();
+    ctx.globalCompositeOperation='source-over';
+  }
+  ctx.restore();
+}
+// せんとうの ゆうしゃ（うしろすがた）：じぶんが たたかっている がめんに する
+function drawHeroBack(bt){
+  const s=Math.min(H/720,W/900); // たてなが(スマホ)では ちいさく＝がめんに あう
+  let uiTop=H*0.75;
+  {const mr=msgwinEl.getBoundingClientRect(), cr=cv.getBoundingClientRect();
+   if(mr.height>0&&cr.height>0)uiTop=(mr.top-cr.top)*(H/cr.height);} // メッセージまどの うえに たつ
+  let hx=W*0.285, hy=Math.min(H*0.80,uiTop-H*0.012);
+  if(bt.intro)hx-=bt.intro*bt.intro*W*0.26; // とうじょうは ひだりから
+  let lean=0;
+  if(bt.heroAtk>0){ // ふみこみ：まえへ おおきく
+    const k=Math.sin(Math.min(1,1-bt.heroAtk)*Math.PI);
+    hx+=k*W*0.045; hy-=k*H*0.02; lean=-k*0.16;
+  }
+  if(bt.heroHit>0){ // ひげき：のけぞって さがる
+    const k=Math.sin(Math.min(1,bt.heroHit)*Math.PI/2);
+    hx-=k*W*0.018; hy+=k*H*0.008; lean=k*0.14;
+  }
+  const bob=Math.sin(bt.t*2.2)*s*2.4; // こきゅう
+  ctx.save();
+  ctx.translate(hx,hy+bob*0.4);
+  if(lean)ctx.rotate(lean);
+  const u=s*(bt.guard?0.92:1); // ぼうぎょは すこし かがむ
+  // かげ
+  ctx.fillStyle='rgba(5,8,24,0.42)';
+  ctx.beginPath();ctx.ellipse(0,s*6,s*46,s*11,0,0,Math.PI*2);ctx.fill();
+  // マント（せなか いっぱい・すそが ゆれる）
+  const sw=Math.sin(bt.t*1.7)*s*3;
+  const cg=ctx.createLinearGradient(0,-u*118,0,0);
+  cg.addColorStop(0,'#3d63b8');cg.addColorStop(1,'#24356e');
+  ctx.fillStyle=cg;
+  ctx.beginPath();
+  ctx.moveTo(-u*30,-u*96);
+  ctx.quadraticCurveTo(-u*46,-u*40,-u*38+sw,0);
+  ctx.lineTo(u*38+sw,0);
+  ctx.quadraticCurveTo(u*46,-u*40,u*30,-u*96);
+  ctx.closePath();ctx.fill();
+  // かたあて
+  ctx.fillStyle='#57709c';
+  ctx.beginPath();ctx.ellipse(0,-u*96,u*34,u*13,0,Math.PI,0);ctx.fill();
+  // あたま（うしろ）＋はちまき
+  ctx.fillStyle='#e8c39a';
+  ctx.beginPath();ctx.arc(0,-u*118,u*22,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#6b4a2f';
+  ctx.beginPath();ctx.arc(0,-u*121,u*22,Math.PI*1.02,Math.PI*1.98);ctx.fill();
+  ctx.fillStyle='#f2ede0';
+  ctx.fillRect(-u*22,-u*124,u*44,u*6);
+  // けん（みぎて・うえに かまえる／こうげきで ふりかぶる）
+  const swK=bt.heroAtk>0?Math.sin(Math.min(1,1-bt.heroAtk)*Math.PI):0;
+  ctx.save();
+  ctx.translate(u*30,-u*74);
+  ctx.rotate(-0.5-swK*1.5);
+  ctx.fillStyle='#8a93a8';ctx.fillRect(-u*2.5,-u*66,u*5,u*66); // やいば
+  ctx.fillStyle='#f4f7ff';ctx.fillRect(-u*1,-u*66,u*2,u*66);   // はの ハイライト
+  ctx.fillStyle='#caa24a';ctx.fillRect(-u*9,-u*4,u*18,u*5);    // つば
+  ctx.fillStyle='#6b4a2f';ctx.fillRect(-u*3,0,u*6,u*16);       // つか
+  ctx.restore();
+  // ぼうぎょ：まえに うでを くむ あお白い ガードこう
+  if(bt.guard){
+    ctx.strokeStyle='rgba(159,182,255,0.75)';ctx.lineWidth=u*5;
+    ctx.beginPath();ctx.arc(0,-u*66,u*44,-0.6,0.6);ctx.stroke();
+  }
+  // じゅもん えいしょう：からだが ひかる
+  if(bt.cast){
+    ctx.globalCompositeOperation='lighter';
+    const gg2=ctx.createRadialGradient(0,-u*80,u*4,0,-u*80,u*90);
+    gg2.addColorStop(0,'rgba(255,190,120,0.5)');gg2.addColorStop(1,'rgba(255,190,120,0)');
+    ctx.fillStyle=gg2;ctx.beginPath();ctx.arc(0,-u*80,u*90,0,Math.PI*2);ctx.fill();
+    ctx.globalCompositeOperation='source-over';
+  }
+  // ひげきの あかい てんめつ
+  if(bt.heroHit>0.4){
+    ctx.globalCompositeOperation='lighter';
+    ctx.fillStyle='rgba(220,60,50,'+(0.35*bt.heroHit).toFixed(3)+')';
+    ctx.beginPath();ctx.arc(0,-u*70,u*70,0,Math.PI*2);ctx.fill();
     ctx.globalCompositeOperation='source-over';
   }
   ctx.restore();
