@@ -2602,7 +2602,8 @@ function tapMove(cx,cy){
   if(tx<0||ty<0||tx>=MW||ty>=MH)return;
   const w=WORLDS[Game.mapId];
   const isTalkT=(x,y)=>!!(npcAt(x,y)||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y));
-  const goalTalk=isTalkT(tx,ty);
+  const goalDoor=(Game.mapId==='cave2'&&tileAt(tx,ty)==='D'&&!Game.hidden.gate1); // とざされた とびらも タップで あけられる（となりまで あるいて たいあたり）
+  const goalTalk=isTalkT(tx,ty)||goalDoor;
   if(!goalTalk&&!walkable(tx,ty))return;
   if(tx===p.tx&&ty===p.ty)return;
   const key=(x,y)=>x+'_'+y;
@@ -2622,6 +2623,7 @@ function tapMove(cx,cy){
       const k2=key(nx,ny);
       if(k2 in prev)continue;
       if(!walkable(nx,ny)||isTalkT(nx,ny))continue; // NPCマスは とおらない
+      if(tileAt(nx,ny)==='E'&&!(nx===tx&&ny===ty))continue; // でぐちは もくてきちの ときだけ ふむ（とおりぬけで べつマップへ とばされない）
       prev[k2]=cu;q.push([nx,ny]);
     }
   }
