@@ -5972,15 +5972,18 @@ async function victory(){
   puff(ep.x,ep.y-ep.s*40,'rgba(236,229,207,.9)',24,160,0.9,{s0:2,s1:5});
   await wait(0.5);
   sfxWin();
+  flash('#ffe9b0',0.20,0.55);
   await say(foe.name+'を たおした！');
   Game.kills++;
   const Dr=curDiff();
   const gexp=Math.round(foe.exp*(bt.night?1.6:1)*Dr.exp);
   const ggold=Math.round((foe.g||0)*(bt.night?1.6:1)*Dr.gold);
+  popup(ep.x,ep.y-ep.s*26,'+'+gexp+' EXP');
   await say('けいけんち '+gexp+'を かくとく！'+(bt.night?'\n（よるの ボーナス！）':''));
   p.exp+=gexp;
   if(ggold){
     Game.gold+=ggold;updateBars();
+    popup(ep.x,ep.y+ep.s*14,'+'+ggold+' G','sp');
     await say(ggold+'ゴールドを てにいれた！');
   }
   if(foe.mboss&&foe===FOES.mboss){Game.mbossDown=true;showChapter('だい 2 しょう','こおりと ほのおの みち');}
@@ -6008,9 +6011,12 @@ async function victory(){
     p.hp=p.mhp;p.mp=p.mmp;
     updateBars();
     sfxLevel();
-    flash('#ffe9b0',0.32,0.7);
+    flash('#ffe9b0',0.40,0.8);
     const c=playerChipPos();
     puff(c.x,c.y,'rgba(255,230,150,.95)',32,150,1.1,{s0:2,s1:5,spread:28});
+    popup(W/2,H*0.36,'レベル '+p.lv+'！','crit');
+    puff(W/2,H*0.40,'rgba(255,225,130,.95)',40,240,1.0,{s0:2,s1:6,spread:40});
+    shakeBattle(6,0.3);
     await say('ゆうしゃは レベル'+p.lv+'に あがった！');
     await say('HP+'+(nw.hp-old.hp)+'　MP+'+(nw.mp-old.mp)+'　こうげき+'+(nw.atk-old.atk)+'　しゅび+'+(nw.def-old.def)+'\nからだに ちからが みなぎる！');
     if(p.lv===2)await say('あたらしい じゅもん キアリーを おぼえた！');
