@@ -3803,21 +3803,6 @@ function drawFieldScene(){
     ctx.fillStyle=tg;ctx.beginPath();ctx.arc(pc.x,pcy,r*0.55,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
-  // でぐちの ひかりの はしら：いりぐち/でぐちを とおくからでも しめす（ぜんマップの exits共通）
-  {
-    const wx=WORLDS[Game.mapId];
-    if(wx.exits)for(const ex of wx.exits){
-      const q=isoCtr(ex.x,ex.y);
-      ctx.save();ctx.globalCompositeOperation='lighter';
-      const ba=0.15+0.07*Math.sin(TM*2.2+ex.x);
-      const bgg=ctx.createLinearGradient(0,q.y-TH*7,0,q.y);
-      bgg.addColorStop(0,'rgba(150,200,255,0)');
-      bgg.addColorStop(1,'rgba(150,200,255,'+ba.toFixed(3)+')');
-      ctx.fillStyle=bgg;
-      ctx.fillRect(q.x-TW*0.20,q.y-TH*7,TW*0.40,TH*7);
-      ctx.restore();
-    }
-  }
   // タップいどうの めじるし（もくてきちに あわい リング）
   if(Game.autoPath&&Game.autoPath.length){
     const gp=Game.autoPath[Game.autoPath.length-1];
@@ -3836,6 +3821,7 @@ function drawFieldScene(){
   else if(MAP===WORLDS.volcano.map){drawEmbers();drawHeatHaze();}
   else if(MAP===WORLDS.castle.map)drawCastleAtmos();
   drawVignette();
+  drawExitBeacons(); // でぐちビーコンは さいごに えがく＝くらやみ/よる/きりに つぶされない
 }
 function drawIsoBlock(x,y,cam){
   const t=MAP[y][x];
@@ -5105,6 +5091,49 @@ function drawVignette(){
   const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.42,W/2,H/2,Math.max(W,H)*0.74);
   vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(4,7,22,0.5)');
   ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+}
+// でぐちビーコン：ぜんマップの exits（＝いりぐち/でぐち）を いちばん うえに えがく。
+// くらやみ・よる・きり・ビネットの どの overlay にも つぶされない「ぜったいに みえる でぐち」。
+function drawExitBeacons(){
+  const wx=WORLDS[Game.mapId];
+  if(!wx.exits||!Game.cam||!Game.p)return;
+  const TWc=Game.cam.TW,THc=Game.cam.TH;
+  for(const ex of wx.exits){
+    const q=isoCtr(ex.x,ex.y);
+    q.y-=Math.max(0,hv(ex.x,ex.y))*Game.cam.lift; // こおり等の だんだん地形でも タイルの うえに のせる
+    if(q.x<-TWc*2||q.x>W+TWc*2||q.y<-THc*2||q.y>H+THc*9)continue;
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    // そとがわの ひろい ひかり
+    const ba=0.22+0.08*Math.sin(TM*2.2+ex.x);
+    let g=ctx.createLinearGradient(0,q.y-THc*7,0,q.y);
+    g.addColorStop(0,'rgba(150,200,255,0)');
+    g.addColorStop(1,'rgba(150,200,255,'+ba.toFixed(3)+')');
+    ctx.fillStyle=g;ctx.fillRect(q.x-TWc*0.30,q.y-THc*7,TWc*0.60,THc*7);
+    // しんの あかるい はしら
+    const ca=0.42+0.16*Math.sin(TM*2.2+ex.x);
+    g=ctx.createLinearGradient(0,q.y-THc*6,0,q.y);
+    g.addColorStop(0,'rgba(225,242,255,0)');
+    g.addColorStop(1,'rgba(225,242,255,'+ca.toFixed(3)+')');
+    ctx.fillStyle=g;ctx.fillRect(q.x-TWc*0.09,q.y-THc*6,TWc*0.18,THc*6);
+    // ねもとの ひかりの わ
+    ctx.translate(q.x,q.y);ctx.scale(1,0.5);
+    const rr=TWc*(0.42+0.05*Math.sin(TM*3.1+ex.y));
+    const rg=ctx.createRadialGradient(0,0,2,0,0,rr*1.6);
+    rg.addColorStop(0,'rgba(190,225,255,0.35)');rg.addColorStop(1,'rgba(190,225,255,0)');
+    ctx.fillStyle=rg;ctx.beginPath();ctx.arc(0,0,rr*1.6,0,6.29);ctx.fill();
+    ctx.strokeStyle='rgba(210,238,255,'+(0.55+0.25*Math.sin(TM*3.1+ex.y)).toFixed(2)+')';
+    ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,rr,0,6.29);ctx.stroke();
+    ctx.restore();
+    // 「でぐち」の じ：くらやみでも よめる（ふちどり つき）
+    ctx.save();
+    ctx.font='bold '+Math.max(11,Math.round(TWc*0.28))+'px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    const ly=q.y-THc*3.4+Math.sin(TM*1.8+ex.x)*2.5;
+    ctx.lineWidth=3;ctx.strokeStyle='rgba(8,16,38,0.85)';ctx.strokeText('でぐち',q.x,ly);
+    ctx.fillStyle='rgba(240,248,255,'+(0.75+0.20*Math.sin(TM*2.6+ex.x)).toFixed(2)+')';
+    ctx.fillText('でぐち',q.x,ly);
+    ctx.restore();
+  }
 }
 // ============================================================
 // 戦闘：フロー（async）
