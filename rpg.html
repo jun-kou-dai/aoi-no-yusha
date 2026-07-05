@@ -671,7 +671,7 @@ volcano:{
   {x:1,y:6,to:'ice',tx:16,ty:7,msg:'こおりの せかいへ もどってきた。'},
   {x:18,y:6,to:'castle',tx:10,ty:11,msg:'ほのおの おくに そびえる まおうのしろに たどりついた…！'}]},
 cave2:{
- song:'cave', bg:['#050308','#0c0712'], dark:true, darkR:2.7,
+ song:'cave', bg:['#050308','#0c0712'], dark:true, darkR:3.4,
  map:[
  'CCCCCCCCCCCCCCCCCCCC',
  'CCCCCCCCCCCCCCCFFECC',
@@ -2666,7 +2666,7 @@ function updateField(dt){
       const go=(nx,ny)=>{
         // overT: まえの いっぽの あまり時間を ひきつぎ、つぎめの カクつきを なくす
         if(Game.qChild===2)Game.popoT={x:p.tx,y:p.ty}; // ポポは ひとあし うしろを ついてくる
-        p.moving={fx:p.tx,fy:p.ty,t:p.overT||0,dur:(p.dir==='L'||p.dir==='R')?0.115:0.078};
+        p.moving={fx:p.tx,fy:p.ty,t:p.overT||0,dur:(p.dir==='L'||p.dir==='R')?0.10:0.068};
         p.overT=0;
         p.tx=nx;p.ty=ny;p.bump=null;
       };
@@ -3786,11 +3786,11 @@ function drawFieldScene(){
   if(wld.dark){
     const pc=isoCtr(Game.p.px,Game.p.py);
     const pcy=pc.y-entLift(Game.p)-TW*0.2;
-    const r=TW*((wld.darkR||3.6)+Math.sin(TM*5.3)*0.10+Math.sin(TM*9.1)*0.06);
+    const r=TW*((wld.darkR||4.6)+Math.sin(TM*5.3)*0.10+Math.sin(TM*9.1)*0.06);
     const dg2=ctx.createRadialGradient(pc.x,pcy,TW*0.8,pc.x,pcy,r);
     dg2.addColorStop(0,'rgba(3,2,9,0)');
-    dg2.addColorStop(0.55,'rgba(3,2,9,0.34)');
-    dg2.addColorStop(1,'rgba(3,2,9,0.94)');
+    dg2.addColorStop(0.55,'rgba(3,2,9,0.30)');
+    dg2.addColorStop(1,'rgba(3,2,9,0.80)');
     ctx.fillStyle=dg2;ctx.fillRect(0,0,W,H);
     ctx.save();ctx.globalCompositeOperation='lighter';
     const tg=ctx.createRadialGradient(pc.x,pcy,2,pc.x,pcy,r*0.55);
