@@ -5911,13 +5911,11 @@ async function victory(){
     Game.gold+=ggold;updateBars();
     await say(ggold+'ゴールドを てにいれた！');
   }
-  if(foe.mboss){
-    if(foe===FOES.mboss){Game.mbossDown=true;showChapter('だい 2 しょう','こおりと ほのおの みち');}
-    if(foe.winMsg)await say(foe.winMsg);
-    if(foe===FOES.satonushi)Game.hidden.sn1=true; // 章2b: さとぬし解放→フィールドで核心開示
-    if(foe===FOES.nukegara)Game.hidden.nk1=true; // 章2d: ぬけがら解放→フィールドで終章
-    if(foe.kage){Game.purified=(Game.purified||0)+1;} // じょうか: かげを ときはなった かず
-  }
+  if(foe.mboss&&foe===FOES.mboss){Game.mbossDown=true;showChapter('だい 2 しょう','こおりと ほのおの みち');}
+  if(foe.winMsg)await say(foe.winMsg); // winMsgは ぜんての たいしょう（かげ雑魚の「ほどけ」も ここ）
+  if(foe===FOES.satonushi)Game.hidden.sn1=true; // 章2b: さとぬし解放→フィールドで核心開示
+  if(foe===FOES.nukegara)Game.hidden.nk1=true; // 章2d: ぬけがら解放→フィールドで終章
+  if(foe.kage){Game.purified=(Game.purified||0)+1;} // じょうか: かげを ときはなった かず（雑魚ふくむ）
   if(grantGiantHeart(foe)){
     sfxChest();
     await say('きょじんのこころを てにいれた！！\nさいだいHPが 10 あがった！（'+Game.gheart+'／5）');
