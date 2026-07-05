@@ -889,6 +889,7 @@ function loadMap(id){
   Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!Game.hidden[s.need])&&!(s.gone&&Game.hidden[s.gone])).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
     seed:rnd(9),timer:rnd(0.5,1.5),moving:null}));
   Game.respawnQ=[];
+  Game.birds=null; // とりの むれは マップを またがない
   Game.inVillage=false;
 }
 // ぶき・たて・たね・レベル・ボーナスから こうげき/しゅびを さいけいさん
@@ -2840,6 +2841,24 @@ function updateField(dt){
       }
     }
   }
+  // くさはらの いぶき：かぜに まう はなびらと とりの むれ（ひるの くさはらだけ・ふかは ごくしょう）
+  if(Game.mapId==='grass'){
+    const dmv=Game.dayNow;
+    if(Game.cam&&dmv&&dmv.sun>0.35){
+      if(Math.random()<dt*0.5){
+        const q=isoCtr(ri(2,MW-2),ri(2,MH-2));
+        P.push({x:q.x+rnd(-30,30),y:q.y-Game.cam.lift-rnd(6,54),vx:rnd(16,40),vy:rnd(-4,9),life:rnd(2.0,3.2),t:0,size:rnd(1.8,3.2),col:Math.random()<0.5?'rgba(255,246,220,.8)':'rgba(196,232,176,.75)',grav:5,light:true,drag:0.996});
+      }
+      if(!Game.birds&&Math.random()<dt/24){
+        const lft=Math.random()<0.5;
+        Game.birds={x:lft?-80:W+80,y:H*rnd(0.08,0.26),vx:(lft?1:-1)*rnd(48,72),n:3+ri(0,2),t:0};
+      }
+    }
+    if(Game.birds){
+      const b=Game.birds;b.t+=dt;b.x+=b.vx*dt;b.y+=Math.sin(b.t*0.9)*7*dt;
+      if(b.x<-140||b.x>W+140)Game.birds=null;
+    }
+  }else if(Game.birds)Game.birds=null;
   // マグマの ふきあがり（ときどき たかく ふきだす）
   if(Game.cam&&MAP===WORLDS.volcano.map&&Math.random()<dt*16){
     const x=ri(1,MW-2),y=ri(1,MH-2);
@@ -2873,9 +2892,9 @@ async function startEncounter(e){
   p.moving=null;p.bump=null;p.px=p.tx;p.py=p.ty;
   held.length=0;swipeVec=null;ptr=null;
   stopSong();sfxEnc();
-  flash('#ffffff',0.5,0.22);await wait(0.07);
-  flash('#ffffff',0.65,0.3);await wait(0.10);
-  await fadeTo(1,0.25);
+  flash('#ffffff',0.5,0.22);await wait(0.05);
+  flash('#ffffff',0.65,0.3);await wait(0.07);
+  await fadeTo(1,0.16);
   runBattle(e);
 }
 
@@ -3540,6 +3559,25 @@ function drawCastleAtmos(){
   ctx.fillStyle=hg2;ctx.fillRect(0,0,W,H);
   ctx.restore();
 }
+// くさはらの そらを よこぎる とりの むれ（シルエット・はばたき）
+function drawFieldBirds(dm){
+  const b=Game.birds;if(!b)return;
+  ctx.save();
+  ctx.strokeStyle='rgba(22,28,50,'+(0.35+0.45*dm.sun).toFixed(2)+')';
+  ctx.lineWidth=Math.max(1.4,H*0.0032);
+  ctx.lineCap='round';
+  for(let i=0;i<b.n;i++){
+    const bx=b.x-i*24*Math.sign(b.vx)-(i%2)*9,by=b.y+(i%2)*9+i*3.5;
+    const fl=Math.sin(TM*7.5+i*1.7);
+    const w=7+1.6*Math.cos(TM*7.5+i*1.7);
+    ctx.beginPath();
+    ctx.moveTo(bx-w,by-fl*4.5);
+    ctx.quadraticCurveTo(bx,by+2.5,bx,by);
+    ctx.quadraticCurveTo(bx,by+2.5,bx+w,by-fl*4.5);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
 function drawFieldScene(){
   const wld=WORLDS[Game.mapId];
   const dm=Game.mapId==='grass'?dayMix():null; // ひるよるは くさはらだけ
@@ -3550,6 +3588,7 @@ function drawFieldScene(){
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   if(dm)drawSky(dm);
   else if((MAP===WORLDS.ice.map||MAP===WORLDS.icetown.map))drawIceSky();
+  if(dm&&Game.birds)drawFieldBirds(dm);
   else if(MAP===WORLDS.volcano.map)drawVolcanoSky();
   else if(MAP===WORLDS.castle.map)drawCastleSky();
   const cam=fieldCam();Game.cam=cam;
@@ -4971,9 +5010,9 @@ async function runBattle(ref){
   msgtextEl.textContent='';
   updateBars();
   playSong(foe===FOES.kotae?'kotae':foe.boss||foe.mboss?'boss':'battle');
-  await fadeTo(0,0.25);
+  await fadeTo(0,0.16);
   Game.bt.intro=1; // とうじょうスライド
-  await wait(0.06);
+  await wait(0.03);
   if(foe.boss)await bossEntrance();
   await say(foe.name+'が あらわれた！');
   if(Game.bt.night&&!Game.nightHintB){
