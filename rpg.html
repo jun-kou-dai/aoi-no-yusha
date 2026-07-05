@@ -922,7 +922,7 @@ function saveGame(){
   try{
     localStorage.setItem(SAVE_KEY,JSON.stringify({v:1,diff:Game.diff,
       lv:p.lv,exp:p.exp,hp:p.hp,mp:p.mp,bonusAtk:p.bonusAtk,tx:p.tx,ty:p.ty,dir:p.dir,
-      gold:Game.gold,items:Game.items,weaponAtk:Game.weaponAtk,shield:Game.shield,
+      gold:Game.gold,items:Game.items,weaponAtk:Game.weaponAtk,armorDef:(Game.armorDef||0),shield:Game.shield,
       mbossDown:Game.mbossDown,springUsed:Game.springUsed,mapId:Game.mapId,door:Game.door,mkey:!!Game.mkey,visited:Game.visited,cloak:Game.cloak,book:Game.book,seen:Game.seen,
       kills:Game.kills,dmgTaken:Game.dmgTaken,goldT:Game.goldT,saidYes:Game.saidYes,day:Game.dayT,
       qChild:Game.qChild,bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,bonusMp:Game.bonusMp,gheart:Game.gheart,ng:Game.ng||0,hidden:Game.hidden,
@@ -945,7 +945,7 @@ function loadGame(){
   const p=Game.p;
   Game.diff=(d.diff>=1&&d.diff<=7)?d.diff:2; // なんいど（範囲外・未定義はふつう）
   p.lv=Math.min(MAXLV,d.lv);p.exp=d.exp||0;p.bonusAtk=d.bonusAtk||0;
-  Game.gold=d.gold||0;Game.weaponAtk=d.weaponAtk||0;Game.shield=!!d.shield;
+  Game.gold=d.gold||0;Game.weaponAtk=d.weaponAtk||0;Game.armorDef=d.armorDef||0;Game.shield=!!d.shield;
   Game.mbossDown=!!d.mbossDown;Game.springUsed=(d.springUsed&&typeof d.springUsed==='object')?d.springUsed:{};Game.saidYes=!!d.saidYes;
   if(d.items)for(const k in Game.items)if(d.items[k])Game.items[k]=d.items[k];
   Game.kills=d.kills||0;Game.dmgTaken=d.dmgTaken||0;Game.goldT=d.goldT||12;
@@ -1727,8 +1727,8 @@ function renderBook(){
 function renderStatus(){
   const p=Game.p,lv=p.lv;
   const row=(l,v,sub)=>'<div class="strow"><span class="stlabel">'+l+'</span><span class="stval">'+v+(sub?'<span class="stsub">'+sub+'</span>':'')+'</span></div>';
-  const wname=Game.weaponAtk>=26?'ゆうしゃのつるぎ':Game.weaponAtk>=20?'ほのおのつるぎ':Game.weaponAtk>=12?'はがねのつるぎ':Game.weaponAtk>=5?'どうのつるぎ':'すで';
-  const aname=(Game.armorDef||0)>=16?'はがねのよろい':(Game.armorDef||0)>=9?'くさりかたびら':(Game.armorDef||0)>=4?'かわのよろい':'ぬののふく';
+  const wname=Game.weaponAtk>=48?'らいめいのつるぎ':Game.weaponAtk>=36?'ふぶきのつるぎ':Game.weaponAtk>=26?'ゆうしゃのつるぎ':Game.weaponAtk>=20?'ほのおのつるぎ':Game.weaponAtk>=12?'はがねのつるぎ':Game.weaponAtk>=5?'どうのつるぎ':'すで';
+  const aname=(Game.armorDef||0)>=34?'ひかりのよろい':(Game.armorDef||0)>=24?'まほうのよろい':(Game.armorDef||0)>=16?'はがねのよろい':(Game.armorDef||0)>=9?'くさりかたびら':(Game.armorDef||0)>=4?'かわのよろい':'ぬののふく';
   const nextExp=lv<MAXLV?(LEVELS[lv+1].exp-p.exp):null;
   let h='<h3 class="bisle">のうりょく</h3>';
   h+=row('レベル',lv);
