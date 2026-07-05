@@ -2829,6 +2829,21 @@ function updateHunter(e,p,dt){
   }
 }
 // タップいどう：タップした マスへ BFSで あるく（NPC/おうさま/やどは となりまで あるいて じどうで はなす）
+// あるきの てざわり：いっぽ ごとに あしもとの ちり＋ちいさな あしおと（0.12sしぼり・2おんこうご）
+let stepPar=0,stepSndT=0;
+function stepFx(){
+  if(Game.scene!=='field')return;
+  if(Game.cam){
+    const q=isoCtr(Game.p.px,Game.p.py);
+    const t=tileAt(Game.p.tx,Game.p.ty);
+    const dc=(MAP===WORLDS.ice.map||MAP===WORLDS.icetown.map)?'rgba(255,255,255,.62)':
+      (MAP===WORLDS.volcano.map)?'rgba(72,46,34,.55)':
+      (MAP===WORLDS.cave.map||MAP===WORLDS.cave2.map||MAP===WORLDS.castle.map)?'rgba(150,140,170,.42)':
+      (t==='P')?'rgba(216,198,152,.62)':'rgba(198,210,152,.55)';
+    puff(q.x,q.y-Game.cam.lift*0.08,dc,2,34,0.46,{up:true,s0:1.6,s1:3.2,spread:11});
+  }
+  if(actx){const tn=actx.currentTime;if(tn-stepSndT>=0.12){stepSndT=tn;stepPar^=1;noiseHit(tn,0.05,0.10,stepPar?820:640,1.1);}}
+}
 function tapMove(cx,cy){
   const cam=Game.cam,p=Game.p;if(!cam||!p)return;
   const r=cv.getBoundingClientRect();if(!r.width)return;
@@ -2957,7 +2972,7 @@ function updateField(dt){
     const k=Math.min(1,p.moving.t/p.moving.dur);
     p.px=lerp(p.moving.fx,p.tx,k);
     p.py=lerp(p.moving.fy,p.ty,k);
-    if(k>=1){p.overT=Math.min(0.03,p.moving.t-p.moving.dur);p.moving=null;p.px=p.tx;p.py=p.ty;if(Game.invisible){Game.cloakSteps--;if(Game.cloakSteps<=0){Game.invisible=false;Game.grace=Math.max(Game.grace,0.6);toast('とうめいマントの ちからが きれた！');}updateCloakBtn();}}
+    if(k>=1){p.overT=Math.min(0.03,p.moving.t-p.moving.dur);p.moving=null;p.px=p.tx;p.py=p.ty;stepFx();if(Game.invisible){Game.cloakSteps--;if(Game.cloakSteps<=0){Game.invisible=false;Game.grace=Math.max(Game.grace,0.6);toast('とうめいマントの ちからが きれた！');}updateCloakBtn();}}
   }
   // でいりぐちを ふんだら マップいどう
   if(!p.moving&&!Game.battling&&!Game.talking&&!Game.transiting){
