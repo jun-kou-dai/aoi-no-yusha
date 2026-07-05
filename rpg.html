@@ -400,6 +400,7 @@ body{
     <div class="eline" id="estats"></div>
     <div class="eline" id="estats2"></div>
     <div class="eline" id="eend">− THE END −</div>
+    <div class="btn hidden" id="btn-cont">たびを つづける</div>
     <div class="btn hidden" id="btn-ng">つよくて ニューゲーム</div>
     <div class="btn hidden" id="btn-title2">タイトルへ</div>
   </div>
@@ -592,7 +593,7 @@ castle:{
   {id:'dslime',x:9, y:5},
   {id:'cuslime',x:17,y:3},
   {id:'chaoslord',x:16,y:10,ng:1},
-  {id:'boss',x:10,y:2}],
+  {id:'boss',x:10,y:2,gone:'cleared'}],
  chests:[{x:2,y:10,item:'taneM'}],
  exits:[{x:9,y:12,to:'volcano',tx:17,ty:6,msg:'ねっぷうの せかいへ もどってきた。'}]},
 ice:{
@@ -731,7 +732,7 @@ icetown:{
  exits:[
   {x:8,y:11,to:'ice',tx:3,ty:10,msg:'こおりの だいちへ ふみだした。'}]},
  edge:{
- song:'ice', bg:['#0a0a18','#1c1434'],
+ song:'edge', bg:['#0a0a18','#1c1434'],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TTTTTTTTTGGTTTTTTTTT',
@@ -976,7 +977,7 @@ function loadGame(){
 // ============================================================
 // サウンド（Web Audio API・全部コードで生成）
 // ============================================================
-let actx=null,master=null,musicIn=null,musLp=null,sfxBus=null,noiseBuf=null,muted=false;
+let actx=null,master=null,musicIn=null,musLp=null,sfxBus=null,noiseBuf=null,echoIn=null,muted=false;
 const mfreq=m=>440*Math.pow(2,(m-69)/12);
 function initAudio(){
   if(actx)return;
@@ -993,6 +994,13 @@ function initAudio(){
   const conv=actx.createConvolver();conv.buffer=ir;
   const rwet=actx.createGain();rwet.gain.value=0.24;
   musicIn.connect(conv);conv.connect(rwet);rwet.connect(musLp);
+  // 曲別エコー（SONGS.echoで湿り気指定・既定0=既存曲は不変）
+  echoIn=actx.createGain();echoIn.gain.value=0;
+  const edl=actx.createDelay(1.0);edl.delayTime.value=0.42;
+  const efb=actx.createGain();efb.gain.value=0.40;
+  const elp=actx.createBiquadFilter();elp.type='lowpass';elp.frequency.value=1800;
+  echoIn.connect(edl);edl.connect(elp);elp.connect(efb);efb.connect(edl);elp.connect(musLp);
+  musicIn.connect(echoIn);
   sfxBus=actx.createGain();sfxBus.gain.value=0.9;sfxBus.connect(master);
   noiseBuf=actx.createBuffer(1,actx.sampleRate,actx.sampleRate);
   const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
@@ -1028,7 +1036,9 @@ const INST={
   horn:{w:'square',det:[-3,2],att:0.04,rel:0.18,filt:1150,sus:0.8},
   bassS:{w:'sawtooth',det:[-3,2],att:0.01,rel:0.09,filt:950,sus:0.9},
   flute:{w:'triangle',det:[0],att:0.035,rel:0.16,filt:3400,sus:0.82,vib:{d:9,f:5.4,dl:0.14}},
-  warm:{w:'sine',det:[0,8],att:0.045,rel:0.35,filt:2200,sus:0.9}};
+  warm:{w:'sine',det:[0,8],att:0.045,rel:0.35,filt:2200,sus:0.9},
+  choir:{w:'triangle',det:[-7,0,7],att:0.30,rel:0.55,filt:1500,sus:0.85,vib:{d:4,f:4.4,dl:0.35}},
+  bell:{prt:[[1,1],[2.0,0.55],[2.76,0.4],[5.40,0.16],[8.93,0.07]],att:0.006,rel:1.8,filt:6000,sus:0.05}};
 function playInst(iname,midi,t,dur,vol,pan){
   if(!actx)return;
   const I=INST[iname]||INST.warm;
@@ -1047,7 +1057,17 @@ function playInst(iname,midi,t,dur,vol,pan){
     lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(I.vib.d,t+I.vib.dl+0.15);
     lfo.connect(lg);lfo.start(t);lfo.stop(t+dur+I.rel);
   }
-  for(const dt of I.det){
+  if(I.prt){
+    // 加算合成（[倍音比,ゲイン]・非整数倍音=かね）。ゲインは合計で正規化
+    const psum=I.prt.reduce((a,pr)=>a+pr[1],0);
+    for(const pr of I.prt){
+      const o=actx.createOscillator();
+      o.type='sine';o.frequency.value=mfreq(midi)*pr[0];
+      const og=actx.createGain();og.gain.value=pr[1]/psum;
+      o.connect(og);og.connect(f);
+      o.start(t);o.stop(t+dur+I.rel+0.05);
+    }
+  }else for(const dt of I.det){
     const o=actx.createOscillator();
     o.type=I.w;o.detune.value=dt;
     if(I.blip){o.frequency.setValueAtTime(mfreq(midi)*0.97,t);o.frequency.exponentialRampToValueAtTime(mfreq(midi),t+0.045);}
@@ -1420,6 +1440,74 @@ const SONGS={};
       {i:'brass',g:0.08,pan:0.1,seq:MEL},
       {drum:1,g:0.34,seq:dr}]};
   }
+  // はての しま：とわの とい（ホ短調58・かねの といかけ+せいか+なみおと・Bで とまり Emへ もどる=とい の ループこうぞう）
+  {
+    const drone=[],pad=[],bell=[],mel=[],wave=[];
+    const CH=[
+      [40,[64,67,71]],[36,[60,64,71]],[43,[62,67,71]],[38,[62,66,69]],
+      [45,[60,64,69]],[40,[59,64,67]],[36,[60,64,67]],[47,[59,64,66]]];
+    CH.forEach((c,b)=>{
+      const o=b*16;
+      drone.push([o,c[0],16]);
+      if(b===7){pad.push([o,59,8],[o,64,8],[o,66,8],[o+8,59,8],[o+8,63,8],[o+8,66,8]);}
+      else c[1].forEach(m=>pad.push([o,m,16]));
+    });
+    bell.push([0,76,4],[20,71,4],[36,78,4],[64,76,4],[84,71,4],[100,79,4],[124,83,4]);
+    mel.push([4,71,6],[10,74,2],[12,76,4],
+      [16,76,8],[24,74,4],[28,71,2],[30,69,2],
+      [32,67,8],[40,71,4],[44,74,4],
+      [48,78,10],[58,76,2],[60,74,2],[62,71,2],
+      [64,72,6],[70,71,2],[72,69,6],[78,67,2],
+      [80,67,4],[84,71,4],[88,76,8],
+      [96,79,6],[102,76,2],[104,74,4],[108,72,4],
+      [112,71,12]);
+    wave.push([0,3,0.55],[64,3,0.45],[116,3,0.3]);
+    SONGS.edge={bpm:58,div:4,steps:128,echo:0.22,tracks:[
+      {i:'warm',g:0.11,pan:0,seq:drone},
+      {i:'choir',g:0.045,pan:-0.25,seq:pad},
+      {i:'bell',g:0.09,pan:0.25,seq:bell},
+      {i:'flute',g:0.09,pan:0.06,seq:mel},
+      {drum:1,g:0.11,seq:wave}]};
+  }
+  // こたえなき もの：しんぱんの かね（Eフリギア146・はんおん オスティナート・さいご F→E も といは のこる）
+  {
+    const bass=[],ost=[],bell=[],MEL=[],run=[],dr=[];
+    const CH=[
+      [40,[64,67,71],41],[41,[65,69,72],40],[40,[64,67,71],41],[43,[62,67,71],41],
+      [45,[64,69,72],41],[41,[65,69,72],40],[48,[64,67,72],47],[41,[64,65,69],40]];
+    CH.forEach((c,b)=>{
+      const o=b*16;
+      if(b===7){for(let i=0;i<8;i++)bass.push([o+i,41,1,(i%4===0)?1:0.8]);for(let i=8;i<16;i++)bass.push([o+i,40,1,(i%4===0)?1:0.8]);}
+      else for(let i=0;i<16;i++)bass.push([o+i,(i%8===2||i%8===6)?c[2]:c[0],1,(i%4===0)?1:0.8]);
+      for(let i=0;i<16;i++)ost.push([o+i,c[1][[0,1,2,1][i%4]],1]);
+      dr.push([o,1],[o+4,0,0.7],[o+8,1],[o+12,0,0.7],[o+6,2,0.55],[o+14,2,0.55]);
+      if(b%2===0)bell.push([o,88,2]);
+    });
+    bell.push([112,88,2],[116,86,2],[120,84,2]);
+    dr.push([0,3,0.8]);
+    for(let i=8;i<16;i++)dr.push([112+i,0,0.5+(i-8)*0.05]);
+    const sc=[64,65,67,69,71,72,74,76];
+    for(let i=0;i<16;i++)run.push([96+i,sc[i%8]+(i>=8?12:0),1,0.7+i*0.02]);
+    MEL.push([0,64,6],[6,65,2],[8,64,8],
+      [16,69,8],[24,67,4],[28,65,4],
+      [32,71,8],[40,72,8],
+      [48,74,12],[60,71,4],
+      [64,76,8],[72,74,4],[76,72,4],
+      [80,77,8],[88,76,4],[92,74,4],
+      [96,72,4],[100,71,4],[104,69,4],[108,67,4],
+      [112,65,8],[120,64,8]);
+    const intro={steps:16,tracks:[
+      {drum:1,g:0.30,seq:(()=>{const a=[];for(let i=4;i<12;i++)a.push([i,0,0.28+i*0.04]);a.push([12,1,1.1],[12,3,0.65]);return a;})()},
+      {i:'bassS',g:0.075,pan:0,seq:[[0,40,16],[0,46,16]]},
+      {i:'bell',g:0.10,pan:0,seq:[[0,76,8]]}]};
+    SONGS.kotae={bpm:146,div:4,steps:128,timp:24,echo:0.10,intro,tracks:[
+      {i:'bassS',g:0.15,pan:-0.1,seq:bass},
+      {i:'strings',g:0.04,pan:-0.32,seq:ost},
+      {i:'bell',g:0.07,pan:0.28,seq:bell},
+      {i:'brass',g:0.075,pan:0.1,seq:MEL},
+      {i:'hiStr',g:0.05,pan:0.3,seq:run},
+      {drum:1,g:0.33,seq:dr}]};
+  }
 })();
 let songTimer=null,songStep=0,songNext=0,songDef=null;
 function stopSong(){if(songTimer){clearInterval(songTimer);songTimer=null;}songDef=null;if(actx&&musicIn){const n=actx.currentTime;musicIn.gain.cancelScheduledValues(n);musicIn.gain.setTargetAtTime(0,n,0.04);}}
@@ -1431,6 +1519,7 @@ function playSong(name){
   stopSong();if(!actx)return;resumeAudio();
   if(musicIn){const n=actx.currentTime;musicIn.gain.cancelScheduledValues(n);musicIn.gain.setValueAtTime(0.0001,n+0.04);musicIn.gain.setTargetAtTime(1,n+0.06,0.03);}
   songDef=SONGS[name];songStep=0;
+  if(echoIn)echoIn.gain.value=(songDef.echo||0);
   const sd=60/songDef.bpm/(songDef.div||2);
   let t0=actx.currentTime+0.06;
   if(songDef.intro){
@@ -1443,6 +1532,11 @@ function playSong(name){
 function songTick(){
   if(!songDef||!actx)return;
   const sd=60/songDef.bpm/(songDef.div||2);
+  if(songNext<actx.currentTime-0.25){ // タブていし等で おくれたら 過去分は すてて いまの きょくいちへ あわせる（復帰時の一斉再生と負時刻例外の防止）
+    const behind=Math.ceil((actx.currentTime-songNext)/sd);
+    songStep=(songStep+behind)%songDef.steps;
+    songNext=actx.currentTime+0.05;
+  }
   while(songNext<actx.currentTime+1.0){
     for(const tr of songDef.tracks)for(const n of tr.seq)
       if(n[0]===songStep)schedEv(sd,tr,n,songNext);
@@ -2338,6 +2432,7 @@ function questText(){
   if(Game.qChild===2)return 'もくてき：ポポを むらの おかあさんの もとへ';
   if(Game.hidden.k1&&!Game.hidden.k2)return Game.mapId==='ice'?'もくてき：こおりの おくで むすめを すくいだせ！':'もくてき：さらわれた むすめを おえ！ こおりの せかいへ！';
   if(Game.hidden.k2&&!Game.hidden.k3)return 'もくてき：むらの じいさんの もとへ';
+  if(Game.hidden.cleared)return Game.mapId==='edge'?'もくてき：とわの といに こたえよ':'もくてき：ひかりの もどった せかいで じぶんの こたえを さがそう';
   if(Game.mapId==='castle')return 'もくてき：やみのおう ヴォルガを たおせ！';
   if(Game.mapId==='edge')return 'もくてき：とわの といに こたえよ';
   if(Game.mapId==='cave2')return 'もくてき：ちそこ どうくつを たんけんせよ';
@@ -4847,7 +4942,7 @@ async function runBattle(ref){
   enameEl.textContent=foe.name;
   msgtextEl.textContent='';
   updateBars();
-  playSong(foe.boss||foe.mboss?'boss':'battle');
+  playSong(foe===FOES.kotae?'kotae':foe.boss||foe.mboss?'boss':'battle');
   await fadeTo(0,0.25);
   Game.bt.intro=1; // とうじょうスライド
   await wait(0.06);
@@ -5483,6 +5578,7 @@ async function bossDefeat(){
   }
   sfxWin();
   Game.kills++;
+  Game.hidden.cleared=true;saveGame(); // クリアの きろく（scene='ending'になる まえ・いこう しろの ボスは gone:'cleared'で わかない）
   fadeColor('#f6f1e2');
   await fadeTo(1,1.6);
   Game.scene='ending';Game.endT=0;
@@ -5501,6 +5597,7 @@ async function bossDefeat(){
   for(const id of['el1','el2','el3','erank','estats','estats2','eend'])$('#'+id).classList.remove('show');
   $('#btn-title2').classList.remove('shown');
   $('#btn-ng').classList.remove('shown');
+  $('#btn-cont').classList.remove('shown');
   playSong('ending');
   await fadeTo(0,1.8);
   fadeColor('#070b1e');
@@ -6713,7 +6810,7 @@ function updateEnding(dt){
   if(t>9.0)$('#estats').classList.add('show');
   if(t>9.8)$('#estats2').classList.add('show');
   if(t>11.2)$('#eend').classList.add('show');
-  if(t>12.4){$('#btn-title2').classList.add('shown');$('#btn-ng').classList.add('shown');}
+  if(t>12.4){$('#btn-title2').classList.add('shown');$('#btn-ng').classList.add('shown');$('#btn-cont').classList.add('shown');}
   if(Math.random()<dt*14)
     puff(rnd(0,W),H+10,'rgba(255,240,200,.65)',1,rnd(18,42),rnd(3,6),{up:true,s0:1.2,s1:3,drag:1});
 }
@@ -6818,6 +6915,22 @@ async function ngNewGame(){
   await openingSequence();
   saveGame();
   toast((Game.ng+1)+'しゅうめの ぼうけんが はじまった！ きろくも すませたぞ！');
+}
+// クリアごの せかいへ：EDから そのまま たびを つづける（きろくは bossDefeatで すませてある）
+async function endContinue(){
+  if(Game.scene!=='ending'||Game.started)return;
+  Game.started=true;
+  sfxOk();
+  fadeColor('#070b1e');
+  await fadeTo(1,0.8);
+  stopSong();
+  loadMap(Game.mapId); // ボスの きえた しろを くみなおす（gone:'cleared'）
+  Game.scene='field';
+  showUI('ui-field');
+  playSong(fieldSong());
+  await fadeTo(0,0.6);
+  toast('ひかりの もどった せかいで、たびは つづく──');
+  Game.started=false;
 }
 async function toTitle(){
   sfxOk();
@@ -6926,6 +7039,7 @@ $('#btn-continue').addEventListener('pointerdown',e=>{e.stopPropagation();contin
 $('#btn-title').addEventListener('pointerdown',e=>{e.stopPropagation();toTitle();});
 $('#btn-title2').addEventListener('pointerdown',e=>{e.stopPropagation();toTitle();});
 $('#btn-ng').addEventListener('pointerdown',e=>{e.stopPropagation();ngNewGame();});
+$('#btn-cont').addEventListener('pointerdown',e=>{e.stopPropagation();endContinue();});
 resize();
 resetGame();
 Game.scene='title';
