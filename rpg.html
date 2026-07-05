@@ -1217,6 +1217,24 @@ const SONGS={};
     {i:'choir',g:0.05,pan:-0.2,seq:pad},
     {i:'bell',g:0.085,pan:0.2,seq:bell}]};
 }
+// かげ戦『とむらいの たたかい』：イ短調96・しずかな こどう+choirの ひあい＝「とどめ」でなく「かいほう」の戦闘曲
+{
+  const bass=[],pad=[],bell=[],dr=[];
+  const CH=[[33,[57,60,64]],[31,[55,59,62]],[29,[53,57,60]],[28,[52,55,59]],
+            [33,[57,60,64]],[36,[60,64,67]],[28,[52,55,59]],[33,[57,60,64]]];
+  CH.forEach((c,b)=>{const o=b*16;
+    for(let i=0;i<16;i+=4)bass.push([o+i,c[0],3,(i===0)?1:0.75]);
+    c[1].forEach((nn,i)=>pad.push([o+i*2,nn,14-i*2]));
+    dr.push([o,1,0.7],[o+8,0,0.5],[o+12,2,0.4]);
+    if(b%2===1)bell.push([o,c[1][2]+12,4,0.9]);
+  });
+  bell.push([120,81,8,1]);
+  SONGS.kage={bpm:96,div:4,steps:128,echo:0.22,tracks:[
+    {i:'bassS',g:0.085,pan:0,seq:bass},
+    {i:'choir',g:0.055,pan:-0.15,seq:pad},
+    {i:'bell',g:0.08,pan:0.2,seq:bell},
+    {drum:1,g:0.10,seq:dr}]};
+}
 (function(){
   // 通常戦闘：イ短調158・序奏つき16小節（嘆きの低音→五度圏→減七→属七の駆け上がり）
   {
@@ -5404,7 +5422,7 @@ async function runBattle(ref){
   enameEl.textContent=foe.name;
   msgtextEl.textContent='';
   updateBars();
-  playSong(foe===FOES.kotae?'kotae':foe.boss||foe.mboss?'boss':'battle');
+  playSong(foe===FOES.kotae?'kotae':foe.kage?'kage':foe.boss||foe.mboss?'boss':'battle');
   await fadeTo(0,0.16);
   Game.bt.intro=1; // とうじょうスライド
   await wait(0.03);
