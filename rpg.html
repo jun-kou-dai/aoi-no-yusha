@@ -2036,7 +2036,13 @@ stage.addEventListener('pointermove',e=>{
     swipeVec=[[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1]][i];
   }
 });
-window.addEventListener('pointerup',()=>{ptr=null;swipeVec=null;});
+window.addEventListener('pointerup',e=>{
+  if(ptr&&!swipeVec&&Game.scene==='field'&&!Game.talking&&!Game.battling&&!Game.transiting){
+    const dx=e.clientX-ptr.x,dy=e.clientY-ptr.y;
+    if(Math.hypot(dx,dy)<16)tapMove(e.clientX,e.clientY); // うごかさず はなした=タップ→そこへ あるく
+  }
+  ptr=null;swipeVec=null;
+});
 window.addEventListener('pointercancel',()=>{ptr=null;swipeVec=null;});
 // おしている ほうこうキーを ぜんぶ あわせた タイルベクトル
 // （1キー＝がめんの みため4ほうこう／2キーどうじ＝タイルじくの ななめ＝みちなり）
@@ -2489,7 +2495,7 @@ function questText(){
   if(Game.qChild===2)return 'もくてき：ポポを むらの おかあさんの もとへ';
   if(Game.hidden.k1&&!Game.hidden.k2)return Game.mapId==='ice'?'もくてき：こおりの おくで むすめを すくいだせ！':'もくてき：さらわれた むすめを おえ！ こおりの せかいへ！';
   if(Game.hidden.k2&&!Game.hidden.k3)return 'もくてき：むらの じいさんの もとへ';
-  if(Game.hidden.cleared)return Game.mapId==='edge'?'もくてき：とわの といに こたえよ':'もくてき：ひかりの もどった せかいで じぶんの こたえを さがそう';
+  if(Game.hidden.cleared)return Game.mapId==='edge'?'もくてき：とわの といに こたえよ':(Game.hidden.elderTold?'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている':'もくてき：5つの せきひと むらの こえが、つぎの みちを しめす');
   if(Game.mapId==='castle')return 'もくてき：やみのおう ヴォルガを たおせ！';
   if(Game.mapId==='edge')return 'もくてき：とわの といに こたえよ';
   if(Game.mapId==='cave2')return 'もくてき：ちそこ どうくつを たんけんせよ';
@@ -2586,6 +2592,56 @@ function updateHunter(e,p,dt){
     }
   }
 }
+// タップいどう：タップした マスへ BFSで あるく（NPC/おうさま/やどは となりまで あるいて じどうで はなす）
+function tapMove(cx,cy){
+  const cam=Game.cam,p=Game.p;if(!cam||!p)return;
+  const r=cv.getBoundingClientRect();if(!r.width)return;
+  const lx=(cx-r.left)*(W/r.width),ly=(cy-r.top)*(H/r.height);
+  const u=(lx-cam.ox)/(cam.TW/2),v=(ly-cam.oy-cam.TH/2)/(cam.TH/2);
+  const tx=Math.round((u+v)/2),ty=Math.round((v-u)/2);
+  if(tx<0||ty<0||tx>=MW||ty>=MH)return;
+  const w=WORLDS[Game.mapId];
+  const isTalkT=(x,y)=>!!(npcAt(x,y)||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y));
+  const goalTalk=isTalkT(tx,ty);
+  if(!goalTalk&&!walkable(tx,ty))return;
+  if(tx===p.tx&&ty===p.ty)return;
+  const key=(x,y)=>x+'_'+y;
+  const prev={};prev[key(p.tx,p.ty)]=null;
+  const q=[[p.tx,p.ty]];
+  let found=false,end=null;
+  // talkマスは ななめから しか ちかづけない はいちが ある（じいさん=王のとなり等）
+  // → talkは「8りんせつの あるけるマスへ BFS→さいごに goalへ むく いっぽ」方式
+  const isEnd=(x,y)=>goalTalk?(Math.max(Math.abs(x-tx),Math.abs(y-ty))<=1&&!(x===tx&&y===ty)):(x===tx&&y===ty);
+  if(goalTalk&&isEnd(p.tx,p.ty)){Game.autoPath=[{x:tx,y:ty}];return;} // すでに となり=この一歩で はなす
+  while(q.length){
+    const cu=q.shift();
+    if(isEnd(cu[0],cu[1])){found=true;end=cu;break;}
+    for(const dd of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx=cu[0]+dd[0],ny=cu[1]+dd[1];
+      if(nx<0||ny<0||nx>=MW||ny>=MH)continue;
+      const k2=key(nx,ny);
+      if(k2 in prev)continue;
+      if(!walkable(nx,ny)||isTalkT(nx,ny))continue; // NPCマスは とおらない
+      prev[k2]=cu;q.push([nx,ny]);
+    }
+  }
+  if(!found)return;
+  const path=[];let cur=end;
+  while(cur&&!(cur[0]===p.tx&&cur[1]===p.ty)){path.unshift({x:cur[0],y:cur[1]});cur=prev[key(cur[0],cur[1])];}
+  if(goalTalk)path.push({x:tx,y:ty}); // さいごの いっぽ（ななめ可）で じどうかいわ
+  if(path.length)Game.autoPath=path;
+}
+function autoStep(){
+  const ap=Game.autoPath;if(!ap||!ap.length)return null;
+  const p=Game.p;
+  const n=ap[0];
+  if(n.x===p.tx&&n.y===p.ty){ap.shift();return autoStep();}
+  const adx=Math.abs(n.x-p.tx),ady=Math.abs(n.y-p.ty);
+  if(adx>1||ady>1){Game.autoPath=null;return null;} // ずれたら はき（ななめ1マスは talkの さいごの いっぽで ゆるす）
+  const d=[Math.sign(n.x-p.tx),Math.sign(n.y-p.ty)];
+  if(ap.length===1)Game.autoPath=null; // さいごの いっぽ（talkマスなら この一歩で じどうかいわが はっかする）
+  return d;
+}
 function updateField(dt){
   const p=Game.p;
   if(!Game.talking)Game.dayT+=dt; // かいわちゅうは ときが とまる
@@ -2595,7 +2651,9 @@ function updateField(dt){
   // 主人公の移動：キーの みための ほうこう（ひし形では ななめ）へ。
   // ふさがれていたら ちかい たて・よこの マスへ そって すすむ
   if(!p.moving&&!Game.battling&&!Game.talking&&!Game.transiting){
-    const d=getDirVec();
+    let d=getDirVec();
+    if(d)Game.autoPath=null; // てで うごかしたら タップいどうは とりけし
+    else d=autoStep();
     if(d){
       // むき：がめんの みための ほうこうで きめる（がめんx=dx-dy / がめんy=dx+dy）
       const sx=d[0]-d[1],sy=d[0]+d[1];
@@ -2916,6 +2974,7 @@ function updateField(dt){
 async function startEncounter(e){
   if(Game.battling)return;
   Game.battling=true;
+  Game.autoPath=null;
   const p=Game.p;
   p.moving=null;p.bump=null;p.px=p.tx;p.py=p.ty;
   held.length=0;swipeVec=null;ptr=null;
@@ -3737,6 +3796,18 @@ function drawFieldScene(){
     const tg=ctx.createRadialGradient(pc.x,pcy,2,pc.x,pcy,r*0.55);
     tg.addColorStop(0,'rgba(255,180,90,0.12)');tg.addColorStop(1,'rgba(255,180,90,0)');
     ctx.fillStyle=tg;ctx.beginPath();ctx.arc(pc.x,pcy,r*0.55,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+  // タップいどうの めじるし（もくてきちに あわい リング）
+  if(Game.autoPath&&Game.autoPath.length){
+    const gp=Game.autoPath[Game.autoPath.length-1];
+    const q=isoCtr(gp.x,gp.y);
+    ctx.save();
+    ctx.strokeStyle='rgba(255,244,200,'+(0.45+0.3*Math.sin(TM*6)).toFixed(2)+')';
+    ctx.lineWidth=2;
+    ctx.translate(q.x,q.y);
+    ctx.scale(1,0.5);
+    ctx.beginPath();ctx.arc(0,0,TW*0.34*(1+0.12*Math.sin(TM*6)),0,6.29);ctx.stroke();
     ctx.restore();
   }
   drawP();
