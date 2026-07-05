@@ -593,7 +593,8 @@ castle:{
   {id:'dslime',x:9, y:5},
   {id:'cuslime',x:17,y:3},
   {id:'chaoslord',x:16,y:10,ng:1},
-  {id:'boss',x:10,y:2,gone:'cleared'}],
+  {id:'boss',x:10,y:2,gone:'cleared'},
+  {id:'nukegara',x:10,y:2,need:'ch2end',gone:'nk1'}],
  chests:[{x:2,y:10,item:'taneM'}],
  exits:[{x:9,y:12,to:'volcano',tx:17,ty:6,msg:'ねっぷうの せかいへ もどってきた。'}]},
 ice:{
@@ -790,7 +791,40 @@ icetown:{
   {x:2,y:3,item:'taneH'},
   {x:16,y:10,item:'seisui'}],
  exits:[
-  {x:10,y:12,to:'grass',tx:4,ty:11,msg:'しずんだ さとを あとに、みなれた そうげんへ もどってきた。'}]}};
+  {x:10,y:12,to:'grass',tx:4,ty:11,msg:'しずんだ さとを あとに、みなれた そうげんへ もどってきた。'}]},
+ mistsea:{
+ song:'sunken', bg:['#1a2030','#2c3a4e'], dark:true, darkR:4.2,
+ map:[
+ 'TTTTTTTTTTTTTTTTTTTT',
+ 'TWWWWWWWWWWWWWWWWWWT',
+ 'TWGGWWWWWGGWWWWWGGWT',
+ 'TWWPWWWWWWPWWWWWWPWT',
+ 'TWWPPPPPPPPPPPPPPPWT',
+ 'TWWPWWWPWWWWPWWWWPWT',
+ 'TWGPGWWGGWWGGWWGPGWT',
+ 'TWWPWWWWPWWWPWWWWPWT',
+ 'TWWPPPPPPPPPPPPPPPWT',
+ 'TWWPWWWWWWPWWWWWWPWT',
+ 'TWGGWWWWWGGWWWWWGGWT',
+ 'TWWWWWWWWWPWWWWWWWWT',
+ 'TTTTTTTTTTETTTTTTTTT',
+ 'TTTTTTTTTTTTTTTTTTTT'],
+ start:{x:10,y:11},
+ npcs:[
+  {x:2,y:2,kind:'stone',col:'#8fb4c8',msg:['こえ「……さむいよう、と ないていた こが いた。\nもう なかなくて いいんだよ、と つたえたい。」']},
+  {x:17,y:2,kind:'stone',col:'#8fb4c8',msg:['こえ「ふねを なおしかけの ままに してきた。\nだれか、つづきを たのめるだろうか。」']},
+  {x:2,y:10,kind:'stone',col:'#8fb4c8',msg:['こえ「むすめの こんれいの はなを つみに いく やくそくだった。\nはなばたけは、まだ あるだろうか。」']},
+  {x:17,y:10,kind:'stone',col:'#8fb4c8',msg:['こえ「わたしたちを わすれないで おくれ。\nわすれられた とき、ほんとうに しずむのだから。」']}],
+ spawns:[
+  {id:'uminokage',x:7,y:6},
+  {id:'uminokage',x:16,y:10},
+  {id:'kirinokage',x:9,y:2},
+  {id:'kirinokage',x:12,y:6}],
+ chests:[
+  {x:10,y:2,item:'taneM'},
+  {x:17,y:6,item:'seisui'}],
+ exits:[
+  {x:10,y:12,to:'grass',tx:4,ty:11,msg:'きりが はれ、みなれた そうげんに もどってきた。'}]}};
 let MAP=WORLDS.grass.map,SPAWNS=WORLDS.grass.spawns,CHESTS=WORLDS.grass.chests,
     SPRING=WORLDS.grass.spring,BZONE=WORLDS.grass.bzone;
 const tileAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?'T':MAP[y][x];
@@ -873,10 +907,13 @@ const FOES={
   dbat:{name:'やみこうもり', hp:36, atk:17, def:6, exp:38, g:15, col:'#b090e0', draw:'crow', v:'bat', physMul:1, fireMul:1.3, iceMul:1, dodge:0.28, drop:'dokukesi'},
   gskel:{name:'がいこつけんし', hp:52, atk:19, def:8, exp:52, g:22, col:'#e0d8c8', draw:'golem', v:'bone', physMul:0.6, fireMul:1.5, iceMul:1, dodge:0},
   bonewarden:{name:'ほねの きょへい', hp:96, atk:24, def:11, exp:115, g:95, col:'#d8d0b8', draw:'golem', v:'bone', huge:true, mboss:true, still:true, winMsg:'ほねの きょへいは がらがらと くずれおちた。\nおくに たからばこが みえる…！', physMul:0.6, fireMul:1.6, iceMul:0.8, dodge:0},
-  kagehito:{name:'かげびと', hp:130, atk:58, def:20, exp:90, g:45, col:'#4a4066', draw:'golem', winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  nakikage:{name:'なきかげ', hp:170, atk:66, def:22, exp:120, g:60, col:'#5a4a78', draw:'crow', spell:true, watch:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  kagekishi:{name:'かげの きし', hp:220, atk:76, def:26, exp:150, g:80, col:'#3a3452', draw:'skel', physMul:0.7, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  satonushi:{name:'さとぬしの かげ', hp:520, atk:100, def:30, exp:600, g:500, col:'#2e2844', draw:'golem', mboss:true, still:true, huge:true, winMsg:'さとぬしの かげは ふかい ためいきとともに ほどけていった。\nみずの そこから、たくさんの こえが きこえてくる——'},
+  kagehito:{name:'かげびと', hp:130, atk:58, def:20, exp:90, g:45, col:'#4a4066', draw:'golem', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  nakikage:{name:'なきかげ', hp:170, atk:66, def:22, exp:120, g:60, col:'#5a4a78', draw:'crow', kage:true, spell:true, watch:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  kagekishi:{name:'かげの きし', hp:220, atk:76, def:26, exp:150, g:80, col:'#3a3452', draw:'skel', kage:true, physMul:0.7, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  satonushi:{name:'さとぬしの かげ', hp:520, atk:100, def:30, exp:600, g:500, col:'#2e2844', draw:'golem', kage:true, mboss:true, still:true, huge:true, winMsg:'さとぬしの かげは ふかい ためいきとともに ほどけていった。\nみずの そこから、たくさんの こえが きこえてくる——'},
+  uminokage:{name:'うみのかげ', hp:180, atk:70, def:24, exp:130, g:65, col:'#35486a', draw:'slime', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  kirinokage:{name:'きりのかげ', hp:150, atk:64, def:22, exp:110, g:55, col:'#6a7a92', draw:'crow', kage:true, dodge:0.15, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  nukegara:{name:'やみの ぬけがら', hp:900, atk:110, def:34, exp:900, g:800, col:'#1c1830', draw:'golem', kage:true, mboss:true, still:true, huge:true, winMsg:'やみの ぬけがらは おとも なく くずれ、\nあとには あたたかい ひかりだけが のこった。'},
   wslime:{name:'まどうスライム', hp:40, atk:15, def:7, exp:55, g:24, col:'#c8a8f0', draw:'slime', v:'dark', spell:true, watch:true, physMul:1, fireMul:1.2, iceMul:1.2, dodge:0.08},
   cuslime:{name:'のろいスライム', hp:58, atk:23, def:9, exp:78, g:34, col:'#e88ad0', draw:'slime', v:'dark', spell:true, physMul:1, fireMul:1.3, iceMul:1.3, dodge:0.12},
   kotae:{name:'こたえなき もの', hp:820, atk:120, def:18, exp:400, g:300, col:'#8a76c8', draw:'golem', v:'iron', mboss:true, still:true, huge:true, spell:true, watch:true, physMul:1, fireMul:0.5, iceMul:0.5, dodge:0, winMsg:'こたえなき ものは しずかに くずれ、なみの おとだけが のこった。\nおくの いしぶみが あわく ひかっている…'}};
@@ -904,7 +941,7 @@ const ITEMS={
   dokukesi:{name:'どくけしそう'},
   tane:  {name:'ちからのたね'}};
 // どこでもドアの 行き先（じゅんばん＝そうげん→…→しろ。表示名つき）
-const ISLE=[['grass','むらの そうげん'],['forest','ふかい もり'],['cave','どうくつ'],['ice','こおりの せかい'],['icetown','ゆきの まち'],['volcano','かざんの しま'],['castle','まおうの しろ'],['edge','はての しま'],['sunken','しずみの さと']];
+const ISLE=[['grass','むらの そうげん'],['forest','ふかい もり'],['cave','どうくつ'],['ice','こおりの せかい'],['icetown','ゆきの まち'],['volcano','かざんの しま'],['castle','まおうの しろ'],['edge','はての しま'],['sunken','しずみの さと'],['mistsea','わすれの うみ']];
 const CLOAK_MAX=60; // とうめいマントの 最大歩数（歩数制バッテリー）
 
 // ============================================================
@@ -943,7 +980,7 @@ function resetGame(){
   Game.bt=null;Game.grace=0;Game.kills=0;Game.battling=false;Game.endT=0;Game.introShown=false;
   Game.items={yakuso:0,seisui:0,dokukesi:0};Game.chestsOpen=[];Game.springUsed={};Game.dmgTaken=0;Game.t0=0;
   Game.goldT=35;Game.saidYes=false;Game.dayT=DAY_START;Game.metalT=20;Game.stats={battles:0,crits:0,deaths:0};
-  Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.hidden={};Game.popo=null;Game.popoT=null;
+  Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.purified=0;Game.hidden={};Game.popo=null;Game.popoT=null;
   Game.door=false;Game.mkey=false;Game.chCard=null;Game.visited={};Game.cloak=false;Game.invisible=false;Game.cloakSteps=0;Game.book=false;Game.seen={};
   loadMap('grass');
   P.length=0;fxL.innerHTML='';
@@ -962,7 +999,7 @@ function saveGame(){
     localStorage.setItem(SAVE_KEY,JSON.stringify({v:1,diff:Game.diff,
       lv:p.lv,exp:p.exp,hp:p.hp,mp:p.mp,bonusAtk:p.bonusAtk,tx:p.tx,ty:p.ty,dir:p.dir,
       gold:Game.gold,items:Game.items,weaponAtk:Game.weaponAtk,armorDef:(Game.armorDef||0),shield:Game.shield,
-      mbossDown:Game.mbossDown,springUsed:Game.springUsed,mapId:Game.mapId,door:Game.door,mkey:!!Game.mkey,visited:Game.visited,cloak:Game.cloak,book:Game.book,seen:Game.seen,
+      mbossDown:Game.mbossDown,springUsed:Game.springUsed,mapId:Game.mapId,door:Game.door,mkey:!!Game.mkey,visited:Game.visited,cloak:Game.cloak,book:Game.book,seen:Game.seen,purified:Game.purified||0,
       kills:Game.kills,dmgTaken:Game.dmgTaken,goldT:Game.goldT,saidYes:Game.saidYes,day:Game.dayT,
       qChild:Game.qChild,bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,bonusMp:Game.bonusMp,gheart:Game.gheart,ng:Game.ng||0,hidden:Game.hidden,
       stats:Game.stats,chests:Game.chestsOpen.map(chestKey).filter(Boolean),
@@ -992,6 +1029,7 @@ function loadGame(){
   Game.qChild=d.qChild||0;Game.bonusDef=d.bonusDef||0;Game.bonusHp=d.bonusHp||0;Game.bonusMp=d.bonusMp||0;Game.gheart=d.gheart||0;Game.ng=d.ng||0;
   Game.hidden=d.hidden||{};
   Game.door=!!d.door; // どこでもドア 所持
+  Game.purified=d.purified||0; // じょうか数（かげ解放）
   Game.mkey=!!d.mkey; // まほうのかぎ 所持
   Game.cloak=!!d.cloak;Game.book=!!d.book;Game.invisible=false;Game.cloakSteps=CLOAK_MAX;Game.seen=(d.seen&&typeof d.seen==='object')?d.seen:{}; // とうめいマント（所持のみ永続・透明状態は持ち越さない・バッテリー満タン）
   Game.visited=(d.visited&&typeof d.visited==='object')?d.visited:{};Game.visited.grass=true; // 訪問した島（旧セーブは草原を既訪あつかい）
@@ -1755,8 +1793,9 @@ const BOOK_ISLES=[
   ['どうくつ',['bat','hslime','skel','mboss','dbat','gskel','bonewarden']],
   ['こおりの せかい',['islime','scrow','fgolem','icewarden','frostlord']],
   ['かざんの しま',['lslime','ecrow','mgolem','magmalord']],
-  ['まおうの しろ',['dslime','dcrow','cuslime','chaoslord','boss','boss2']],
-  ['しずみの さと',['kagehito','nakikage','kagekishi','satonushi']]];
+  ['まおうの しろ',['dslime','dcrow','cuslime','chaoslord','boss','boss2','nukegara']],
+  ['しずみの さと',['kagehito','nakikage','kagekishi','satonushi']],
+  ['わすれの うみ',['uminokage','kirinokage']]];
 const BOOK_SPECIAL=['gslime','metal','kotae'];
 const BOOK_TRAITS={
   slime:['たまに にげだす'],
@@ -1870,6 +1909,7 @@ function renderStatus(){
    h+=row('ずかん',zk+' / '+zAll.length);
    h+=row('せきひ',sk+' / 5');
    h+=row('きょじんのこころ',(Game.gheart||0)+' / 5');
+   if(Game.hidden&&Game.hidden.ch2)h+=row('じょうか',(Game.purified||0)+'にん の かげを ときはなった');
    h+=row('しょうごう',(Game.hidden&&Game.hidden.zkomp)?'まものはかせ':'──');}
   return h;
 }
@@ -2184,7 +2224,7 @@ async function transitMap(ex){
 // どこでもドア：行ったことのある しまへ ひとっとび（フィールドの 🚪ボタンから）
 async function useDoor(){
   if(!Game.door||Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
-  const dests=ISLE.filter(([id])=>(Game.visited[id]||(id==='edge'&&Game.hidden.elderTold)||(id==='sunken'&&Game.hidden.ch2))&&id!==Game.mapId);
+  const dests=ISLE.filter(([id])=>(Game.visited[id]||(id==='edge'&&Game.hidden.elderTold)||(id==='sunken'&&Game.hidden.ch2)||(id==='mistsea'&&Game.hidden.ch2end))&&id!==Game.mapId);
   startTalk();sfxSel();
   if(!dests.length){await say('どこでもドア——でも まだ いける しまが ない。');endTalk();return;}
   await say('どこでもドアが ひらいた！\nどの しまへ いく？');
@@ -2382,6 +2422,17 @@ async function talkNpc(n){
       await say('じいさん「…そうか。あの よる、おとうとは たまに すがって、\nさとを すくおうと したのか…。」');
       await say('じいさん「たまは えらび、おとうとは のこされた——\nそれが すべての はじまり じゃったのじゃな。」');
       await say('じいさん「ゆうしゃどの。かげたちを、たのむ。\nすくいのこした ものたちを、すくって やってくれ。」');
+      await say('じいさん「うみの きりの おくにも、こえが のこっていると きく。\nそれと……しろの おくで、なにかが うごめいて おるそうじゃ。」');
+      toast('どこでもドアに「わすれの うみ」が あらわれた！');
+      endTalk();
+      saveGame();
+      return;
+    }
+    // 章2c: じょうか10にん＝じいさんの こころが かるくなる
+    if(n.msgElder&&Game.hidden.ch2&&(Game.purified||0)>=10&&!Game.hidden.jou10){
+      Game.hidden.jou10=true;
+      await say('じいさん「ふしぎ なものじゃ。このごろ、むねの つかえが\nすこしずつ かるく なっていく きが するのじゃ。」');
+      await say('じいさん「おとうとの こころも、きっと——。\n……ありがとう、ゆうしゃどの。」');
       endTalk();
       saveGame();
       return;
@@ -2450,6 +2501,36 @@ async function kidnapScene(){
   endTalk();
   toast('むすめが さらわれた！ こおりの おくを さがせ！');
   loadMap('ice'); // ばんへい(need:k1)を いま わかせる
+  saveGame();
+}
+// 章2d: しろに はいると、ぬけがらの けはいと「とい」
+async function nukegaraIntroScene(){
+  Game.hidden.nkIntro=true;
+  startTalk();
+  Game.fieldShake=Math.max(Game.fieldShake||0,8);
+  flash('#2a2040',0.4,1.0);sfxEnc();
+  await say('たまの だいざの あとに、くろい なにかが わだかまっている——');
+  await say('ヴォルガの ぬぎすてた やみ。\nすくえなかった なげきの、ぬけがらだ。');
+  await say('ぬけがら『……とおう。はんぶんしか すくえぬ とき、\nおまえは どうする。』');
+  const c=await ask([{id:'yes',label:'それでも すくう'},{id:'no',label:'こたえられない'}],'とい');
+  if(c==='yes')await say('ぬけがら『……ヴォルガも、はじめは そう いった。\nならば その こたえ、ためさせて もらう。』');
+  else await say('ぬけがら『しょうじきさは つよさだ。\nこたえは たたかいの なかで さがせ。』');
+  endTalk();
+  toast('もくてき：やみの ぬけがらを ときはなて！');
+  saveGame();
+}
+// 章2d: ぬけがらを ときはなつ＝章2の むすび（終章カード+せきひ6まいめ）
+async function nukegaraScene(){
+  Game.hidden.nk2=true;
+  startTalk();
+  flash('#fff2d0',0.5,1.4);sfxWin&&0;
+  await say('ぬけがらは ほどけ、ひかりの つぶに なって のぼっていく——');
+  await say('その ひかりの なかに、いっしゅん——\nおさない おとうとが、にいさんへ てを ふる かげが みえた。');
+  if((Game.purified||0)>=15)await say('とおい はての しまで、せきひに あたらしい もじが きざまれた。\n「すくえなかった ものは、もう いない。」');
+  else await say('とおい はての しまで、せきひに あたらしい もじが きざまれた。\n「すくいは、まだ つづいている。」');
+  await say('――ひかりは、つぎの けいしょうしゃを まっている。');
+  endTalk();
+  showChapter('しゅうしょう','ひかりを つぐもの');
   saveGame();
 }
 // 章2b: さとぬしの かげを ときはなつと、さとの しんじつが あかされる
@@ -2618,9 +2699,11 @@ function questText(){
   if(Game.hidden.k2&&!Game.hidden.k3)return 'もくてき：むらの じいさんの もとへ';
   if(Game.hidden.cleared){
     if(Game.mapId==='edge')return 'もくてき：とわの といに こたえよ';
-    if(Game.mapId==='castle')return 'もくてき：みなみの ひかる でぐちから しろを あとに しよう';
+    if(Game.mapId==='castle')return (Game.hidden.ch2end&&!Game.hidden.nk1)?'もくてき：やみの ぬけがらを ときはなて！':'もくてき：みなみの ひかる でぐちから しろを あとに しよう';
     if(Game.mapId==='sunken')return Game.hidden.sn2?'もくてき：むらの じいさんに しんじつを つたえよう':'もくてき：かげを ときはなち、さとの ひろばの ぬしへ';
-    if(Game.hidden.ch2end)return 'もくてき：のこる かげを ときはなち、ひかりを つなごう';
+    if(Game.mapId==='mistsea')return 'もくてき：こえに みみを すませ、かげを ときはなとう';
+    if(Game.hidden.nk2)return 'もくてき：ひかりを つないで いこう——ものがたりは つづく';
+    if(Game.hidden.ch2end)return 'もくてき：「わすれの うみ」の こえと、しろの おくの ぬけがらへ';
     if(Game.hidden.sn2)return 'もくてき：むらの じいさんに しんじつを つたえよう';
     if(Game.hidden.ch2)return 'もくてき：どこでもドアで「しずみの さと」へ';
     return Game.hidden.elderTold?'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている':'もくてき：5つの せきひと むらの こえが、つぎの みちを しめす';
@@ -2867,6 +2950,8 @@ function updateField(dt){
     if(Game.mapId==='ice'&&Game.mbossDown&&!Game.hidden.k1)kidnapScene();
     else if(Game.inVillage&&Game.hidden.k2&&!Game.hidden.k3)thanksScene();
     else if(Game.mapId==='sunken'&&Game.hidden.sn1&&!Game.hidden.sn2)satonushiScene();
+    else if(Game.mapId==='castle'&&Game.hidden.ch2end&&!Game.hidden.nkIntro&&!Game.hidden.nk1)nukegaraIntroScene();
+    else if(Game.mapId==='castle'&&Game.hidden.nk1&&!Game.hidden.nk2)nukegaraScene();
     else if(Game.mapId==='castle'&&!Game.hidden.cleared&&!Game.hidden.ch4c){Game.hidden.ch4c=true;showChapter('だい 4 しょう','やみの おうざ');saveGame();}
   }
   if(p.bump){
@@ -5830,6 +5915,8 @@ async function victory(){
     if(foe===FOES.mboss){Game.mbossDown=true;showChapter('だい 2 しょう','こおりと ほのおの みち');}
     if(foe.winMsg)await say(foe.winMsg);
     if(foe===FOES.satonushi)Game.hidden.sn1=true; // 章2b: さとぬし解放→フィールドで核心開示
+    if(foe===FOES.nukegara)Game.hidden.nk1=true; // 章2d: ぬけがら解放→フィールドで終章
+    if(foe.kage){Game.purified=(Game.purified||0)+1;} // じょうか: かげを ときはなった かず
   }
   if(grantGiantHeart(foe)){
     sfxChest();
