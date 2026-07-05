@@ -1718,7 +1718,9 @@ function songTick(){
 function sfxSel(){if(!actx)return;note('square',93,actx.currentTime,0.05,0.05,sfxBus);}
 function sfxOk(){if(!actx)return;const t=actx.currentTime;note('square',88,t,0.06,0.06,sfxBus);note('square',95,t+0.07,0.09,0.06,sfxBus);}
 function sfxSlash(){if(!actx)return;const t=actx.currentTime;noiseHit(t,0.16,0.5,3400,2);noiseHit(t+0.03,0.12,0.3,1700,2);}
-function sfxHit(){if(!actx)return;const t=actx.currentTime;noiseHit(t,0.18,0.55,900,1.4);note('sine',38,t,0.18,0.5,sfxBus);}
+function sfxHit(){if(!actx)return;const t=actx.currentTime; // 4そう：クリック＋ボディ＋にく＋そこ
+  noiseHit(t,0.045,0.6,2600,3);noiseHit(t+0.012,0.15,0.62,760,1.5);
+  note('triangle',45,t,0.09,0.4,sfxBus);note('sine',31,t,0.22,0.62,sfxBus);}
 function sfxFire(){if(!actx)return;const t=actx.currentTime;
   const o=actx.createOscillator(),g=actx.createGain();o.type='sawtooth';
   o.frequency.setValueAtTime(640,t);o.frequency.exponentialRampToValueAtTime(110,t+0.4);
@@ -1729,9 +1731,9 @@ function sfxHeal(){if(!actx)return;const t=actx.currentTime;[72,76,79,84].forEac
 function sfxLevel(){if(!actx)return;const t=actx.currentTime;[72,76,79,84,88].forEach((m,i)=>note('triangle',m,t+i*0.07,0.22,0.16,sfxBus));[76,79,84,88,91].forEach((m,i)=>note('triangle',m,t+0.4+i*0.07,0.26,0.14,sfxBus));}
 function sfxRun(){if(!actx)return;const t=actx.currentTime;[70,65,60,55].forEach((m,i)=>note('triangle',m,t+i*0.06,0.1,0.12,sfxBus));}
 function sfxCrit(){if(!actx)return;const t=actx.currentTime;
-  noiseHit(t,0.14,0.55,5200,2.5);noiseHit(t+0.04,0.2,0.35,2600,1.6);
+  noiseHit(t,0.03,0.7,3600,3.5);noiseHit(t+0.01,0.14,0.55,5200,2.5);noiseHit(t+0.05,0.2,0.35,2600,1.6);
   note('square',98,t,0.07,0.1,sfxBus);note('square',103,t+0.05,0.12,0.09,sfxBus);
-  note('sine',33,t+0.02,0.4,0.55,sfxBus);}
+  note('sine',33,t+0.02,0.4,0.6,sfxBus);note('sine',26,t+0.06,0.5,0.5,sfxBus);}
 function sfxCharge(){if(!actx)return;const t=actx.currentTime;
   const o=actx.createOscillator(),g=actx.createGain();o.type='sawtooth';
   o.frequency.setValueAtTime(46,t);o.frequency.exponentialRampToValueAtTime(92,t+0.55);
@@ -5414,7 +5416,7 @@ async function runBattle(ref){
   // よるの くさはらの まものは つよい（HP1.35倍・こうげき1.3倍・ほうしゅう1.6倍）
   const night=isNightNow()&&!foe.boss;
   const nhp=Math.round(foe.hp*(night?1.35:1)*diffEnemyHP(foe)); // なんいど：敵HP係数
-  Game.bt={foe,ref,night,hp:nhp,mhp:nhp,t:0,flash:0,lunge:0,shakeT:0,shakeP:0,slash:null,cast:null,dying:null,half:false,
+  Game.bt={foe,ref,night,hp:nhp,mhp:nhp,t:0,flash:0,lunge:0,shakeT:0,shakeP:0,hitStop:0,recoil:0,blink:0,slash:null,cast:null,dying:null,half:false,
     turn:0,soar:false,soarK:0,charge:false,guard:false,sleep:0,para:0,pflash:0,boltT:0,bolt:null,shock:null,awakenT:0,ghosts:null};
   Game.stats.battles++;updateBadge();
   P.length=0;
@@ -5621,14 +5623,14 @@ async function playerAction(act){
       // かいしん：ぼうぎょ・いわのからだ・きんのからだを つらぬく
       Game.stats.crits++;
       d=Math.round(p.atk*2*(bt.atkUp||1)+ri(0,4));
-      sfxCrit();bt.flash=1;shakeBattle(14,0.5);
+      sfxCrit();bt.flash=1;bt.hitStop=0.16;bt.recoil=1.35;bt.blink=1;shakeBattle(18,0.5);
       flash('#fff3c4',0.45,0.55);
       popup(ep.x,ep.y-ep.s*70,d,'crit');
       puff(ep.x,ep.y-ep.s*40,'rgba(255,225,140,.95)',34,300,0.8,{s0:2,s1:6});
       await wait(0.24);
       await say('かいしんの いちげき！！');
     }else{
-      sfxHit();bt.flash=1;shakeBattle(7,0.3);
+      sfxHit();bt.flash=1;bt.hitStop=0.08;bt.recoil=1;bt.blink=1;shakeBattle(10,0.3);
       d=calcDmg(Math.round(p.atk*(bt.atkUp||1)),bt.foe.def);
       d=Math.max(1,Math.round(d*(bt.foe.physMul||1)));
       popup(ep.x,ep.y-ep.s*70,d);
@@ -5651,7 +5653,7 @@ async function playerAction(act){
     bt.cast={t:0};
     await wait(0.26);
     bt.cast=null;
-    sfxFire();bt.flash=1;shakeBattle(8,0.35);
+    sfxFire();bt.flash=1;bt.hitStop=0.07;bt.recoil=0.9;bt.blink=1;shakeBattle(8,0.35);
     flash('#ff9b54',0.3,0.5);
     const mul=bt.foe.fireMul??1;
     const d=spellDmg(p.atk+10-bt.foe.def+ri(0,4),mul);
@@ -5666,7 +5668,7 @@ async function playerAction(act){
     bt.cast={t:0};
     await wait(0.12);
     bt.cast=null;
-    sfxGira();bt.flash=1;shakeBattle(12,0.45);
+    sfxGira();bt.flash=1;bt.hitStop=0.07;bt.recoil=0.9;bt.blink=1;shakeBattle(12,0.45);
     flash('#ffb066',0.42,0.6);
     const mul=bt.foe.fireMul??1;
     const d=spellDmg(p.atk+22-bt.foe.def+ri(0,5),mul);
@@ -5682,7 +5684,7 @@ async function playerAction(act){
     bt.cast={t:0};
     await wait(0.12);
     bt.cast=null;
-    sfxGira();bt.flash=1;shakeBattle(15,0.55);
+    sfxGira();bt.flash=1;bt.hitStop=0.09;bt.recoil=1.1;bt.blink=1;shakeBattle(15,0.55);
     flash('#ffc066',0.5,0.7);
     const mul=bt.foe.fireMul??1;
     const d=spellDmg(p.atk+40-bt.foe.def+ri(0,8),mul);
@@ -5698,7 +5700,7 @@ async function playerAction(act){
     bt.cast={t:0};
     await wait(0.2);
     bt.cast=null;
-    sfxFire();bt.flash=1;shakeBattle(9,0.4);
+    sfxFire();bt.flash=1;bt.hitStop=0.07;bt.recoil=0.9;bt.blink=1;shakeBattle(9,0.4);
     flash('#7bc8ff',0.34,0.55);
     const mul=bt.foe.iceMul??1;
     const d=spellDmg(p.atk+18-bt.foe.def+ri(0,4),mul);
@@ -5713,7 +5715,7 @@ async function playerAction(act){
     bt.cast={t:0};
     await wait(0.12);
     bt.cast=null;
-    sfxGira();bt.flash=1;shakeBattle(14,0.5);
+    sfxGira();bt.flash=1;bt.hitStop=0.09;bt.recoil=1.1;bt.blink=1;shakeBattle(14,0.5);
     flash('#9ad8ff',0.46,0.65);
     const mul=bt.foe.iceMul??1;
     const d=spellDmg(p.atk+40-bt.foe.def+ri(0,8),mul);
@@ -5891,7 +5893,7 @@ async function enemyAction(){
   else if(holy){sfxGira();bossBreath(epb,'rgba(255,228,150,.95)');flash('#f3e9c8',0.55,0.55);shakeBattle(18,0.65);await wait(0.14);}
   else if(spel){sfxFire();bossBreath(epb,'rgba(255,140,60,.95)');flash('#e86a2a',0.4,0.5);shakeBattle(10,0.4);await wait(0.14);}
   else sfxHit();
-  uiShake();
+  uiShake();bt.hitStop=0.06;
   if(!fire&&!holy)shakeBattle(heavy?12:9,heavy?0.45:0.35);
   flash('#c83030',fire||holy||heavy?0.36:0.22,0.45);
   if(foe.boss)playerBloodFx(fire||holy||heavy);
@@ -6187,6 +6189,8 @@ function updateBattle(dt){
   }
   bt.soarK+=((bt.soar?1:0)-(bt.soarK||0))*Math.min(1,dt*5);
   if(bt.flash>0)bt.flash=Math.max(0,bt.flash-dt*3);
+  if(bt.recoil>0)bt.recoil=Math.max(0,bt.recoil-dt*3.8);
+  if(bt.blink>0)bt.blink=Math.max(0,bt.blink-dt*6.5);
   if(bt.lunge>0)bt.lunge=Math.max(0,bt.lunge-dt*2.4);
   if(bt.shakeT>0)bt.shakeT-=dt;
   if(bt.slash){bt.slash.t+=dt*3.4;if(bt.slash.t>=1)bt.slash=null;}
@@ -6377,7 +6381,7 @@ function drawBattleScene(){
   ctx.fillStyle=pg;
   ctx.beginPath();ctx.ellipse(ep.x,py,W*0.24,ep.s*30,0,0,Math.PI*2);ctx.fill();
   if(bt.foe.boss)bossBack(bt,ep);
-  if(bt.foe.tint)drawFoeTinted(bt,ep);
+  if(bt.foe.tint||bt.blink>0)drawFoeTinted(bt,ep);
   else drawFoe(bt,ep);
   if(bt.slash)drawSlash(bt.slash.t,ep);
   drawP();
@@ -6401,8 +6405,8 @@ function drawFoeTinted(bt,ep){
   ctx=foeCtx;
   try{drawFoe(bt,{x:pad,y:pad,s:ep.s});}finally{ctx=keep;}
   foeCtx.globalCompositeOperation='source-atop';
-  foeCtx.fillStyle=bt.foe.tint;
-  foeCtx.fillRect(0,0,pad*2,pad*2);
+  if(bt.foe.tint){foeCtx.fillStyle=bt.foe.tint;foeCtx.fillRect(0,0,pad*2,pad*2);}
+  if(bt.blink>0){foeCtx.fillStyle='rgba(255,255,255,'+(0.8*Math.min(1,bt.blink)).toFixed(3)+')';foeCtx.fillRect(0,0,pad*2,pad*2);} // ひげきの しろい てんめつ
   foeCtx.globalCompositeOperation='source-over';
   ctx.drawImage(foeCv,0,0,w,h,ep.x-pad,ep.y-pad,pad*2,pad*2);
 }
@@ -6417,6 +6421,11 @@ function drawFoe(bt,ep){
   ctx.translate(ep.x,ep.y);
   const ly=bt.lunge>0?Math.sin((1-bt.lunge)*Math.PI)*s*26:0;
   ctx.translate(0,ly);
+  if(bt.recoil>0){ // ひげき：ノックバック＋ふるえ＋つぶれ（おおきい てきは はんぶん）
+    const rk=Math.sin(Math.min(1,bt.recoil)*Math.PI/2)*((bt.foe.huge||bt.foe.boss)?0.5:1);
+    ctx.translate(rk*s*15+Math.sin(bt.recoil*44)*rk*s*3,-rk*s*4);
+    ctx.translate(0,s*62);ctx.scale(1+rk*0.09,1-rk*0.13);ctx.translate(0,-s*62);
+  }
   ctx.globalAlpha=Math.max(0,alpha);
   const sk=bt.soarK||0;
   ctx.fillStyle='rgba(5,8,24,0.45)';
@@ -6449,18 +6458,24 @@ function drawFoe(bt,ep){
   ctx.restore();
 }
 function drawSlash(t,ep){
-  const k=Math.min(1,t);
-  const x0=ep.x+130*ep.s,y0=ep.y-125*ep.s,x1=ep.x-130*ep.s,y1=ep.y+55*ep.s;
-  const xa=lerp(x0,x1,Math.max(0,k-0.3)),ya=lerp(y0,y1,Math.max(0,k-0.3));
-  const xb=lerp(x0,x1,k),yb=lerp(y0,y1,k);
+  // おおぶりの こうせん（3そうの ざんぞう＋せんたんの ひかり）＝「じぶんが きった」てごたえ
+  const k=Math.min(1,t),s=ep.s;
+  const cx=ep.x+120*s,cy=ep.y+160*s,R=260*s;   // えんの ちゅうしん＝てきの みぎした とおく
+  const a0=-1.72,a1=-2.92;                      // みぎうえ→ひだりした へ ふりぬく
+  const sw=Math.min(1,k*1.3);
+  const tail=a0+(a1-a0)*Math.max(0,sw-0.46), head=a0+(a1-a0)*sw;
+  const fade=1-k*k;
   ctx.save();ctx.globalCompositeOperation='lighter';
   ctx.lineCap='round';
-  ctx.strokeStyle='rgba(180,200,255,'+(0.5*(1-k))+')';
-  ctx.lineWidth=16*ep.s;
-  ctx.beginPath();ctx.moveTo(xa,ya);ctx.lineTo(xb,yb);ctx.stroke();
-  ctx.strokeStyle='rgba(255,255,255,'+(1-k*0.4)+')';
-  ctx.lineWidth=5*ep.s+1.5;
-  ctx.beginPath();ctx.moveTo(xa,ya);ctx.lineTo(xb,yb);ctx.stroke();
+  for(const[wd,al]of[[34,0.16],[15,0.45],[5,0.95]]){
+    ctx.strokeStyle='rgba(215,232,255,'+(al*fade).toFixed(3)+')';
+    ctx.lineWidth=wd*s;
+    ctx.beginPath();ctx.arc(cx,cy,R,tail,head,true);ctx.stroke();
+  }
+  const hx=cx+Math.cos(head)*R,hy=cy+Math.sin(head)*R;
+  const hg=ctx.createRadialGradient(hx,hy,1,hx,hy,30*s);
+  hg.addColorStop(0,'rgba(255,255,255,'+(0.95*fade).toFixed(3)+')');hg.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=hg;ctx.beginPath();ctx.arc(hx,hy,30*s,0,Math.PI*2);ctx.fill();
   ctx.restore();
 }
 // ---- スライム（みどり・きん・やみ・メタル） ----
@@ -7656,8 +7671,9 @@ function loop(ts){
   // 60fps上限：120Hz端末(iPad Pro等)で仕事量を半減させ発熱/電池を抑える。60Hz環境では素通り＝見た目不変
   if(ts-(Game._lastFrame||0)<15.5){requestAnimationFrame(loop);return;}
   Game._lastFrame=ts;
-  const dt=Math.min(0.05,(ts-last)/1000)||0.016;
+  let dt=Math.min(0.05,(ts-last)/1000)||0.016;
   last=ts;TM+=dt;
+  if(Game.scene==='battle'&&Game.bt&&Game.bt.hitStop>0){Game.bt.hitStop-=dt;dt=0;} // ヒットストップ：いちげきの てごたえ（はいけいは いきたまま、やくしゃと じかんだけ こおる）
   updateMsg(dt);
   updateP(dt);
   if(Game.scene==='field')updateField(dt);
