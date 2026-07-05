@@ -1969,6 +1969,7 @@ window.addEventListener('keydown',e=>{
   if(DIRS[k]&&!held.includes(k))held.push(k);
   const confirm=(e.key==='Enter'||e.key==='z'||e.key==='Z'||e.key===' ');
   const cancel=(e.key==='x'||e.key==='X'||e.key==='Escape');
+  if(Game.scene==='prologue'&&(confirm||cancel)&&!e.repeat){Game.prSkip=true;return;} // プロローグは キーでも スキップ
   if(MSG&&!MENU&&confirm){ if(!e.repeat||MSG.done)msgConfirm(); return; } // メッセージ表示中はキーで送り（全場面・固まり防止）
   if(Game.scene==='title'&&confirm&&!e.repeat){(hasSave()?continueGame:startGame)();return;}
   if(Game.scene==='field'&&!Game.talking&&!Game.battling&&!Game.transiting&&confirm&&!e.repeat&&tryOpenChest())return;
@@ -1992,6 +1993,7 @@ window.addEventListener('keyup',e=>{
 stage.addEventListener('pointerdown',e=>{
   firstGesture();
   if(e.target.closest('.btn,.mi,#mute'))return;
+  if(Game.scene==='prologue'){Game.prSkip=true;return;} // プロローグは タップで スキップ
   if(MSG&&!MENU){msgConfirm();return;} // メッセージ表示中はタップで送り（全場面・固まり防止）
   if(Game.scene==='field'&&!Game.talking){ptr={x:e.clientX,y:e.clientY};swipeVec=null;}
   else if((Game.scene==='battle'||Game.talking)&&!MENU)msgConfirm();
@@ -6893,9 +6895,133 @@ async function startGame(){
   resetGame();
   await openingSequence();
 }
+// ============================================================
+// プロローグ（はじめから/NG+の どうにゅうえいぞう・タップ/キーで スキップ）
+// ============================================================
+async function prologueScene(){
+  Game.scene='prologue';
+  Game.prT=0;Game.prSkip=false;Game.prFx={l1:false,l2:false,l3:false};
+  showUI('');
+  fadeColor('#070b1e');
+  await fadeTo(0,0.8);
+  while(!Game.prSkip&&Game.prT<11.6)await wait(0.08);
+  await fadeTo(1,Game.prSkip?0.3:1.0);
+  fadeColor('#070b1e');
+}
+function updatePrologue(dt){
+  Game.prT+=dt;
+  const t=Game.prT,fx=Game.prFx;
+  if(t>=3.0&&!fx.l1){fx.l1=true;flash('#e8ecff',0.55,0.16);sfxHit();}
+  if(t>=4.2&&!fx.l2){fx.l2=true;flash('#ffd9c8',0.5,0.2);sfxCrit();}
+  if(t>=7.6&&!fx.l3){fx.l3=true;flash('#ffffff',0.95,0.9);sfxBossDown();}
+}
+function prText(str,a,y){
+  if(a<=0.01)return;
+  ctx.save();
+  ctx.globalAlpha=Math.min(1,a);
+  ctx.fillStyle='#f2ecdc';
+  ctx.font='600 '+Math.max(15,Math.round(Math.min(W,H)*0.034))+'px sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(0,0,0,0.75)';ctx.shadowBlur=10;
+  ctx.fillText(str,W/2,y);
+  ctx.restore();
+}
+function drawPrologueScene(){
+  const t=Game.prT;
+  const dark=Math.min(1,Math.max(0,(t-7.6)/1.6));          // うばわれた あとの くらさ
+  const storm=Math.min(1,Math.max(0,(t-2.6)/1.8))*(1-dark*0.4); // あかぐろい あらし
+  // そら
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,mix('#0b1130','#241028',storm*0.6));
+  g.addColorStop(0.7,mix('#17214b','#3a1020',storm*0.8));
+  g.addColorStop(1,mix('#232c58','#4a1418',storm*0.9));
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // ほし（あらしと やみで きえていく）
+  ctx.save();
+  for(const st of FSTARS){
+    const a=(0.5+0.5*Math.sin(TM*1.7+st.ph))*(1-storm*0.85)*(1-dark*0.5);
+    if(a<=0.02)continue;
+    ctx.globalAlpha=a*0.8;
+    ctx.fillStyle='#dfe6ff';
+    ctx.beginPath();ctx.arc(st.u*W,st.v*H*1.4,st.r,0,6.29);ctx.fill();
+  }
+  ctx.restore();
+  // むらの かげ（ちへいせん・とんがりやね）
+  ctx.fillStyle=mix('#0a0f26','#050409',Math.max(storm*0.3,dark));
+  ctx.fillRect(0,H*0.82,W,H*0.18);
+  for(let i=0;i<7;i++){
+    const bx=W*(0.08+i*0.13),bw=W*0.055,bh=H*(0.05+((i*37)%3)*0.012);
+    ctx.fillRect(bx,H*0.82-bh,bw,bh);
+    ctx.beginPath();ctx.moveTo(bx-bw*0.15,H*0.82-bh);ctx.lineTo(bx+bw/2,H*0.82-bh-bw*0.5);ctx.lineTo(bx+bw*1.15,H*0.82-bh);ctx.closePath();ctx.fill();
+  }
+  const px=W*0.5,py=H*0.34;
+  const gone=t>=7.6;
+  // ヴォルガの かげ（4.6sから たまへ しのびよる・かげえ）
+  if(t>=4.6){
+    const k=Math.min(1,(t-4.6)/2.6);
+    const ss=Math.min(W,H)*0.001*(1.0+k*0.55);
+    const sx=W*(0.60+0.26*(1-k)),sy=py-H*0.02+H*0.012*Math.sin(TM*1.3);
+    const fade=gone?Math.max(0,1-(t-7.6)/1.2):1;
+    if(fade>0.01){
+      ctx.save();
+      ctx.translate(sx,sy);ctx.scale(ss,ss);
+      ctx.globalAlpha=0.92*fade*Math.min(1,k*2.5);
+      ctx.fillStyle=mix('#120a1e','#000000',dark);
+      // マント（すそひろがり）
+      ctx.beginPath();
+      ctx.moveTo(0,-120);
+      ctx.bezierCurveTo(-95,-95,-130,30,-105,120);
+      ctx.quadraticCurveTo(-50,95,0,115);
+      ctx.quadraticCurveTo(50,95,105,120);
+      ctx.bezierCurveTo(130,30,95,-95,0,-120);
+      ctx.closePath();ctx.fill();
+      // つの（2ほん）
+      ctx.beginPath();ctx.moveTo(-38,-104);ctx.quadraticCurveTo(-72,-160,-40,-190);ctx.quadraticCurveTo(-44,-140,-16,-116);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(38,-104);ctx.quadraticCurveTo(72,-160,40,-190);ctx.quadraticCurveTo(44,-140,16,-116);ctx.closePath();ctx.fill();
+      // て（たまへ のばす）
+      const reach=Math.min(1,Math.max(0,(t-5.6)/1.6));
+      if(reach>0){
+        const dxv=(px-sx)/ss,dyv=(py-sy)/ss; // かたから たまへ むかう うで
+        ctx.beginPath();
+        ctx.moveTo(-60,-36);
+        ctx.quadraticCurveTo(dxv*0.5,dyv*0.5-46,dxv*0.94*reach,dyv*0.94*reach-6);
+        ctx.quadraticCurveTo(dxv*0.55,dyv*0.55+16,-52,6);
+        ctx.closePath();ctx.fill();
+      }
+      // め（あかく ひかる）
+      ctx.globalAlpha=fade*(0.65+0.35*Math.sin(TM*3.1));
+      ctx.fillStyle='#c22a3a';
+      ctx.beginPath();ctx.arc(-22,-58,7,0,6.29);ctx.fill();
+      ctx.beginPath();ctx.arc(22,-58,7,0,6.29);ctx.fill();
+      ctx.restore();
+    }
+  }
+  // ひかりのたま（うばわれる まで）
+  if(!gone){
+    const R=Math.max(10,Math.min(W,H)*0.05)*(1+0.06*Math.sin(TM*2.2));
+    const grab=Math.min(1,Math.max(0,(t-6.2)/1.4));
+    const rg=ctx.createRadialGradient(px,py,0,px,py,R*4);
+    rg.addColorStop(0,'rgba(255,250,225,'+(0.95*(1-grab*0.55)).toFixed(3)+')');
+    rg.addColorStop(0.25,'rgba(255,238,180,'+(0.55*(1-grab*0.5)).toFixed(3)+')');
+    rg.addColorStop(1,'rgba(255,220,140,0)');
+    ctx.fillStyle=rg;ctx.beginPath();ctx.arc(px,py,R*4,0,6.29);ctx.fill();
+    ctx.fillStyle='rgba(255,252,240,'+(1-grab*0.35).toFixed(3)+')';
+    ctx.beginPath();ctx.arc(px,py,R,0,6.29);ctx.fill();
+  }
+  // うばわれた あとの やみの まく（ぜんたいを しずめる）
+  if(dark>0){ctx.fillStyle='rgba(4,2,8,'+(dark*0.82).toFixed(3)+')';ctx.fillRect(0,0,W,H);}
+  // ナレーション（2まい）
+  const a1=Math.min((t-0.9)/0.6,(2.9-t)/0.6);
+  prText('ひかりのたまは、せかいの よるを てらしつづけていた。',a1,H*0.62);
+  const a2=Math.min((t-8.6)/0.6,(11.3-t)/0.6);
+  prText('―― その よる、ひかりは うばわれた。',a2,H*0.5);
+  // スキップあんない
+  if(t>1.2&&t<11.0)prText('タップで とばす',0.28,H*0.94);
+}
 // オープニング共通部（「はじめから」と「つよくてニューゲーム」の両方から呼ぶ）
 async function openingSequence(){
   Game.t0=performance.now();
+  await prologueScene();
   Game.scene='field';
   Game.p.dir='U';
   showUI('ui-field');
@@ -7050,12 +7176,14 @@ function loop(ts){
   if(Game.scene==='field')updateField(dt);
   else if(Game.scene==='battle')updateBattle(dt);
   else if(Game.scene==='ending')updateEnding(dt);
+  else if(Game.scene==='prologue')updatePrologue(dt);
   songTick(); // 毎フレーム音符スケジュール（setInterval間引き対策：移動の描画負荷で音が途切れるのを防ぐ）
   ctx.clearRect(0,0,W,H);
   if(Game.scene==='title')drawTitleScene();
   else if(Game.scene==='field')drawFieldScene();
   else if(Game.scene==='battle')drawBattleScene();
   else if(Game.scene==='ending')drawEndingScene();
+  else if(Game.scene==='prologue')drawPrologueScene();
   else if(Game.scene==='gameover')drawGameoverScene();
   drawGrade();
   requestAnimationFrame(loop);
