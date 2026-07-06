@@ -4191,6 +4191,27 @@ function drawFieldScene(){
     ag.addColorStop(0,'rgba(110,50,160,'+pulse+')');ag.addColorStop(1,'rgba(110,50,160,0)');
     ctx.fillStyle=ag;ctx.fillRect(bq.x-TW*4,by-TW*4,TW*8,TW*8);
   }
+  // しずみのさと：すいめんに しずかな はもん（ちんこんの わ・こてい7てん を いそうずらしで じゅんかん）
+  if(Game.mapId==='sunken'){
+    const pts=[[3,1],[9,3],[14,4],[3,6],[16,7],[6,11],[17,11]];
+    ctx.save();
+    for(let i=0;i<pts.length;i++){
+      const ph=(TM*0.13+i*0.371)%1;
+      const c=isoCtr(pts[i][0],pts[i][1]);
+      const a=(ph<0.12)?(ph/0.12):(1-(ph-0.12)/0.88);
+      const r=TW*(0.10+ph*0.72);
+      ctx.strokeStyle='rgba(238,220,214,'+(a*0.34).toFixed(3)+')';
+      ctx.lineWidth=Math.max(1,TW*0.030*(1-ph*0.6));
+      ctx.beginPath();ctx.ellipse(c.x,c.y,r,r*0.5,0,0,Math.PI*2);ctx.stroke();
+      if(ph>0.25){
+        const r2=TW*(0.10+(ph-0.25)*0.72);
+        ctx.strokeStyle='rgba(238,220,214,'+(a*0.20).toFixed(3)+')';
+        ctx.lineWidth=Math.max(1,TW*0.02);
+        ctx.beginPath();ctx.ellipse(c.x,c.y,r2,r2*0.5,0,0,Math.PI*2);ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
   // どうくつの くらやみ（プレイヤーの まわりだけ みえる）
   if(wld.dark){
     const pc=isoCtr(Game.p.px,Game.p.py);
