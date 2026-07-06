@@ -6295,7 +6295,7 @@ async function bossDefeat(){
   Game.hidden.cleared=true;saveGame(); // クリアの きろく（scene='ending'になる まえ・いこう しろの ボスは gone:'cleared'で わかない）
   fadeColor('#f6f1e2');
   await fadeTo(1,1.6);
-  Game.scene='ending';Game.endT=0;
+  Game.scene='ending';Game.endT=0;Game.endRankFx=false;
   Game.bt=null;P.length=0;
   MSG=null;msgtextEl.textContent='';
   showUI('ui-ending');
@@ -7733,6 +7733,9 @@ function updateEnding(dt){
   if(t>3.6)$('#el2').classList.add('show');
   if(t>6.0)$('#el3').classList.add('show');
   if(t>8.0)$('#erank').classList.add('show');
+  if(t>8.0&&!Game.endRankFx){Game.endRankFx=true; // ランクの しゅんかんに きんの しゅくふく
+    for(let i=0;i<44;i++){const a=rnd(0,Math.PI*2),v=rnd(60,320);
+      P.push({x:W/2,y:H*0.40,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:rnd(0.8,1.7),t:0,size:rnd(2,5),col:i%3?'rgba(255,225,140,.9)':'rgba(255,250,230,.95)',grav:30,light:true,drag:0.97});}}
   if(t>9.0)$('#estats').classList.add('show');
   if(t>9.8)$('#estats2').classList.add('show');
   if(t>11.2)$('#eend').classList.add('show');
@@ -7759,6 +7762,24 @@ function drawEndingScene(){
   ctx.fillStyle='#fff6e2';
   ctx.beginPath();ctx.arc(W/2,sy,H*0.045,0,Math.PI*2);ctx.fill();
   ctx.restore();
+  // よあけの とり：ひかりが もどった そらに いのちが かえる
+  if(k>0.45){
+    ctx.save();
+    const ba=Math.min(1,(k-0.45)/0.2)*0.55;
+    ctx.strokeStyle='rgba(40,40,72,'+ba.toFixed(3)+')';
+    ctx.lineWidth=Math.max(1.2,H*0.004);ctx.lineCap='round';
+    for(let i=0;i<4;i++){
+      const bx=((Game.endT*(14+i*3)+i*230)%(W+160))-80;
+      const by=H*(0.28+((i*0.13)%0.22))+Math.sin(Game.endT*1.1+i*2)*H*0.012;
+      const fl=Math.abs(Math.sin(Game.endT*6+i*1.7))*H*0.010;
+      const ww=H*0.016;
+      ctx.beginPath();
+      ctx.moveTo(bx-ww,by-fl);
+      ctx.quadraticCurveTo(bx,by+H*0.004,bx+ww,by-fl);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
   drawMountains(H*0.9,'#2c2a52',1.1);
   drawP();
   drawVignette();
