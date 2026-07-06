@@ -910,13 +910,13 @@ const FOES={
   dbat:{name:'やみこうもり', hp:36, atk:17, def:6, exp:38, g:15, col:'#b090e0', draw:'crow', v:'bat', physMul:1, fireMul:1.3, iceMul:1, dodge:0.28, drop:'dokukesi'},
   gskel:{name:'がいこつけんし', hp:52, atk:19, def:8, exp:52, g:22, col:'#e0d8c8', draw:'golem', v:'bone', physMul:0.6, fireMul:1.5, iceMul:1, dodge:0},
   bonewarden:{name:'ほねの きょへい', hp:96, atk:24, def:11, exp:115, g:95, col:'#d8d0b8', draw:'golem', v:'bone', huge:true, mboss:true, still:true, winMsg:'ほねの きょへいは がらがらと くずれおちた。\nおくに たからばこが みえる…！', physMul:0.6, fireMul:1.6, iceMul:0.8, dodge:0},
-  kagehito:{name:'かげびと', hp:130, atk:58, def:20, exp:90, g:45, col:'#4a4066', draw:'golem', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  nakikage:{name:'なきかげ', hp:170, atk:66, def:22, exp:120, g:60, col:'#5a4a78', draw:'crow', kage:true, spell:true, watch:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  kagekishi:{name:'かげの きし', hp:220, atk:76, def:26, exp:150, g:80, col:'#3a3452', draw:'skel', kage:true, physMul:0.7, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  satonushi:{name:'さとぬしの かげ', hp:520, atk:100, def:30, exp:600, g:500, col:'#2e2844', draw:'golem', kage:true, mboss:true, still:true, huge:true, winMsg:'さとぬしの かげは ふかい ためいきとともに ほどけていった。\nみずの そこから、たくさんの こえが きこえてくる——'},
-  uminokage:{name:'うみのかげ', hp:180, atk:70, def:24, exp:130, g:65, col:'#35486a', draw:'slime', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  kirinokage:{name:'きりのかげ', hp:150, atk:64, def:22, exp:110, g:55, col:'#6a7a92', draw:'crow', kage:true, dodge:0.15, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  nukegara:{name:'やみの ぬけがら', hp:900, atk:110, def:34, exp:900, g:800, col:'#1c1830', draw:'golem', kage:true, mboss:true, still:true, huge:true, winMsg:'やみの ぬけがらは おとも なく くずれ、\nあとには あたたかい ひかりだけが のこった。'},
+  kagehito:{name:'かげびと', hp:130, atk:58, def:20, exp:90, g:45, col:'#4a4066', draw:'golem', tint:'rgba(58,50,88,0.85)', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  nakikage:{name:'なきかげ', hp:170, atk:66, def:22, exp:120, g:60, col:'#5a4a78', draw:'crow', tint:'rgba(70,56,100,0.85)', kage:true, spell:true, watch:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  kagekishi:{name:'かげの きし', hp:220, atk:76, def:26, exp:150, g:80, col:'#3a3452', draw:'golem', v:'bone', tint:'rgba(50,44,76,0.85)', kage:true, physMul:0.7, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  satonushi:{name:'さとぬしの かげ', hp:520, atk:100, def:30, exp:600, g:500, col:'#2e2844', draw:'golem', tint:'rgba(40,34,66,0.88)', kage:true, mboss:true, still:true, huge:true, winMsg:'さとぬしの かげは ふかい ためいきとともに ほどけていった。\nみずの そこから、たくさんの こえが きこえてくる——'},
+  uminokage:{name:'うみのかげ', hp:180, atk:70, def:24, exp:130, g:65, col:'#35486a', draw:'slime', tint:'rgba(48,62,94,0.82)', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  kirinokage:{name:'きりのかげ', hp:150, atk:64, def:22, exp:110, g:55, col:'#6a7a92', draw:'crow', tint:'rgba(88,100,122,0.78)', kage:true, dodge:0.15, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  nukegara:{name:'やみの ぬけがら', hp:900, atk:110, def:34, exp:900, g:800, col:'#1c1830', draw:'golem', tint:'rgba(20,16,38,0.90)', kage:true, mboss:true, still:true, huge:true, winMsg:'やみの ぬけがらは おとも なく くずれ、\nあとには あたたかい ひかりだけが のこった。'},
   wslime:{name:'まどうスライム', hp:40, atk:15, def:7, exp:55, g:24, col:'#c8a8f0', draw:'slime', v:'dark', spell:true, watch:true, physMul:1, fireMul:1.2, iceMul:1.2, dodge:0.08},
   cuslime:{name:'のろいスライム', hp:58, atk:23, def:9, exp:78, g:34, col:'#e88ad0', draw:'slime', v:'dark', spell:true, physMul:1, fireMul:1.3, iceMul:1.3, dodge:0.12},
   kotae:{name:'こたえなき もの', hp:820, atk:120, def:18, exp:400, g:300, col:'#8a76c8', draw:'golem', v:'iron', mboss:true, still:true, huge:true, spell:true, watch:true, physMul:1, fireMul:0.5, iceMul:0.5, dodge:0, winMsg:'こたえなき ものは しずかに くずれ、なみの おとだけが のこった。\nおくの いしぶみが あわく ひかっている…'}};
@@ -6467,12 +6467,24 @@ const BT_ICE={sky:[[0,'#2f5680'],[0.30,'#4f7ba6'],[0.50,'#86b0d4'],[0.60,'#b6d4e
 const BT_VOLCANO={sky:[[0,'#1c0606'],[0.30,'#3a0e0a'],[0.50,'#7a1f10'],[0.60,'#c2491c'],[0.74,'#5e1a0a'],[1,'#1a0807']],
   mtn:['#4e1a10','#2e0d08','#1a0605'],ground:['#42160f','#2c0f0a','#170806'],stars:0,
   pg:'255,148,66',fog:'150,72,52',bokeh:'255,170,92'};
+const BT_SUNKEN={sky:[[0,'#2a1630'],[0.30,'#4e2542'],[0.46,'#8a4152'],[0.54,'#c67a55'],[0.62,'#5a2c48'],[1,'#241426']],
+  mtn:['#4a2848','#341c38','#241328'],ground:['#2e2452','#252048','#161230'],stars:0.35,
+  pg:'255,190,130',fog:'190,120,140',bokeh:'255,180,150'};
+const BT_MISTSEA={sky:[[0,'#1c2434'],[0.30,'#2e3d52'],[0.50,'#54687e'],[0.60,'#7e92a4'],[0.74,'#3c4e64'],[1,'#182030']],
+  mtn:['#37485e','#28374a','#1c2838'],ground:['#26364c','#1e2c40','#121c2c'],stars:0.15,
+  pg:'170,200,230',fog:'205,220,235',bokeh:'185,210,240'};
+const BT_EDGE={sky:[[0,'#080a1a'],[0.30,'#181c3a'],[0.46,'#343056'],[0.54,'#6a5878'],[0.62,'#242244'],[1,'#0c0e22']],
+  mtn:['#262a4a','#1a1d38','#121428'],ground:['#1e2140','#171a34','#0e1024'],stars:0.9,
+  pg:'190,200,255',fog:'140,150,200',bokeh:'190,205,255'};
 function battleTheme(bt){
   if(Game.mapId==='cave'||Game.mapId==='cave2')return BT_CAVE;
   if(Game.mapId==='castle')return BT_CASTLE;
   if(Game.mapId==='forest')return BT_FOREST;
   if(Game.mapId==='ice')return BT_ICE;
   if(Game.mapId==='volcano')return BT_VOLCANO;
+  if(Game.mapId==='sunken')return BT_SUNKEN;
+  if(Game.mapId==='mistsea')return BT_MISTSEA;
+  if(Game.mapId==='edge')return BT_EDGE;
   return bt.night?BT_NIGHT:BT_DAY;
 }
 function drawMountains(baseY,col,amp){
