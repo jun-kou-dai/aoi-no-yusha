@@ -53,6 +53,10 @@ body{
 
 /* ---------- タイトル ---------- */
 #ui-title{ flex-direction:column; align-items:center; justify-content:center; gap:clamp(14px,3vh,26px); }
+#slotwin{ display:flex; flex-direction:column; align-items:center; gap:clamp(10px,2vh,16px); }
+#slot-head{ font-size:clamp(14px,2.4vmin,19px); letter-spacing:.10em; color:#cfd6ef; opacity:.85; max-width:92vw; text-align:center; }
+#slotwin .btn.slotbtn{ min-width:min(78vw,430px); font-size:clamp(13px,2.2vmin,17px); }
+#slotwin .btn.dis{ opacity:.4; pointer-events:none; }
 #logo-wrap{ display:flex; flex-direction:column; align-items:center; gap:6px; animation:lfloat 5.2s ease-in-out infinite; }
 #emblem{ width:clamp(120px,22vmin,190px); height:auto; filter:drop-shadow(0 0 22px rgba(236,229,207,.35)); }
 #ui-title h1{
@@ -357,6 +361,13 @@ body{
     </div>
     <div class="btn" id="btn-continue" style="display:none">▶ つづきから</div>
     <div class="btn main" id="btn-start">▶ はじめる</div>
+    <div id="slotwin" style="display:none">
+      <div id="slot-head">ぼうけんのしょ</div>
+      <div class="btn slotbtn" id="slot-1"></div>
+      <div class="btn slotbtn" id="slot-2"></div>
+      <div class="btn slotbtn" id="slot-3"></div>
+      <div class="btn" id="slot-back">もどる</div>
+    </div>
     <div id="title-hint"><span style="white-space:nowrap">いどう：矢印キー / WASD / スワイプ</span><wbr><span style="white-space:nowrap">（ななめスワイプ・2キーどうじおしで みちなりに あるける）</span>　　<span style="white-space:nowrap">けってい：Enter / Z / タップ</span></div>
   </div>
 
@@ -994,13 +1005,15 @@ function resetGame(){
 // ============================================================
 // ぼうけんのしょ（セーブ・localStorage）
 // ============================================================
-const SAVE_KEY='aoYushaSave1';
+let curSlot=1; // いま あそんでいる ぼうけんのしょ(1-3)。きどうじは 1=きゅうセーブと ごかん
+const saveKey=()=>'aoYushaSave'+curSlot;
+const MAPNAME={grass:'そうげん',forest:'もり',cave:'どうくつ',cave2:'ちそこ',ice:'こおりのしま',icetown:'ゆきのまち',volcano:'かざん',castle:'まおうのしろ',edge:'はてのしま',sunken:'しずみのさと',mistsea:'わすれのうみ'};
 // 宝箱はオブジェクト参照で管理しているため「マップ:座標」の文字列に変換して保存する
 function chestKey(c){for(const id in WORLDS){const w=WORLDS[id];if(w.chests&&w.chests.includes(c))return id+':'+c.x+':'+c.y;}return'';}
 function saveGame(){
   const p=Game.p;if(!p||Game.scene==='ending')return;
   try{
-    localStorage.setItem(SAVE_KEY,JSON.stringify({v:1,diff:Game.diff,
+    localStorage.setItem(saveKey(),JSON.stringify({v:1,diff:Game.diff,
       lv:p.lv,exp:p.exp,hp:p.hp,mp:p.mp,bonusAtk:p.bonusAtk,tx:p.tx,ty:p.ty,dir:p.dir,
       gold:Game.gold,items:Game.items,weaponAtk:Game.weaponAtk,armorDef:(Game.armorDef||0),shield:Game.shield,
       mbossDown:Game.mbossDown,springUsed:Game.springUsed,mapId:Game.mapId,door:Game.door,mkey:!!Game.mkey,visited:Game.visited,cloak:Game.cloak,book:Game.book,seen:Game.seen,purified:Game.purified||0,
@@ -1010,7 +1023,8 @@ function saveGame(){
       playMs:Math.max(0,performance.now()-Game.t0)}));
   }catch(e){}
 }
-function hasSave(){try{return!!localStorage.getItem(SAVE_KEY);}catch(e){return false;}}
+function hasSave(n){try{return!!localStorage.getItem(n?('aoYushaSave'+n):saveKey());}catch(e){return false;}}
+function hasAnySave(){return hasSave(1)||hasSave(2)||hasSave(3);}
 // フィールドの「きろく」ボタン／Escキー：いつでも ぼうけんのしょに きろく
 function fieldSave(){
   if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||!Game.p)return;
@@ -1019,7 +1033,7 @@ function fieldSave(){
 }
 function loadGame(){
   let d=null;
-  try{d=JSON.parse(localStorage.getItem(SAVE_KEY));}catch(e){}
+  try{d=JSON.parse(localStorage.getItem(saveKey()));}catch(e){}
   if(!d||!LEVELS[d.lv])return false;
   resetGame();
   const p=Game.p;
@@ -2255,7 +2269,10 @@ window.addEventListener('keydown',e=>{
   const cancel=(e.key==='x'||e.key==='X'||e.key==='Escape');
   if(Game.scene==='prologue'&&(confirm||cancel)&&!e.repeat){Game.prSkip=true;return;} // プロローグは キーでも スキップ
   if(MSG&&!MENU&&confirm){ if(!e.repeat||MSG.done)msgConfirm(); return; } // メッセージ表示中はキーで送り（全場面・固まり防止）
-  if(Game.scene==='title'&&confirm&&!e.repeat){(hasSave()?continueGame:startGame)();return;}
+  if(Game.scene==='title'&&confirm&&!e.repeat){
+    if($('#slotwin').style.display!=='none')return; // 冊えらび中は キーきどう しない（ごばく ぼうし）
+    if(hasAnySave())showSlots('load');else startGame();
+    return;}
   if(Game.scene==='field'&&!Game.talking&&!Game.battling&&!Game.transiting&&confirm&&!e.repeat&&tryOpenChest())return;
   if(Game.scene==='field'&&!Game.talking&&!Game.battling&&cancel&&!e.repeat){fieldSave();return;}
   if(Game.scene==='battle'||Game.talking){
@@ -7798,10 +7815,10 @@ function drawGameoverScene(){
 // シーン遷移
 // ============================================================
 let newConfirmT=0; // 「ほんとうに はじめから？」の かくにん きげん（TMびょう）
-async function startGame(){
+async function startGame(force){
   if(Game.started||Game.scene!=='title')return;
-  // ぼうけんのしょが あるときは うわがき かくにん：5びょう いないに もういちど おすと かいし
-  if(hasSave()&&TM>=newConfirmT){
+  // ぼうけんのしょが あるときは うわがき かくにん：5びょう いないに もういちど おすと かいし（冊えらび ずみは スキップ）
+  if(!force&&hasSave()&&TM>=newConfirmT){
     newConfirmT=TM+5;
     $('#btn-start').textContent='ほんとうに はじめから？';
     sfxSel();
@@ -8022,7 +8039,7 @@ async function continueGame(){
   firstGesture();sfxOk();
   await fadeTo(1,0.35);
   if(!loadGame()){
-    try{localStorage.removeItem(SAVE_KEY);}catch(e){}
+    try{localStorage.removeItem(saveKey());}catch(e){}
     resetGame();
     Game.scene='title';showUI('ui-title');updateTitleButtons();
     await fadeTo(0,0.45);
@@ -8037,15 +8054,61 @@ async function continueGame(){
   toast('ぼうけんのしょを よみこんだ！ たびの つづきだ！');
   Game.started=false;
 }
-// タイトルのボタン：ぼうけんのしょの うむで きりかえ
+// タイトルのボタン：ぼうけんのしょの うむで きりかえ（冊えらびは とじる）
 function updateTitleButtons(){
-  const has=hasSave();
+  $('#slotwin').style.display='none';
+  $('#title-hint').style.display='';
+  const has=hasAnySave();
   const bc=$('#btn-continue'),bs=$('#btn-start');
   bc.style.display=has?'':'none';
+  bs.style.display='';
   bs.textContent=has?'はじめから':'▶ はじめる';
   bc.classList.toggle('main',has);
   bs.classList.toggle('main',!has);
   newConfirmT=0;
+}
+// ぼうけんのしょ 冊えらび（load=つづきから／new=はじめから）
+let slotMode='load',slotConfirmT=0,slotConfirmN=0;
+const SLOT_NAME=['','いち','に','さん'];
+function slotSummary(n){
+  let d=null;try{d=JSON.parse(localStorage.getItem('aoYushaSave'+n));}catch(e){}
+  if(!d||!LEVELS[d.lv])return null;
+  const ms=d.playMs||0,mm=Math.floor(ms/60000),ss=String(Math.floor(ms/1000)%60).padStart(2,'0');
+  return 'Lv'+d.lv+'　'+((DIFF[d.diff]||DIFF[2]).name)+'　'+(MAPNAME[d.mapId]||'そうげん')+'　'+mm+':'+ss;
+}
+function renderSlots(){
+  for(let n=1;n<=3;n++){
+    const el=$('#slot-'+n),sm=slotSummary(n);
+    el.textContent='【'+SLOT_NAME[n]+'】 '+(sm||'──あたらしい ぼうけん──');
+    el.classList.toggle('dis',slotMode==='load'&&!sm);
+  }
+}
+function showSlots(mode){
+  slotMode=mode;slotConfirmT=0;slotConfirmN=0;
+  renderSlots();
+  $('#slot-head').textContent=mode==='load'?'どの ぼうけんのしょで つづける？':'どの ぼうけんのしょに きろくする？';
+  $('#slotwin').style.display='flex';
+  $('#btn-continue').style.display='none';
+  $('#btn-start').style.display='none';
+  $('#title-hint').style.display='none';
+  sfxSel();
+}
+function pickSlot(n){
+  if(Game.started||Game.scene!=='title')return;
+  const sm=slotSummary(n);
+  if(slotMode==='load'){
+    if(!sm)return;
+    curSlot=n;updateTitleButtons();continueGame();
+  }else{
+    if(sm&&!(slotConfirmN===n&&TM<slotConfirmT)){
+      slotConfirmN=n;slotConfirmT=TM+5;
+      $('#slot-'+n).textContent='【'+SLOT_NAME[n]+'】 ほんとうに うわがきする？';
+      sfxSel();
+      setTimeout(()=>{if(Game.scene==='title'&&!Game.started&&TM>=slotConfirmT&&$('#slotwin').style.display!=='none')renderSlots();},5200);
+      return;
+    }
+    curSlot=n;updateTitleButtons();startGame(true);
+  }
 }
 
 // ============================================================
@@ -8109,8 +8172,10 @@ function loop(ts){
   drawGrade();
   requestAnimationFrame(loop);
 }
-$('#btn-start').addEventListener('pointerdown',e=>{e.stopPropagation();startGame();});
-$('#btn-continue').addEventListener('pointerdown',e=>{e.stopPropagation();continueGame();});
+$('#btn-start').addEventListener('pointerdown',e=>{e.stopPropagation();hasAnySave()?showSlots('new'):startGame();});
+$('#btn-continue').addEventListener('pointerdown',e=>{e.stopPropagation();showSlots('load');});
+for(const N of[1,2,3])$('#slot-'+N).addEventListener('pointerdown',e=>{e.stopPropagation();pickSlot(N);});
+$('#slot-back').addEventListener('pointerdown',e=>{e.stopPropagation();sfxSel();updateTitleButtons();});
 $('#btn-title').addEventListener('pointerdown',e=>{e.stopPropagation();toTitle();});
 $('#btn-title2').addEventListener('pointerdown',e=>{e.stopPropagation();toTitle();});
 $('#btn-ng').addEventListener('pointerdown',e=>{e.stopPropagation();ngNewGame();});
