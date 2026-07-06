@@ -797,7 +797,7 @@ icetown:{
  exits:[
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'しずんだ さとを あとに、みなれた そうげんへ もどってきた。'}]},
  mistsea:{
- song:'sunken', bg:['#1a2030','#2c3a4e'], dark:true, darkR:4.2,
+ song:'sunken', bg:['#1a2030','#2c3a4e'], dark:true, darkR:5.0, darkCol:'56,72,92', darkA:0.66,
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TWWWWWWWWWWWWWWWWWWT',
@@ -4197,9 +4197,10 @@ function drawFieldScene(){
     const pcy=pc.y-entLift(Game.p)-TW*0.2;
     const r=TW*((wld.darkR||4.6)+Math.sin(TM*5.3)*0.10+Math.sin(TM*9.1)*0.06);
     const dg2=ctx.createRadialGradient(pc.x,pcy,TW*0.8,pc.x,pcy,r);
-    dg2.addColorStop(0,'rgba(3,2,9,0)');
-    dg2.addColorStop(0.55,'rgba(3,2,9,0.30)');
-    dg2.addColorStop(1,'rgba(3,2,9,0.80)');
+    const dc=wld.darkCol||'3,2,9',da=(wld.darkA!==undefined)?wld.darkA:0.80; // 霧の いろ・こさは マップべつ（みすとしーは あおい きり）。既定は くろ=既存マップ不変
+    dg2.addColorStop(0,'rgba('+dc+',0)');
+    dg2.addColorStop(0.55,'rgba('+dc+','+(da*0.375).toFixed(3)+')');
+    dg2.addColorStop(1,'rgba('+dc+','+da+')');
     ctx.fillStyle=dg2;ctx.fillRect(0,0,W,H);
     ctx.save();ctx.globalCompositeOperation='lighter';
     const tg=ctx.createRadialGradient(pc.x,pcy,2,pc.x,pcy,r*0.55);
@@ -5820,7 +5821,7 @@ async function playerAction(act){
       // かいしん：ぼうぎょ・いわのからだ・きんのからだを つらぬく
       Game.stats.crits++;
       d=Math.round(p.atk*2*(bt.atkUp||1)+ri(0,4));
-      sfxCrit();bt.flash=1;bt.hitStop=0.16;bt.recoil=1.35;bt.blink=1;shakeBattle(18,0.5);
+      sfxCrit();bt.flash=1;bt.hitStop=0.16;bt.recoil=1.35;bt.blink=1;shakeBattle(18,0.5);bt.shock={t:0};
       flash('#fff3c4',0.45,0.55);
       popup(ep.x,ep.y-ep.s*70,d,'crit');
       puff(ep.x,ep.y-ep.s*40,'rgba(255,225,140,.95)',34,300,0.8,{s0:2,s1:6});
@@ -5850,6 +5851,7 @@ async function playerAction(act){
     bt.cast={t:0};
     await wait(0.26);
     bt.cast=null;
+    bt.spellFx={kind:'fire',t:0,pow:1};
     sfxFire();bt.flash=1;bt.hitStop=0.07;bt.recoil=0.9;bt.blink=1;shakeBattle(8,0.35);
     flash('#ff9b54',0.3,0.5);
     const mul=bt.foe.fireMul??1;
@@ -5865,6 +5867,7 @@ async function playerAction(act){
     bt.cast={t:0};
     await wait(0.12);
     bt.cast=null;
+    bt.spellFx={kind:'fire',t:0,pow:2};
     sfxGira();bt.flash=1;bt.hitStop=0.07;bt.recoil=0.9;bt.blink=1;shakeBattle(12,0.45);
     flash('#ffb066',0.42,0.6);
     const mul=bt.foe.fireMul??1;
@@ -5881,6 +5884,7 @@ async function playerAction(act){
     bt.cast={t:0};
     await wait(0.12);
     bt.cast=null;
+    bt.spellFx={kind:'fire',t:0,pow:3};
     sfxGira();bt.flash=1;bt.hitStop=0.09;bt.recoil=1.1;bt.blink=1;shakeBattle(15,0.55);
     flash('#ffc066',0.5,0.7);
     const mul=bt.foe.fireMul??1;
@@ -5897,6 +5901,7 @@ async function playerAction(act){
     bt.cast={t:0};
     await wait(0.2);
     bt.cast=null;
+    bt.spellFx={kind:'ice',t:0,pow:1};
     sfxFire();bt.flash=1;bt.hitStop=0.07;bt.recoil=0.9;bt.blink=1;shakeBattle(9,0.4);
     flash('#7bc8ff',0.34,0.55);
     const mul=bt.foe.iceMul??1;
@@ -5912,6 +5917,7 @@ async function playerAction(act){
     bt.cast={t:0};
     await wait(0.12);
     bt.cast=null;
+    bt.spellFx={kind:'ice',t:0,pow:3};
     sfxGira();bt.flash=1;bt.hitStop=0.09;bt.recoil=1.1;bt.blink=1;shakeBattle(14,0.5);
     flash('#9ad8ff',0.46,0.65);
     const mul=bt.foe.iceMul??1;
@@ -6400,6 +6406,8 @@ function updateBattle(dt){
   if(bt.lunge>0)bt.lunge=Math.max(0,bt.lunge-dt*2.4);
   if(bt.shakeT>0)bt.shakeT-=dt;
   if(bt.slash){bt.slash.t+=dt*3.4;if(bt.slash.t>=1)bt.slash=null;}
+  if(bt.spellFx){bt.spellFx.t+=dt*2.2;if(bt.spellFx.t>=1)bt.spellFx=null;} // じゅもんの ほのお/こおり
+  if(bt.shock){bt.shock.t+=dt*2.6;if(bt.shock.t>=1)bt.shock=null;} // かいしんの しょうげきは
   if(bt.cast){
     bt.cast.t+=dt;
     const ep=enemyPos();
@@ -6603,6 +6611,8 @@ function drawBattleScene(){
   else drawFoe(bt,ep);
   drawHeroBack(bt);
   if(bt.slash)drawSlash(bt.slash.t,ep);
+  if(bt.spellFx)drawSpellFx(bt.spellFx,ep);
+  if(bt.shock)drawShock(bt.shock.t,ep);
   drawP();
   drawBattleFore(th.bokeh);
   ctx.restore();
@@ -6756,6 +6766,71 @@ function drawHeroBack(bt){
     ctx.beginPath();ctx.arc(0,-u*70,u*70,0,Math.PI*2);ctx.fill();
     ctx.globalCompositeOperation='source-over';
   }
+  ctx.restore();
+}
+// じゅもんの ぞくせいエフェクト：ほのお=たちのぼる 火柱／こおり=つきたつ 氷晶（powで きぼ）
+function drawSpellFx(fx,ep){
+  const t=Math.min(1,fx.t),s=ep.s;
+  ctx.save();
+  if(fx.kind==='fire'){
+    const n=2+fx.pow;
+    ctx.globalCompositeOperation='lighter';
+    for(let i=0;i<n;i++){
+      const px=ep.x+(i-(n-1)/2)*s*26+Math.sin(t*9+i*2.1)*s*5;
+      const hgt=s*(95+fx.pow*22)*(0.5+0.5*Math.min(1,t*2.2))*(1-0.25*t);
+      const w=s*(13+fx.pow*3)*(1-t*0.5);
+      const base=ep.y+s*95;
+      const a=(1-t)*0.75;
+      const g=ctx.createLinearGradient(0,base,0,base-hgt);
+      g.addColorStop(0,'rgba(255,120,30,0)');
+      g.addColorStop(0.25,'rgba(255,150,50,'+(a*0.85).toFixed(3)+')');
+      g.addColorStop(0.7,'rgba(255,205,90,'+a.toFixed(3)+')');
+      g.addColorStop(1,'rgba(255,250,200,0)');
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.moveTo(px-w,base);
+      ctx.quadraticCurveTo(px-w*0.5+Math.sin(t*11+i)*s*6,base-hgt*0.55,px,base-hgt);
+      ctx.quadraticCurveTo(px+w*0.5+Math.sin(t*13+i*1.7)*s*6,base-hgt*0.55,px+w,base);
+      ctx.closePath();ctx.fill();
+    }
+  }else{
+    const n=3+fx.pow;
+    const k=Math.min(1,t*2.6);
+    const a=(t<0.75)?1:(1-(t-0.75)/0.25);
+    for(let i=0;i<n;i++){
+      const ang=(-0.5+i/(n-1))*0.9;
+      const px=ep.x+(i-(n-1)/2)*s*30;
+      const py=ep.y-s*10+((i%2)?s*18:0);
+      const len=s*(60+fx.pow*14)*k;
+      const w=s*(9+fx.pow*1.5);
+      ctx.save();ctx.translate(px,py);ctx.rotate(ang);
+      const g=ctx.createLinearGradient(0,0,0,-len);
+      g.addColorStop(0,'rgba(140,200,255,'+(0.15*a).toFixed(3)+')');
+      g.addColorStop(0.6,'rgba(190,230,255,'+(0.75*a).toFixed(3)+')');
+      g.addColorStop(1,'rgba(255,255,255,'+(0.95*a).toFixed(3)+')');
+      ctx.fillStyle=g;
+      ctx.beginPath();ctx.moveTo(-w*0.5,0);ctx.lineTo(0,-len);ctx.lineTo(w*0.5,0);ctx.lineTo(0,len*0.12);ctx.closePath();ctx.fill();
+      ctx.globalCompositeOperation='lighter';
+      ctx.fillStyle='rgba(255,255,255,'+(0.8*a*k).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(0,-len,s*3,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+// かいしんの しょうげきは（きんの 太リング+白リング+ほのかな 円盤。おおきな てきでも りんかくの そとへ ぬける）
+function drawShock(t,ep){
+  const s=ep.s,r=s*(40+t*220),a=Math.min(1,(1-t)*1.4);
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  const fg=ctx.createRadialGradient(ep.x,ep.y-s*20,r*0.35,ep.x,ep.y-s*20,r);
+  fg.addColorStop(0,'rgba(255,240,190,0)');
+  fg.addColorStop(0.82,'rgba(255,236,170,'+(a*0.30).toFixed(3)+')');
+  fg.addColorStop(1,'rgba(255,240,190,0)');
+  ctx.fillStyle=fg;ctx.beginPath();ctx.arc(ep.x,ep.y-s*20,r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,232,150,'+(a*0.95).toFixed(3)+')';ctx.lineWidth=Math.max(1.5,s*11*(1-t*0.5));
+  ctx.beginPath();ctx.arc(ep.x,ep.y-s*20,r,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,'+(a*0.8).toFixed(3)+')';ctx.lineWidth=Math.max(1,s*3.5);
+  ctx.beginPath();ctx.arc(ep.x,ep.y-s*20,r*0.86,0,Math.PI*2);ctx.stroke();
   ctx.restore();
 }
 function drawSlash(t,ep){
