@@ -6541,7 +6541,10 @@ function drawHeroBack(bt){
   let uiTop=H*0.75;
   {const mr=msgwinEl.getBoundingClientRect(), cr=cv.getBoundingClientRect();
    if(mr.height>0&&cr.height>0)uiTop=(mr.top-cr.top)*(H/cr.height);} // メッセージまどの うえに たつ
-  let hx=W*0.285, hy=Math.min(H*0.80,uiTop-H*0.012);
+  const hyT=Math.min(H*0.80,uiTop-H*0.012); // めあての たちいち
+  if(bt.heroY==null)bt.heroY=hyT;
+  bt.heroY+=(hyT-bt.heroY)*0.10; // まどの ひらきとじで とばない よう なめらかに
+  let hx=W*0.285, hy=bt.heroY;
   if(bt.intro)hx-=bt.intro*bt.intro*W*0.26; // とうじょうは ひだりから
   let lean=0;
   if(bt.heroAtk>0){ // ふみこみ：まえへ おおきく
