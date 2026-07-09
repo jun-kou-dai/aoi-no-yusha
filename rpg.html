@@ -965,7 +965,7 @@ const CLOAK_MAX=60; // とうめいマントの 最大歩数（歩数制バッ�
 const Game={scene:'boot', p:null, enemies:[], bt:null, grace:0, kills:0, battling:false, endT:0, introShown:false, started:false,
   items:{yakuso:0,seisui:0,dokukesi:0}, chestsOpen:[], springUsed:{}, dmgTaken:0, t0:0, respawnQ:[], goldT:12,
   gold:0, mapId:'grass', weaponAtk:0, armorDef:0, shield:false, mbossDown:false, talking:false, transiting:false,
-  saidYes:false, dayT:0, metalT:20, qChild:0, bonusDef:0, bonusHp:0, bonusMp:0, gheart:0, ng:0, hidden:{}, popo:null, popoT:null, stats:{battles:0,crits:0,deaths:0}, diff:2, door:false, mkey:false, visited:{}, cloak:false, invisible:false, cloakSteps:0, book:false, seen:{}, fieldShake:0};
+  saidYes:false, dayT:0, metalT:20, qChild:0, bonusDef:0, bonusHp:0, bonusMp:0, gheart:0, ng:0, hidden:{}, popo:null, popoT:null, mate:null, mateT:null, stats:{battles:0,crits:0,deaths:0}, diff:2, door:false, mkey:false, visited:{}, cloak:false, invisible:false, cloakSteps:0, book:false, seen:{}, fieldShake:0};
 window.G=Game;
 function newPlayer(){const L=LEVELS[1],st=WORLDS.grass.start;return{lv:1,exp:0,hp:L.hp,mhp:L.hp,mp:L.mp,mmp:L.mp,atk:L.atk,def:L.def,bonusAtk:0,poison:false,poisonT:0,
   tx:st.x,ty:st.y,px:st.x,py:st.y,face:1,dir:'D',moving:null,bump:null};}
@@ -995,7 +995,7 @@ function resetGame(){
   Game.bt=null;Game.grace=0;Game.kills=0;Game.battling=false;Game.endT=0;Game.introShown=false;
   Game.items={yakuso:0,seisui:0,dokukesi:0};Game.chestsOpen=[];Game.springUsed={};Game.dmgTaken=0;Game.t0=0;
   Game.goldT=35;Game.saidYes=false;Game.dayT=DAY_START;Game.metalT=20;Game.stats={battles:0,crits:0,deaths:0};
-  Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.purified=0;Game.hidden={};Game.popo=null;Game.popoT=null;
+  Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.purified=0;Game.hidden={};Game.popo=null;Game.popoT=null;Game.mate=null;Game.mateT=null;
   Game.door=false;Game.mkey=false;Game.chCard=null;Game.visited={};Game.cloak=false;Game.invisible=false;Game.cloakSteps=0;Game.book=false;Game.seen={};
   loadMap('grass');
   P.length=0;fxL.innerHTML='';
@@ -1065,6 +1065,7 @@ function loadGame(){
   p.dir=(d.dir==='U'||d.dir==='D'||d.dir==='L'||d.dir==='R')?d.dir:'D';
   p.face=p.dir==='L'?-1:1;
   if(Game.qChild===2){Game.popo={px:p.px,py:p.py};Game.popoT={x:p.tx,y:p.ty};}
+  if(Game.hidden.mate1){Game.mate={px:p.px,py:p.py};Game.mateT={x:p.tx,y:p.ty};}
   Game.t0=performance.now()-(d.playMs||0);
   updateBars();
   return true;
@@ -1947,7 +1948,7 @@ function renderStatus(){
    h+=row('ずかん',zk+' / '+zAll.length);
    h+=row('せきひ',sk+' / 5');
    h+=row('きょじんのこころ',(Game.gheart||0)+' / 5');
-   if(Game.hidden&&Game.hidden.ch2)h+=row('じょうか',(Game.purified||0)+'にん の かげを ときはなった');
+   if(Game.hidden&&Game.hidden.ch2)h+=row('じょうか',(Game.purified||0)+'にん の かげを ときはなった');if(Game.hidden&&Game.hidden.mate1)h+=row('みちづれ','こどものかげ（いのり）');
    h+=row('しょうごう',(Game.hidden&&Game.hidden.zkomp)?'まものはかせ':'──');}
   return h;
 }
@@ -2385,6 +2386,7 @@ async function transitMap(ex){
   const p=Game.p;
   p.tx=ex.tx;p.ty=ex.ty;p.px=ex.tx;p.py=ex.ty;p.moving=null;p.bump=null;
   if(Game.qChild===2){Game.popo={px:p.px,py:p.py};Game.popoT={x:p.tx,y:p.ty};}
+  if(Game.hidden.mate1){Game.mate={px:p.px,py:p.py};Game.mateT={x:p.tx,y:p.ty};}
   Game.grace=1.5;
   playSong(fieldSong());
   await fadeTo(0,0.35);
@@ -2702,6 +2704,26 @@ async function nukegaraScene(){
   await say('――ひかりは、つぎの けいしょうしゃを まっている。');
   endTalk();
   showChapter('しゅうしょう','ひかりを つぐもの');
+  saveGame();
+}
+// 章2: じょうか5＝とかれた かげたちの ひかりから、こどものかげが みちづれに
+async function mateJoinScene(){
+  Game.hidden.mate1=true;
+  const p=Game.p;
+  startTalk();
+  flash('#cfe8ff',0.4,1.2);sfxHeal();
+  if(Game.cam){const q=isoCtr(p.tx,p.ty);puff(q.x,q.y-Game.cam.lift*0.2,'rgba(200,225,255,.95)',30,140,1.4,{up:true,s0:2,s1:4});}
+  await say('あなたが といてきた かげたちの ひかりが、\nどこからともなく あつまってくる——');
+  await say('ひかりの なかから、ちいさな かげが\nそっと あゆみでた。');
+  await say('こどものかげ「…みつけた。 かげを といてくれる ひと。」');
+  await say('こどものかげ「にいちゃんたちは もう いない。でも まだ、\nくらいところで ないてる こが いるの。」');
+  await say('こどものかげ「つれてって。 いのることしか できないけど、\nあなたの となりで、いのらせて。」');
+  Game.hidden.sk1=true; // さとの こどものかげ＝この子。いごは となりに いる
+  Game.mate={px:p.px,py:p.py};Game.mateT={x:p.tx,y:p.ty};
+  sfxChest();flash('#fff2d0',0.3,0.8);
+  await say('こどものかげが みちづれに なった！\nたたかいの なかで、いのりが ちからに なる。');
+  endTalk();
+  toast('みちづれ：こどものかげ（つよさ で かくにん できる）');
   saveGame();
 }
 // 章2b: さとぬしの かげを ときはなつと、さとの しんじつが あかされる
@@ -3072,6 +3094,7 @@ function updateField(dt){
       const go=(nx,ny)=>{
         // overT: まえの いっぽの あまり時間を ひきつぎ、つぎめの カクつきを なくす
         if(Game.qChild===2)Game.popoT={x:p.tx,y:p.ty}; // ポポは ひとあし うしろを ついてくる
+        if(Game.mate)Game.mateT={x:p.tx,y:p.ty}; // みちづれも ひとあし うしろを つづく
         p.moving={fx:p.tx,fy:p.ty,t:p.overT||0,dur:(p.dir==='L'||p.dir==='R')?0.10:0.068};
         p.overT=0;
         p.tx=nx;p.ty=ny;p.bump=null;
@@ -3139,6 +3162,7 @@ function updateField(dt){
     else if(Game.mapId==='castle'&&Game.hidden.ch2end&&!Game.hidden.nkIntro&&!Game.hidden.nk1)nukegaraIntroScene();
     else if(Game.mapId==='castle'&&Game.hidden.nk1&&!Game.hidden.nk2)nukegaraScene();
     else if(Game.mapId==='castle'&&!Game.hidden.cleared&&!Game.hidden.ch4c){Game.hidden.ch4c=true;showChapter('だい 4 しょう','やみの おうざ');saveGame();}
+    else if(Game.hidden.ch2&&!Game.hidden.mate1&&(Game.purified||0)>=5)mateJoinScene();
   }
   if(p.bump){
     p.bump.t+=dt;
@@ -3151,6 +3175,13 @@ function updateField(dt){
     const t=Game.popoT||{x:p.tx,y:p.ty};
     Game.popo.px+=(t.x-Game.popo.px)*Math.min(1,dt*7);
     Game.popo.py+=(t.y-Game.popo.py)*Math.min(1,dt*7);
+  }
+  // みちづれ（こどものかげ）の ついてくる うごき＋きらめきの つぶ
+  if(Game.hidden.mate1&&Game.mate){
+    const t=Game.mateT||{x:p.tx,y:p.ty};
+    Game.mate.px+=(t.x-Game.mate.px)*Math.min(1,dt*5.5);
+    Game.mate.py+=(t.y-Game.mate.py)*Math.min(1,dt*5.5);
+    if(Game.cam&&Math.random()<dt*0.9){const q=isoCtr(Game.mate.px,Game.mate.py);P.push({x:q.x+rnd(-5,5),y:q.y-rnd(6,18),vx:0,vy:-9,life:0.6,t:0,size:1.8,col:'rgba(180,205,255,.7)',grav:0,light:true,drag:1});}
   }
   // かくしざいほう
   if(!p.moving&&!Game.battling){
@@ -4120,6 +4151,7 @@ function drawFieldScene(){
     if(SPRING&&SPRING.x+SPRING.y===d)drawSpring();
     if(wld.npcs)for(const n of wld.npcs)if(n.x+n.y===d&&!npcGone(n))drawNpc(n);
     for(const e of Game.enemies)if(Math.round(e.px+e.py)===d)drawFieldFoe(e);
+    if(Game.hidden.mate1&&Game.mate&&Math.round(Game.mate.px+Game.mate.py)===d)drawMateField(); // みちづれは じぶんの おくゆき行で（あとの行のタイルに けされない）
     if(pd===d){drawPopo();drawFieldHero();}
   }
   // くもの かげ（ひるの くさはらだけ・しまの うえを ゆっくり ながれる）
@@ -5253,6 +5285,37 @@ function drawPopo(){
   ctx.beginPath();ctx.arc(0,-ts*0.55,ts*0.155,Math.PI*1.05,Math.PI*1.95);ctx.fill();
   ctx.restore();
 }
+// ついてくる みちづれ（こどものかげ：ふわりと うかぶ 影の子）
+function drawMateField(){
+  if(!Game.hidden.mate1||!Game.mate)return;
+  const cam=Game.cam,mm=Game.mate;
+  const ts=cam.TW*0.44;
+  const c={x:cam.ox+(mm.px-mm.py)*cam.TW/2,y:cam.oy+(mm.px+mm.py)*cam.TH/2+cam.TH/2};
+  c.y-=propZ(Math.round(mm.px),Math.round(mm.py));
+  const fy=c.y+cam.TH*0.20;
+  const fl=(Math.sin(TM*2.6)*0.5+0.5)*ts*0.05; // ふわふわ うかぶ
+  ctx.fillStyle='rgba(8,14,28,0.22)';
+  ctx.beginPath();ctx.ellipse(c.x,fy,ts*0.13,ts*0.045,0,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.translate(c.x,fy-ts*0.05-fl);
+  const gl=0.26+(Math.sin(TM*3.4)*0.5+0.5)*0.14; // りんかくの ひかりが めいめつ
+  const bg=ctx.createLinearGradient(0,-ts*0.40,0,0);
+  bg.addColorStop(0,'#5a5480');bg.addColorStop(1,'rgba(34,30,56,0.30)');
+  ctx.fillStyle=bg;
+  ctx.beginPath();
+  ctx.moveTo(-ts*0.095,-ts*0.36);
+  ctx.quadraticCurveTo(-ts*0.175,-ts*0.10,-ts*0.13,0);
+  ctx.quadraticCurveTo(0,ts*0.045,ts*0.13,0);
+  ctx.quadraticCurveTo(ts*0.175,-ts*0.10,ts*0.095,-ts*0.36);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(170,200,255,'+gl+')';ctx.lineWidth=Math.max(1,ts*0.02);ctx.stroke();
+  ctx.fillStyle='#3e3860';
+  ctx.beginPath();ctx.arc(0,-ts*0.47,ts*0.165,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(170,200,255,'+(gl+0.06)+')';ctx.lineWidth=Math.max(1,ts*0.018);ctx.stroke();
+  ctx.fillStyle='rgba(215,235,255,0.92)';
+  ctx.beginPath();ctx.arc(-ts*0.055,-ts*0.475,ts*0.024,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(ts*0.055,-ts*0.475,ts*0.024,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
 function swordCol(){
   return Game.weaponAtk>=20?['#ffe2b0','#cf7a3e']
        :Game.weaponAtk>=12?['#f4f8ff','#8fa0c8']
@@ -5713,6 +5776,29 @@ async function runBattle(ref){
     const er=await enemyAction();
     if(er==='enemyFled'){await leaveBattle(true);return;}
     if(Game.p.hp<=0){await defeat();return;}
+    await mateTurn(); // みちづれの いのり（ターンまつ）
+  }
+}
+// みちづれ（こどものかげ）：ターンまつの いのり
+const mateOn=()=>!!(Game.hidden&&Game.hidden.mate1);
+async function mateTurn(){
+  const p=Game.p,bt=Game.bt;
+  if(!mateOn()||!bt||bt.hp<=0||p.hp<=0)return;
+  if(p.hp>=p.mhp*0.75)return;
+  bt.pray={t:0};
+  sfxHeal();
+  await wait(0.18);
+  const n=Math.min(p.mhp-p.hp,5+ri(0,3));
+  p.hp+=n;updateBars();
+  flash('#cfe8ff',0.2,0.55);
+  const hx=W*0.285,hy=(bt.heroY==null?H*0.80:bt.heroY);
+  popup(hx,hy-H*0.10,'+'+n,'heal');
+  puff(W*0.13,hy-H*0.03,'rgba(200,225,255,.9)',14,70,1,{up:true,s0:1.5,s1:3,spread:22});
+  if(!Game.hidden.mate1st){
+    Game.hidden.mate1st=true;
+    await say('こどものかげが ちいさな てを あわせ、いのった——\nあわい ひかりが ゆうしゃを つつむ。HPが '+n+' かいふくした！');
+  }else{
+    await say('こどものかげの いのり！\nHPが '+n+' かいふくした。');
   }
 }
 // ============================================================
@@ -6370,6 +6456,7 @@ async function defeat(){
   Game.invisible=false;Game.cloakSteps=CLOAK_MAX; // しんだら とうめい解除＋ほきゅう
   p.tx=4;p.ty=11;p.px=4;p.py=11;p.moving=null;p.bump=null;p.face=1;p.dir='D';
   if(Game.qChild===2){Game.popo={px:p.px,py:p.py};Game.popoT={x:p.tx,y:p.ty};}
+  if(Game.hidden.mate1){Game.mate={px:p.px,py:p.py};Game.mateT={x:p.tx,y:p.ty};}
   p.hp=p.mhp;p.mp=p.mmp;p.poison=false;
   updateBars();
   Game.scene='field';
@@ -6404,6 +6491,7 @@ async function badEnd(){
   Game.invisible=false;Game.cloakSteps=CLOAK_MAX; // しんだら とうめい解除＋ほきゅう
   p.tx=4;p.ty=11;p.px=4;p.py=11;p.moving=null;p.bump=null;p.face=1;p.dir='D';
   if(Game.qChild===2){Game.popo={px:p.px,py:p.py};Game.popoT={x:p.tx,y:p.ty};}
+  if(Game.hidden.mate1){Game.mate={px:p.px,py:p.py};Game.mateT={x:p.tx,y:p.ty};}
   p.hp=p.mhp;p.mp=p.mmp;p.poison=false;
   updateBars();
   Game.scene='field';
@@ -6446,6 +6534,7 @@ function updateBattle(dt){
   if(bt.shakeT>0)bt.shakeT-=dt;
   if(bt.slash){bt.slash.t+=dt*3.4;if(bt.slash.t>=1)bt.slash=null;}
   if(bt.spellFx){bt.spellFx.t+=dt*2.2;if(bt.spellFx.t>=1)bt.spellFx=null;} // じゅもんの ほのお/こおり
+  if(bt.pray){bt.pray.t+=dt*1.1;if(bt.pray.t>=1)bt.pray=null;} // みちづれの いのりの ひかり
   if(bt.shock){bt.shock.t+=dt*2.6;if(bt.shock.t>=1)bt.shock=null;} // かいしんの しょうげきは
   if(bt.cast){
     bt.cast.t+=dt;
@@ -6648,7 +6737,7 @@ function drawBattleScene(){
   if(bt.foe.boss)bossBack(bt,ep);
   if(bt.foe.tint||bt.blink>0)drawFoeTinted(bt,ep);
   else drawFoe(bt,ep);
-  drawHeroBack(bt);
+  drawMateBattle(bt);drawHeroBack(bt);
   if(bt.slash)drawSlash(bt.slash.t,ep);
   if(bt.spellFx)drawSpellFx(bt.spellFx,ep);
   if(bt.shock)drawShock(bt.shock.t,ep);
@@ -6723,6 +6812,56 @@ function drawFoe(bt,ep){
     ctx.fillStyle=dg;
     ctx.beginPath();ctx.arc(0,-s*20,s*(120+glow*120),0,Math.PI*2);ctx.fill();
     ctx.globalCompositeOperation='source-over';
+  }
+  ctx.restore();
+}
+// せんとうの みちづれ（こどものかげ）：ゆうしゃの ひだりで いのる
+function drawMateBattle(bt){
+  if(!Game.hidden||!Game.hidden.mate1)return;
+  const s=Math.min(H/720,W/900);
+  let mx=W*0.13, my=(bt.heroY==null?H*0.80:bt.heroY)+s*4;
+  if(bt.intro)mx-=bt.intro*bt.intro*W*0.30;
+  const k=bt.pray?Math.sin(Math.min(1,bt.pray.t)*Math.PI):0;
+  const bob=Math.sin(bt.t*1.9+1.3)*s*2.0;
+  ctx.save();
+  ctx.translate(mx,my+bob*0.5-k*s*8);
+  const u=s*0.62;
+  if(k>0){ // いのりの ひかりばしら
+    const gh=u*260;
+    const lg=ctx.createLinearGradient(0,-gh,0,u*12);
+    lg.addColorStop(0,'rgba(200,230,255,0)');
+    lg.addColorStop(0.55,'rgba(190,220,255,'+(0.30*k)+')');
+    lg.addColorStop(1,'rgba(235,246,255,'+(0.48*k)+')');
+    ctx.fillStyle=lg;
+    ctx.beginPath();ctx.moveTo(-u*30,u*12);ctx.lineTo(-u*12,-gh);ctx.lineTo(u*12,-gh);ctx.lineTo(u*30,u*12);ctx.closePath();ctx.fill();
+  }
+  ctx.fillStyle='rgba(5,8,24,0.28)';
+  ctx.beginPath();ctx.ellipse(0,u*10,u*34,u*9,0,0,Math.PI*2);ctx.fill();
+  const gl=0.24+(Math.sin(bt.t*3.2)*0.5+0.5)*0.12+k*0.45;
+  const bg2=ctx.createLinearGradient(0,-u*78,0,u*10);
+  bg2.addColorStop(0,'#5a5480');bg2.addColorStop(1,'rgba(30,26,52,0.08)');
+  ctx.fillStyle=bg2;
+  ctx.beginPath();
+  ctx.moveTo(-u*17,-u*56);
+  ctx.quadraticCurveTo(-u*28,-u*18,-u*20,u*8);
+  ctx.quadraticCurveTo(0,u*14,u*20,u*8);
+  ctx.quadraticCurveTo(u*28,-u*18,u*17,-u*56);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(170,200,255,'+gl+')';ctx.lineWidth=Math.max(1,u*2);ctx.stroke();
+  const hy2=-u*30-k*u*26; // て：ふだんは むねの まえ、いのりで たかく
+  ctx.fillStyle='#6a6494';
+  ctx.beginPath();ctx.arc(-u*5,hy2,u*4.6,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(u*5,hy2,u*4.6,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#3e3860';
+  ctx.beginPath();ctx.arc(0,-u*68,u*17,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(170,200,255,'+(gl+0.05)+')';ctx.lineWidth=Math.max(1,u*1.8);ctx.stroke();
+  if(k>0.25){ // いのりちゅうは めを とじる
+    ctx.strokeStyle='rgba(215,235,255,0.9)';ctx.lineWidth=Math.max(1,u*1.6);
+    ctx.beginPath();ctx.moveTo(-u*8,-u*68);ctx.lineTo(-u*3,-u*68);ctx.moveTo(u*3,-u*68);ctx.lineTo(u*8,-u*68);ctx.stroke();
+  }else{
+    ctx.fillStyle='rgba(215,235,255,0.92)';
+    ctx.beginPath();ctx.arc(-u*5.5,-u*68,u*2.4,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(u*5.5,-u*68,u*2.4,0,Math.PI*2);ctx.fill();
   }
   ctx.restore();
 }
