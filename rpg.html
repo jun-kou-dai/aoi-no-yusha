@@ -3173,12 +3173,17 @@ function updateField(dt){
     toast('やみのおうは もう いない。みなみに ひかる でぐちが ある──「どこでもドア」でも とべるぞ');
     saveGame();
   }
+  // 1おし=1ぽ: ほうこう入力の おしっぱなし時間（はなすと リセット）
+  {const dv=(!Game.battling&&!Game.talking&&!Game.transiting)?getDirVec():null;
+   if(dv){Game.holdT=(Game.holdT||0)+dt;}else{Game.holdT=0;Game.stepN=0;}}
   // 主人公の移動：キーの みための ほうこう（ひし形では ななめ）へ。
   // ふさがれていたら ちかい たて・よこの マスへ そって すすむ
   if(!p.moving&&!Game.battling&&!Game.talking&&!Game.transiting){
     let d=getDirVec();
+    const manual=!!d;
     if(d)Game.autoPath=null; // てで うごかしたら タップいどうは とりけし
     else d=autoStep();
+    if(d&&manual&&(Game.stepN||0)>=1&&(Game.holdT||0)<0.22)d=null; // 1おし=1ぽ。おしっぱなし(0.22s+)だけ れんぞく歩行
     if(d){
       // むき：がめんの みための ほうこうで きめる（がめんx=dx-dy / がめんy=dx+dy）
       const sx=d[0]-d[1],sy=d[0]+d[1];
@@ -3189,6 +3194,7 @@ function updateField(dt){
       // ななめ（がめんの たてよこ）は すべりこみ こうほつき／タイルじくは その1マスのみ
       const cands=(d[0]&&d[1])?[d,[d[0],0],[0,d[1]]]:[d];
       const go=(nx,ny)=>{
+        if(manual)Game.stepN=(Game.stepN||0)+1;
         // overT: まえの いっぽの あまり時間を ひきつぎ、つぎめの カクつきを なくす
         if(Game.qChild===2)Game.popoT={x:p.tx,y:p.ty}; // ポポは ひとあし うしろを ついてくる
         if(Game.mate)Game.mateT={x:p.tx,y:p.ty}; // みちづれも ひとあし うしろを つづく
@@ -3197,20 +3203,22 @@ function updateField(dt){
         p.tx=nx;p.ty=ny;p.bump=null;
       };
       let acted=false;
-      // 1) はなしかける（NPC・おうさま）
-      for(const c of cands){
-        const nx=p.tx+c[0],ny=p.ty+c[1];
+      // NPC・おうさま・やどの マスは とおれない（すべりこみ先から じょがい）
+      const occ=(nx,ny)=>!!npcAt(nx,ny)||!!(w.king&&w.king.x===nx&&w.king.y===ny)||!!(w.inn&&w.inn.x===nx&&w.inn.y===ny);
+      // 1) はなしかける（おした ほうこうの しょうめんだけ＝すべりこみで ひっかからない）
+      {
+        const nx=p.tx+d[0],ny=p.ty+d[1];
         const npc=npcAt(nx,ny);
-        if(npc){talkNpc(npc);acted=true;break;}
-        if(w.king&&w.king.x===nx&&w.king.y===ny){talkKing();acted=true;break;}
-        if(w.inn&&w.inn.x===nx&&w.inn.y===ny){runInn();acted=true;break;}
-        if(Game.mapId==='cave2'&&nx===16&&ny===8&&tileAt(nx,ny)==='D'){gateTry();acted=true;break;}
+        if(npc){talkNpc(npc);acted=true;}
+        else if(w.king&&w.king.x===nx&&w.king.y===ny){talkKing();acted=true;}
+        else if(w.inn&&w.inn.x===nx&&w.inn.y===ny){runInn();acted=true;}
+        else if(Game.mapId==='cave2'&&nx===16&&ny===8&&tileAt(nx,ny)==='D'){gateTry();acted=true;}
       }
       // 2) でいりぐち・たからばこ・いずみは おした ほうこうの 3マスから すいつく
       //    （ひし形いどうだと 1マスの まとに たて・よこから のれないため）
       if(!acted)for(const c of cands){
         const nx=p.tx+c[0],ny=p.ty+c[1];
-        if(!walkable(nx,ny))continue;
+        if(!walkable(nx,ny)||occ(nx,ny))continue;
         const sp=exitAt(nx,ny)
           ||CHESTS.some(ch=>ch.x===nx&&ch.y===ny&&!Game.chestsOpen.includes(ch))
           ||(SPRING&&!Game.springUsed[Game.mapId]&&SPRING.x===nx&&SPRING.y===ny);
@@ -3219,10 +3227,10 @@ function updateField(dt){
       // 3) ふつうの あるき：ななめ。ふさがれていたら みち(P)ゆうせんで たて・よこに そう
       if(!acted){
         const nx=p.tx+d[0],ny=p.ty+d[1];
-        if(walkable(nx,ny)){go(nx,ny);acted=true;}
+        if(walkable(nx,ny)&&!occ(nx,ny)){go(nx,ny);acted=true;}
         else if(d[0]&&d[1]){ // ななめが ふさがれたら みち(P)ゆうせんで たて・よこに そう
           const f1=[p.tx+d[0],p.ty],f2=[p.tx,p.ty+d[1]];
-          const w1=walkable(f1[0],f1[1]),w2=walkable(f2[0],f2[1]);
+          const w1=walkable(f1[0],f1[1])&&!occ(f1[0],f1[1]),w2=walkable(f2[0],f2[1])&&!occ(f2[0],f2[1]);
           if(w1&&w2){
             const p1=tileAt(f1[0],f1[1])==='P',p2=tileAt(f2[0],f2[1])==='P';
             const t2=(p2&&!p1)?f2:f1;
