@@ -234,6 +234,11 @@ body{
 #bookbtn.show{ display:flex; }
 #bookbtn:hover{ opacity:1; }
 #bookbtn:active{ transform:scale(.94); }
+#questbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 300px); right:12px; z-index:70;
+  display:flex; align-items:center; gap:6px; padding:8px 12px; font-size:clamp(12px,2vmin,15px);
+  color:#f2e6c2; cursor:pointer; pointer-events:auto; opacity:.92; user-select:none; transition:opacity .2s, transform .12s; }
+#questbtn:hover{ opacity:1; }
+#questbtn:active{ transform:scale(.94); }
 #bookwin{ position:fixed; inset:0; z-index:200; display:none; justify-content:center; align-items:flex-start;
   background:rgba(6,10,28,.82); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); overflow:auto; padding:20px 10px; }
 #bookwin.show{ display:flex; }
@@ -255,6 +260,22 @@ body{
 #statusclose{ cursor:pointer; padding:4px 12px; border-radius:8px; background:rgba(255,255,255,.10); font-size:.82em; }
 #statusclose:active{ transform:scale(.92); }
 #statusbody{ padding:6px 16px; }
+#questwin{ position:fixed; inset:0; z-index:200; display:none; justify-content:center; align-items:flex-start;
+  background:rgba(6,10,28,.82); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); overflow:auto; padding:20px 10px; }
+#questwin.show{ display:flex; }
+#questpanel{ width:100%; max-width:520px; max-height:94vh; overflow-y:auto; padding:0 0 18px; color:var(--text); }
+#questhead{ position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between;
+  padding:13px 18px; font-size:1.12em; font-weight:700; letter-spacing:.06em;
+  background:var(--indigo); border-bottom:1px solid var(--line); border-radius:10px 10px 0 0; }
+#questclose{ cursor:pointer; padding:4px 12px; border-radius:8px; background:rgba(255,255,255,.10); font-size:.82em; }
+#questclose:active{ transform:scale(.92); }
+#questbody{ padding:6px 16px; }
+.qgoal{ margin:14px 2px 4px; padding:12px 14px; border-radius:10px; background:rgba(255,230,168,.10);
+  border:1px solid rgba(255,230,168,.35); color:#ffe6a8; font-weight:700; font-size:1.02em; line-height:1.7; letter-spacing:.03em; }
+#questbody .stlabel{ white-space:nowrap; }
+.strow.qstack{ display:block; }
+.qstack .qtop{ display:flex; justify-content:space-between; align-items:baseline; }
+.qstack .qsub{ font-size:.78em; color:#9aa6cc; margin-top:3px; line-height:1.65; }
 .strow{ display:flex; justify-content:space-between; align-items:baseline; padding:7px 4px; border-bottom:1px dashed rgba(160,170,210,.18); font-size:.95em; }
 .strow .stlabel{ color:#cdd5ef; }
 .strow .stval{ font-weight:700; letter-spacing:.04em; }
@@ -388,6 +409,7 @@ body{
     <div id="doorbtn" class="glass">🚪 どこでもドア</div>
     <div id="cloakbtn" class="glass">👻 とうめい</div>
     <div id="bookbtn" class="glass">📕 ずかん</div>
+    <div id="questbtn" class="glass">🗺 メモ</div>
   </div>
 
   <div id="ui-battle" class="ui">
@@ -426,6 +448,7 @@ body{
 
   <div id="bookwin"><div id="bookpanel" class="glass"><div id="bookhead"><span>📕 冒険の書</span><span id="bookclose">✕ とじる</span></div><div id="bookbody"></div></div></div>
   <div id="statuswin"><div id="statuspanel" class="glass"><div id="statushead"><span>💪 つよさ</span><span id="statusclose">✕ とじる</span></div><div id="statusbody"></div></div></div>
+  <div id="questwin"><div id="questpanel" class="glass"><div id="questhead"><span>🗺 たびのメモ</span><span id="questclose">✕ とじる</span></div><div id="questbody"></div></div></div>
   <div id="mute" class="glass" title="サウンド">
     <svg viewBox="0 0 24 24" fill="none" stroke="#e7e0c8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="4,9 8,9 13,4.5 13,19.5 8,15 4,15" fill="rgba(231,224,200,.85)" stroke="none"/>
@@ -1961,6 +1984,51 @@ function openStatus(){
   if(typeof sfxSel==='function')sfxSel();
 }
 function closeStatus(){const w=document.getElementById('statuswin');if(w)w.classList.remove('show');Game.statusOpen=false;}
+// たびのメモ：いまの もくてき＋やりのこし＋きろく（ぜんぶ 実データ走査）
+function renderQuest(){
+  const row=(l,v,sub)=>{
+    if(sub&&(sub.length>=16||(l+String(v)+sub).length>=22))return '<div class="strow qstack"><div class="qtop"><span class="stlabel">'+l+'</span><span class="stval">'+v+'</span></div><div class="qsub">'+sub+'</div></div>';
+    return '<div class="strow"><span class="stlabel">'+l+'</span><span class="stval">'+v+(sub?'<span class="stsub">'+sub+'</span>':'')+'</span></div>';
+  };
+  let h='<div class="qgoal">'+questText()+'</div>';
+  h+='<h3 class="bisle">やりのこし</h3>';
+  {let tot=0,got=0;const rem=[];
+   for(const id in WORLDS){const w=WORLDS[id];if(!w.chests)continue;let r=0;
+     for(const c of w.chests){tot++;if(Game.chestsOpen.includes(c))got++;else r++;}
+     if(r>0)rem.push(MAPNAME[id]||id);}
+   h+=row('たからばこ',got+' / '+tot,got>=tot?'ぜんぶ あけた！':('のこり: '+rem.join('・')));}
+  {const tot=HIDDENS.length,got=HIDDENS.filter(hd=>Game.hidden[hd.key]).length;
+   const rem=[...new Set(HIDDENS.filter(hd=>!Game.hidden[hd.key]).map(hd=>MAPNAME[hd.map]||hd.map))];
+   h+=row('かくしざいほう',got+' / '+tot,got>=tot?'ぜんぶ みつけた！':('キラリと ひかる しま: '+rem.join('・')));}
+  {const st=[];for(const id in WORLDS){const w=WORLDS[id];if(w.npcs)for(const n of w.npcs)if(n.stoneKey)st.push({k:n.stoneKey,m:id});}
+   const got=st.filter(x=>Game.hidden[x.k]).length;
+   const rem=[...new Set(st.filter(x=>!Game.hidden[x.k]).map(x=>MAPNAME[x.m]||x.m))];
+   h+=row('せきひ',got+' / '+st.length,got>=st.length?'すべて よんだ':('のこり: '+rem.join('・')));}
+  {const zAll=[].concat.apply([],BOOK_ISLES.map(pr=>pr[1])).concat(BOOK_SPECIAL);
+   const zk=zAll.filter(id=>Game.seen&&Game.seen[id]).length;
+   h+=row('ずかん',zk+' / '+zAll.length,zk>=zAll.length?'コンプリート！':'まだ みぬ まものが いる');}
+  h+=row('きょじんのこころ',(Game.gheart||0)+' / 5',(Game.gheart||0)>=5?'すべて あつめた':'');
+  if(Game.hidden&&Game.hidden.ch2){
+    h+=row('じょうか',(Game.purified||0)+'にん','かげを ときはなった かず');
+    h+=row('みちづれ',Game.hidden.mate1?'こどものかげ':'まだ いない',Game.hidden.mate1?'いのりで たたかいを ささえる':'かげを 5にん ときはなつと…');
+  }
+  h+='<h3 class="bisle">きろく</h3>';
+  h+=row('なんいど',curDiff().name,(Game.ng?(Game.ng+1)+'しゅうめ':''));
+  h+=row('たたかった かず',(Game.stats&&Game.stats.battles)||0,'かいしん '+((Game.stats&&Game.stats.crits)||0)+'・ぜんめつ '+((Game.stats&&Game.stats.deaths)||0));
+  {const mm=Math.floor(Math.max(0,performance.now()-Game.t0)/60000);
+   h+=row('ぼうけんの じかん',Math.floor(mm/60)+'じかん '+(mm%60)+'ぷん');}
+  return h;
+}
+function openQuest(){
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
+  const w=document.getElementById('questwin');if(!w)return;
+  document.getElementById('questbody').innerHTML=renderQuest();
+  w.classList.add('show');Game.questOpen=true;Game._questT=performance.now();
+  if(w.firstElementChild)w.firstElementChild.scrollTop=0;
+  held.length=0;swipeVec=null;ptr=null;
+  if(typeof sfxSel==='function')sfxSel();
+}
+function closeQuest(){const w=document.getElementById('questwin');if(w)w.classList.remove('show');Game.questOpen=false;}
 function openBook(){
   const w=document.getElementById('bookwin');if(!w)return;
   document.getElementById('bookbody').innerHTML=renderBook();
@@ -2263,6 +2331,7 @@ function firstGesture(){
 window.addEventListener('keydown',e=>{
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
   if(Game.bookOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeBook(); return; }
+  if(Game.questOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeQuest(); return; }
   firstGesture();
   const k=e.key.length===1?e.key.toLowerCase():e.key;
   if(DIRS[k]&&!held.includes(k))held.push(k);
@@ -2352,6 +2421,15 @@ $('#fstat').addEventListener('pointerdown',e=>{
 });
 $('#statusclose').addEventListener('pointerdown',e=>{
   e.stopPropagation();closeStatus();
+});
+$('#questbtn').addEventListener('pointerdown',e=>{
+  e.stopPropagation();firstGesture();openQuest();
+});
+$('#questclose').addEventListener('pointerdown',e=>{
+  e.stopPropagation();closeQuest();
+});
+$('#questwin').addEventListener('pointerdown',e=>{
+  if(e.target.id==='questwin'&&performance.now()-(Game._questT||0)>450)closeQuest(); // 開いた直後の2度押しガード(bookwin方式)
 });
 $('#bookbody').addEventListener('pointerdown',e=>{
   const b=e.target.closest('[data-buy]');
@@ -3248,7 +3326,7 @@ function updateField(dt){
     }
   }
   // エンカウント
-  if(!Game.battling&&!Game.talking&&!Game.transiting&&!Game.bookOpen&&!Game.statusOpen&&Game.grace<=0){
+  if(!Game.battling&&!Game.talking&&!Game.transiting&&!Game.bookOpen&&!Game.statusOpen&&!Game.questOpen&&Game.grace<=0){
     for(const e of Game.enemies){
       if(Game.invisible&&e.def&&!e.def.boss&&!e.def.mboss)continue; // とうめい中は つうじょうの てきが はんのうしない（ボス/中ボスは のぞく）
       if(Math.hypot(p.px-e.px,p.py-e.py)<0.85){startEncounter(e);break;}
