@@ -906,7 +906,7 @@ icetown:{
  exits:[
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'きんいろの ひかりを あとに、そうげんへ もどってきた。'}]},
  towa:{ // 裏ダンジョン『とわの ふち』：こたえを もつ ものだけが たどりつく、といの すみか
- song:'kage', bg:['#0c0616','#1e1030'], dark:true, darkR:4.5, darkCol:'40,20,70', darkA:0.72,
+ song:'towa', bg:['#0c0616','#1e1030'], dark:true, darkR:4.5, darkCol:'40,20,70', darkA:0.72,
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TTGGGGGGGPPGGGGGGGTT',
@@ -1819,7 +1819,36 @@ const SONGS={};
     drop.push([2,89,1],[10,91,1],[18,88,1],[26,86,1],[34,91,1],[42,89,1],[50,93,1],[58,88,1],
       [66,91,1],[74,89,1],[82,86,1],[90,88,1],[98,91,1],[106,89,1],[114,93,1],[122,96,1]);
     glow.push([0,84,16],[32,81,16],[64,84,16],[96,83,16]);
-    SONGS.minamoto={bpm:88,div:4,steps:128,echo:0.22,tracks:[
+    // とわの ふち『といの こもりうた』：Dフリギア70・ふかい かねの オスティナート+といの こえ(flute)+むげんの ま(choir)。echo深め=ふちの ざんきょう
+  {
+    const bass=[],knell=[],pad=[],MEL=[],whis=[];
+    // 低音: D-Eb-C-D の フリギア進行(8小節)
+    const BS=[38,39,36,38,38,39,36,38];
+    BS.forEach((b,i)=>{const o=i*16;bass.push([o,b,12],[o+12,b-2>=34?b:b+5,4]);});
+    // かね(bell低域): まばらな とむらいの オスティナート
+    for(let b=0;b<8;b++){const o=b*16;knell.push([o,50,4]);if(b%2===1)knell.push([o+8,53,3]);if(b===3||b===7)knell.push([o+12,46,4]);}
+    // choir: にごりの ある さんわおん(フリギアらしい b2)
+    const CH=[[62,65,69],[63,67,70],[60,63,67],[62,65,69],[62,65,69],[63,67,70],[60,63,67],[62,65,69]];
+    CH.forEach((c,b)=>{const o=b*16;c.forEach(m=>pad.push([o,m,16]));});
+    // とい の こえ(flute): といかけて、こたえず おわる ふれーず
+    MEL.push([8,74,4],[12,72,2],[14,69,2],
+      [24,70,4],[28,67,6],
+      [40,69,4],[44,72,4],[48,74,6],[54,75,2],
+      [56,74,8],
+      [72,74,4],[76,72,2],[78,69,2],
+      [88,70,4],[92,67,6],
+      [104,69,4],[108,67,4],[112,65,6],
+      [120,62,8]);
+    // ささやき(hiStr): ふちの かぜ
+    whis.push([0,81,16],[32,79,16],[64,81,16],[96,77,16]);
+    SONGS.towa={bpm:70,div:4,steps:128,echo:0.3,tracks:[
+      {i:'warm',g:0.14,pan:-0.06,seq:bass},
+      {i:'bell',g:0.075,pan:0.15,seq:knell},
+      {i:'choir',g:0.04,pan:-0.28,seq:pad},
+      {i:'flute',g:0.075,pan:0.08,seq:MEL},
+      {i:'hiStr',g:0.022,pan:0.25,seq:whis}]};
+  }
+  SONGS.minamoto={bpm:88,div:4,steps:128,echo:0.22,tracks:[
       {i:'warm',g:0.13,pan:-0.08,seq:bass},
       {i:'choir',g:0.045,pan:-0.25,seq:pad},
       {i:'flute',g:0.09,pan:0.05,seq:MEL},
