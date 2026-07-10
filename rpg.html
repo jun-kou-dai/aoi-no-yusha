@@ -3199,8 +3199,10 @@ async function talkKing(){
       await say('おうさま「この くにの ひかりを、これからも\nともに みまもって くれい。」');
     }else if(Game.hidden.ch3d){
       await say('おうさま「『ひかりは うけとめる こころに やどる』……\nそなたの もちかえった こたえは、この くにの たからじゃ。」');
-    }else{
+    }else if(Game.hidden.elderTold){
       await say('おうさま「じゃが ものしりどもが うわさしておる。\nはての しまの せきひには、まだ つづきが あると な。」');
+    }else{
+      await say('おうさま「むらの じいさまが、なにか ふかい わけを\nかかえておる ようすじゃ。はなしを きいて やってくれ。」');
     }
   }else if(Game.mbossDown){
     await say('おうさま「くろがねの ゴーレムを たおしたそうじゃな！\nさすが わしの みこんだ ゆうしゃよ。」');
@@ -3506,7 +3508,11 @@ function questText(){
     if(Game.hidden.ch2end)return 'もくてき：「わすれの うみ」の こえと、しろの おくの ぬけがらへ';
     if(Game.hidden.sn2)return 'もくてき：むらの じいさんに しんじつを つたえよう';
     if(Game.hidden.ch2)return 'もくてき：どこでもドアで「しずみの さと」へ';
-    return Game.hidden.elderTold?'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている':'もくてき：5つの せきひと むらの こえが、つぎの みちを しめす';
+    if(Game.hidden.elderTold)return 'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている';
+    {const st=['t1','t2','t3','t4','t5'].filter(k=>Game.hidden[k]).length;
+     if(!Game.hidden.k3)return 'もくてき：さらわれた むすめを すくいだそう（こおりの おく）';
+     if(st<5)return 'もくてき：こだいの せきひを すべて よもう（'+st+'/5・のこりは メモで）';
+     return 'もくてき：むらの じいさんが なにかを かたりたがっている';}
   }
   if(Game.mapId==='castle')return 'もくてき：やみのおう ヴォルガを たおせ！';
   if(Game.mapId==='edge')return 'もくてき：とわの といに こたえよ';
