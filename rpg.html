@@ -226,6 +226,8 @@ body{
   cursor:pointer; pointer-events:auto; opacity:.92; transition:opacity .2s, transform .12s;
   font-size:clamp(12px,1.9vmin,14px); letter-spacing:.1em; color:#e8e2cc; gap:6px; }
 #doorbtn.show{ display:flex; }
+#doorbtn.quest{ color:#ffd9a0; box-shadow:0 0 0 2px rgba(255,205,110,.65), 0 0 18px rgba(255,190,90,.5); border-radius:14px; animation:doorpulse 1.6s ease-in-out infinite; }
+@keyframes doorpulse{ 0%,100%{ box-shadow:0 0 0 2px rgba(255,205,110,.65), 0 0 18px rgba(255,190,90,.5);} 50%{ box-shadow:0 0 0 3px rgba(255,225,150,.9), 0 0 26px rgba(255,205,110,.8);} }
 #doorbtn:hover{ opacity:1; }
 #doorbtn:active{ transform:scale(.94); }
 #cloakbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 200px); right:12px; z-index:70;
@@ -3725,7 +3727,8 @@ function updateField(dt){
   if(!Game.talking)Game.dayT+=dt; // かいわちゅうは ときが とまる
   if(Game.grace>0)Game.grace-=dt;
   const qt=questText();
-  if(qt!==Game._qt){Game._qt=qt;questEl.textContent=qt;}
+  if(qt!==Game._qt){Game._qt=qt;questEl.textContent=qt;
+    const db=document.getElementById('doorbtn');if(db)db.classList.toggle('quest',qt.indexOf('どこでもドア')>=0);}
   if(Game.chCard){Game.chCard.t+=dt;if(Game.chCard.t>Game.chCard.dur)Game.chCard=null;}
   if(Game.mapId==='castle'&&Game.hidden.cleared&&!Game.hidden.cTip&&!Game.talking&&!Game.battling){
     Game.hidden.cTip=true;
@@ -5841,6 +5844,7 @@ function npcStoryPending(n){
   if(n.msgElder){
     if(!h.elderTold&&(h.cleared||h.k3&&['t1','t2','t3','t4','t5'].every(k=>h[k])))return true; // 告白待ち or クリア後の導き
     if(h.cleared&&h.elderTold&&!h.ch2)return true; // 章2の たのみ
+    if(h.sn2&&!h.ch2end)return true; // さとの しんじつの ほうこく
     if(h.nk2&&h.ch3m&&(Game.purified||0)>=15&&!h.ch3a)return true; // 章3の みちびき
     if(h.ch3t&&!h.ch3d)return true; // こたえを つたえる
     return false;
@@ -6540,14 +6544,29 @@ function drawExitBeacons(){
 function questBeaconTargets(){
   const h=Game.hidden,w=WORLDS[Game.mapId],out=[];
   if(!w)return out;
-  if(Game.mapId==='ice'&&h.k1&&!h.k2)out.push({x:17,y:2}); // とらわれの むすめ
-  if(Game.mapId==='grass'&&w.npcs){
-    for(const n of w.npcs)if((n.msgElder||n.heir)&&npcStoryPending(n))out.push({x:n.x,y:n.y});
+  const push=(x,y)=>out.push({x,y});
+  const foeB=(pred)=>{for(const e of Game.enemies)if(e.def&&pred(e))push(Math.round(e.px),Math.round(e.py));};
+  // 章1後: とらわれの むすめ
+  if(Game.mapId==='ice'&&h.k1&&!h.k2)push(17,2);
+  // 村: じいさん・こども(はなす用事が あるとき)
+  if(Game.mapId==='grass'&&w.npcs)for(const n of w.npcs)if((n.msgElder||n.heir)&&npcStoryPending(n))push(n.x,n.y);
+  // クリア後・告白前: いまの しまの みよんでいない せきひ
+  if(h.cleared&&h.k3&&!h.elderTold&&w.npcs)for(const n of w.npcs)if(n.stoneKey&&!h[n.stoneKey])push(n.x,n.y);
+  // 章2: しずみのさとの かげたち→さとぬし（たおす＝ときはなつ）
+  if(Game.mapId==='sunken'&&h.ch2&&!h.sn1)foeB(e=>e.def.kage);
+  // 章2後半: わすれのうみの かげ（じょうかを つみ、ぬけがら・継承へ）
+  if(Game.mapId==='mistsea'&&h.ch2end&&!h.ch3m&&!(h.nk2&&(Game.purified||0)>=15))foeB(e=>e.def.kage);
+  // 城: やみの ぬけがら
+  if(Game.mapId==='castle'&&h.ch2end&&!h.nk1)foeB(e=>e.def===FOES.nukegara);
+  // 章3: ひかりの しずく3つ → いずみの まえの ボス
+  if(Game.mapId==='minamoto'&&w.npcs){
+    if(!h.ch3b)for(const n of w.npcs)if(n.memKey&&!h[n.memKey])push(n.x,n.y);
+    if(h.ch3b&&!h.ch3c)foeB(e=>e.def===FOES.hikarinokodama);
   }
-  // クリア後・告白前は「いまの しまの みよんでいない せきひ」へ
-  if(h.cleared&&h.k3&&!h.elderTold&&w.npcs){
-    for(const n of w.npcs)if(n.stoneKey&&!h[n.stoneKey])out.push({x:n.x,y:n.y});
-  }
+  // こたえの あかし: はてのしまの こたえなきもの（とわのふち かいほう）
+  if(Game.mapId==='edge'&&h.ch3d&&!h.towaGate)foeB(e=>e.def===FOES.kotae);
+  // とわのふち: といの けしん
+  if(Game.mapId==='towa'&&!h.towaDown)foeB(e=>e.def===FOES.toikeshin);
   return out;
 }
 function drawQuestBeacons(){
