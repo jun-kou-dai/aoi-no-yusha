@@ -95,6 +95,8 @@ body{
 .ailtag.poison{ background:rgba(156,74,190,.92); color:#fbeaff; }
 .ailtag.sleep{ background:rgba(74,104,196,.92); color:#eef2ff; }
 .ailtag.para{ background:rgba(196,160,46,.92); color:#fff7e0; }
+.ailtag.abreak{ background:rgba(200,106,38,.92); color:#ffe9d4; }
+.blore{ font-size:.82em; color:#d8c896; margin-top:5px; line-height:1.65; opacity:.92; }
 
 /* ---------- フィールド ---------- */
 #ui-field{ flex-direction:column; align-items:flex-start; }
@@ -917,9 +919,9 @@ function diffEnemyHP(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();let 
 function diffEnemyAtk(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.batk:D.eatk;if(foe.giant&&D.giantAtk)m*=D.giantAtk;return m;}
 const FOES={
   slime:{name:'スライム',     hp:14, atk:7,  def:2, exp:11, g:4,  col:'#8fd0a0', draw:'slime', physMul:1,   fireMul:1,   iceMul:1,   dodge:0, drop:'yakuso'},
-  crow: {name:'おおがらす',   hp:19, atk:10, def:3, exp:16, g:6,  col:'#a9b7ff', draw:'crow',  physMul:1,   fireMul:1,   iceMul:1,   dodge:0.18},
+  crow: {name:'おおがらす',   hp:19, atk:10, def:3, exp:16, g:6,  coward:true, col:'#a9b7ff', draw:'crow',  physMul:1,   fireMul:1,   iceMul:1,   dodge:0.18},
   golem:{name:'いわゴーレム', hp:28, atk:12, def:5, exp:26, g:10, col:'#d8d3bd', draw:'golem', physMul:0.5, fireMul:1.5, iceMul:1,   dodge:0},
-  bat:  {name:'どくこうもり', hp:24, atk:14, def:4, exp:22, g:9,  col:'#9fe88f', draw:'crow',  v:'bat', physMul:1, fireMul:1, iceMul:1, dodge:0.22, drop:'dokukesi'},
+  bat:  {name:'どくこうもり', hp:24, atk:14, def:4, exp:22, g:9,  coward:true, col:'#9fe88f', draw:'crow',  v:'bat', physMul:1, fireMul:1, iceMul:1, dodge:0.22, drop:'dokukesi'},
   skel: {name:'ほねゴーレム', hp:38, atk:16, def:6, exp:36, g:15, col:'#e8e8e0', draw:'golem', v:'bone', physMul:0.7, fireMul:1.4, iceMul:1, dodge:0},
   hslime:{name:'ホイミスライム', hp:30, atk:12, def:5, exp:34, g:14, col:'#8fd8e8', draw:'slime', physMul:1, fireMul:1.2, iceMul:1, dodge:0.1, drop:'yakuso'},
   mboss:{name:'くろがねゴーレム', hp:100, atk:19, def:9, exp:85, g:100, col:'#8a93b8', draw:'golem', v:'iron', mboss:true, still:true, winMsg:'どうくつの おくから つめたい かぜが ふきこんでくる…\nこおりの せかいへの みちが ひらいた！', physMul:0.6, fireMul:1.3, iceMul:1, dodge:0},
@@ -929,13 +931,13 @@ const FOES={
   boss2:{name:'ヴォルガ しんのすがた', hp:220, atk:28, def:11, exp:0, g:0, boss:true, col:'#f3e9c8', draw:'boss2', physMul:1, fireMul:1, iceMul:1, dodge:0},
   gslime:{name:'きんのスライム', hp:8, atk:0, def:20, exp:25, g:65, col:'#ffd86b', draw:'slime', gold:true, v:'gold', physMul:1, fireMul:1, iceMul:1, dodge:0.4},
   metal:{name:'メタルスライム', hp:6, atk:10, def:60, exp:60, g:10, col:'#cdd6e4', draw:'slime', v:'metal', metal:true, physMul:1, fireMul:1, iceMul:1, dodge:0.35},
-  mslime:{name:'もりスライム', hp:20, atk:12, def:4, exp:18, g:7, col:'#9bd06a', draw:'slime', v:'moss', physMul:1, fireMul:1.3, iceMul:1, dodge:0, drop:'yakuso'},
-  yamabato:{name:'やまばと', hp:26, atk:15, def:5, exp:28, g:11, col:'#d8b06a', draw:'crow', v:'owl', physMul:1, fireMul:1, iceMul:1, dodge:0.2},
+  mslime:{name:'もりスライム', hp:20, atk:12, def:4, exp:18, g:7, coward:true, col:'#9bd06a', draw:'slime', v:'moss', physMul:1, fireMul:1.3, iceMul:1, dodge:0, drop:'yakuso'},
+  yamabato:{name:'やまばと', hp:26, atk:15, def:5, exp:28, g:11, coward:true, col:'#d8b06a', draw:'crow', v:'owl', physMul:1, fireMul:1, iceMul:1, dodge:0.2},
   ent:{name:'もりの ぬし', hp:72, atk:17, def:7, exp:70, g:45, col:'#7ec86a', draw:'golem', v:'ent', mboss:true, still:true, winMsg:'もりの ぬしは くずおれ、おお木は しずかに ねむりに ついた。\nうっそうとした こずえの おくに、どうくつへの みちが のぞいた。', physMul:1, fireMul:1.5, iceMul:0.6, dodge:0},
-  islime:{name:'こおりスライム', hp:30, atk:14, def:6, exp:30, g:12, col:'#bfe6ff', draw:'slime', v:'ice', physMul:1, fireMul:1.8, iceMul:0.3, dodge:0.05, drop:'yakuso'},
+  islime:{name:'こおりスライム', hp:30, atk:14, def:6, exp:30, g:12, coward:true, col:'#bfe6ff', draw:'slime', v:'ice', physMul:1, fireMul:1.8, iceMul:0.3, dodge:0.05, drop:'yakuso'},
   scrow:{name:'ゆきがらす', hp:42, atk:18, def:7, exp:40, g:16, col:'#cfe6ff', draw:'crow', v:'snow', physMul:1, fireMul:1.7, iceMul:0.4, dodge:0.24},
   fgolem:{name:'こおりの きょじん', hp:96, atk:21, def:11, exp:90, g:60, col:'#a9cfe8', draw:'golem', v:'frost', mboss:true, still:true, winMsg:'こおりの きょじんは くだけちり、しろい しじまが あたりを つつむ。\nかぜに ほのおの においが まじりはじめた…', physMul:0.7, fireMul:2.0, iceMul:0, dodge:0},
-  lslime:{name:'ようがんスライム', hp:34, atk:16, def:7,  exp:34, g:13, col:'#ff9a5a', draw:'slime', v:'lava',  physMul:1,   fireMul:0.3, iceMul:1.8, dodge:0.05, drop:'yakuso'},
+  lslime:{name:'ようがんスライム', hp:34, atk:16, def:7,  exp:34, g:13, coward:true, col:'#ff9a5a', draw:'slime', v:'lava',  physMul:1,   fireMul:0.3, iceMul:1.8, dodge:0.05, drop:'yakuso'},
   ecrow:{name:'ほのおがらす',   hp:46, atk:20, def:8,  exp:44, g:18, col:'#ff8a6a', draw:'crow',  v:'ember', physMul:1,   fireMul:0.4, iceMul:1.7, dodge:0.22},
   mgolem:{name:'ようがんの きょじん', hp:104,atk:23, def:12, exp:96, g:66, col:'#e87a4a', draw:'golem', v:'magma', mboss:true, still:true, winMsg:'ようがんの きょじんは マグマの うみに しずんでいった。\nゆくてに そびえる まおうの しろが、その すがたを あらわす…！', physMul:0.7, fireMul:0, iceMul:2.0, dodge:0},
   frostlord:{name:'さまよう ひょうじん', hp:74, atk:32, def:10, exp:95, g:55, col:'#bfe6ff', draw:'golem', v:'frost', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.9, iceMul:0, dodge:0},
@@ -1859,11 +1861,52 @@ const BOOK_ISLES=[
   ['しずみの さと',['kagehito','nakikage','kagekishi','satonushi']],
   ['わすれの うみ',['uminokage','kirinokage']]];
 const BOOK_SPECIAL=['gslime','metal','kotae'];
+// ずかんの ものがたり行（よみものとしての 図鑑）
+const BOOK_LORE={
+  slime:'あさつゆを のんで ぷるぷる そだつ。むらの こどもの あそびあいて。',
+  crow:'よるに なくこえは、はぐれた なかまを さがしている らしい。',
+  golem:'こけむした いわに こころが やどった もの。あめの ひは じっと うごかない。',
+  mslime:'もりの こけを かぶって そだつ。あめあがりの においが すき。',
+  yamabato:'もりの しらせを はこぶ とり。はおとは おどろくほど しずか。',
+  wslime:'ふるい ほんを かじって じゅもんを おぼえた。すこし なまいき。',
+  ent:'もりで いちばん ふるい き。しずけさを みだす ものを ゆるさない。',
+  bat:'どうくつの てんじょうで、さかさまの ゆめを みている。',
+  hslime:'きずついた まものを いやして まわる、こころやさしい スライム。',
+  skel:'かえれなかった たびびとの なれのはて。つるぎだけが きれいな まま。',
+  mboss:'とざされた みちを まもる くろがね。めいれいした こえの ぬしは、もう いない。',
+  dbat:'やみに そまった こうもり。どくの きばを といでいる。',
+  gskel:'いくさで たおれた きしの ほね。ほこりだけは、いまも たおれていない。',
+  bonewarden:'「たからを まもれ」──めいれいだけが、しろい ほねを たたせている。',
+  islime:'ふぶきの よるに うまれる。だきしめると つめたくて、すこし かなしい。',
+  scrow:'ゆきぐもの うえから えものを さがす。はねは ゆきより しろい。',
+  fgolem:'こおった たきが、そのまま あるきだした と いわれる。',
+  icewarden:'こおりの よろいの したに、むかしの やさしい かおが ねむっている という。',
+  frostlord:'ふぶきの よるに あらわれる おおきな かげ。ただ さみしいだけ かもしれない。',
+  lslime:'ようがんの ぬくもりで ねむる。ちかづく ものを ぷるぷると こばむ。',
+  ecrow:'ひばしらを くぐる あそびが すき。はねの さきが いつも こげている。',
+  mgolem:'ようがんが ひえて かたまる まえに、あるきかたを おぼえて しまった。',
+  magmalord:'かざんの いかりが かたちに なった もの。ねむりを さまたげた ものを おう。',
+  dslime:'やみを すいこんで いろの かわった スライム。ねむりの こなを ふりまく。',
+  dcrow:'まおうの しろの そらを まわりつづける、みはりの め。',
+  cuslime:'のろいの ひかりを まとう。もとは しろで かわれていた らしい。',
+  chaoslord:'2しゅうめの よに あらわれる こんとん。つよき ものの まえにしか たたない。',
+  boss:'たまを「とりもどした」と かたった やみのおう。その ことばの いみを、たびの おわりに しる。',
+  boss2:'すくえなかった なげきが、おおきな つばさの かたちに なった。',
+  nukegara:'ヴォルガが ぬぎすてた やみ。なげきだけが、うつわの かたちを おぼえていた。',
+  kagehito:'しずんだ さとに のこる ひとの かげ。まだ かえりみちを さがしている。',
+  nakikage:'なきごえは よびごえ。だれかに みつけてほしくて ないている。',
+  kagekishi:'さとを まもりきれなかった きしの こうかいが、よろいを きて たっている。',
+  satonushi:'さとの みなを せおい、まもりきれなかった もの。その ためいきは うみより ふかい。',
+  uminokage:'うみに のまれた ものたちの かげ。なみおとに まぎれて うたっている。',
+  kirinokage:'きりの なかで みちに まよった たましい。ひかりの ほうへ あるきたがっている。',
+  gslime:'おうごんの からだは おまもりがわり。おかねもちほど にげあしが はやい。',
+  metal:'はがねの からだに けいけんの かたまり。であえた ひは うんが いい。',
+  kotae:'とわに といつづける もの。こたえを もつ ものを、しずかに ためしに くる。'};
 const BOOK_TRAITS={
-  slime:['たまに にげだす'],
-  crow:['そらを とぶ（こうげきを かわす）'],
+  slime:['たまに にげだす','なかまを よんで かさなる（たおすと ほうびも ふえる）'],
+  crow:['そらを とぶ（こうげきを かわす）','HPが へると おびえて にげる'],
   golem:['ちからを ためる（つよい いちげき）'],
-  bat:['そらを とぶ','どくを つける'],
+  bat:['そらを とぶ','どくを つける','HPが へると おびえて にげる'],
   hslime:['HPが へると ホイミで じぶんを かいふくする','はやめに たたみかけよう'],
   chaoslord:['2しゅうめ いこうにだけ あらわれる','ちかづくと きづいて おいかけてくる'],
   kotae:['せきひ5まいと こくはくの さきに あらわれる','なんど たおれても たちあがる——こたえを さがすように'],
@@ -1873,15 +1916,20 @@ const BOOK_TRAITS={
   boss:['ねむりを つける','HP半分で かくせい','つよい とくぎ'],
   boss2:['ヴォルガの しんのすがた','つよい とくぎ'],
   frostlord:['ちかづくと きづいて おいかけてくる','なんいど「しんわ」で さらに つよくなる'],
-  icewarden:['ヴォルガの めいで むすめを さらった ばんにん','とうめいマントも みやぶって おいかけてくる'],
+  icewarden:['ヴォルガの めいで むすめを さらった ばんにん','とうめいマントも みやぶって おいかけてくる','ぼうぎょくずしで まもりを ゆるめてくる'],
   magmalord:['ちかづくと きづいて おいかけてくる','なんいど「しんわ」で さらに つよくなる'],
   gslime:['たたかわず すぐ にげる','守備が 高く 攻撃が きかない','たおすと 大金'],
   metal:['すぐ にげる','守備が 非常に 高い','たおすと 経験値 特大'],
   dbat:['そらを とぶ','どくを つける'],
-  gskel:['かたい ほねは ぶきが ききにくい','ほのおの じゅもんが よくきく'],
-  bonewarden:['ちからを ためる','ちそこの たからを まもる ばんにん'],
+  gskel:['かたい ほねは ぶきが ききにくい','ほのおの じゅもんが よくきく','ぼうぎょくずしで まもりを ゆるめてくる'],
+  bonewarden:['ちからを ためる','ちそこの たからを まもる ばんにん','ぼうぎょくずしで まもりを ゆるめてくる'],
   wslime:['メラを となえてくる','ようすを みていることも ある'],
-  cuslime:['メラを となえてくる','のろわしい ひかりを まとう']};
+  cuslime:['メラを となえてくる','のろわしい ひかりを まとう'],
+  mslime:['なかまを よんで かさなる（たおすと ほうびも ふえる）','HPが へると おびえて にげる'],
+  islime:['なかまを よんで かさなる（たおすと ほうびも ふえる）','HPが へると おびえて にげる'],
+  lslime:['なかまを よんで かさなる（たおすと ほうびも ふえる）','HPが へると おびえて にげる'],
+  yamabato:['そらを とぶ','HPが へると おびえて にげる'],
+  kagekishi:['ぶつりに つよい（ぶきが ききにくい）','ぼうぎょくずしで まもりを ゆるめてくる']};
 function bookElemBadges(f){
   const b=[];
   if(f.def>=20)b.push(['imm','物理 ほぼ無効']);
@@ -1912,7 +1960,8 @@ function bookMonCard(id){
   return '<div class="bmon"><div class="bmh"><span class="bsw" style="background:'+f.col+'"></span><b>'+f.name+'</b>'+role+'</div>'
     +'<div class="bstat">'+stat+(gain?'　｜　'+gain:'')+'</div>'
     +(badges?'<div class="bbadges">'+badges+'</div>':'')
-    +(tags.length?'<div class="btags">'+tags.map(t=>'・'+t).join('　')+'</div>':'')+'</div>';
+    +(tags.length?'<div class="btags">'+tags.map(t=>'・'+t).join('　')+'</div>':'')
+    +(BOOK_LORE[id]?'<div class="blore">'+BOOK_LORE[id]+'</div>':'')+'</div>';
 }
 function renderBook(){
   const _allIds=[].concat.apply([],BOOK_ISLES.map(p=>p[1])).concat(BOOK_SPECIAL);
@@ -5810,7 +5859,7 @@ function drawChapterCard(){
 // 戦闘：フロー（async）
 // ============================================================
 const calcDmg=(atk,def)=>Math.max(1,atk-def+ri(0,3));
-const enemyPos=()=>({x:W/2,y:H*0.40,s:Math.min(W,H)/560});
+const enemyPos=()=>{const k=(Game.bt&&Game.bt.sizeK)||1;return{x:W/2,y:H*0.40,s:Math.min(W,H)/560*k};}; // sizeK=なかまをよぶ の 拡大
 function shakeBattle(p,dur){const bt=Game.bt;if(bt){bt.shakeP=p;bt.shakeT=dur;}}
 
 async function runBattle(ref){
@@ -5914,6 +5963,7 @@ function ailList(){
   if(p&&p.poison)a.push(['poison','どく']);
   if(bt&&bt.sleep>0)a.push(['sleep','ねむり']);
   if(bt&&bt.para>0)a.push(['para','まひ']);
+  if(bt&&bt.abreak>0)a.push(['abreak','まもりダウン']);
   return a;
 }
 function updateBadge(){
@@ -6264,6 +6314,36 @@ async function enemyAction(){
     await say('ホイミスライムは ホイミを となえた！\nじぶんの HPが '+hn+' かいふくした！');
     return;
   }
+  // おびえ：よわった こわがりの ざこは にげだす（ほうびなし＝トドメの きんちょう）
+  if(foe.coward&&!bt.merged&&bt.hp<bt.mhp*0.3&&Math.random()<0.25){
+    sfxRun();
+    await say(foe.name+'は おびえて にげだした！');
+    return 'enemyFled';
+  }
+  // なかまをよぶ：スライムけいは かさなって おおきくなる（1せんとう1かい・たおすと ほうびも ふえる）
+  if((foe===FOES.slime||foe===FOES.mslime||foe===FOES.islime||foe===FOES.lslime)&&!bt.merged&&bt.turn>=2&&bt.hp<bt.mhp*0.7&&Math.random()<0.30){
+    bt.merged=1;
+    await say(foe.name+'は なかまを よんだ！');
+    sfxSoar();shakeBattle(6,0.3);
+    bt.sizeTarget=1.32;
+    const ep2=enemyPos();
+    puff(ep2.x,ep2.y+ep2.s*40,foe.col,26,150,0.9,{s0:3,s1:7,spread:60});
+    const add=Math.round(bt.mhp*0.6);
+    bt.mhp+=add;bt.hp=Math.min(bt.mhp,bt.hp+add);
+    await wait(0.25);
+    await say('スライムたちは かさなって おおきくなった！');
+    return;
+  }
+  // ぼうぎょくずし：きしけいは よろいの まもりを ゆるめてくる
+  if((foe===FOES.gskel||foe===FOES.kagekishi||foe===FOES.bonewarden||foe===FOES.icewarden)&&!(bt.abreak>0)&&bt.turn>=2&&Math.random()<0.22){
+    bt.abreak=3;
+    sfxSlash();flash('#d8a24a',0.3,0.5);shakeBattle(8,0.35);
+    const cq=playerChipPos();
+    popup(cq.x,cq.y,'まもりダウン','sp');
+    updateBadge();
+    await say(foe.name+'の ぼうぎょくずし！\nよろいの まもりが ゆるんだ…！（てきの こうげき3かいで もどる）');
+    return;
+  }
   // まどうし系：ようすを みている（ターンスキップ＝ゆらぎ）
   if(foe.watch&&Math.random()<0.18){
     await say(foe.name+'は ようすを みている。');
@@ -6329,7 +6409,7 @@ async function enemyAction(){
   if(!fire&&!holy)shakeBattle(heavy?12:9,heavy?0.45:0.35);
   flash('#c83030',fire||holy||heavy?0.36:0.22,0.45);
   if(foe.boss)playerBloodFx(fire||holy||heavy);
-  let d=calcDmg(atk,p.def);
+  let d=calcDmg(atk,(bt.abreak>0?Math.round(p.def*0.5):p.def)); // ぼうぎょくずし中は まもり半分（7割ではminFrac下限に沈んで体感ゼロ＝Lv16実測で確認）
   {const Dc0=curDiff(),mf=foe.boss?(Dc0.bossMinFrac||Dc0.minFrac||0):(Dc0.minFrac||0);
    d=Math.max(d,Math.round(atk*mf));} // なんいど：被ダメ下限。ボスはbossMinFrac優先（ふつう帯ボスの被弾が空気になる対処・未定義はminFracへ＝でんせつ以上とざこ・中ボスは不変）
   {const Dc=curDiff();d=Math.min(d,Math.max(1,Math.round(p.mhp*((fire||holy||heavy)?Dc.capHeavy:Dc.capNorm))));} // なんいど：被ダメ上限（即死防止・大技は高め天井）
@@ -6343,6 +6423,7 @@ async function enemyAction(){
   await wait(0.12);
   if(bt.guard)await say('みを まもって しのいだ！ うけた ダメージは '+d+'！');
   else await say('ゆうしゃは '+d+'の ダメージを うけた！');
+  if(bt.abreak>0){bt.abreak--;if(!bt.abreak){updateBadge();await say('よろいの まもりが もとに もどった！');}}
   if(p.hp>0)await tryInflict(foe);
 }
 async function victory(){
@@ -6358,8 +6439,9 @@ async function victory(){
   await say(foe.name+'を たおした！');
   Game.kills++;
   const Dr=curDiff();
-  const gexp=Math.round(foe.exp*(bt.night?1.6:1)*Dr.exp);
-  const ggold=Math.round((foe.g||0)*(bt.night?1.6:1)*Dr.gold);
+  const mgk=1+0.6*(bt.merged||0); // かさなった スライムは ほうびも ふえる
+  const gexp=Math.round(foe.exp*(bt.night?1.6:1)*Dr.exp*mgk);
+  const ggold=Math.round((foe.g||0)*(bt.night?1.6:1)*Dr.gold*mgk);
   popup(ep.x,ep.y-ep.s*26,'+'+gexp+' EXP');
   await say('けいけんち '+gexp+'を かくとく！'+(bt.night?'\n（よるの ボーナス！）':''));
   p.exp+=gexp;
@@ -6630,6 +6712,7 @@ function updateBattle(dt){
     }
   }
   bt.soarK+=((bt.soar?1:0)-(bt.soarK||0))*Math.min(1,dt*5);
+  if(bt.sizeTarget){bt.sizeK=(bt.sizeK||1)+(bt.sizeTarget-(bt.sizeK||1))*Math.min(1,dt*6);} // なかまをよぶ：ぷにっと 拡大
   if(bt.flash>0)bt.flash=Math.max(0,bt.flash-dt*3);
   if(bt.recoil>0)bt.recoil=Math.max(0,bt.recoil-dt*3.8);
   if(bt.blink>0)bt.blink=Math.max(0,bt.blink-dt*6.5);
