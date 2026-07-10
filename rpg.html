@@ -2636,6 +2636,7 @@ window.addEventListener('keydown',e=>{
   const confirm=(e.key==='Enter'||e.key==='z'||e.key==='Z'||e.key===' ');
   const cancel=(e.key==='x'||e.key==='X'||e.key==='Escape');
   if(Game.scene==='prologue'&&(confirm||cancel)&&!e.repeat){Game.prSkip=true;return;} // プロローグは キーでも スキップ
+  if(Game.scene==='ending'&&(confirm||cancel)&&!e.repeat){const ad=($('#elans').textContent||'')!==''?2.2:0; if(Game.endT<12.5+ad){Game.endT=12.5+ad;sfxSel();} return;} // EDも キーで はやおくり
   if(MSG&&!MENU&&confirm){ if(!e.repeat||MSG.done)msgConfirm(); return; } // メッセージ表示中はキーで送り（全場面・固まり防止）
   if(Game.scene==='title'&&confirm&&!e.repeat){
     if($('#slotwin').style.display!=='none')return; // 冊えらび中は キーきどう しない（ごばく ぼうし）
@@ -2663,6 +2664,7 @@ stage.addEventListener('pointerdown',e=>{
   firstGesture();
   if(e.target.closest('.btn,.mi,#mute'))return;
   if(Game.scene==='prologue'){Game.prSkip=true;return;} // プロローグは タップで スキップ
+  if(Game.scene==='ending'){const ad=($('#elans').textContent||'')!==''?2.2:0; if(Game.endT<12.5+ad){Game.endT=12.5+ad;sfxSel();} return;} // EDは タップで はやおくり(ボタンまで)
   if(MSG&&!MENU){msgConfirm();return;} // メッセージ表示中はタップで送り（全場面・固まり防止）
   if(Game.scene==='field'&&!Game.talking){ptr={x:e.clientX,y:e.clientY};swipeVec=null;}
   else if((Game.scene==='battle'||Game.talking)&&!MENU)msgConfirm();
