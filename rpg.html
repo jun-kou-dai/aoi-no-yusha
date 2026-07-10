@@ -246,6 +246,12 @@ body{
   color:#f2e6c2; cursor:pointer; pointer-events:auto; opacity:.92; user-select:none; transition:opacity .2s, transform .12s; }
 #questbtn:hover{ opacity:1; }
 #questbtn:active{ transform:scale(.94); }
+#talkbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 350px); right:12px; z-index:70;
+  display:flex; align-items:center; gap:6px; padding:8px 12px; font-size:clamp(12px,2vmin,15px);
+  color:#f2e6c2; cursor:pointer; pointer-events:auto; opacity:.92; user-select:none; transition:opacity .2s, transform .12s; }
+#talkbtn.on{ color:#ffd9a0; box-shadow:0 0 0 2px rgba(255,190,110,.55), 0 0 16px rgba(255,170,90,.4); border-radius:14px; }
+#talkbtn:hover{ opacity:1; }
+#talkbtn:active{ transform:scale(.94); }
 #bookwin{ position:fixed; inset:0; z-index:200; display:none; justify-content:center; align-items:flex-start;
   background:rgba(6,10,28,.82); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); overflow:auto; padding:20px 10px; }
 #bookwin.show{ display:flex; }
@@ -436,6 +442,7 @@ body{
     <div id="cloakbtn" class="glass">👻 とうめい</div>
     <div id="bookbtn" class="glass">📕 ずかん</div>
     <div id="questbtn" class="glass">🗺 メモ</div>
+    <div id="talkbtn" class="glass">💬 はなしかけ</div>
   </div>
 
   <div id="ui-battle" class="ui">
@@ -1116,7 +1123,7 @@ function resetGame(){
   Game.items={yakuso:0,seisui:0,dokukesi:0};Game.chestsOpen=[];Game.springUsed={};Game.dmgTaken=0;Game.t0=0;
   Game.goldT=35;Game.saidYes=false;Game.dayT=DAY_START;Game.metalT=20;Game.stats={battles:0,crits:0,deaths:0};
   Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.purified=0;Game.hidden={};Game.popo=null;Game.popoT=null;Game.mate=null;Game.mateT=null;Game.minigame=null;
-  Game.door=false;Game.mkey=false;Game.chCard=null;Game.visited={};Game.cloak=false;Game.invisible=false;Game.cloakSteps=0;Game.book=false;Game.seen={};
+  Game.door=false;Game.mkey=false;Game.chCard=null;Game.visited={};Game.cloak=false;Game.invisible=false;Game.cloakSteps=0;Game.book=false;Game.talkOff=false;Game.seen={};
   loadMap('grass');
   P.length=0;fxL.innerHTML='';
   MSG=null;MENU=null;cmdwinEl.classList.remove('on');msgtextEl.textContent='';msgwinEl.classList.remove('done');msgwinEl.classList.remove('hasface');
@@ -1135,7 +1142,7 @@ function saveData(){
   return {v:1,diff:Game.diff,
       lv:p.lv,exp:p.exp,hp:p.hp,mp:p.mp,bonusAtk:p.bonusAtk,tx:p.tx,ty:p.ty,dir:p.dir,
       gold:Game.gold,items:Game.items,weaponAtk:Game.weaponAtk,armorDef:(Game.armorDef||0),shield:Game.shield,
-      mbossDown:Game.mbossDown,springUsed:Game.springUsed,mapId:Game.mapId,door:Game.door,mkey:!!Game.mkey,visited:Game.visited,cloak:Game.cloak,book:Game.book,seen:Game.seen,purified:Game.purified||0,
+      mbossDown:Game.mbossDown,springUsed:Game.springUsed,mapId:Game.mapId,door:Game.door,mkey:!!Game.mkey,visited:Game.visited,cloak:Game.cloak,book:Game.book,talkOff:!!Game.talkOff,seen:Game.seen,purified:Game.purified||0,
       kills:Game.kills,dmgTaken:Game.dmgTaken,goldT:Game.goldT,saidYes:Game.saidYes,day:Game.dayT,
       qChild:Game.qChild,bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,bonusMp:Game.bonusMp,gheart:Game.gheart,ng:Game.ng||0,hidden:Game.hidden,
       stats:Game.stats,chests:Game.chestsOpen.map(chestKey).filter(Boolean),
@@ -1235,7 +1242,7 @@ function loadGame(){
   Game.door=!!d.door; // どこでもドア 所持
   Game.purified=d.purified||0; // じょうか数（かげ解放）
   Game.mkey=!!d.mkey; // まほうのかぎ 所持
-  Game.cloak=!!d.cloak;Game.book=!!d.book;Game.invisible=false;Game.cloakSteps=CLOAK_MAX;Game.seen=(d.seen&&typeof d.seen==='object')?d.seen:{}; // とうめいマント（所持のみ永続・透明状態は持ち越さない・バッテリー満タン）
+  Game.cloak=!!d.cloak;Game.book=!!d.book;Game.talkOff=!!d.talkOff;Game.invisible=false;Game.cloakSteps=CLOAK_MAX;Game.seen=(d.seen&&typeof d.seen==='object')?d.seen:{}; // とうめいマント（所持のみ永続・透明状態は持ち越さない・バッテリー満タン）
   Game.visited=(d.visited&&typeof d.visited==='object')?d.visited:{};Game.visited.grass=true; // 訪問した島（旧セーブは草原を既訪あつかい）
   if(d.stats)Game.stats={battles:d.stats.battles||0,crits:d.stats.crits||0,deaths:d.stats.deaths||0};
   const keys=d.chests||[];
@@ -2044,7 +2051,7 @@ function updateBars(){
   setBar($('#fhp'),$('#fhpn'),p.hp,p.mhp);setBar($('#bhp'),$('#bhpn'),p.hp,p.mhp);
   setBar($('#fmp'),$('#fmpn'),p.mp,p.mmp);setBar($('#bmp'),$('#bmpn'),p.mp,p.mmp);
   if(typeof updateBadge==='function')updateBadge();
-  updateDoorBtn();updateCloakBtn();updateBookBtn();
+  updateDoorBtn();updateCloakBtn();updateBookBtn();updateTalkBtn();
 }
 // 🚪どこでもドアボタン：所持していれば フィールドに 表示
 function updateDoorBtn(){const b=document.getElementById('doorbtn');if(b)b.classList.toggle('show',!!Game.door);}
@@ -2726,6 +2733,9 @@ $('#doorbtn').addEventListener('pointerdown',e=>{
 $('#cloakbtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();firstGesture();toggleCloak();
 });
+$('#talkbtn').addEventListener('pointerdown',e=>{
+  e.stopPropagation();firstGesture();toggleTalkOff();
+});
 $('#bookbtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();firstGesture();openBook();
 });
@@ -2904,6 +2914,17 @@ function toggleCloak(){
     toast('すがたを けした！ のこり '+Game.cloakSteps+'歩');
   }
   updateCloakBtn();
+}
+function toggleTalkOff(){
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
+  Game.talkOff=!Game.talkOff;sfxSel();updateTalkBtn();
+  toast(Game.talkOff?'はなしかけない モード。あるいても むらびとに はなしかけない（タップで えらべば はなせる）':'はなしかけ できるように もどした。');
+  saveGame();
+}
+function updateTalkBtn(){
+  const b=document.getElementById('talkbtn');if(!b)return;
+  b.classList.toggle('on',!!Game.talkOff);
+  b.textContent=Game.talkOff?'🤫 はなさない':'💬 はなしかけ';
 }
 function updateCloakBtn(){
   const b=document.getElementById('cloakbtn');if(!b)return;
@@ -3698,9 +3719,10 @@ function updateField(dt){
       {
         const nx=p.tx+d[0],ny=p.ty+d[1];
         const npc=npcAt(nx,ny);
-        if(npc){talkNpc(npc);acted=true;}
-        else if(w.king&&w.king.x===nx&&w.king.y===ny){talkKing();acted=true;}
-        else if(w.inn&&w.inn.x===nx&&w.inn.y===ny){runInn();acted=true;}
+        const hush=manual&&Game.talkOff; // はなしかけOFF: キー/スワイプの正面では話さない。タップで狙った会話(autoStep)は通す
+        if(npc){if(!hush){talkNpc(npc);acted=true;}}
+        else if(w.king&&w.king.x===nx&&w.king.y===ny){if(!hush){talkKing();acted=true;}}
+        else if(w.inn&&w.inn.x===nx&&w.inn.y===ny){if(!hush){runInn();acted=true;}}
         else if(Game.mapId==='cave2'&&nx===16&&ny===8&&tileAt(nx,ny)==='D'){gateTry();acted=true;}
       }
       // 2) でいりぐち・たからばこ・いずみは おした ほうこうの 3マスから すいつく
@@ -9006,7 +9028,7 @@ async function ngNewGame(){
   const keep={lv:p0.lv,exp:p0.exp,bonusAtk:p0.bonusAtk,gold:Game.gold,
     items:JSON.parse(JSON.stringify(Game.items)),weaponAtk:Game.weaponAtk,armorDef:(Game.armorDef||0),shield:Game.shield,
     bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,bonusMp:(Game.bonusMp||0),gheart:(Game.gheart||0),
-    door:Game.door,mkey:!!Game.mkey,cloak:Game.cloak,book:Game.book,seen:JSON.parse(JSON.stringify(Game.seen||{})),
+    door:Game.door,mkey:!!Game.mkey,cloak:Game.cloak,book:Game.book,talkOff:!!Game.talkOff,seen:JSON.parse(JSON.stringify(Game.seen||{})),
     zkomp:!!(Game.hidden&&Game.hidden.zkomp),ch3dEver:!!(Game.hidden&&(Game.hidden.ch3d||Game.hidden.ch3dEver)),ng:(Game.ng||0)+1};
   fadeColor('#070b1e');
   await fadeTo(1,0.8);
@@ -9015,7 +9037,7 @@ async function ngNewGame(){
   p.lv=Math.min(MAXLV,keep.lv);p.exp=keep.exp;p.bonusAtk=keep.bonusAtk;
   Game.gold=keep.gold;Game.items=keep.items;Game.weaponAtk=keep.weaponAtk;Game.armorDef=keep.armorDef;Game.shield=keep.shield;
   Game.bonusDef=keep.bonusDef;Game.bonusHp=keep.bonusHp;Game.bonusMp=keep.bonusMp;Game.gheart=keep.gheart;
-  Game.door=keep.door;Game.mkey=keep.mkey;Game.cloak=keep.cloak;Game.book=keep.book;Game.seen=keep.seen;
+  Game.door=keep.door;Game.mkey=keep.mkey;Game.cloak=keep.cloak;Game.book=keep.book;Game.talkOff=keep.talkOff;Game.seen=keep.seen;
   if(keep.zkomp)Game.hidden.zkomp=true;
   if(keep.ch3dEver)Game.hidden.ch3dEver=true; // 章3の こたえは 周回でも きえない(EDの ことばに かかる)
   Game.ng=keep.ng;
