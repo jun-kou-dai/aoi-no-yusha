@@ -3397,7 +3397,8 @@ async function runShop(){
       if(it.armor&&Game.armorDef>=it.armor)continue;
       if(it.def&&Game.shield)continue;
       if(it.key&&Game[it.key])continue; // 買い切り品（どこでもドア など）所持済みは ならべない
-      list.push({id:it.id,label:it.label+'  '+it.cost+'G',dis:Game.gold<it.cost});
+      const sp=it.atk?' ⚔+'+it.atk:(it.armor?' 🛡+'+it.armor:(it.def?' 🛡+'+it.def:'')); // 性能を そのばで くらべられるように
+      list.push({id:it.id,label:it.label+sp+'  '+it.cost+'G',dis:Game.gold<it.cost});
     }
     list.push({id:'back',label:'やめる'});
     const c=await ask(list,'かいもの（'+Game.gold+'G）');
