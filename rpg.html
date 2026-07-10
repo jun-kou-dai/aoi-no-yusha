@@ -2030,10 +2030,10 @@ function renderStatus(){
    if(Game.hidden&&Game.hidden.ch2)h+=row('じょうか',(Game.purified||0)+'にん の かげを ときはなった');if(Game.hidden&&Game.hidden.mate1){const Mm=MATES[mateKind()];h+=row('みちづれ',Mm.name+'（'+Mm.act+'）');}
    h+=row('しょうごう',(Game.hidden&&Game.hidden.zkomp)?'まものはかせ':'──');}
   if(Game.hidden&&Game.hidden.mate1){
-    h+='<h3 class="bisle">みちづれを えらぶ</h3><div class="mateswap">';
+    h+='<h3 class="bisle">みちづれを えらぶ<span class="stsub">　じょうかが すすむほど つよくなる</span></h3><div class="mateswap">';
     for(const mk of MATE_ORDER){
       const M=MATES[mk],un=(Game.purified||0)>=M.need,cur=mateKind()===mk;
-      if(un)h+='<div class="mopt'+(cur?' cur':'')+'" data-mate="'+mk+'"><b>'+M.name+'</b><span class="msub">'+M.act+'：'+M.desc+'</span></div>';
+      if(un)h+='<div class="mopt'+(cur?' cur':'')+'" data-mate="'+mk+'"><b>'+M.name+'</b><span class="msub">'+M.act+'：'+(M.descF?M.descF():M.desc)+'</span></div>';
       else h+='<div class="mopt lock"><b>？？？</b><span class="msub">じょうか '+M.need+'にんで こころを ひらく</span></div>';
     }
     h+='</div>';
@@ -5994,6 +5994,15 @@ const MATES={
   nakikage:{name:'なきかげ',act:'てをふさぐ',desc:'ときどき なきごえで てきを 1回 やすませる',need:12,sc:1.06,body:'#5a4a78',head:'#463862',eye:'weep'},
   kagekishi:{name:'かげのきし',act:'かばう',desc:'ときどき たてとなり 被ダメージを やわらげる',need:16,sc:1.32,body:'#3a3452',head:'#2c2842',eye:'slit'}};
 const MATE_ORDER=['kokage','kagehito','nakikage','kagekishi'];
+// 従者の成長：じょうか数が ちからになる（上限=勇者の回復・攻撃の1/4）
+const mateInori=()=>4+Math.ceil((Game.purified||0)/6);   // +ri(0,3)
+const mateAtkN=()=>6+Math.ceil((Game.purified||0)/4);    // +ri(0,4)
+const mateBindP=()=>Math.min(0.30,0.22+Math.max(0,(Game.purified||0)-12)*0.012);
+const mateGuardP=()=>Math.min(0.40,0.30+Math.max(0,(Game.purified||0)-16)*0.03);
+MATES.kokage.descF=()=>'HPを '+mateInori()+'〜'+(mateInori()+3)+' いやしてくれる';
+MATES.kagehito.descF=()=>'ターンのおわりに てきへ '+mateAtkN()+'〜'+(mateAtkN()+4)+' ダメージ';
+MATES.nakikage.descF=()=>'なきごえで てきを 1回 やすませる（'+Math.round(mateBindP()*100)+'%）';
+MATES.kagekishi.descF=()=>'たてとなり 被ダメージを やわらげる（'+Math.round(mateGuardP()*100)+'%）';
 const mateOn=()=>!!(Game.hidden&&Game.hidden.mate1);
 const mateKind=()=>{const k=Game.hidden&&Game.hidden.mateSel;return (k&&MATES[k]&&(Game.purified||0)>=MATES[k].need)?k:'kokage';};
 async function mateTurn(){
@@ -6005,7 +6014,7 @@ async function mateTurn(){
     bt.pray={t:0};
     sfxHeal();
     await wait(0.18);
-    const n=Math.min(p.mhp-p.hp,5+ri(0,3));
+    const n=Math.min(p.mhp-p.hp,mateInori()+ri(0,3));
     p.hp+=n;updateBars();
     flash('#cfe8ff',0.2,0.55);
     const hx=W*0.285,hy=(bt.heroY==null?H*0.80:bt.heroY);
@@ -6019,7 +6028,7 @@ async function mateTurn(){
     }
   }else if(kind==='kagehito'){ // ついげき：てきに こていの 小ダメージ（metal/goldは しとめられない）
     if(bt.foe.metal||bt.foe.gold)return;
-    const d=8+ri(0,4);
+    const d=mateAtkN()+ri(0,4);
     bt.hp=Math.max(0,bt.hp-d);
     const ep=enemyPos();
     sfxSlash();bt.recoil=Math.max(bt.recoil||0,0.5);bt.blink=Math.max(bt.blink||0,0.6);
@@ -6028,7 +6037,7 @@ async function mateTurn(){
     await wait(0.12);
     await say('かげびとの ついげき！\n'+bt.foe.name+'に '+d+'の ダメージ！');
   }else if(kind==='nakikage'){ // てをふさぐ：ときどき なきごえで てきの つぎの てを とめる
-    if(bt.foeBind>0||Math.random()>=0.22)return;
+    if(bt.foeBind>0||Math.random()>=mateBindP())return;
     bt.foeBind=1;
     sfxSel();sfxHeal();
     const ep=enemyPos();
@@ -6503,7 +6512,7 @@ async function enemyAction(){
   {const Dc=curDiff();d=Math.min(d,Math.max(1,Math.round(p.mhp*((fire||holy||heavy)?Dc.capHeavy:Dc.capNorm))));} // なんいど：被ダメ上限（即死防止・大技は高め天井）
   let kabau=false;
   if(bt.guard)d=Math.max(1,Math.ceil(d*0.45)); // ぼうぎょで 55%カット
-  else if(mateOn()&&mateKind()==='kagekishi'&&Math.random()<0.30){kabau=true;d=Math.max(1,Math.ceil(d*0.55));} // かげのきしが かばう
+  else if(mateOn()&&mateKind()==='kagekishi'&&Math.random()<mateGuardP()){kabau=true;d=Math.max(1,Math.ceil(d*0.55));} // かげのきしが かばう
   p.hp=Math.max(0,p.hp-d);
   Game.dmgTaken+=d;
   updateBars();
