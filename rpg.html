@@ -182,8 +182,8 @@ body{
   background:rgba(7,9,19,.8); border:1.5px solid rgba(236,229,207,.55); border-radius:6px;
   padding:5px 16px; pointer-events:none; white-space:nowrap; }
 
-/* ---------- エンディング / ゲームオーバー ---------- */
-#ui-ending,#ui-gameover{ flex-direction:column; align-items:center; justify-content:center; gap:clamp(12px,2.6vh,22px); text-align:center; padding:24px; }
+/* ---------- エンディング ---------- */
+#ui-ending{ flex-direction:column; align-items:center; justify-content:center; gap:clamp(12px,2.6vh,22px); text-align:center; padding:24px; }
 .eline{ opacity:0; transform:translateY(10px); transition:opacity 1.4s ease, transform 1.4s ease;
   font-size:clamp(16px,2.9vmin,23px); letter-spacing:.14em; line-height:2; color:#f2ecd8;
   text-shadow:0 2px 10px rgba(10,12,40,.92), 0 1px 12px rgba(25,22,70,.7), 0 0 18px rgba(120,150,255,.25); }
@@ -196,9 +196,6 @@ body{
 #estats{ font-size:clamp(12px,2vmin,15px); color:#dde3f8; letter-spacing:.18em; text-shadow:0 1px 4px rgba(10,12,40,.95), 0 2px 12px rgba(10,12,40,.85); }
 .btn.hidden{ opacity:0; pointer-events:none; transition:opacity 1.2s ease; }
 .btn.shown{ opacity:1; pointer-events:auto; }
-#gotext{ font-size:clamp(20px,4vmin,32px); letter-spacing:.2em; color:#e8d8cf;
-  text-shadow:0 0 26px rgba(200,90,70,.35); opacity:0; transition:opacity 1.6s ease; }
-#gotext.show{ opacity:1; }
 
 /* ---------- フィールド会話（戦闘UIを流用し 敵ヘッダだけ隠す） ---------- */
 #ui-battle.talk .b-top{ display:none; }
@@ -448,11 +445,6 @@ body{
     <div class="btn hidden" id="btn-cont">たびを つづける</div>
     <div class="btn hidden" id="btn-ng">つよくて ニューゲーム</div>
     <div class="btn hidden" id="btn-title2">タイトルへ</div>
-  </div>
-
-  <div id="ui-gameover" class="ui">
-    <div id="gotext">ゆうしゃは ちからつきた…</div>
-    <div class="btn hidden" id="btn-title">タイトルへもどる</div>
   </div>
 
   <div id="bookwin"><div id="bookpanel" class="glass"><div id="bookhead"><span>📕 冒険の書</span><span id="bookclose">✕ とじる</span></div><div id="bookbody"></div></div></div>
@@ -8699,16 +8691,6 @@ function drawEndingScene(){
   drawP();
   drawVignette();
 }
-function drawGameoverScene(){
-  const g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,'#0a0a18');g.addColorStop(1,'#1d1126');
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  if(Math.random()<0.12)
-    puff(rnd(0,W),-10,'rgba(200,90,70,.5)',1,12,5,{s0:1,s1:2.6,grav:16,drag:1});
-  drawP();
-  drawVignette();
-}
-
 // ============================================================
 // シーン遷移
 // ============================================================
@@ -9067,7 +9049,6 @@ function loop(ts){
   else if(Game.scene==='battle')drawBattleScene();
   else if(Game.scene==='ending')drawEndingScene();
   else if(Game.scene==='prologue')drawPrologueScene();
-  else if(Game.scene==='gameover')drawGameoverScene();
   drawGrade();
   requestAnimationFrame(loop);
 }
@@ -9075,7 +9056,6 @@ $('#btn-start').addEventListener('pointerdown',e=>{e.stopPropagation();hasAnySav
 $('#btn-continue').addEventListener('pointerdown',e=>{e.stopPropagation();showSlots('load');});
 for(const N of[1,2,3])$('#slot-'+N).addEventListener('pointerdown',e=>{e.stopPropagation();pickSlot(N);});
 $('#slot-back').addEventListener('pointerdown',e=>{e.stopPropagation();sfxSel();updateTitleButtons();});
-$('#btn-title').addEventListener('pointerdown',e=>{e.stopPropagation();toTitle();});
 $('#btn-title2').addEventListener('pointerdown',e=>{e.stopPropagation();toTitle();});
 $('#btn-ng').addEventListener('pointerdown',e=>{e.stopPropagation();ngNewGame();});
 $('#btn-cont').addEventListener('pointerdown',e=>{e.stopPropagation();endContinue();});
