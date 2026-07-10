@@ -554,7 +554,7 @@ grass:{
  inn:{x:2,y:9},
  exits:[{x:16,y:2,to:'forest',tx:4,ty:6,msg:'ふかい もりへ ふみこんだ…'}],
  npcs:[
-  {x:2,y:10,kind:'ojii',col:'#d8a86a',msgElder:['じいさん「…そなたには はなしておこう。\nあの 5つの せきひを たてたのは、この わしじゃ。」','じいさん「ヴォルガ── あやつは わしの おとうとじゃ。\nふたりで たまを まもる けいしょうしゃ じゃった。」','じいさん「『なぜ ひかりは すべてを すくわぬのか』──\nあの といに、わしは こたえて やれなんだ。」','じいさん「もし あやつと あいまみえたら…… たのむ。\nにくまないで やって くれ。」'],msgCleared:['じいさん「よあけの かぜが、こんなにも あたたかいとは のう…。\nながい よるは ほんとうに おわったんじゃ。」','じいさん「おとうとの こと…… ありがとう。\nあとは わしが、ちゃんと おぼえておいて やるわい。」'],msg:['じいさん「たまが うばわれた あの よる… わしは そらに\nやみの かげを みた。どこか… なつかしい かげ じゃった。」','むらびと「きんいろの スライムは おかねもちだ。\nにげられる まえに たおすんだぞ！」','むらびと「わしの へそくり？ みずうみの ひがしの くさむらに\nうめたんじゃが… どこ じゃったかのう。」'],
+  {x:7,y:10,kind:'ojii',col:'#d8a86a',msgElder:['じいさん「…そなたには はなしておこう。\nあの 5つの せきひを たてたのは、この わしじゃ。」','じいさん「ヴォルガ── あやつは わしの おとうとじゃ。\nふたりで たまを まもる けいしょうしゃ じゃった。」','じいさん「『なぜ ひかりは すべてを すくわぬのか』──\nあの といに、わしは こたえて やれなんだ。」','じいさん「もし あやつと あいまみえたら…… たのむ。\nにくまないで やって くれ。」'],msgCleared:['じいさん「よあけの かぜが、こんなにも あたたかいとは のう…。\nながい よるは ほんとうに おわったんじゃ。」','じいさん「おとうとの こと…… ありがとう。\nあとは わしが、ちゃんと おぼえておいて やるわい。」'],msg:['じいさん「たまが うばわれた あの よる… わしは そらに\nやみの かげを みた。どこか… なつかしい かげ じゃった。」','むらびと「きんいろの スライムは おかねもちだ。\nにげられる まえに たおすんだぞ！」','むらびと「わしの へそくり？ みずうみの ひがしの くさむらに\nうめたんじゃが… どこ じゃったかのう。」'],
    msg2:['むらびと「くろがねの ゴーレムを たおしたんだってな！\nむらは その うわさで もちきりだぞ！」','むらびと「よるに でる ぎんいろの スライムは けいけんちの\nかたまり らしいぞ。にげあしは はやいがな！」'],
    msg3:['むらびと「かざんには ようがんの きょじんが おるらしい。\nこおりの じゅもんを わすれるでないぞ！」','むらびと「さまよう おおきな かげを みたら にげるんじゃ。\nいや… そなたなら たおせるかも しれんな！」'],
    msg4:['むらびと「ついに まおうの しろまで いったのか…！\nむらの みんなが おうえんしとるぞ！」'],
@@ -3318,6 +3318,20 @@ async function endMiniGame(win){
   endTalk();
   saveGame();
 }
+// クリアの がいせん: 村に もどった しゅんかん、ものがたりの ほうから むかえに くる（さがさせない）
+async function clearedWelcomeScene(){
+  Game.hidden.cwelc=true;
+  startTalk();
+  flash('#fff2d0',0.3,1.0);sfxLevel();
+  if(Game.cam){const q=isoCtr(Game.p.tx,Game.p.ty);puff(q.x,q.y-Game.cam.lift*0.2,'rgba(255,235,170,.95)',36,150,1.2,{up:true,s0:2,s1:5});}
+  await say('むらじゅうが かけよってくる——\n「やみのおうを たおしたぞ！」「ゆうしゃさま ばんざい！」');
+  await say('こども「ゆうしゃさま、おかえりなさーい！」');
+  await say('……ざわめきの なかを、じいさんが\nゆっくりと あゆみよってきた。');
+  endTalk();
+  saveGame();
+  const eld=WORLDS.grass.npcs.find(n=>n.msgElder);
+  if(eld)talkNpc(eld); // じいさんが その場で つぎの みちを かたる（条件が そろっていれば こくはくまで）
+}
 // 章2: じょうか5＝とかれた かげたちの ひかりから、こどものかげが みちづれに
 async function mateJoinScene(){
   Game.hidden.mate1=true;
@@ -3814,6 +3828,7 @@ function updateField(dt){
   if(!Game.talking&&!Game.battling&&!Game.transiting&&Game.scene==='field'){
     if(Game.mapId==='ice'&&Game.mbossDown&&!Game.hidden.k1)kidnapScene();
     else if(Game.inVillage&&Game.hidden.k2&&!Game.hidden.k3)thanksScene();
+    else if(Game.mapId==='grass'&&Game.hidden.cleared&&!Game.hidden.elderTold&&!Game.hidden.cwelc&&!Game.minigame)clearedWelcomeScene();
     else if(Game.mapId==='sunken'&&Game.hidden.sn1&&!Game.hidden.sn2)satonushiScene();
     else if(Game.mapId==='castle'&&Game.hidden.ch2end&&!Game.hidden.nkIntro&&!Game.hidden.nk1)nukegaraIntroScene();
     else if(Game.mapId==='castle'&&Game.hidden.nk1&&!Game.hidden.nk2)nukegaraScene();
