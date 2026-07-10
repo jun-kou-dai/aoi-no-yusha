@@ -1202,7 +1202,7 @@ function openJumon(mode,text){
 function closeJumon(){const w=document.getElementById('jumonwin');if(w)w.classList.remove('show');Game.jumonOpen=false;}
 // きろくボタンのメニュー(きろく/じゅもん)。X・Escキーの クイックきろくは 従来どおり fieldSave 直
 async function fieldRecordMenu(){
-  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||!Game.p)return;
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame||!Game.p)return; // minigame中は開かない(talkKing同列)
   startTalk();sfxSel();
   const c=await ask([{id:'save',label:'きろくする'},{id:'jumon',label:'ふっかつのじゅもんを きく'},{id:'back',label:'もどる'}],'きろく');
   endTalk();
