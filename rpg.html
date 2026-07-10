@@ -871,7 +871,36 @@ icetown:{
   {x:10,y:2,item:'taneM'},
   {x:17,y:6,item:'seisui'}],
  exits:[
-  {x:10,y:12,to:'grass',tx:4,ty:11,msg:'きりが はれ、みなれた そうげんに もどってきた。'}]}};
+  {x:10,y:12,to:'grass',tx:4,ty:11,msg:'きりが はれ、みなれた そうげんに もどってきた。'}]},
+ minamoto:{ // 章3『ひかりの みなもと』：きんいろの もり。ひかりのしじま=白金の霧(darkの色替え=mistseaと同機構)
+ song:'minamoto', bg:['#2e2410','#4a3a1a'], dark:true, darkR:5.5, darkCol:'255,246,214', darkA:0.5,
+ map:[
+ 'TTTTTTTTTTTTTTTTTTTT',
+ 'TTGGGTTWWWWWWTTGGGTT',
+ 'TGGGGGTWWWWWWTGGGGGT',
+ 'TGGPGGGWWWWWWGGGPGGT',
+ 'TGGPGGGGGPPGGGGGPGGT',
+ 'TGGPPGGGGPPGGGGPPGGT',
+ 'TTGGPPGGGPPGGGPPGGTT',
+ 'TTTGGPPGGPPGGPPGGTTT',
+ 'TTTTGGPGGPPGGPGGTTTT',
+ 'TTTGGGPGGPPGGPGGGTTT',
+ 'TTGGGTGPGPPGPGTGGGTT',
+ 'TGGGGTTGGPPGGTTGGGGT',
+ 'TTTTTTTTTTETTTTTTTTT',
+ 'TTTTTTTTTTTTTTTTTTTT'],
+ start:{x:10,y:11},
+ npcs:[
+  {x:5,y:5,kind:'stone',col:'#e8d89a',msg:['こえ「ここは いのりが かえる ばしょ。\nひかりも、ながれつく ばしょ。」']},
+  {x:14,y:7,kind:'stone',col:'#e8d89a',msg:['こえ「といに きたのか。こたえに きたのか。\nもりは どちらも こばまない。」']}],
+ spawns:[
+  {id:'komari',x:5,y:8},
+  {id:'komari',x:15,y:9},
+  {id:'kodamadori',x:3,y:4},
+  {id:'kodamadori',x:16,y:5}],
+ chests:[{x:4,y:10,item:'taneH'}],
+ exits:[
+  {x:10,y:12,to:'grass',tx:4,ty:11,msg:'きんいろの ひかりを あとに、そうげんへ もどってきた。'}]}};
 let MAP=WORLDS.grass.map,SPAWNS=WORLDS.grass.spawns,CHESTS=WORLDS.grass.chests,
     SPRING=WORLDS.grass.spring,BZONE=WORLDS.grass.bzone;
 const tileAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?'T':MAP[y][x];
@@ -961,6 +990,8 @@ const FOES={
   uminokage:{name:'うみのかげ', hp:180, atk:70, def:24, exp:130, g:65, col:'#35486a', draw:'slime', tint:'rgba(48,62,94,0.82)', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
   kirinokage:{name:'きりのかげ', hp:150, atk:64, def:22, exp:110, g:55, col:'#6a7a92', draw:'crow', tint:'rgba(88,100,122,0.78)', kage:true, dodge:0.15, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
   nukegara:{name:'やみの ぬけがら', hp:900, atk:110, def:34, exp:900, g:800, col:'#1c1830', draw:'golem', tint:'rgba(20,16,38,0.90)', kage:true, mboss:true, still:true, huge:true, winMsg:'やみの ぬけがらは おとも なく くずれ、\nあとには あたたかい ひかりだけが のこった。'},
+  komari:{name:'ひかりのまり', hp:190, atk:74, def:26, exp:150, g:70, col:'#f0e2a0', draw:'slime', tint:'rgba(240,226,160,0.72)', physMul:1, fireMul:0.85, iceMul:0.85, dodge:0.08, winMsg:'ひかりが ほどけて、もりに かえっていった。'},
+  kodamadori:{name:'こだまどり', hp:160, atk:68, def:24, exp:125, g:60, col:'#f6eec8', draw:'crow', tint:'rgba(246,238,200,0.68)', physMul:1, fireMul:0.85, iceMul:0.85, dodge:0.18, winMsg:'ひかりが ほどけて、もりに かえっていった。'},
   wslime:{name:'まどうスライム', hp:40, atk:15, def:7, exp:55, g:24, col:'#c8a8f0', draw:'slime', v:'dark', spell:true, watch:true, physMul:1, fireMul:1.2, iceMul:1.2, dodge:0.08},
   cuslime:{name:'のろいスライム', hp:58, atk:23, def:9, exp:78, g:34, col:'#e88ad0', draw:'slime', v:'dark', spell:true, physMul:1, fireMul:1.3, iceMul:1.3, dodge:0.12},
   kotae:{name:'こたえなき もの', hp:820, atk:120, def:18, exp:400, g:300, col:'#8a76c8', draw:'golem', v:'iron', mboss:true, still:true, huge:true, spell:true, watch:true, physMul:1, fireMul:0.5, iceMul:0.5, dodge:0, winMsg:'こたえなき ものは しずかに くずれ、なみの おとだけが のこった。\nおくの いしぶみが あわく ひかっている…'}};
@@ -988,7 +1019,7 @@ const ITEMS={
   dokukesi:{name:'どくけしそう'},
   tane:  {name:'ちからのたね'}};
 // どこでもドアの 行き先（じゅんばん＝そうげん→…→しろ。表示名つき）
-const ISLE=[['grass','むらの そうげん'],['forest','ふかい もり'],['cave','どうくつ'],['ice','こおりの せかい'],['icetown','ゆきの まち'],['volcano','かざんの しま'],['castle','まおうの しろ'],['edge','はての しま'],['sunken','しずみの さと'],['mistsea','わすれの うみ']];
+const ISLE=[['grass','むらの そうげん'],['forest','ふかい もり'],['cave','どうくつ'],['ice','こおりの せかい'],['icetown','ゆきの まち'],['volcano','かざんの しま'],['castle','まおうの しろ'],['edge','はての しま'],['sunken','しずみの さと'],['mistsea','わすれの うみ'],['minamoto','みなもとの もり']];
 const CLOAK_MAX=60; // とうめいマントの 最大歩数（歩数制バッテリー）
 
 // ============================================================
@@ -1730,6 +1761,33 @@ const SONGS={};
       {i:'flute',g:0.035,pan:0.3,seq:sez},
       {i:'bell',g:0.05,pan:0.2,seq:bell}]};
   }
+  // みなもとの もり『みなもとの うた』：Fリディアン88・いのりの ハミング(choir)と しずくの すず(bell)。ひかりの ちょうわ
+  {
+    const bass=[],pad=[],MEL=[],drop=[],glow=[];
+    const CH=[[41,[65,69,72]],[43,[67,71,74]],[45,[69,72,76]],[48,[72,76,79]],
+              [41,[65,69,72]],[43,[67,71,74]],[45,[69,72,76]],[48,[72,76,79]]];
+    CH.forEach((c,b)=>{const o=b*16;
+      bass.push([o,c[0],12],[o+12,c[0]+7,4]);
+      c[1].forEach(m=>pad.push([o,m,16]));
+    });
+    MEL.push([0,72,6],[6,74,2],[8,76,8],
+      [16,77,4],[20,76,4],[24,74,4],[28,72,4],
+      [32,74,6],[38,72,2],[40,69,8],
+      [48,67,4],[52,69,4],[56,72,8],
+      [64,76,6],[70,77,2],[72,79,8],
+      [80,77,4],[84,76,4],[88,74,4],[92,76,4],
+      [96,72,6],[102,71,2],[104,69,8],
+      [112,67,4],[116,69,4],[120,65,8]);
+    drop.push([2,89,1],[10,91,1],[18,88,1],[26,86,1],[34,91,1],[42,89,1],[50,93,1],[58,88,1],
+      [66,91,1],[74,89,1],[82,86,1],[90,88,1],[98,91,1],[106,89,1],[114,93,1],[122,96,1]);
+    glow.push([0,84,16],[32,81,16],[64,84,16],[96,83,16]);
+    SONGS.minamoto={bpm:88,div:4,steps:128,echo:0.22,tracks:[
+      {i:'warm',g:0.13,pan:-0.08,seq:bass},
+      {i:'choir',g:0.045,pan:-0.25,seq:pad},
+      {i:'flute',g:0.09,pan:0.05,seq:MEL},
+      {i:'bell',g:0.055,pan:0.3,seq:drop},
+      {i:'hiStr',g:0.03,pan:0.2,seq:glow}]};
+  }
 })();
 let songTimer=null,songStep=0,songNext=0,songDef=null,songBus=null;
 function stopSong(){if(songTimer){clearInterval(songTimer);songTimer=null;}songDef=null;if(actx&&songBus){const n=actx.currentTime,b=songBus;songBus=null;b.gain.cancelScheduledValues(n);b.gain.setTargetAtTime(0,n,0.04);setTimeout(()=>{try{b.disconnect();}catch(e){}},600);}}
@@ -1866,10 +1924,13 @@ const BOOK_ISLES=[
   ['かざんの しま',['lslime','ecrow','mgolem','magmalord']],
   ['まおうの しろ',['dslime','dcrow','cuslime','chaoslord','boss','boss2','nukegara']],
   ['しずみの さと',['kagehito','nakikage','kagekishi','satonushi']],
-  ['わすれの うみ',['uminokage','kirinokage']]];
+  ['わすれの うみ',['uminokage','kirinokage']],
+  ['みなもとの もり',['komari','kodamadori']]];
 const BOOK_SPECIAL=['gslime','metal','kotae'];
 // ずかんの ものがたり行（よみものとしての 図鑑）
 const BOOK_LORE={
+  komari:'いのりの しずくが まるく こごった もの。ふれると ほんのり あたたかい。',
+  kodamadori:'よろこびの こえが とりの かたちを かりた もの。うたごえが ひびきあう。',
   slime:'あさつゆを のんで ぷるぷる そだつ。むらの こどもの あそびあいて。',
   crow:'よるに なくこえは、はぐれた なかまを さがしている らしい。',
   golem:'こけむした いわに こころが やどった もの。あめの ひは じっと うごかない。',
@@ -2555,7 +2616,7 @@ async function transitMap(ex){
 // どこでもドア：行ったことのある しまへ ひとっとび（フィールドの 🚪ボタンから）
 async function useDoor(){
   if(!Game.door||Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
-  const dests=ISLE.filter(([id])=>(Game.visited[id]||(id==='edge'&&Game.hidden.elderTold)||(id==='sunken'&&Game.hidden.ch2)||(id==='mistsea'&&Game.hidden.ch2end))&&id!==Game.mapId);
+  const dests=ISLE.filter(([id])=>(Game.visited[id]||(id==='edge'&&Game.hidden.elderTold)||(id==='sunken'&&Game.hidden.ch2)||(id==='mistsea'&&Game.hidden.ch2end)||(id==='minamoto'&&Game.hidden.ch3a))&&id!==Game.mapId);
   startTalk();sfxSel();
   if(!dests.length){await say('どこでもドア——でも まだ いける しまが ない。');endTalk();return;}
   await say('どこでもドアが ひらいた！\nどの しまへ いく？');
@@ -2767,6 +2828,18 @@ async function talkNpc(n){
       Game.hidden.elderTold=true;
       for(const m of n.msgElder)await say(m);
       toast('とおい うみの はてで、なにかが めざめた…（どこでもドアに あたらしい いきさき）');
+      endTalk();
+      saveGame();
+      return;
+    }
+    // 章3: けいしょうの ゆめ(ch3m)のあと じいさんが みなもとを あかす（フル章3の とびら）
+    if(n.msgElder&&Game.hidden.nk2&&Game.hidden.ch3m&&(Game.purified||0)>=15&&!Game.hidden.ch3a){
+      Game.hidden.ch3a=true;
+      await say('じいさん「…ゆうしゃどの。ちかごろ、たまが ゆめで\nわしを よぶのじゃ。『みなもとへ おいで』と な。」');
+      await say('じいさん「なつかしい、ははの こえ じゃった。\nせきひの いう みなもと…… こころあたりが ある。」');
+      await say('じいさん「わしら けいしょうしゃの はじまりの もり。\nひかりが うまれ、いのりが かえる ばしょ じゃ。」');
+      await say('じいさん「たしかめて きて くれぬか。ひかりとは なにか——\nその こたえが、そこに ねむって おる はずじゃ。」');
+      toast('どこでもドアに「みなもとの もり」が あらわれた！');
       endTalk();
       saveGame();
       return;
@@ -3120,7 +3193,10 @@ function questText(){
     if(Game.mapId==='castle')return (Game.hidden.ch2end&&!Game.hidden.nk1)?'もくてき：やみの ぬけがらを ときはなて！':'もくてき：みなみの ひかる でぐちから しろを あとに しよう';
     if(Game.mapId==='sunken')return Game.hidden.sn2?'もくてき：むらの じいさんに しんじつを つたえよう':'もくてき：かげを ときはなち、さとの ひろばの ぬしへ';
     if(Game.mapId==='mistsea')return 'もくてき：こえに みみを すませ、かげを ときはなとう';
+    if(Game.mapId==='minamoto')return 'もくてき：きんいろの しじまに みみを すませよう';
+    if(Game.hidden.ch3a&&!(Game.visited&&Game.visited.minamoto))return 'もくてき：どこでもドアで「みなもとの もり」へ——はじまりの ばしょ';
     if(Game.hidden.nk2&&(Game.purified||0)>=15&&!Game.hidden.ch3m)return 'もくてき：むらの こどもが ふしぎな ゆめを みたらしい';
+    if(Game.hidden.nk2&&Game.hidden.ch3m&&(Game.purified||0)>=15)return 'もくてき：むらの じいさんが なにか しっている らしい';
     if(Game.hidden.nk2)return 'もくてき：ひかりを つないで いこう——ものがたりは つづく';
     if(Game.hidden.ch2end)return 'もくてき：「わすれの うみ」の こえと、しろの おくの ぬけがらへ';
     if(Game.hidden.sn2)return 'もくてき：むらの じいさんに しんじつを つたえよう';
@@ -3401,6 +3477,7 @@ function updateField(dt){
     else if(Game.mapId==='castle'&&Game.hidden.ch2end&&!Game.hidden.nkIntro&&!Game.hidden.nk1)nukegaraIntroScene();
     else if(Game.mapId==='castle'&&Game.hidden.nk1&&!Game.hidden.nk2)nukegaraScene();
     else if(Game.mapId==='castle'&&!Game.hidden.cleared&&!Game.hidden.ch4c){Game.hidden.ch4c=true;showChapter('だい 4 しょう','やみの おうざ');saveGame();}
+    else if(Game.mapId==='minamoto'&&!Game.hidden.ch3card){Game.hidden.ch3card=true;showChapter('だい 3 ぶ','ひかりの みなもと');saveGame();}
     else if(Game.hidden.ch2&&!Game.hidden.mate1&&(Game.purified||0)>=5)mateJoinScene();
   }
   if(p.bump){
@@ -4041,6 +4118,24 @@ function drawVolcanoSky(){
   ctx.fillStyle='rgba(255,90,40,'+(0.05+er*0.12).toFixed(3)+')';ctx.fillRect(0,0,W,H);
   ctx.restore();
 }
+// みなもとの もり：ひかりの こなが ゆっくり まいのぼる（あたたかい きんの くうき）
+function drawLightMotes(){
+  ctx.save();
+  ctx.fillStyle='rgba(255,232,160,0.05)';ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='lighter';
+  const layers=[[26,0.35,10,0.30],[20,0.55,14,0.45],[12,0.85,20,0.65]];
+  for(const[n,sp,sz,al] of layers){
+    for(let i=0;i<n;i++){
+      const ph=i*97.3+(i*31)%7;
+      const xx=((ph*53+TM*sp*18)%(W+40))-20;
+      const yy=H-(((ph*29+TM*sp*26)%(H+60))-30);
+      const tw=0.5+0.5*Math.sin(TM*1.4+i*2.1);
+      ctx.fillStyle='rgba(255,240,185,'+(al*0.35*(0.4+0.6*tw)).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(xx,yy,(sz*0.10)*(0.7+0.6*tw),0,Math.PI*2);ctx.fill();
+    }
+  }
+  ctx.restore();
+}
 function drawSnow(){
   ctx.save();
   // ホワイトアウト：ふぶきの ピークで しかいが しろむ
@@ -4512,6 +4607,10 @@ function drawFieldScene(){
     lg.addColorStop(0,'rgba(150,80,200,0.14)');
     lg.addColorStop(0.5,'rgba(128,128,128,0)');
     lg.addColorStop(1,'rgba(40,10,56,0.22)');
+  }else if(MAP===WORLDS.minamoto.map){
+    lg.addColorStop(0,'rgba(255,226,140,0.32)');
+    lg.addColorStop(0.5,'rgba(255,210,120,0.10)');
+    lg.addColorStop(1,'rgba(150,104,30,0.30)');
   }else{
     lg.addColorStop(0,'rgba(255,238,205,0.18)');
     lg.addColorStop(0.5,'rgba(128,128,128,0)');
@@ -4584,6 +4683,7 @@ function drawFieldScene(){
   if((MAP===WORLDS.ice.map||MAP===WORLDS.icetown.map))drawSnow();
   else if(MAP===WORLDS.volcano.map){drawEmbers();drawHeatHaze();}
   else if(MAP===WORLDS.castle.map)drawCastleAtmos();
+  else if(MAP===WORLDS.minamoto.map)drawLightMotes();
   drawVignette();
   drawExitBeacons(); // でぐちビーコンは さいごに えがく＝くらやみ/よる/きりに つぶされない
   drawChapterCard(); // しょうタイトルは さいじょうそう
@@ -4721,6 +4821,17 @@ function drawIsoBlock(x,y,cam){
         ctx.lineTo(cx+(hsh-0.7)*TW*0.3,cy+TH*0.2);
         ctx.stroke();ctx.restore();
       }
+    }else if(MAP===WORLDS.minamoto.map){
+      // きんの おちばと ひかりの こつぶ（はなは ださない）
+      for(let i=0;i<3;i++){
+        const u=0.2+((hsh*7+i*0.31)%1)*0.6,v=0.2+((hsh*13+i*0.47)%1)*0.6;
+        const qx=bx+(u-v)*TW/2,qy=by+(u+v)*TH/2-z;
+        ctx.fillStyle=['rgba(232,194,94,0.42)','rgba(255,226,140,0.34)','rgba(190,150,60,0.38)'][(i+((hsh*5)|0))%3];
+        ctx.beginPath();ctx.ellipse(qx,qy,TW*0.026,TW*0.015,hsh*6,0,Math.PI*2);ctx.fill();
+      }
+      if(hsh>0.62){ctx.save();ctx.globalCompositeOperation='lighter';
+        ctx.fillStyle='rgba(255,240,180,'+(0.10+0.10*Math.sin(TM*1.8+hsh*8)).toFixed(3)+')';
+        ctx.beginPath();ctx.arc(cx+(hsh-0.5)*TW*0.3,cy,TW*0.05,0,Math.PI*2);ctx.fill();ctx.restore();}
     }else{
       // くさはら：みえる くさむら（こい/あかるいの 2しょく・かたむきと たかさは タイルごとに かわる）
       ctx.lineCap='round';
@@ -4999,6 +5110,7 @@ function drawIsoTree(x,y,cam){
   const c=isoCtr(x,y);
   c.y-=propZ(x,y);
   if(MAP===WORLDS.forest.map){drawForestTree(x,y,cam,c);return;}
+  if(MAP===WORLDS.minamoto.map){drawMinamotoTree(x,y,cam,c);return;}
   if((MAP===WORLDS.ice.map||MAP===WORLDS.icetown.map)){drawIceTree(x,y,cam,c);return;}
   if(MAP===WORLDS.volcano.map){drawVolcanoTree(x,y,cam,c);return;}
   const S=TW*0.56;
@@ -5014,6 +5126,29 @@ function drawIsoTree(x,y,cam){
     ctx.fillStyle=cg;
     ctx.beginPath();ctx.arc(c.x+sway*(1+i*0.5),cy,cr,0,Math.PI*2);ctx.fill();
   }
+}
+// みなもとの き：こがねの は・こぼれる ひかりの つぶ（章3の かお）
+function drawMinamotoTree(x,y,cam,c){
+  const{TW,TH}=cam;
+  const h=tileHash(x,y);
+  const S=TW*0.56*(0.9+((h*5)%1)*0.24);
+  const sway=Math.sin(TM*0.7+x*1.7+y*0.8)*S*0.025;
+  ctx.fillStyle='rgba(70,48,12,0.28)';
+  ctx.beginPath();ctx.ellipse(c.x+S*0.14,c.y+TH*0.10,S*0.36,TH*0.30,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#8a6a44';
+  rr(ctx,c.x-S*0.055,c.y-S*0.40,S*0.11,S*0.48,S*0.05);ctx.fill();
+  for(let i=0;i<3;i++){
+    const cy=c.y-S*(0.50+i*0.30),cr=S*(0.42-i*0.085);
+    const cg=ctx.createRadialGradient(c.x-cr*0.4+sway,cy-cr*0.4,cr*0.15,c.x+sway,cy,cr);
+    cg.addColorStop(0,'#ffe9a0');cg.addColorStop(0.55,'#e8c25e');cg.addColorStop(1,'#8a6a24');
+    ctx.fillStyle=cg;
+    ctx.beginPath();ctx.arc(c.x+sway*(1+i*0.5),cy,cr,0,Math.PI*2);ctx.fill();
+  }
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  const tw2=0.5+0.5*Math.sin(TM*1.6+h*9);
+  ctx.fillStyle='rgba(255,238,170,'+(0.20+0.28*tw2).toFixed(3)+')';
+  ctx.beginPath();ctx.arc(c.x+sway*2+S*(h-0.5)*0.5,c.y-S*(0.65+((h*7)%1)*0.5),S*0.045,0,Math.PI*2);ctx.fill();
+  ctx.restore();
 }
 // もりの き：はりば樹／こうよう樹／じょうりょくを tileHash で だしわけ（いろは くらく・サイズと いちを ゆらす）
 function drawForestTree(x,y,cam,c){
@@ -7025,6 +7160,9 @@ const BT_SUNKEN={sky:[[0,'#2a1630'],[0.30,'#4e2542'],[0.46,'#8a4152'],[0.54,'#c6
 const BT_MISTSEA={sky:[[0,'#1c2434'],[0.30,'#2e3d52'],[0.50,'#54687e'],[0.60,'#7e92a4'],[0.74,'#3c4e64'],[1,'#182030']],
   mtn:['#37485e','#28374a','#1c2838'],ground:['#26364c','#1e2c40','#121c2c'],stars:0.15,
   pg:'170,200,230',fog:'205,220,235',bokeh:'185,210,240'};
+const BT_MINAMOTO={sky:[[0,'#3a2c0e'],[0.30,'#7a5c1e'],[0.46,'#c89c3e'],[0.54,'#f2dc8a'],[0.62,'#8a6a26'],[1,'#2e2410']],
+  mtn:['#8a7a3c','#6a5c2a','#4a401c'],ground:['#a08a44','#7a6a34','#4e4420'],stars:0.5,
+  pg:'255,240,180',fog:'230,210,150',bokeh:'255,244,190'};
 const BT_EDGE={sky:[[0,'#080a1a'],[0.30,'#181c3a'],[0.46,'#343056'],[0.54,'#6a5878'],[0.62,'#242244'],[1,'#0c0e22']],
   mtn:['#262a4a','#1a1d38','#121428'],ground:['#1e2140','#171a34','#0e1024'],stars:0.9,
   pg:'190,200,255',fog:'140,150,200',bokeh:'190,205,255'};
@@ -7037,6 +7175,7 @@ function battleTheme(bt){
   if(Game.mapId==='sunken')return BT_SUNKEN;
   if(Game.mapId==='mistsea')return BT_MISTSEA;
   if(Game.mapId==='edge')return BT_EDGE;
+  if(Game.mapId==='minamoto')return BT_MINAMOTO;
   return bt.night?BT_NIGHT:BT_DAY;
 }
 function drawMountains(baseY,col,amp){
