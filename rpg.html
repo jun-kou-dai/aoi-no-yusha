@@ -67,6 +67,7 @@ body{
 }
 #sub-title{ letter-spacing:.5em; padding-left:.5em; font-size:clamp(11px,1.8vmin,14px); color:#b9c2e4; opacity:.85; }
 #ui-title .btn.main{ animation:btnpulse 2.6s ease-in-out infinite; }
+#title-ver{ position:absolute; top:max(10px, env(safe-area-inset-top)); left:12px; font-size:11px; letter-spacing:.05em; color:rgba(231,224,200,.55); pointer-events:none; }
 #title-hint{ position:absolute; bottom:max(18px, env(safe-area-inset-bottom)); width:100%; text-align:center;
   font-size:clamp(10px,1.7vmin,13px); color:#9aa4cc; letter-spacing:.12em; }
 @keyframes lfloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-9px) } }
@@ -422,6 +423,7 @@ body{
       <div class="btn" id="slot-back">もどる</div>
     </div>
     <div id="title-hint"><span style="white-space:nowrap">いどう：矢印キー / WASD / スワイプ</span><wbr><span style="white-space:nowrap">（ななめスワイプ・2キーどうじおしで みちなりに あるける）</span>　　<span style="white-space:nowrap">けってい：Enter / Z / タップ</span></div>
+    <div id="title-ver"></div>
   </div>
 
   <div id="ui-field" class="ui">
@@ -5790,6 +5792,22 @@ function drawHouse(x,y,cam,palace){
   ctx.restore();
 }
 // むらびと（kindで かきわけ：ojii=むぎわらの ろうじん / musume=エプロンの むすめ / shop=しょうにん）
+// つぎの ものがたりが この人で まっているか（村の じいさん・こども の章フック）
+function npcStoryPending(n){
+  if(Game.mapId!=='grass')return false;
+  const h=Game.hidden;
+  if(n.msgElder){
+    if(h.k3&&['t1','t2','t3','t4','t5'].every(k=>h[k])&&!h.elderTold)return true; // 告白待ち
+    if(h.cleared&&h.elderTold&&!h.ch2)return true; // 章2の たのみ
+    if(h.nk2&&h.ch3m&&(Game.purified||0)>=15&&!h.ch3a)return true; // 章3の みちびき
+    if(h.ch3t&&!h.ch3d)return true; // こたえを つたえる
+    return false;
+  }
+  if(n.heir){
+    if(h.nk2&&(Game.purified||0)>=15&&!h.ch3m)return true; // 継承の ゆめ
+  }
+  return false;
+}
 function drawNpc(n){
   const cam=Game.cam,ts=cam.TW*0.66;
   const c=isoCtr(n.x,n.y);
@@ -5902,6 +5920,25 @@ function drawNpc(n){
     ctx.fillText('G',ts*0.16,cy);
   }
   ctx.restore();
+  // ものがたりが まっている人の あたまに 金の「！」（浮き沈み+光）
+  if(npcStoryPending(n)){
+    const mb=Math.sin(TM*3.2)*ts*0.045;
+    const mx=c.x, my=fy-ts*0.86+mb;
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    const g=ctx.createRadialGradient(mx,my,1,mx,my,ts*0.3);
+    g.addColorStop(0,'rgba(255,225,130,0.5)');g.addColorStop(1,'rgba(255,225,130,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(mx,my,ts*0.3,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.fillStyle='#ffdf7e';
+    ctx.strokeStyle='rgba(90,60,10,0.85)';ctx.lineWidth=Math.max(1,ts*0.03);
+    ctx.font='bold '+Math.round(ts*0.42)+'px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.strokeText('！',mx,my);
+    ctx.fillText('！',mx,my);
+    ctx.restore();
+  }
 }
 function drawChest(c){
   const open=Game.chestsOpen.includes(c);
@@ -9106,6 +9143,8 @@ async function continueGame(){
 }
 // タイトルのボタン：ぼうけんのしょの うむで きりかえ（冊えらびは とじる）
 function updateTitleButtons(){
+  {const v=new URLSearchParams(location.search).get('v');
+   $('#title-ver').textContent=v?('はん: '+v):'はん: ふめい（ふるい いりぐち。トップの みじかいURLから ひらくと つねに さいしん）';}
   $('#slotwin').style.display='none';
   $('#title-hint').style.display='';
   const has=hasAnySave();
