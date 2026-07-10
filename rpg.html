@@ -196,6 +196,7 @@ body{
 #estats{ font-size:clamp(12px,2vmin,15px); color:#dde3f8; letter-spacing:.18em; text-shadow:0 1px 4px rgba(10,12,40,.95), 0 2px 12px rgba(10,12,40,.85); }
 .btn.hidden{ opacity:0; pointer-events:none; transition:opacity 1.2s ease; }
 .btn.shown{ opacity:1; pointer-events:auto; }
+#elans{ color:#ffe6a8; text-shadow:0 0 20px rgba(255,220,140,.5); font-weight:700; letter-spacing:.05em; }
 
 /* ---------- フィールド会話（戦闘UIを流用し 敵ヘッダだけ隠す） ---------- */
 #ui-battle.talk .b-top{ display:none; }
@@ -456,6 +457,7 @@ body{
   <div id="ui-ending" class="ui">
     <div class="eline" id="el1">やみのおうは ほろび、だいちに ひかりが もどった。</div>
     <div class="eline" id="el2">くさはらは ふたたび いのちの いろを とりもどすだろう。</div>
+    <div class="eline" id="elans"></div>
     <div class="eline" id="el3">ゆうしゃの たびは、ここで おわる。</div>
     <div class="eline" id="erank"></div>
     <div class="eline" id="estats"></div>
@@ -7267,7 +7269,8 @@ async function bossDefeat(){
   const _ed=edStatsText(sec);
   $('#estats').textContent=_ed[0];
   $('#estats2').textContent=_ed[1];
-  for(const id of['el1','el2','el3','erank','estats','estats2','eend'])$('#'+id).classList.remove('show');
+  $('#elans').textContent=(Game.hidden.ch3d||Game.hidden.ch3dEver)?'——ひかりは えらばない。うけとめる こころの かずだけ、あさが くる。':''; // 章3の答えを知る周回のみ
+  for(const id of['el1','el2','el3','elans','erank','estats','estats2','eend'])$('#'+id).classList.remove('show');
   $('#btn-title2').classList.remove('shown');
   $('#btn-ng').classList.remove('shown');
   $('#btn-cont').classList.remove('shown');
@@ -8767,19 +8770,21 @@ function drawTitleScene(){
 function updateEnding(dt){
   Game.endT+=dt;
   const t=Game.endT;
+  const ans=($('#elans').textContent||'')!==''; const ad=ans?2.2:0; // 答えを知る周回は1行ぶんの間を足す(通常EDのテンポは不変)
   if(t>1.2)$('#el1').classList.add('show');
   if(t>3.6)$('#el2').classList.add('show');
-  if(t>6.0)$('#el3').classList.add('show');
-  if(t>8.0)$('#erank').classList.add('show');
-  if(t>8.0&&!Game.endRankFx){Game.endRankFx=true; // ランクの しゅんかんに きんの しゅくふく
+  if(ans&&t>6.0)$('#elans').classList.add('show');
+  if(t>6.0+ad)$('#el3').classList.add('show');
+  if(t>8.0+ad)$('#erank').classList.add('show');
+  if(t>8.0+ad&&!Game.endRankFx){Game.endRankFx=true; // ランクの しゅんかんに きんの しゅくふく
     for(let i=0;i<44;i++){const a=rnd(0,Math.PI*2),v=rnd(60,320);
       P.push({x:W/2,y:H*0.40,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:rnd(0.8,1.7),t:0,size:rnd(2,5),col:i%3?'rgba(255,225,140,.9)':'rgba(255,250,230,.95)',grav:30,light:true,drag:0.97});}}
-  if(t>9.0)$('#estats').classList.add('show');
-  if(t>9.8)$('#estats2').classList.add('show');
-  if(t>11.2)$('#eend').classList.add('show');
-  if(t>12.4){$('#btn-title2').classList.add('shown');$('#btn-ng').classList.add('shown');$('#btn-cont').classList.add('shown');}
-  if(Math.random()<dt*14)
-    puff(rnd(0,W),H+10,'rgba(255,240,200,.65)',1,rnd(18,42),rnd(3,6),{up:true,s0:1.2,s1:3,drag:1});
+  if(t>9.0+ad)$('#estats').classList.add('show');
+  if(t>9.8+ad)$('#estats2').classList.add('show');
+  if(t>11.2+ad)$('#eend').classList.add('show');
+  if(t>12.4+ad){$('#btn-title2').classList.add('shown');$('#btn-ng').classList.add('shown');$('#btn-cont').classList.add('shown');}
+  if(Math.random()<dt*(ans?20:14))
+    puff(rnd(0,W),H+10,ans?'rgba(255,228,150,.8)':'rgba(255,240,200,.65)',1,rnd(18,42),rnd(3,6),{up:true,s0:1.2,s1:3,drag:1});
 }
 function drawEndingScene(){
   const k=Math.min(1,Game.endT/16);
