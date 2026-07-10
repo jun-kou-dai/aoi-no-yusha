@@ -1208,8 +1208,8 @@ function playInst(iname,midi,t,dur,vol,pan){
   f.connect(g);
   if(actx.createStereoPanner&&pan){
     const pn=actx.createStereoPanner();pn.pan.value=pan;
-    g.connect(pn);pn.connect(musicIn);
-  }else g.connect(musicIn);
+    g.connect(pn);pn.connect(songBus||musicIn);
+  }else g.connect(songBus||musicIn);
 }
 // 楽曲用打楽器（0=ティンパニ 1=ティンパニ強 2=スネア 3=シンバル）
 function musDrum(kind,t,vol,tm){
@@ -1219,8 +1219,8 @@ function musDrum(kind,t,vol,tm){
     const f=actx.createBiquadFilter();f.type='bandpass';f.frequency.value=1900;f.Q.value=0.8;
     const g=actx.createGain();
     g.gain.setValueAtTime(vol*0.8,t);g.gain.exponentialRampToValueAtTime(0.0004,t+0.11);
-    s.connect(f);f.connect(g);g.connect(musicIn);s.start(t);s.stop(t+0.15);
-    note('triangle',62,t,0.05,vol*0.15,musicIn);
+    s.connect(f);f.connect(g);g.connect(songBus||musicIn);s.start(t);s.stop(t+0.15);
+    note('triangle',62,t,0.05,vol*0.15,songBus||musicIn);
     return;
   }
   if(kind===3){
@@ -1228,7 +1228,7 @@ function musDrum(kind,t,vol,tm){
     const f=actx.createBiquadFilter();f.type='highpass';f.frequency.value=5200;
     const g=actx.createGain();
     g.gain.setValueAtTime(vol*0.7,t);g.gain.exponentialRampToValueAtTime(0.0004,t+1.3);
-    s.connect(f);f.connect(g);g.connect(musicIn);s.start(t);s.stop(t+1.4);
+    s.connect(f);f.connect(g);g.connect(songBus||musicIn);s.start(t);s.stop(t+1.4);
     return;
   }
   const v=kind===1?vol*1.45:vol;
@@ -1237,12 +1237,12 @@ function musDrum(kind,t,vol,tm){
   o.frequency.setValueAtTime(mfreq(base+4),t);
   o.frequency.exponentialRampToValueAtTime(mfreq(base),t+0.13);
   g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.0004,t+0.33);
-  o.connect(g);g.connect(musicIn);o.start(t);o.stop(t+0.4);
+  o.connect(g);g.connect(songBus||musicIn);o.start(t);o.stop(t+0.4);
   const s=actx.createBufferSource();s.buffer=noiseBuf;
   const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.value=300;
   const ng=actx.createGain();
   ng.gain.setValueAtTime(v*0.45,t);ng.gain.exponentialRampToValueAtTime(0.0004,t+0.13);
-  s.connect(f);f.connect(ng);ng.connect(musicIn);s.start(t);s.stop(t+0.18);
+  s.connect(f);f.connect(ng);ng.connect(songBus||musicIn);s.start(t);s.stop(t+0.18);
 }
 // ---- 曲データ（16分グリッド・全曲オリジナル）----
 const SONGS={};
@@ -1731,15 +1731,15 @@ const SONGS={};
       {i:'bell',g:0.05,pan:0.2,seq:bell}]};
   }
 })();
-let songTimer=null,songStep=0,songNext=0,songDef=null;
-function stopSong(){if(songTimer){clearInterval(songTimer);songTimer=null;}songDef=null;if(actx&&musicIn){const n=actx.currentTime;musicIn.gain.cancelScheduledValues(n);musicIn.gain.setTargetAtTime(0,n,0.04);}}
+let songTimer=null,songStep=0,songNext=0,songDef=null,songBus=null;
+function stopSong(){if(songTimer){clearInterval(songTimer);songTimer=null;}songDef=null;if(actx&&songBus){const n=actx.currentTime,b=songBus;songBus=null;b.gain.cancelScheduledValues(n);b.gain.setTargetAtTime(0,n,0.04);setTimeout(()=>{try{b.disconnect();}catch(e){}},600);}}
 function schedEv(sd,tr,n,t){
   if(tr.drum)musDrum(n[1],t,tr.g*(n[2]||1),(songDef&&songDef.timp)||31);
   else playInst(tr.i,n[1],t,sd*(n[2]||1)*0.92,tr.g*(n[3]||1),tr.pan||0);
 }
 function playSong(name){
   stopSong();if(!actx)return;resumeAudio();
-  if(musicIn){const n=actx.currentTime;musicIn.gain.cancelScheduledValues(n);musicIn.gain.setValueAtTime(0.0001,n+0.04);musicIn.gain.setTargetAtTime(1,n+0.06,0.03);}
+  songBus=actx.createGain();songBus.gain.value=1;songBus.connect(musicIn); // 曲ごとの専用バス（停止＝バスごと消音で まえの曲の予約ノートを ころす）
   songDef=SONGS[name];songStep=0;
   if(echoIn)echoIn.gain.value=(songDef.echo||0);
   const sd=60/songDef.bpm/(songDef.div||2);
