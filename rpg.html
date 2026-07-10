@@ -2799,7 +2799,7 @@ async function transitMap(ex){
 }
 // どこでもドア：行ったことのある しまへ ひとっとび（フィールドの 🚪ボタンから）
 async function useDoor(){
-  if(!Game.door||Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
+  if(!Game.door||Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return; // minigame中は開かない
   const dests=ISLE.filter(([id])=>(Game.visited[id]||(id==='edge'&&Game.hidden.elderTold)||(id==='sunken'&&Game.hidden.ch2)||(id==='mistsea'&&Game.hidden.ch2end)||(id==='minamoto'&&Game.hidden.ch3a)||(id==='towa'&&Game.hidden.towaGate))&&id!==Game.mapId);
   startTalk();sfxSel();
   if(!dests.length){await say('どこでもドア——でも まだ いける しまが ない。');endTalk();return;}
@@ -2815,7 +2815,7 @@ async function useDoor(){
 }
 // フィールドで どうぐを つかう：🧪ボタン（やくそう／せいすい／どくけしそう・回復量は戦闘と同じ）
 async function useFieldItem(){
-  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return; // minigame中は開かない
   const p=Game.p;
   startTalk();sfxSel();
   while(true){
@@ -2855,7 +2855,7 @@ async function useFieldItem(){
 }
 // フィールドじゅもん：🔮ボタン（かいふく系のみ・回復量は戦闘と同じ）
 async function useFieldSpell(){
-  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return; // minigame中は開かない
   const p=Game.p;
   startTalk();sfxSel();
   while(true){
