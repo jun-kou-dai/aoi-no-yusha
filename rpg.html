@@ -2261,6 +2261,7 @@ function renderStatus(){
   return h;
 }
 function openStatus(){
+  if(Game.minigame)return; // minigame中は開かない
   if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
   const w=document.getElementById('statuswin');if(!w)return;
   document.getElementById('statusbody').innerHTML=renderStatus();
@@ -2307,6 +2308,7 @@ function renderQuest(){
   return h;
 }
 function openQuest(){
+  if(Game.minigame)return; // minigame中は開かない
   if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
   const w=document.getElementById('questwin');if(!w)return;
   document.getElementById('questbody').innerHTML=renderQuest();
@@ -2317,6 +2319,7 @@ function openQuest(){
 }
 function closeQuest(){const w=document.getElementById('questwin');if(w)w.classList.remove('show');Game.questOpen=false;}
 function openBook(){
+  if(Game.minigame)return; // minigame中は開かない(タイマーだけ進んで不利になるのを防ぐ)
   const w=document.getElementById('bookwin');if(!w)return;
   document.getElementById('bookbody').innerHTML=renderBook();
   w.classList.add('show');Game.bookOpen=true;Game._bookT=performance.now();
