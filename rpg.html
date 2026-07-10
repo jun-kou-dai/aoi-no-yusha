@@ -5044,6 +5044,7 @@ function drawFieldScene(){
   else if(MAP===WORLDS.minamoto.map)drawLightMotes();
   drawVignette();
   drawExitBeacons(); // でぐちビーコンは さいごに えがく＝くらやみ/よる/きりに つぶされない
+  drawQuestBeacons(); // めあての 金の光柱も どのoverlayにも つぶされない
   drawChapterCard(); // しょうタイトルは さいじょうそう
 }
 function drawIsoBlock(x,y,cam){
@@ -6532,6 +6533,57 @@ function drawExitBeacons(){
     ctx.lineWidth=3;ctx.strokeStyle='rgba(8,16,38,0.85)';ctx.strokeText('でぐち',q.x,ly);
     ctx.fillStyle='rgba(240,248,255,'+(0.75+0.20*Math.sin(TM*2.6+ex.x)).toFixed(2)+')';
     ctx.fillText('でぐち',q.x,ly);
+    ctx.restore();
+  }
+}
+// めあてビーコン：いま すべきことの ばしょに 金の光柱（でぐちと同型・どのoverlayにも つぶされない）
+function questBeaconTargets(){
+  const h=Game.hidden,w=WORLDS[Game.mapId],out=[];
+  if(!w)return out;
+  if(Game.mapId==='ice'&&h.k1&&!h.k2)out.push({x:17,y:2}); // とらわれの むすめ
+  if(Game.mapId==='grass'&&w.npcs){
+    for(const n of w.npcs)if((n.msgElder||n.heir)&&npcStoryPending(n))out.push({x:n.x,y:n.y});
+  }
+  // クリア後・告白前は「いまの しまの みよんでいない せきひ」へ
+  if(h.cleared&&h.k3&&!h.elderTold&&w.npcs){
+    for(const n of w.npcs)if(n.stoneKey&&!h[n.stoneKey])out.push({x:n.x,y:n.y});
+  }
+  return out;
+}
+function drawQuestBeacons(){
+  if(!Game.cam||!Game.p)return;
+  const ts=questBeaconTargets();if(!ts.length)return;
+  const TWc=Game.cam.TW,THc=Game.cam.TH;
+  for(const ex of ts){
+    const q=isoCtr(ex.x,ex.y);
+    q.y-=Math.max(0,hv(ex.x,ex.y))*Game.cam.lift;
+    if(q.x<-TWc*2||q.x>W+TWc*2||q.y<-THc*2||q.y>H+THc*9)continue;
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    const ba=0.26+0.10*Math.sin(TM*2.4+ex.x);
+    let g=ctx.createLinearGradient(0,q.y-THc*7,0,q.y);
+    g.addColorStop(0,'rgba(255,215,120,0)');
+    g.addColorStop(1,'rgba(255,215,120,'+ba.toFixed(3)+')');
+    ctx.fillStyle=g;ctx.fillRect(q.x-TWc*0.30,q.y-THc*7,TWc*0.60,THc*7);
+    const ca=0.46+0.18*Math.sin(TM*2.4+ex.x);
+    g=ctx.createLinearGradient(0,q.y-THc*6,0,q.y);
+    g.addColorStop(0,'rgba(255,242,205,0)');
+    g.addColorStop(1,'rgba(255,242,205,'+ca.toFixed(3)+')');
+    ctx.fillStyle=g;ctx.fillRect(q.x-TWc*0.09,q.y-THc*6,TWc*0.18,THc*6);
+    ctx.translate(q.x,q.y);ctx.scale(1,0.5);
+    const rr=TWc*(0.42+0.05*Math.sin(TM*3.3+ex.y));
+    const rg=ctx.createRadialGradient(0,0,2,0,0,rr*1.6);
+    rg.addColorStop(0,'rgba(255,225,140,0.4)');rg.addColorStop(1,'rgba(255,225,140,0)');
+    ctx.fillStyle=rg;ctx.beginPath();ctx.arc(0,0,rr*1.6,0,6.29);ctx.fill();
+    ctx.strokeStyle='rgba(255,232,160,'+(0.6+0.25*Math.sin(TM*3.3+ex.y)).toFixed(2)+')';
+    ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,rr,0,6.29);ctx.stroke();
+    ctx.restore();
+    ctx.save();
+    ctx.font='bold '+Math.max(11,Math.round(TWc*0.28))+'px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    const ly=q.y-THc*3.4+Math.sin(TM*1.9+ex.x)*2.5;
+    ctx.lineWidth=3;ctx.strokeStyle='rgba(38,26,6,0.85)';ctx.strokeText('めあて',q.x,ly);
+    ctx.fillStyle='rgba(255,240,200,'+(0.8+0.18*Math.sin(TM*2.7+ex.x)).toFixed(2)+')';
+    ctx.fillText('めあて',q.x,ly);
     ctx.restore();
   }
 }
