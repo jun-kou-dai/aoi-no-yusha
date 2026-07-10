@@ -3516,7 +3516,7 @@ function questText(){
   if(Game.minigame)return 'スライムつかまえ！ のこり '+Math.max(0,Math.ceil(Game.minigame.t))+'びょう　つかまえた '+Game.minigame.got+'/3';
   if(Game.qChild===1)return Game.mapId==='cave'?'もくてき：どうくつの ひだりおくで ポポを さがせ':'もくてき：どうくつで まいごの ポポを さがせ';
   if(Game.qChild===2)return 'もくてき：ポポを むらの おかあさんの もとへ';
-  if(Game.hidden.k1&&!Game.hidden.k2)return Game.mapId==='ice'?'もくてき：こおりの おくで むすめを すくいだせ！':'もくてき：さらわれた むすめを おえ！ こおりの せかいへ！';
+  if(Game.hidden.k1&&!Game.hidden.k2)return Game.mapId==='ice'?'もくてき：みぎうえ（きたの はて）で むすめを すくいだせ！':'もくてき：さらわれた むすめを おえ！ こおりの せかいへ！';
   if(Game.hidden.k2&&!Game.hidden.k3)return 'もくてき：むらの じいさんの もとへ';
   if(Game.hidden.cleared){
     if(Game.mapId==='edge')return Game.hidden.towaDown?'もくてき：ふちは しずかに ねむっている':(Game.hidden.towaGate?'もくてき：どこでもドアで「とわの ふち」へ':'もくてき：とわの といに こたえよ');
@@ -3542,7 +3542,7 @@ function questText(){
     if(Game.hidden.ch2)return 'もくてき：どこでもドアで「しずみの さと」へ';
     if(Game.hidden.elderTold)return 'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている';
     {const st=['t1','t2','t3','t4','t5'].filter(k=>Game.hidden[k]).length;
-     if(!Game.hidden.k3)return 'もくてき：さらわれた むすめを すくいだそう（こおりの おく）';
+     if(!Game.hidden.k3)return 'もくてき：むすめを すくいだそう（こおりの せかいの みぎうえの はて）';
      if(st<5)return 'もくてき：こだいの せきひを すべて よもう（'+st+'/5・のこりは メモで）';
      return 'もくてき：むらの じいさんが なにかを かたりたがっている';}
   }
@@ -5834,8 +5834,9 @@ function drawHouse(x,y,cam,palace){
 // むらびと（kindで かきわけ：ojii=むぎわらの ろうじん / musume=エプロンの むすめ / shop=しょうにん）
 // つぎの ものがたりが この人で まっているか（村の じいさん・こども の章フック）
 function npcStoryPending(n){
-  if(Game.mapId!=='grass')return false;
   const h=Game.hidden;
+  if(n.captive)return !!(h.k1&&!h.k2); // とらわれの むすめ=すくいだすまで！
+  if(Game.mapId!=='grass')return false;
   if(n.msgElder){
     if(!h.elderTold&&(h.cleared||h.k3&&['t1','t2','t3','t4','t5'].every(k=>h[k])))return true; // 告白待ち or クリア後の導き
     if(h.cleared&&h.elderTold&&!h.ch2)return true; // 章2の たのみ
