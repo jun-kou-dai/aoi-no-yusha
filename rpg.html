@@ -3105,6 +3105,20 @@ async function talkNpc(n){
       saveGame();
       return;
     }
+    // クリア後・告白の条件が たりない とき：じいさんが 自分で みちを しめす（「何も しゃべらない」の根治）
+    if(n.msgElder&&Game.hidden.cleared&&!Game.hidden.elderTold){
+      if(!Game.hidden.k3){
+        await say('じいさん「…そなたに はなしたい ことが ある。じゃが、\nまずは さらわれた むすめを たすけて やって くれんか。」');
+        await say('じいさん「こおりの せかいの おくじゃ。たのんだぞ。」');
+      }else{
+        const stn=['t1','t2','t3','t4','t5'].filter(k=>Game.hidden[k]).length;
+        await say('じいさん「…そなたに はなしたい ことが ある。じゃが その まえに、\nせかいの 5つの せきひを すべて よんできて くれんか。（いま '+stn+'/5）」');
+        await say('じいさん「のこりの せきひの しまは、🗺メモの\n「やりのこし」に のっておる。」');
+      }
+      endTalk();
+      saveGame();
+      return;
+    }
     // 章3d: みなもとの こたえを じいさんへ——ものがたりの むすび
     if(n.msgElder&&Game.hidden.ch3t&&!Game.hidden.ch3d){
       Game.hidden.ch3d=true;
@@ -3635,9 +3649,20 @@ function tapMove(cx,cy){
   const r=cv.getBoundingClientRect();if(!r.width)return;
   const lx=(cx-r.left)*(W/r.width),ly=(cy-r.top)*(H/r.height);
   const u=(lx-cam.ox)/(cam.TW/2),v=(ly-cam.oy-cam.TH/2)/(cam.TH/2);
-  const tx=Math.round((u+v)/2),ty=Math.round((v-u)/2);
-  if(tx<0||ty<0||tx>=MW||ty>=MH)return;
+  let tx=Math.round((u+v)/2),ty=Math.round((v-u)/2);
   const w=WORLDS[Game.mapId];
+  // からだの どこを おしても その人: NPC/王/宿の スプライト中心(足元より上)との画面距離で吸着
+  {const ents=[];
+   if(w.npcs)for(const n of w.npcs)if(!npcGone(n))ents.push({x:n.x,y:n.y});
+   if(w.king)ents.push({x:w.king.x,y:w.king.y});
+   if(w.inn)ents.push({x:w.inn.x,y:w.inn.y});
+   let best=null,bd=1e9;
+   for(const e of ents){const q=isoCtr(e.x,e.y);
+     const dx=lx-q.x, dy=ly-(q.y-cam.TH*0.45); // 体の中心は足元タイルより上
+     const dd=Math.hypot(dx,dy);
+     if(dd<cam.TW*0.55&&dd<bd){bd=dd;best=e;}}
+   if(best){tx=best.x;ty=best.y;}}
+  if(tx<0||ty<0||tx>=MW||ty>=MH)return;
   const isTalkT=(x,y)=>!!(npcAt(x,y)||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y));
   const goalDoor=(Game.mapId==='cave2'&&tileAt(tx,ty)==='D'&&!Game.hidden.gate1); // とざされた とびらも タップで あけられる（となりまで あるいて たいあたり）
   const goalTalk=isTalkT(tx,ty)||goalDoor;
@@ -5797,7 +5822,7 @@ function npcStoryPending(n){
   if(Game.mapId!=='grass')return false;
   const h=Game.hidden;
   if(n.msgElder){
-    if(h.k3&&['t1','t2','t3','t4','t5'].every(k=>h[k])&&!h.elderTold)return true; // 告白待ち
+    if(!h.elderTold&&(h.cleared||h.k3&&['t1','t2','t3','t4','t5'].every(k=>h[k])))return true; // 告白待ち or クリア後の導き
     if(h.cleared&&h.elderTold&&!h.ch2)return true; // 章2の たのみ
     if(h.nk2&&h.ch3m&&(Game.purified||0)>=15&&!h.ch3a)return true; // 章3の みちびき
     if(h.ch3t&&!h.ch3d)return true; // こたえを つたえる
