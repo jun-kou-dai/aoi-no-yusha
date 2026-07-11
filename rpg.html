@@ -776,7 +776,7 @@ cave2:{
  chests:[
   {x:2, y:5,  item:'taneH'},
   {x:11,y:12, item:'seisui'},
-  {x:17,y:9,  item:'tane'},
+  {x:17,y:9,  weapon:'hayabusa'},
   {x:15,y:6,  item:'taneD'},
   {x:17,y:6,  item:'taneM'}],
  exits:[
@@ -807,7 +807,7 @@ icetown:{
   {x:6,y:8,kind:'musume',col:'#bfd8f0',msg:['まちむすめ「どうくつの おくの たてあなの したに\nちそこの どうくつが あるんですって。」','まちむすめ「ちからのたねが ねむってる って\nもっぱらの うわさよ。」'],
    msgCleared:['まちむすめ「おかえりなさい！ ゆうべは まちの あかりが\nひとつも きえなかったの。こんなの はじめて！」','まちむすめ「かえってきてくれて…… ほんとうに よかった。」'],
    msg4:['まちむすめ「まおうの しろへ いくのね…。\nかならず かえってきてね。まってるから。」']},
-  {x:13,y:8,kind:'ojii',col:'#c8d8e8',msg:['ちょうろう「さまよう きょじんを たおすと、まれに\n『きょじんのこころ』を おとすそうな。からだが つよくなるぞ。」','ちょうろう「よるの まものは てごわいが けいけんちも おおい。\nやどで あさまで やすむのも ちえの うちじゃ。」','ちょうろう「ちそこの ぬしの まの おくに、とざされた とびらが あるそうな。\nかぎなら うちの みせが あつかっとるよ。」'],
+  {x:13,y:8,kind:'ojii',col:'#c8d8e8',msg:['ちょうろう「さまよう きょじんを たおすと、まれに\n『きょじんのこころ』を おとすそうな。からだが つよくなるぞ。」','ちょうろう「よるの まものは てごわいが けいけんちも おおい。\nやどで あさまで やすむのも ちえの うちじゃ。」','ちょうろう「ちそこの ぬしの まの おくに、とざされた とびらが あるそうな。\nかぎなら うちの みせが あつかっとるよ。」','ちょうろう「ちそこの たからのまには、1ターンに 2どぎりする\nでんせつの けんが ねむっとる…という うわさじゃ。」'],
    msgCleared:['ちょうろう「ゆきの まちに とりの こえが もどってきた。\nすべて そなたの おかげじゃ。」','ちょうろう「はての しまの せきひ…… あれには まだ つづきが\nあると いう。いつか たしかめて みなされ。」'],
    msg4:['ちょうろう「しろに いどむか…。\nむりだけは するでないぞ。」']}],
  exits:[
@@ -1089,6 +1089,9 @@ const SHOP=[
   {id:'cloak',label:'とうめいマント',cost:180,key:'cloak',hint:'フィールドの「👻」ボタンで ON/OFFできる！'},
   {id:'book',label:'冒険の書',cost:100,key:'book',hint:'フィールドの「📕」ボタンで モンスター図鑑を ひらける！'},
   {id:'mkey',label:'まほうのかぎ',cost:300,key:'mkey',town:'icetown',hint:'ちそこの とざされた とびらが ひらく！'}];
+// でんせつのぶき: weaponAtkの値が武器の同一性(全武器で一意)。効果はここで引く
+const WEAPONFX={16:{twice:true},44:{vsKage:1.5},52:{critUp:0.05},56:{critUp:0.08}};
+const WNAME={5:'どうのつるぎ',12:'はがねのつるぎ',16:'はやぶさのつるぎ',20:'ほのおのつるぎ',26:'ゆうしゃのつるぎ',36:'ふぶきのつるぎ',44:'かげぬいの たち',48:'らいめいのつるぎ',52:'おうじゃのけん',56:'とわのつるぎ'};
 const ITEMS={
   yakuso:{name:'やくそう'},
   iyakuso:{name:'いいやくそう'},
@@ -2242,7 +2245,7 @@ function renderBook(){
 function renderStatus(){
   const p=Game.p,lv=p.lv;
   const row=(l,v,sub)=>'<div class="strow"><span class="stlabel">'+l+'</span><span class="stval">'+v+(sub?'<span class="stsub">'+sub+'</span>':'')+'</span></div>';
-  const wname=Game.weaponAtk>=48?'らいめいのつるぎ':Game.weaponAtk>=36?'ふぶきのつるぎ':Game.weaponAtk>=26?'ゆうしゃのつるぎ':Game.weaponAtk>=20?'ほのおのつるぎ':Game.weaponAtk>=12?'はがねのつるぎ':Game.weaponAtk>=5?'どうのつるぎ':'すで';
+  const wname=(WNAME[Game.weaponAtk]||(Game.weaponAtk?'ふしぎな ぶき':'すで'))+(WEAPONFX[Game.weaponAtk]?'✦':'');
   const aname=(Game.armorDef||0)>=34?'ひかりのよろい':(Game.armorDef||0)>=24?'まほうのよろい':(Game.armorDef||0)>=16?'はがねのよろい':(Game.armorDef||0)>=9?'くさりかたびら':(Game.armorDef||0)>=4?'かわのよろい':'ぬののふく';
   const nextExp=lv<MAXLV?(LEVELS[lv+1].exp-p.exp):null;
   let h='<h3 class="bisle">のうりょく</h3>';
@@ -3255,6 +3258,17 @@ async function talkKing(){
       await say('おうさま「くにを すくった ほうびじゃ。\n500ゴールドを とらせよう！」');
       await say('おうさま「ゆきのまちの みせで、つよい そうびを\nととのえると よいぞ。」');
     }
+    if(!Game.hidden.crown2){
+      Game.hidden.crown2=true;
+      await say('おうさま「そして——おうけに だいだい つたわる けんを\nそなたに たくそう。」');
+      sfxLevel();flash('#ffe9b0',0.45,0.9);
+      if(Game.weaponAtk<52){
+        Game.weaponAtk=52;recalcStats();updateBars();
+        await say('でんせつのぶき おうじゃのけんを さずかった！\n（こうげき+52・かいしんの いちげきが でやすい）');
+      }else{
+        await say('おうじゃのけんを さずかった！\nだが いまの ぶきの ほうが つよい。たからとして おさめた。');
+      }
+    }
     if(Game.hidden.towaDown){
       await say('おうさま「とわの ふちを こえた ものよ……\nもはや わしが さずける ものは なにもない。」');
       await say('おうさま「この くにの ひかりを、これからも\nともに みまもって くれい。」');
@@ -3705,6 +3719,13 @@ function openChest(c){
   }else if(c.item==='taneM'){
     Game.bonusMp=(Game.bonusMp||0)+6;p.mmp+=6;p.mp=Math.min(p.mmp,p.mp+6);updateBars();
     toast('たからばこを あけた！ ふしぎなたね！ さいだいMPが 6 あがった！');
+  }else if(c.weapon==='hayabusa'){
+    if(Game.weaponAtk<36){
+      Game.weaponAtk=16;recalcStats();updateBars();
+      toast('でんせつのぶき はやぶさのつるぎを てにいれた！ 1ターンに 2かい きりつける！');
+    }else{
+      toast('はやぶさのつるぎを みつけた…が いまの ぶきの ほうが つよい。たからに しまった。');
+    }
   }else{
     Game.items[c.item]++;
     toast('たからばこを あけた！ '+ITEMS[c.item].name+'を てにいれた！');
@@ -7216,7 +7237,8 @@ async function playerAction(act){
     await say('ゆうしゃの こうげき！');
     bt.slash={t:0};bt.heroAtk=1;sfxSlash();
     await wait(0.08);
-    const crit=Math.random()<(curDiff().pcrit||0.1);
+    const wfx=WEAPONFX[Game.weaponAtk]||{};
+    const crit=Math.random()<((curDiff().pcrit||0.1)+(wfx.critUp||0));
     const dodgeP=bt.soar?0.5:(bt.foe.dodge||0);
     if(!crit&&dodgeP&&Math.random()<dodgeP){
       sfxRun();
@@ -7231,6 +7253,7 @@ async function playerAction(act){
       // かいしん：ぼうぎょ・いわのからだ・きんのからだを つらぬく
       Game.stats.crits++;
       d=Math.round(p.atk*2*(bt.atkUp||1)+ri(0,4));
+      if(wfx.vsKage&&bt.foe.kage)d=Math.round(d*wfx.vsKage);
       sfxCrit();bt.flash=1;bt.hitStop=0.16;bt.recoil=1.35;bt.blink=1;shakeBattle(18,0.5);bt.shock={t:0};
       flash('#fff3c4',0.45,0.55);
       popup(ep.x,ep.y-ep.s*70,d,'crit');
@@ -7241,12 +7264,25 @@ async function playerAction(act){
       sfxHit();bt.flash=1;bt.hitStop=0.08;bt.recoil=1;bt.blink=1;shakeBattle(10,0.3);
       d=calcDmg(Math.round(p.atk*(bt.atkUp||1)),bt.foe.def);
       d=Math.max(1,Math.round(d*(bt.foe.physMul||1)));
+      if(wfx.vsKage&&bt.foe.kage){d=Math.round(d*wfx.vsKage);}
       popup(ep.x,ep.y-ep.s*70,d);
       puff(ep.x,ep.y-ep.s*40,'rgba(255,245,220,.9)',18,220,0.6,{s0:2,s1:5});
     }
     bt.hp=Math.max(0,bt.hp-d);
     await wait(crit?0.08:0.12);
     await say(bt.foe.name+'に '+d+'の ダメージ！');
+    if(wfx.twice&&bt.hp>0){
+      bt.slash={t:0};sfxSlash();bt.flash=1;bt.hitStop=0.06;bt.recoil=0.9;bt.blink=1;shakeBattle(8,0.25);
+      await wait(0.10);
+      let d2=calcDmg(Math.round(p.atk*0.75*(bt.atkUp||1)),bt.foe.def);
+      d2=Math.max(1,Math.round(d2*(bt.foe.physMul||1)));
+      if(wfx.vsKage&&bt.foe.kage)d2=Math.round(d2*wfx.vsKage);
+      bt.hp=Math.max(0,bt.hp-d2);
+      popup(ep.x,ep.y-ep.s*58,d2);
+      puff(ep.x,ep.y-ep.s*40,'rgba(200,235,255,.9)',14,200,0.5,{s0:2,s1:4});
+      await wait(0.10);
+      await say('はやぶさの 2げきめ！ さらに '+d2+'の ダメージ！');
+    }
     if(!crit&&(bt.foe.gold||bt.foe.metal)&&d<=2&&!bt.hintG){
       bt.hintG=true;
       await say('からだが きんぞくのように かたい！ こうげきが ほとんど きかない！');
@@ -7662,7 +7698,17 @@ async function victory(){
   }
   if(foe.mboss&&foe===FOES.mboss){Game.mbossDown=true;showChapter('だい 2 しょう','こおりと ほのおの みち');}
   if(foe.winMsg)await say(foe.winMsg); // winMsgは ぜんての たいしょう（かげ雑魚の「ほどけ」も ここ）
-  if(foe===FOES.satonushi)Game.hidden.sn1=true; // 章2b: さとぬし解放→フィールドで核心開示
+  if(foe===FOES.satonushi){
+    Game.hidden.sn1=true; // 章2b: さとぬし解放→フィールドで核心開示
+    await say('ほどけた かげの そこから、くろい たちが うかびあがった——');
+    if(Game.weaponAtk<44){
+      Game.weaponAtk=44;recalcStats();updateBars();
+      sfxLevel();flash('#b9a8e8',0.4,0.9);
+      await say('でんせつのぶき かげぬいの たちを てにいれた！\n（こうげき+44・かげに 1.5ばいの いちげき）');
+    }else{
+      await say('かげぬいの たちを てにいれた…が いまの ぶきの ほうが つよい。\nたからとして おさめた。');
+    }
+  }
   if(foe===FOES.nukegara)Game.hidden.nk1=true; // 章2d: ぬけがら解放→フィールドで終章
   if(foe===FOES.hikarinokodama)Game.hidden.ch3c=true; // 章3c: こだま=いのりを うけつぐ→いずみの しんじつ
   if(foe===FOES.kotae&&Game.hidden.ch3d&&!Game.hidden.towaGate){ // 裏: こたえを もつ ものが といを こえた→ふちが ひらく
