@@ -1008,64 +1008,64 @@ const LEVELS=[null,
 // なんいど Lv1〜7（Lv2=げんこうバランス=1.0）。敵HP/攻撃・経験値・ゴールド・被ダメ上限・痛恨/特殊頻度を一括制御
 // ============================================================
 const DIFF={
- 1:{name:'やさしい',   ehp:0.85, eatk:0.75, bhp:0.9,  batk:0.8,  exp:1.25, gold:1.15, capNorm:0.40, capHeavy:0.55, crit:1/32, bspecial:0.25, pcrit:0.10},
+ 1:{name:'やさしい',   ehp:0.9,  eatk:0.95, bhp:0.9,  batk:0.95, exp:1.25, gold:1.15, capNorm:0.40, capHeavy:0.55, crit:1/32, bspecial:0.25, pcrit:0.10},
  2:{name:'ふつう',     ehp:1.0,  eatk:1.0,  bhp:1.0,  batk:1.0,  exp:1.0,  gold:1.0,  capNorm:0.50, capHeavy:0.70, crit:1/24, bspecial:0.30, pcrit:0.10, minFrac:0.10, bossMinFrac:0.25},
- 3:{name:'むずかしい', ehp:1.15, eatk:1.15, bhp:1.15, batk:1.12, exp:0.95, gold:0.95, capNorm:0.55, capHeavy:0.78, crit:1/20, bspecial:0.34, pcrit:0.115, minFrac:0.15, bossMinFrac:0.30, baiki:1.45},
- 4:{name:'ごくむず',   ehp:1.3,  eatk:1.3,  bhp:1.3,  batk:1.25, exp:0.85, gold:0.9,  capNorm:0.60, capHeavy:0.85, crit:1/18, bspecial:0.38, pcrit:0.13,  minFrac:0.20, bossMinFrac:0.35, baiki:1.4},
- 5:{name:'でんせつ',   ehp:1.5,  eatk:1.8,  bhp:1.5,  batk:2.4,  exp:0.8,  gold:0.85, capNorm:0.65, capHeavy:0.90, crit:1/16, bspecial:0.42, pcrit:0.15, minFrac:0.30, baiki:1.35},
- 6:{name:'しんわ',     ehp:1.8,  eatk:2.2,  bhp:1.9,  batk:2.9,  exp:0.55, gold:0.6,  capNorm:0.80, capHeavy:0.95, crit:1/11, bspecial:0.52, pcrit:0.07, minFrac:0.45, giantHp:1.2, giantAtk:1.5, baiki:1.3},
- 7:{name:'しんぱん',   ehp:2.1,  eatk:2.6,  bhp:2.6,  batk:3.4,  exp:0.4,  gold:0.5,  capNorm:0.88, capHeavy:0.97, crit:1/9,  bspecial:0.60, pcrit:0.05, minFrac:0.55, bossMinFrac:0.40, giantHp:1.3, giantAtk:1.6, baiki:1.25}}; // bossMinFrac0.40=ボス床のみ引き下げ(v1240実戦でボス2形態が構造的詰み=回復ゼロ7T必要に対し期待被弾>mhp を実測→0.40で期待被弾297<341=たね積み前提でチキンレース成立。しんわボス床32/41より上=単調性維持。ざこ/巨人0.55とボスの格(batk/bhp/bspecial0.60)は不変
+ 3:{name:'むずかしい', ehp:1.12, eatk:1.0,  bhp:1.12, batk:1.0,  exp:0.95, gold:0.95, capNorm:0.55, capHeavy:0.78, crit:1/20, bspecial:0.34, pcrit:0.115, minFrac:0.12, bossMinFrac:0.26, baiki:1.45},
+ 4:{name:'ごくむず',   ehp:1.25, eatk:1.0,  bhp:1.25, batk:1.0,  exp:0.85, gold:0.9,  capNorm:0.60, capHeavy:0.85, crit:1/18, bspecial:0.38, pcrit:0.13,  minFrac:0.14, bossMinFrac:0.28, baiki:1.4},
+ 5:{name:'でんせつ',   ehp:1.4,  eatk:1.02, bhp:1.4,  batk:1.02, exp:0.8,  gold:0.85, capNorm:0.65, capHeavy:0.90, crit:1/16, bspecial:0.42, pcrit:0.15, minFrac:0.16, bossMinFrac:0.30, baiki:1.35},
+ 6:{name:'しんわ',     ehp:1.6,  eatk:1.04, bhp:1.6,  batk:1.04, exp:0.55, gold:0.6,  capNorm:0.80, capHeavy:0.95, crit:1/11, bspecial:0.52, pcrit:0.07, minFrac:0.18, bossMinFrac:0.32, giantHp:1.2, giantAtk:1.5, baiki:1.3},
+ 7:{name:'しんぱん',   ehp:1.9,  eatk:1.05, bhp:1.9,  batk:1.05, exp:0.4,  gold:0.5,  capNorm:0.88, capHeavy:0.97, crit:1/9,  bspecial:0.60, pcrit:0.05, minFrac:0.20, bossMinFrac:0.34, giantHp:1.3, giantAtk:1.6, baiki:1.25}}; // 2026-07-11再正規化: 敵の素の数値を実戦シム最適化で引き上げたため、難易度は「HP係数=戦いの長さと資源消費」で運ぶ設計へ。atk係数はシム上ほぼ1.0が最適(上げると勝率が崩壊)。床(minFrac系)は保険役に降格し緩勾配へ
 function curDiff(){return DIFF[Game.diff]||DIFF[2];}
 // 稼ぎ敵(メタル/金スラ)は係数なし。中ボス・ボスはbhp/batk、通常はehp/eatk
 function diffEnemyHP(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.bhp:D.ehp;if(foe.giant&&D.giantHp)m*=D.giantHp;return m;}
 function diffEnemyAtk(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.batk:D.eatk;if(foe.giant&&D.giantAtk)m*=D.giantAtk;return m;}
 const FOES={
-  slime:{name:'スライム',     hp:14, atk:7,  def:2, exp:11, g:4,  col:'#8fd0a0', draw:'slime', physMul:1,   fireMul:1,   iceMul:1,   dodge:0, drop:'yakuso'},
-  crow: {name:'おおがらす',   hp:19, atk:10, def:3, exp:16, g:6,  coward:true, col:'#a9b7ff', draw:'crow',  physMul:1,   fireMul:1,   iceMul:1,   dodge:0.18},
-  golem:{name:'いわゴーレム', hp:28, atk:12, def:5, exp:26, g:10, col:'#d8d3bd', draw:'golem', physMul:0.5, fireMul:1.5, iceMul:1,   dodge:0},
-  bat:  {name:'どくこうもり', hp:24, atk:14, def:4, exp:22, g:9,  coward:true, col:'#9fe88f', draw:'crow',  v:'bat', physMul:1, fireMul:1, iceMul:1, dodge:0.22, drop:'dokukesi'},
-  skel: {name:'ほねゴーレム', hp:38, atk:16, def:6, exp:36, g:15, col:'#e8e8e0', draw:'golem', v:'bone', physMul:0.7, fireMul:1.4, iceMul:1, dodge:0},
-  hslime:{name:'ホイミスライム', hp:30, atk:12, def:5, exp:34, g:14, col:'#8fd8e8', draw:'slime', physMul:1, fireMul:1.2, iceMul:1, dodge:0.1, drop:'yakuso'},
-  mboss:{name:'くろがねゴーレム', hp:100, atk:19, def:9, exp:85, g:100, col:'#8a93b8', draw:'golem', v:'iron', mboss:true, still:true, winMsg:'どうくつの おくから つめたい かぜが ふきこんでくる…\nこおりの せかいへの みちが ひらいた！', physMul:0.6, fireMul:1.3, iceMul:1, dodge:0},
-  dslime:{name:'やみスライム', hp:44, atk:19, def:8, exp:50, g:20, col:'#c490e8', draw:'slime', v:'dark', physMul:1, fireMul:1, iceMul:1.4, dodge:0.1, drop:'seisui'},
-  dcrow:{name:'じごくがらす', hp:52, atk:22, def:9, exp:64, g:25, col:'#ff9f9f', draw:'crow', v:'hell', physMul:1, fireMul:0, iceMul:1.5, dodge:0.25, drop:'dokukesi'},
-  boss: {name:'やみのおう ヴォルガ', hp:300, atk:24, def:10, exp:0, g:0, boss:true, col:'#b06aff', draw:'boss', physMul:1, fireMul:1, iceMul:1, dodge:0},
-  boss2:{name:'ヴォルガ しんのすがた', hp:220, atk:28, def:11, exp:0, g:0, boss:true, col:'#f3e9c8', draw:'boss2', physMul:1, fireMul:1, iceMul:1, dodge:0},
-  gslime:{name:'きんのスライム', hp:8, atk:0, def:20, exp:25, g:65, col:'#ffd86b', draw:'slime', gold:true, v:'gold', physMul:1, fireMul:1, iceMul:1, dodge:0.4},
+  slime:{name:'スライム',     hp:28, atk:7,  def:2, exp:11, g:4,  col:'#8fd0a0', draw:'slime', physMul:1,   fireMul:1,   iceMul:1,   dodge:0, drop:'yakuso'},
+  crow: {name:'おおがらす',   hp:27, atk:7, def:3, exp:16, g:6,  coward:true, col:'#a9b7ff', draw:'crow',  physMul:1,   fireMul:1,   iceMul:1,   dodge:0.18},
+  golem:{charge:true, name:'いわゴーレム', hp:32, atk:10, def:5, exp:26, g:10, col:'#d8d3bd', draw:'golem', physMul:0.5, fireMul:1.5, iceMul:1,   dodge:0},
+  bat:  {name:'どくこうもり', hp:85, atk:23, def:4, exp:22, g:9,  coward:true, col:'#9fe88f', draw:'crow',  v:'bat', physMul:1, fireMul:1, iceMul:1, dodge:0.22, drop:'dokukesi'},
+  skel: {name:'ほねゴーレム', hp:105, atk:25, def:6, exp:36, g:15, col:'#e8e8e0', draw:'golem', v:'bone', physMul:0.7, fireMul:1.4, iceMul:1, dodge:0},
+  hslime:{name:'ホイミスライム', hp:95, atk:21, def:5, exp:34, g:14, col:'#8fd8e8', draw:'slime', physMul:1, fireMul:1.2, iceMul:1, dodge:0.1, drop:'yakuso'},
+  mboss:{charge:true, name:'くろがねゴーレム', hp:220, atk:33, def:9, exp:85, g:100, col:'#8a93b8', draw:'golem', v:'iron', mboss:true, still:true, winMsg:'どうくつの おくから つめたい かぜが ふきこんでくる…\nこおりの せかいへの みちが ひらいた！', physMul:0.6, fireMul:1.25, iceMul:1, dodge:0},
+  dslime:{name:'やみスライム', hp:210, atk:62, def:8, exp:50, g:20, col:'#c490e8', draw:'slime', v:'dark', physMul:1, fireMul:1, iceMul:1.4, dodge:0.1, drop:'seisui'},
+  dcrow:{name:'じごくがらす', hp:230, atk:60, def:9, exp:64, g:25, col:'#ff9f9f', draw:'crow', v:'hell', physMul:1, fireMul:0, iceMul:1.5, dodge:0.25, drop:'dokukesi'},
+  boss: {name:'やみのおう ヴォルガ', hp:300, atk:56, def:10, exp:0, g:0, boss:true, col:'#b06aff', draw:'boss', physMul:1, fireMul:1, iceMul:1, dodge:0},
+  boss2:{name:'ヴォルガ しんのすがた', hp:220, atk:65, def:11, exp:0, g:0, boss:true, col:'#f3e9c8', draw:'boss2', physMul:1, fireMul:1, iceMul:1, dodge:0},
+  gslime:{name:'きんのスライム', hp:8, atk:0, def:14, exp:25, g:65, col:'#ffd86b', draw:'slime', gold:true, v:'gold', physMul:1, fireMul:1, iceMul:1, dodge:0.4},
   metal:{name:'メタルスライム', hp:6, atk:10, def:60, exp:60, g:10, col:'#cdd6e4', draw:'slime', v:'metal', metal:true, physMul:1, fireMul:1, iceMul:1, dodge:0.35},
-  mslime:{name:'もりスライム', hp:20, atk:12, def:4, exp:18, g:7, coward:true, col:'#9bd06a', draw:'slime', v:'moss', physMul:1, fireMul:1.3, iceMul:1, dodge:0, drop:'yakuso'},
-  yamabato:{name:'やまばと', hp:26, atk:15, def:5, exp:28, g:11, coward:true, col:'#d8b06a', draw:'crow', v:'owl', physMul:1, fireMul:1, iceMul:1, dodge:0.2},
-  ent:{name:'もりの ぬし', hp:72, atk:17, def:7, exp:70, g:45, col:'#7ec86a', draw:'golem', v:'ent', mboss:true, still:true, winMsg:'もりの ぬしは くずおれ、おお木は しずかに ねむりに ついた。\nうっそうとした こずえの おくに、どうくつへの みちが のぞいた。', physMul:1, fireMul:1.5, iceMul:0.6, dodge:0},
-  islime:{name:'こおりスライム', hp:30, atk:14, def:6, exp:30, g:12, coward:true, col:'#bfe6ff', draw:'slime', v:'ice', physMul:1, fireMul:1.8, iceMul:0.3, dodge:0.05, drop:'yakuso'},
-  scrow:{name:'ゆきがらす', hp:42, atk:18, def:7, exp:40, g:16, col:'#cfe6ff', draw:'crow', v:'snow', physMul:1, fireMul:1.7, iceMul:0.4, dodge:0.24},
-  fgolem:{name:'こおりの きょじん', hp:96, atk:21, def:11, exp:90, g:60, col:'#a9cfe8', draw:'golem', v:'frost', mboss:true, still:true, winMsg:'こおりの きょじんは くだけちり、しろい しじまが あたりを つつむ。\nかぜに ほのおの においが まじりはじめた…', physMul:0.7, fireMul:2.0, iceMul:0, dodge:0},
-  lslime:{name:'ようがんスライム', hp:34, atk:16, def:7,  exp:34, g:13, coward:true, col:'#ff9a5a', draw:'slime', v:'lava',  physMul:1,   fireMul:0.3, iceMul:1.8, dodge:0.05, drop:'yakuso'},
-  ecrow:{name:'ほのおがらす',   hp:46, atk:20, def:8,  exp:44, g:18, col:'#ff8a6a', draw:'crow',  v:'ember', physMul:1,   fireMul:0.4, iceMul:1.7, dodge:0.22},
-  mgolem:{name:'ようがんの きょじん', hp:104,atk:23, def:12, exp:96, g:66, col:'#e87a4a', draw:'golem', v:'magma', mboss:true, still:true, winMsg:'ようがんの きょじんは マグマの うみに しずんでいった。\nゆくてに そびえる まおうの しろが、その すがたを あらわす…！', physMul:0.7, fireMul:0, iceMul:2.0, dodge:0},
-  frostlord:{name:'さまよう ひょうじん', hp:74, atk:32, def:10, exp:95, g:55, col:'#bfe6ff', draw:'golem', v:'frost', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.9, iceMul:0, dodge:0},
-  magmalord:{name:'さまよう マグマじん', hp:88, atk:36, def:12, exp:120, g:70, col:'#ff7a3a', draw:'golem', v:'magma', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:0, iceMul:1.9, dodge:0},
-  icewarden:{name:'こおりの ばんへい', hp:110, atk:27, def:13, exp:110, g:80, col:'#8fc8e8', draw:'golem', v:'ice', hunter:true, huge:true, mboss:true, winMsg:'ばんへいは こおりの かけらと なって くだけちった！\nむすめを たすけださねば！'},
-  chaoslord:{name:'こんとんの きょじん', hp:120, atk:40, def:14, exp:200, g:150, col:'#a88ae8', draw:'golem', v:'iron', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.2, iceMul:1.2, dodge:0},
-  dbat:{name:'やみこうもり', hp:36, atk:17, def:6, exp:38, g:15, col:'#b090e0', draw:'crow', v:'bat', physMul:1, fireMul:1.3, iceMul:1, dodge:0.28, drop:'dokukesi'},
-  gskel:{name:'がいこつけんし', hp:52, atk:19, def:8, exp:52, g:22, col:'#e0d8c8', draw:'golem', v:'bone', physMul:0.6, fireMul:1.5, iceMul:1, dodge:0},
-  bonewarden:{name:'ほねの きょへい', hp:96, atk:24, def:11, exp:115, g:95, col:'#d8d0b8', draw:'golem', v:'bone', huge:true, mboss:true, still:true, winMsg:'ほねの きょへいは がらがらと くずれおちた。\nおくに たからばこが みえる…！', physMul:0.6, fireMul:1.6, iceMul:0.8, dodge:0},
-  kagehito:{name:'かげびと', hp:130, atk:58, def:20, exp:90, g:45, col:'#4a4066', draw:'golem', tint:'rgba(58,50,88,0.85)', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  mslime:{name:'もりスライム', hp:75, atk:12, def:4, exp:18, g:7, coward:true, col:'#9bd06a', draw:'slime', v:'moss', physMul:1, fireMul:1.3, iceMul:1, dodge:0, drop:'yakuso'},
+  yamabato:{name:'やまばと', hp:56, atk:12, def:5, exp:28, g:11, coward:true, col:'#d8b06a', draw:'crow', v:'owl', physMul:1, fireMul:1, iceMul:1, dodge:0.2},
+  ent:{charge:true, name:'もりの ぬし', hp:130, atk:23, def:7, exp:70, g:45, col:'#7ec86a', draw:'golem', v:'ent', mboss:true, still:true, winMsg:'もりの ぬしは くずおれ、おお木は しずかに ねむりに ついた。\nうっそうとした こずえの おくに、どうくつへの みちが のぞいた。', physMul:1, fireMul:1.25, iceMul:0.6, dodge:0},
+  islime:{name:'こおりスライム', hp:260, atk:39, def:6, exp:30, g:12, coward:true, col:'#bfe6ff', draw:'slime', v:'ice', physMul:1, fireMul:1.8, iceMul:0.3, dodge:0.05, drop:'yakuso'},
+  scrow:{name:'ゆきがらす', hp:230, atk:39, def:7, exp:40, g:16, col:'#cfe6ff', draw:'crow', v:'snow', physMul:1, fireMul:1.7, iceMul:0.4, dodge:0.24},
+  fgolem:{charge:true, name:'こおりの きょじん', hp:240, atk:45, def:11, exp:90, g:60, col:'#a9cfe8', draw:'golem', v:'frost', mboss:true, still:true, winMsg:'こおりの きょじんは くだけちり、しろい しじまが あたりを つつむ。\nかぜに ほのおの においが まじりはじめた…', physMul:0.7, fireMul:1.25, iceMul:0, dodge:0},
+  lslime:{name:'ようがんスライム', hp:260, atk:57, def:7,  exp:34, g:13, coward:true, col:'#ff9a5a', draw:'slime', v:'lava',  physMul:1,   fireMul:0.3, iceMul:1.8, dodge:0.05, drop:'yakuso'},
+  ecrow:{name:'ほのおがらす',   hp:250, atk:56, def:8,  exp:44, g:18, col:'#ff8a6a', draw:'crow',  v:'ember', physMul:1,   fireMul:0.4, iceMul:1.7, dodge:0.22},
+  mgolem:{charge:true, name:'ようがんの きょじん', hp:260,atk:53, def:12, exp:96, g:66, col:'#e87a4a', draw:'golem', v:'magma', mboss:true, still:true, winMsg:'ようがんの きょじんは マグマの うみに しずんでいった。\nゆくてに そびえる まおうの しろが、その すがたを あらわす…！', physMul:0.7, fireMul:0, iceMul:1.25, dodge:0},
+  frostlord:{name:'さまよう ひょうじん', hp:300, atk:48, def:10, exp:95, g:55, col:'#bfe6ff', draw:'golem', v:'frost', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.9, iceMul:0, dodge:0},
+  magmalord:{name:'さまよう マグマじん', hp:330, atk:62, def:12, exp:120, g:70, col:'#ff7a3a', draw:'golem', v:'magma', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:0, iceMul:1.9, dodge:0},
+  icewarden:{charge:true, name:'こおりの ばんへい', hp:155, atk:39, def:13, exp:110, g:80, col:'#8fc8e8', draw:'golem', v:'ice', hunter:true, huge:true, mboss:true, winMsg:'ばんへいは こおりの かけらと なって くだけちった！\nむすめを たすけださねば！'},
+  chaoslord:{name:'こんとんの きょじん', hp:400, atk:70, def:14, exp:200, g:150, col:'#a88ae8', draw:'golem', v:'iron', hunter:true, huge:true, giant:true, physMul:0.8, fireMul:1.2, iceMul:1.2, dodge:0},
+  dbat:{name:'やみこうもり', hp:150, atk:45, def:6, exp:38, g:15, col:'#b090e0', draw:'crow', v:'bat', physMul:1, fireMul:1.3, iceMul:1, dodge:0.28, drop:'dokukesi'},
+  gskel:{name:'がいこつけんし', hp:180, atk:48, def:8, exp:52, g:22, col:'#e0d8c8', draw:'golem', v:'bone', physMul:0.6, fireMul:1.5, iceMul:1, dodge:0},
+  bonewarden:{charge:true, name:'ほねの きょへい', hp:260, atk:48, def:11, exp:115, g:95, col:'#d8d0b8', draw:'golem', v:'bone', huge:true, mboss:true, still:true, winMsg:'ほねの きょへいは がらがらと くずれおちた。\nおくに たからばこが みえる…！', physMul:0.6, fireMul:1.6, iceMul:0.8, dodge:0},
+  kagehito:{name:'かげびと', hp:185, atk:63, def:20, exp:90, g:45, col:'#4a4066', draw:'golem', tint:'rgba(58,50,88,0.85)', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
   nakikage:{name:'なきかげ', hp:170, atk:66, def:22, exp:120, g:60, col:'#5a4a78', draw:'crow', tint:'rgba(70,56,100,0.85)', kage:true, spell:true, watch:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  kagekishi:{name:'かげの きし', hp:220, atk:76, def:26, exp:150, g:80, col:'#3a3452', draw:'golem', v:'bone', tint:'rgba(50,44,76,0.85)', kage:true, physMul:0.7, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  satonushi:{name:'さとぬしの かげ', hp:520, atk:100, def:30, exp:600, g:500, col:'#2e2844', draw:'golem', tint:'rgba(40,34,66,0.88)', kage:true, mboss:true, still:true, huge:true, winMsg:'さとぬしの かげは ふかい ためいきとともに ほどけていった。\nみずの そこから、たくさんの こえが きこえてくる——'},
-  uminokage:{name:'うみのかげ', hp:180, atk:70, def:24, exp:130, g:65, col:'#35486a', draw:'slime', tint:'rgba(48,62,94,0.82)', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  kirinokage:{name:'きりのかげ', hp:150, atk:64, def:22, exp:110, g:55, col:'#6a7a92', draw:'crow', tint:'rgba(88,100,122,0.78)', kage:true, dodge:0.15, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
-  nukegara:{name:'やみの ぬけがら', hp:900, atk:110, def:34, exp:900, g:800, col:'#1c1830', draw:'golem', tint:'rgba(20,16,38,0.90)', kage:true, mboss:true, still:true, huge:true, winMsg:'やみの ぬけがらは おとも なく くずれ、\nあとには あたたかい ひかりだけが のこった。'},
-  komari:{name:'ひかりのまり', hp:190, atk:74, def:26, exp:150, g:70, col:'#f0e2a0', draw:'slime', tint:'rgba(240,226,160,0.72)', physMul:1, fireMul:0.85, iceMul:0.85, dodge:0.08, winMsg:'ひかりが ほどけて、もりに かえっていった。'},
-  kodamadori:{name:'こだまどり', hp:160, atk:68, def:24, exp:125, g:60, col:'#f6eec8', draw:'crow', tint:'rgba(246,238,200,0.68)', physMul:1, fireMul:0.85, iceMul:0.85, dodge:0.18, winMsg:'ひかりが ほどけて、もりに かえっていった。'},
-  hikarinokodama:{name:'ひかりの こだま', hp:980, atk:118, def:36, exp:1200, g:1000, col:'#f6ecc0', draw:'boss2', tint:'rgba(246,236,192,0.85)', mboss:true, still:true, huge:true, watch:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'いのりが ほどけ、あなたの なかへ ながれこんだ。'},
-  towakage:{name:'とわのかけら', hp:260, atk:88, def:30, exp:220, g:110, col:'#6a5a9a', draw:'golem', v:'iron', tint:'rgba(74,58,120,0.85)', physMul:0.8, fireMul:1.1, iceMul:1.1, winMsg:'かけらは くだけ、といの こなに かえった。'},
-  jigencho:{name:'じげんちょう', hp:200, atk:80, def:26, exp:180, g:90, col:'#8a76c8', draw:'crow', tint:'rgba(110,90,170,0.78)', dodge:0.22, physMul:1, fireMul:1, iceMul:1, winMsg:'かけらは くだけ、といの こなに かえった。'},
-  mugenslime:{name:'むげんスライム', hp:230, atk:84, def:28, exp:200, g:100, col:'#5a4a8a', draw:'slime', v:'dark', tint:'rgba(70,54,120,0.82)', spell:true, physMul:1, fireMul:1.15, iceMul:1.15, dodge:0.1, winMsg:'かけらは くだけ、といの こなに かえった。'},
-  toikeshin:{name:'といの けしん', hp:1200, atk:126, def:40, exp:1500, g:1500, col:'#4a3a7a', draw:'boss2', tint:'rgba(58,42,104,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'といは しずかに ほどけ、ふちに ほしが ともった。'},
-  wslime:{name:'まどうスライム', hp:40, atk:15, def:7, exp:55, g:24, col:'#c8a8f0', draw:'slime', v:'dark', spell:true, watch:true, physMul:1, fireMul:1.2, iceMul:1.2, dodge:0.08},
-  cuslime:{name:'のろいスライム', hp:58, atk:23, def:9, exp:78, g:34, col:'#e88ad0', draw:'slime', v:'dark', spell:true, physMul:1, fireMul:1.3, iceMul:1.3, dodge:0.12},
-  kotae:{name:'こたえなき もの', hp:820, atk:120, def:18, exp:400, g:300, col:'#8a76c8', draw:'golem', v:'iron', mboss:true, still:true, huge:true, spell:true, watch:true, physMul:1, fireMul:0.5, iceMul:0.5, dodge:0, winMsg:'こたえなき ものは しずかに くずれ、なみの おとだけが のこった。\nおくの いしぶみが あわく ひかっている…'}};
+  kagekishi:{name:'かげの きし', hp:220, atk:61, def:26, exp:150, g:80, col:'#3a3452', draw:'golem', v:'bone', tint:'rgba(50,44,76,0.85)', kage:true, physMul:0.7, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  satonushi:{charge:true, name:'さとぬしの かげ', hp:730, atk:68, def:30, exp:600, g:500, col:'#2e2844', draw:'golem', tint:'rgba(40,34,66,0.88)', kage:true, mboss:true, still:true, huge:true, winMsg:'さとぬしの かげは ふかい ためいきとともに ほどけていった。\nみずの そこから、たくさんの こえが きこえてくる——'},
+  uminokage:{name:'うみのかげ', hp:280, atk:82, def:24, exp:130, g:65, col:'#35486a', draw:'slime', tint:'rgba(48,62,94,0.82)', kage:true, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  kirinokage:{name:'きりのかげ', hp:300, atk:81, def:22, exp:110, g:55, col:'#6a7a92', draw:'crow', tint:'rgba(88,100,122,0.78)', kage:true, dodge:0.15, winMsg:'かげが ほどけ、ひとの かおが ほほえんで きえた。'},
+  nukegara:{charge:true, name:'やみの ぬけがら', hp:810, atk:86, def:34, exp:900, g:800, col:'#1c1830', draw:'golem', tint:'rgba(20,16,38,0.90)', kage:true, mboss:true, still:true, huge:true, winMsg:'やみの ぬけがらは おとも なく くずれ、\nあとには あたたかい ひかりだけが のこった。'},
+  komari:{name:'ひかりのまり', hp:270, atk:100, def:26, exp:150, g:70, col:'#f0e2a0', draw:'slime', tint:'rgba(240,226,160,0.72)', physMul:1, fireMul:0.85, iceMul:0.85, dodge:0.08, winMsg:'ひかりが ほどけて、もりに かえっていった。'},
+  kodamadori:{name:'こだまどり', hp:250, atk:99, def:24, exp:125, g:60, col:'#f6eec8', draw:'crow', tint:'rgba(246,238,200,0.68)', physMul:1, fireMul:0.85, iceMul:0.85, dodge:0.18, winMsg:'ひかりが ほどけて、もりに かえっていった。'},
+  hikarinokodama:{charge:true, name:'ひかりの こだま', hp:880, atk:95, def:36, exp:1200, g:1000, col:'#f6ecc0', draw:'boss2', tint:'rgba(246,236,192,0.85)', mboss:true, still:true, huge:true, watch:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'いのりが ほどけ、あなたの なかへ ながれこんだ。'},
+  towakage:{name:'とわのかけら', hp:370, atk:111, def:30, exp:220, g:110, col:'#6a5a9a', draw:'golem', v:'iron', tint:'rgba(74,58,120,0.85)', physMul:0.8, fireMul:1.1, iceMul:1.1, winMsg:'かけらは くだけ、といの こなに かえった。'},
+  jigencho:{name:'じげんちょう', hp:350, atk:108, def:26, exp:180, g:90, col:'#8a76c8', draw:'crow', tint:'rgba(110,90,170,0.78)', dodge:0.22, physMul:1, fireMul:1, iceMul:1, winMsg:'かけらは くだけ、といの こなに かえった。'},
+  mugenslime:{name:'むげんスライム', hp:360, atk:106, def:28, exp:200, g:100, col:'#5a4a8a', draw:'slime', v:'dark', tint:'rgba(70,54,120,0.82)', spell:true, physMul:1, fireMul:1.15, iceMul:1.15, dodge:0.1, winMsg:'かけらは くだけ、といの こなに かえった。'},
+  toikeshin:{charge:true, name:'といの けしん', hp:1020, atk:97, def:40, exp:1500, g:1500, col:'#4a3a7a', draw:'boss2', tint:'rgba(58,42,104,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'といは しずかに ほどけ、ふちに ほしが ともった。'},
+  wslime:{name:'まどうスライム', hp:65, atk:12, def:7, exp:55, g:24, col:'#c8a8f0', draw:'slime', v:'dark', spell:true, watch:true, physMul:1, fireMul:1.2, iceMul:1.2, dodge:0.08},
+  cuslime:{name:'のろいスライム', hp:200, atk:62, def:9, exp:78, g:34, col:'#e88ad0', draw:'slime', v:'dark', spell:true, physMul:1, fireMul:1.3, iceMul:1.3, dodge:0.12},
+  kotae:{charge:true, name:'こたえなき もの', hp:820, atk:104, def:18, exp:400, g:300, col:'#8a76c8', draw:'golem', v:'iron', mboss:true, still:true, huge:true, spell:true, watch:true, physMul:1, fireMul:0.5, iceMul:0.5, dodge:0, winMsg:'こたえなき ものは しずかに くずれ、なみの おとだけが のこった。\nおくの いしぶみが あわく ひかっている…'}};
 const SHOP=[
   {id:'w1',label:'どうのつるぎ',cost:30,atk:5,town:'grass'},
   {id:'w2',label:'はがねのつるぎ',cost:90,atk:12,town:'grass'},
@@ -7507,7 +7507,7 @@ async function enemyAction(){
     return 'enemyFled';
   }
   // スライム：たまに ぷるぷるして にげだす
-  if(foe===FOES.slime&&Math.random()<0.12){
+  if(foe===FOES.slime&&bt.hp<bt.mhp*0.4&&Math.random()<0.12){
     sfxRun();
     await say('スライムは ぷるぷるして にげだした！');
     return 'enemyFled';
@@ -7563,7 +7563,7 @@ async function enemyAction(){
     return;
   }
   // ゴーレム系：3ターンしゅうきで ちからを ためる
-  if((foe===FOES.golem||foe===FOES.mboss||foe===FOES.bonewarden)&&!bt.charge&&bt.turn%3===2){
+  if(foe.charge&&!bt.charge&&bt.turn%3===2){
     bt.charge=true;
     sfxCharge();
     shakeBattle(4,0.4);
