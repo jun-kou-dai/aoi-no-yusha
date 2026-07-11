@@ -121,8 +121,8 @@ body{
   padding:max(10px, env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom)); }
 .b-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; width:100%; padding-right:48px; } /* 右上の🔊ボタンとHP/MPチップの重なり防止 */
 #ename{ font-size:clamp(13px,2.2vmin,17px); letter-spacing:.08em; }
-#fastbtn{ cursor:pointer; font-size:clamp(11px,1.9vmin,14px); align-self:flex-start; opacity:.85; }
-#fastbtn.on{ color:#ffd86b; border-color:rgba(255,216,107,.6); opacity:1; }
+#fastbtn,#autobtn{ cursor:pointer; font-size:clamp(11px,1.9vmin,14px); align-self:flex-start; opacity:.85; }
+#fastbtn.on,#autobtn.on{ color:#ffd86b; border-color:rgba(255,216,107,.6); opacity:1; }
 #enamewrap{ display:flex; flex-direction:column; gap:4px; min-width:120px; }
 #ehpbar{ width:100%; height:6px; background:rgba(255,255,255,.16); border-radius:3px; overflow:hidden; }
 #ehpfill{ display:block; height:100%; width:100%; background:#8fd0a0; border-radius:3px; transition:width .25s ease, background .25s ease; }
@@ -462,6 +462,7 @@ body{
     <div class="b-top">
       <div class="chip glass" id="enamewrap"><div id="ename">スライム</div><div id="ehpbar"><i id="ehpfill"></i></div></div>
       <div class="chip glass" id="fastbtn">⚡ はやさ ×1</div>
+      <div class="chip glass" id="autobtn">🤖 オート OFF</div>
       <div class="chip glass" id="bstat">
         <span class="lv">LV <b id="blv">1</b></span>
         <span class="bgrp"><span class="blabel">HP</span><span class="bar"><i id="bhp"></i></span><span class="num" id="bhpn">26/26</span></span>
@@ -3032,6 +3033,16 @@ function toggleTalkOff(){
     Game.fastBattle=!Game.fastBattle;sfxSel();
     fb.classList.toggle('on',!!Game.fastBattle);
     fb.textContent=Game.fastBattle?'⚡ はやさ ×2':'⚡ はやさ ×1';
+  });})();
+(function(){const ab=document.getElementById('autobtn');
+  if(ab)ab.addEventListener('pointerdown',e=>{e.stopPropagation();
+    Game.autoBattle=!Game.autoBattle;sfxSel();
+    ab.classList.toggle('on',!!Game.autoBattle);
+    ab.textContent=Game.autoBattle?'🤖 オート ON':'🤖 オート OFF';
+    // コマンド窓が開いたままONにしたら、窓を閉じて即オートに引き渡す（fightを含む窓=戦闘コマンドのみ）
+    if(Game.autoBattle&&MENU&&MENU.items.some(i=>i.id==='fight')){
+      const r=MENU.res;MENU=null;cmdwinEl.classList.remove('on');r('__auto__');
+    }
   });})();
 function updateTalkBtn(){
   const b=document.getElementById('talkbtn');if(!b)return;
@@ -7272,15 +7283,32 @@ async function tryInflict(foe){
     await say(foe.name+'の しびれ こうげき！\nゆうしゃは からだが しびれた！');
   }
 }
+// オートバトル：ため=ぼうぎょ／HP35%以下=回復（呪文→やくそう系）／どく=キアリー／それ以外=たたかう
+function autoDecide(){
+  const p=Game.p,bt=Game.bt;
+  if(bt&&bt.charge)return{kind:'guard'};
+  if(p.hp<=p.mhp*0.35){
+    if(p.lv>=11&&p.mp>=22)return{kind:'behoma'};
+    if(p.lv>=5&&p.mp>=8)return{kind:'behoimi'};
+    if(p.mp>=3)return{kind:'hoimi'};
+    if((Game.items.tokusen||0)>0)return{kind:'item',item:'tokusen'};
+    if((Game.items.iyakuso||0)>0)return{kind:'item',item:'iyakuso'};
+    if((Game.items.yakuso||0)>0)return{kind:'item',item:'yakuso'};
+  }
+  if(p.poison&&p.mp>=2)return{kind:'kiari'};
+  return{kind:'fight'};
+}
 async function commandPhase(){
   const p=Game.p;
   while(true){
+    if(Game.autoBattle)return autoDecide();
     const c=await ask([
       {id:'fight',label:'たたかう'},
       {id:'spell',label:'じゅもん'},
       {id:'item',label:'どうぐ'},
       {id:'guard',label:'ぼうぎょ'},
       {id:'run',label:'にげる'}],'コマンド');
+    if(c==='__auto__')continue;
     if(c==='fight')return{kind:'fight'};
     if(c==='guard')return{kind:'guard'};
     if(c==='run')return{kind:'run'};
