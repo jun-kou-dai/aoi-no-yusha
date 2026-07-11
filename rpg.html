@@ -121,6 +121,9 @@ body{
   padding:max(10px, env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom)); }
 .b-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; width:100%; padding-right:48px; } /* 右上の🔊ボタンとHP/MPチップの重なり防止 */
 #ename{ font-size:clamp(13px,2.2vmin,17px); letter-spacing:.08em; }
+#enamewrap{ display:flex; flex-direction:column; gap:4px; min-width:120px; }
+#ehpbar{ width:100%; height:6px; background:rgba(255,255,255,.16); border-radius:3px; overflow:hidden; }
+#ehpfill{ display:block; height:100%; width:100%; background:#8fd0a0; border-radius:3px; transition:width .25s ease, background .25s ease; }
 .b-bottom{ display:flex; gap:12px; align-items:stretch; width:100%; }
 /* DQふう：くろじに しろの にじゅうわく */
 #msgwin,#cmdwin{
@@ -437,6 +440,7 @@ body{
       <span class="bgrp"><span class="blabel">MP</span><span class="bar mp"><i id="fmp"></i></span><span class="num" id="fmpn">8/8</span></span>
       <span class="lv"><b id="fgold">0</b> G</span>
       <span class="lv"><b id="fdiff">ふつう</b></span>
+      <span class="lv"><b id="fweap"></b></span>
     </div>
     <div class="ailbadge" id="failbadge"></div>
     <div id="toast" class="glass"></div>
@@ -453,7 +457,7 @@ body{
 
   <div id="ui-battle" class="ui">
     <div class="b-top">
-      <div class="chip glass" id="ename">スライム</div>
+      <div class="chip glass" id="enamewrap"><div id="ename">スライム</div><div id="ehpbar"><i id="ehpfill"></i></div></div>
       <div class="chip glass" id="bstat">
         <span class="lv">LV <b id="blv">1</b></span>
         <span class="bgrp"><span class="blabel">HP</span><span class="bar"><i id="bhp"></i></span><span class="num" id="bhpn">26/26</span></span>
@@ -564,13 +568,13 @@ grass:{
    msg3:['むらびと「かざんには ようがんの きょじんが おるらしい。\nこおりの じゅもんを わすれるでないぞ！」','むらびと「さまよう おおきな かげを みたら にげるんじゃ。\nいや… そなたなら たおせるかも しれんな！」'],
    msg4:['むらびと「ついに まおうの しろまで いったのか…！\nむらの みんなが おうえんしとるぞ！」'],
    msgNight:['むらびと「よるは まものが つよくなる…。\nじゃが けいけんちも おおい らしいぞ。ふふ。」']},
-  {x:5,y:10,kind:'musume',goneKid:true,msgCleared:['むすめ「そらの いろが かわったの、きづいてた？\nあさが ちゃんと、あさの いろを してるのよ。」','むすめ「あのかたが さいごに なにを おもったのか……\nいまなら すこし、わかる きが するの。」'],msgRescued:['むすめ「たすけてくれて ほんとうに ありがとう…！」','むすめ「あのかた… たまを 『とりもどす』と いっていたわ。\nまるで もともと じぶんの ものだった みたいに…」'],col:'#9ad0c0',msg:['むらびと「どうくつの ほねの まものは\nほのおの じゅもんが にがて らしい。」'],
+  {x:11,y:5,kind:'musume',goneKid:true,msgCleared:['むすめ「そらの いろが かわったの、きづいてた？\nあさが ちゃんと、あさの いろを してるのよ。」','むすめ「あのかたが さいごに なにを おもったのか……\nいまなら すこし、わかる きが するの。」'],msgRescued:['むすめ「たすけてくれて ほんとうに ありがとう…！」','むすめ「あのかた… たまを 『とりもどす』と いっていたわ。\nまるで もともと じぶんの ものだった みたいに…」'],col:'#9ad0c0',msg:['むらびと「どうくつの ほねの まものは\nほのおの じゅもんが にがて らしい。」'],
    msg2:['むらびと「しろには やみの まものが うようよ いるって…。\nやくそうを わすれずに ね！」'],
    msg3:['むらびと「こおりの せかいには さまよう きょじんが いるって…。\nちかづくと おいかけて くるらしいわ！」'],
    msg4:['むらびと「ヴォルガって もとは わるいひとじゃ なかったって\nおばあちゃんが いってたけど… ほんとう かしら。」']},
   {x:5,y:9,shop:true,kind:'shop',col:'#e8c880',msg:[]},
   {x:1,y:11,kind:'musume',role:'haha',col:'#e8b0c0',msg:[]},
-  {x:7,y:8,kind:'musume',small:true,col:'#90c8e8',heir:1,msgCleared:['こども「ゆうしゃさま、かったんだね！ むらの みんな、\nきのうから ずーっと おまつりみたいだよ！」','こども「わたしも いつか、ゆうしゃさまみたいに\nつよくて やさしい ひとに なるんだ！」'],msg:['こども「おおきくなったら わたしが たまを まもるんだ！\nだから ゆうしゃさま、まけちゃ だめだよ！」'],msgHeir:['こども「むねの おくが、まだ ぽかぽか してるの。\nわたし、いつか ちゃんと うけとめて みせるよ！」'],msgAnswered:['こども「ひかりはね、えらばないんだって！\nうけとめれば、だれにでも やどるんだって！」','こども「だから わたし、おおきな うつわに なるの。\nゆうしゃさまみたいに！」']},
+  {x:10,y:10,kind:'musume',small:true,col:'#90c8e8',heir:1,msgCleared:['こども「ゆうしゃさま、かったんだね！ むらの みんな、\nきのうから ずーっと おまつりみたいだよ！」','こども「わたしも いつか、ゆうしゃさまみたいに\nつよくて やさしい ひとに なるんだ！」'],msg:['こども「おおきくなったら わたしが たまを まもるんだ！\nだから ゆうしゃさま、まけちゃ だめだよ！」'],msgHeir:['こども「むねの おくが、まだ ぽかぽか してるの。\nわたし、いつか ちゃんと うけとめて みせるよ！」'],msgAnswered:['こども「ひかりはね、えらばないんだって！\nうけとめれば、だれにでも やどるんだって！」','こども「だから わたし、おおきな うつわに なるの。\nゆうしゃさまみたいに！」']},
   {x:14,y:9,kind:'stone',col:'#9aa4b8',stoneKey:'t1',msg:['せきひ「ひかりのたまは よを てらす。\nこれを まもる ものを ── けいしょうしゃ と よぶ。」']}],
  king:{x:3,y:10}},
 forest:{
@@ -2077,6 +2081,7 @@ function updateBars(){
   $('#flv').textContent=p.lv;$('#blv').textContent=p.lv;
   $('#fgold').textContent=Game.gold;
   {const _fd=$('#fdiff');if(_fd)_fd.textContent=curDiff().name;}
+  {const _fw=$('#fweap');if(_fw)_fw.textContent=Game.weaponAtk?('⚔ '+(WNAME[Game.weaponAtk]||'ぶき')):'';}
   setBar($('#fhp'),$('#fhpn'),p.hp,p.mhp);setBar($('#bhp'),$('#bhpn'),p.hp,p.mhp);
   setBar($('#fmp'),$('#fmpn'),p.mp,p.mmp);setBar($('#bmp'),$('#bmpn'),p.mp,p.mmp);
   if(typeof updateBadge==='function')updateBadge();
@@ -8041,6 +8046,10 @@ async function badEnd(){
 function updateBattle(dt){
   const bt=Game.bt;if(!bt)return;
   bt.t+=dt;
+  {const f=document.getElementById('ehpfill');
+   if(f&&bt.mhp){const r=Math.max(0,bt.hp)/bt.mhp;
+     f.style.width=(r*100)+'%';
+     f.style.background=r>0.5?'#8fd0a0':r>0.25?'#ffd86b':'#ff7a6a';}}
   if(bt.intro){
     bt.intro=Math.max(0,bt.intro-dt*2.8);
     if(bt.intro<=0.12&&!bt.introPuff){
