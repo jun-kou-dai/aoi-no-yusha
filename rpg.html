@@ -121,6 +121,8 @@ body{
   padding:max(10px, env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom)); }
 .b-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; width:100%; padding-right:48px; } /* 右上の🔊ボタンとHP/MPチップの重なり防止 */
 #ename{ font-size:clamp(13px,2.2vmin,17px); letter-spacing:.08em; }
+#fastbtn{ cursor:pointer; font-size:clamp(11px,1.9vmin,14px); align-self:flex-start; opacity:.85; }
+#fastbtn.on{ color:#ffd86b; border-color:rgba(255,216,107,.6); opacity:1; }
 #enamewrap{ display:flex; flex-direction:column; gap:4px; min-width:120px; }
 #ehpbar{ width:100%; height:6px; background:rgba(255,255,255,.16); border-radius:3px; overflow:hidden; }
 #ehpfill{ display:block; height:100%; width:100%; background:#8fd0a0; border-radius:3px; transition:width .25s ease, background .25s ease; }
@@ -459,6 +461,7 @@ body{
   <div id="ui-battle" class="ui">
     <div class="b-top">
       <div class="chip glass" id="enamewrap"><div id="ename">スライム</div><div id="ehpbar"><i id="ehpfill"></i></div></div>
+      <div class="chip glass" id="fastbtn">⚡ はやさ ×1</div>
       <div class="chip glass" id="bstat">
         <span class="lv">LV <b id="blv">1</b></span>
         <span class="bgrp"><span class="blabel">HP</span><span class="bar"><i id="bhp"></i></span><span class="num" id="bhpn">26/26</span></span>
@@ -512,7 +515,7 @@ const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
 const lerp=(a,b,t)=>a+(b-a)*t;
 const rnd=(a=1,b)=>b===undefined?Math.random()*a:a+Math.random()*(b-a);
 const ri=(a,b)=>Math.floor(rnd(a,b+1));
-const wait=s=>new Promise(r=>setTimeout(r,s*1000));
+const wait=s=>new Promise(r=>setTimeout(r,s*1000*((Game&&Game.fastBattle&&Game.scene==='battle')?0.5:1)));
 function tileHash(x,y){let h=(x*374761393+y*668265263)|0;h=((h^(h>>>13))*1274126177)|0;return((h^(h>>>16))>>>0)/4294967296;}
 function rr(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 
@@ -2279,6 +2282,10 @@ function renderStatus(){
   h+=row('ぶき',wname,Game.weaponAtk?('こうげき +'+Game.weaponAtk+(WFXDESC[Game.weaponAtk]?'・'+WFXDESC[Game.weaponAtk]:'')):'');
   h+=row('よろい',aname,(Game.armorDef||0)?('しゅび +'+Game.armorDef+(AFXDESC[Game.armorDef]?'・'+AFXDESC[Game.armorDef]:'')):'');
   h+=row('たて',Game.shield?'てつのたて':'なし',Game.shield?'しゅび +6':'');
+  {ownGear();
+   const bag=[...Game.ownW.map(v=>(WNAME[v]||'ぶき')+(v===Game.weaponAtk?'●':'')),
+              ...Game.ownA.map(v=>(ANAME[v]||'よろい')+(v===Game.armorDef?'●':''))];
+   h+=row('そうびの ふくろ',bag.join('　'),'●=そうびちゅう。つけかえは どうぐ から');}
   {const dj=[];if(Game.door)dj.push('どこでもドア');if(Game.cloak)dj.push('とうめいマント');if(Game.book)dj.push('冒険の書');if(Game.mkey)dj.push('まほうのかぎ');
    h+='<h3 class="bisle">だいじなもの</h3>'+row('',dj.length?dj.join('　'):'なし');}
   {const sp=[['メラ',1],['キアリー',2],['ギラ',3],['ヒャド',4],['ベホイミ',5],['バイキルト',6],['ベギラマ',7],['ヒャダルコ',8],['ベホマ',11],['ベギラゴン',12],['マヒャド',13]];
@@ -2592,7 +2599,7 @@ function updateMsg(dt){
   }else if(Game.scene==='battle'){
     // せんとうだけ じどうで ながれる（よみじかんは ながさに ひれい・タップで そくざに おくれるのは そのまま）
     MSG.timer+=dt;
-    if(MSG.timer>=Math.max(0.55,0.26+MSG.full.length*0.045))finishMsg();
+    {const sp=(Game.fastBattle?0.55:1);if(MSG.timer>=Math.max(0.55*sp,(0.26+MSG.full.length*0.045)*sp))finishMsg();}
   }
 }
 function finishMsg(){
@@ -3002,6 +3009,12 @@ function toggleTalkOff(){
   toast(Game.talkOff?'はなしかけない モード。あるいても むらびとに はなしかけない（タップで えらべば はなせる）':'はなしかけ できるように もどした。');
   saveGame();
 }
+(function(){const fb=document.getElementById('fastbtn');
+  if(fb)fb.addEventListener('pointerdown',e=>{e.stopPropagation();
+    Game.fastBattle=!Game.fastBattle;sfxSel();
+    fb.classList.toggle('on',!!Game.fastBattle);
+    fb.textContent=Game.fastBattle?'⚡ はやさ ×2':'⚡ はやさ ×1';
+  });})();
 function updateTalkBtn(){
   const b=document.getElementById('talkbtn');if(!b)return;
   b.classList.toggle('on',!!Game.talkOff);
