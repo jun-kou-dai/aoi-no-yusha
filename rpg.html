@@ -549,7 +549,8 @@ grass:{
  spawns:[
   {id:'slime',x:4, y:7},
   {id:'crow', x:10,y:8},
-  {id:'golem',x:15,y:5}],
+  {id:'golem',x:15,y:5},
+  {id:'gslime',x:6,y:4}],
  chests:[
   {x:3, y:2,  item:'tane'},
   {x:2, y:7,  item:'yakuso'},
@@ -2965,7 +2966,7 @@ function toggleTalkOff(){
 function updateTalkBtn(){
   const b=document.getElementById('talkbtn');if(!b)return;
   b.classList.toggle('on',!!Game.talkOff);
-  b.textContent=Game.talkOff?'🤫 はなさない':'💬 はなしかけ';
+  b.textContent=Game.talkOff?'🤫 はなしかけ OFF':'💬 はなしかけ ON';
 }
 function updateCloakBtn(){
   const b=document.getElementById('cloakbtn');if(!b)return;
@@ -6727,7 +6728,8 @@ function powerAdvice(recLv){
   if(recLv&&p.lv<recLv)L.push('つぎの あいてには レベル'+recLv+'くらい ほしい（いま レベル'+p.lv+'）。');
   const place=p.lv<=4?'むらの まわりや もり':(p.lv<=7?'どうくつの あたり':(p.lv<=9?'こおりの しま':(p.lv<=11?'かざんの しま':'いまの しまの まものたち')));
   L.push('しゅぎょうは '+place+'が ちょうどいい。よるの くさはらは けいけんちが おおいぞ。');
-  L.push('きんいろスライムは おかねもち、ぎんいろの メタルスライムは けいけんちの かたまりだ。にがさず たおせ。');
+  L.push('おかねなら むらの いけの ほとりに すむ きんいろスライムだ。1ぴきで 65ゴールドに なる。');
+  L.push('ぎんいろの メタルスライムは けいけんちの かたまりだ。にがさず たおせ。');
   const b=bestBuy();
   if(b)L.push('いまの おかねで '+b.town+'の「'+b.label+'」が かえる。そうびで ぐっと つよくなるぞ。');
   else L.push('おかねが たまったら みせで つよい ぶきと よろいを かならず かおう。それが いちばん きく。');
