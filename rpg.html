@@ -143,7 +143,8 @@ body{
 #cmdwin.on{ display:flex; }
 .mtitle{ font-size:clamp(11px,1.8vmin,13px); letter-spacing:.28em; color:#aeb8de; text-align:center;
   padding:2px 0 8px; border-bottom:1px solid rgba(236,229,207,.14); margin-bottom:6px; }
-#mlist{ display:flex; flex-direction:column; gap:2px; }
+#mlist{ display:flex; flex-direction:column; gap:2px; flex:0 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+#mexit{ flex:none; display:flex; flex-direction:column; }
 .mi{ padding:8px 12px; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;
   font-size:clamp(14px,2.3vmin,18px); letter-spacing:.1em; transition:background .12s; }
 .mi::before{ content:'▶'; color:#f3ecd6; font-size:.72em; opacity:0; margin-right:10px; transition:opacity .1s; }
@@ -203,7 +204,7 @@ body{
 /* ---------- フィールド会話（戦闘UIを流用し 敵ヘッダだけ隠す） ---------- */
 #ui-battle.talk .b-top{ display:none; }
 #ui-battle.talk .b-bottom{ align-items:flex-start; }
-#ui-battle #cmdwin .mi:last-child{ position:sticky; bottom:-12px; margin-top:4px; background:linear-gradient(180deg,rgba(7,9,19,0),rgba(7,9,19,.97) 42%); } /* shop等の長メニュー：stretchを切りcmdwinのmax-height/overflowを効かせる(Safari対策) */
+#ui-battle #mexit .mi{ margin-top:4px; } /* shop等の長メニュー：stretchを切りcmdwinのmax-height/overflowを効かせる(Safari対策) */
 
 /* ---------- ミュート ---------- */
 #savebtn{ position:absolute; top:max(12px, env(safe-area-inset-top)); right:62px; z-index:70;
@@ -462,7 +463,7 @@ body{
     </div>
     <div class="b-bottom">
       <div id="msgwin" class="glass"><canvas id="mface" width="120" height="120"></canvas><div id="msgtext"></div><div class="adv">▼</div></div>
-      <div id="cmdwin" class="glass"><div class="mtitle" id="mtitle">コマンド</div><div id="mlist"></div></div>
+      <div id="cmdwin" class="glass"><div class="mtitle" id="mtitle">コマンド</div><div id="mlist"></div><div id="mexit"></div></div>
     </div>
   </div>
 
@@ -515,7 +516,7 @@ function rr(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);c.a
 // ============================================================
 const cv=$('#cv');let ctx=cv.getContext('2d');
 const stage=$('#stage'), fxL=$('#fx'), flashEl=$('#flashfx'), fadeEl=$('#fade');
-const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), cmdwinEl=$('#cmdwin'), mlistEl=$('#mlist'), mtitleEl=$('#mtitle');
+const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), cmdwinEl=$('#cmdwin'), mlistEl=$('#mlist'), mexitEl=$('#mexit'), mtitleEl=$('#mtitle');
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 let W=0,H=0,TM=0;
 
@@ -2577,7 +2578,7 @@ function ask(items,title){
   return new Promise(res=>{
     MENU={items,idx:0,res};
     mtitleEl.textContent=title||'コマンド';
-    mlistEl.innerHTML='';
+    mlistEl.innerHTML='';mexitEl.innerHTML='';
     items.forEach((it,i)=>{
       const d=document.createElement('div');
       d.className='mi'+(it.dis?' dis':'');
@@ -2585,7 +2586,7 @@ function ask(items,title){
       d.querySelector('.mlabel').textContent=it.label;
       d.addEventListener('pointerenter',()=>{if(MENU){MENU.idx=i;renderCursor();}});
       d.addEventListener('pointerdown',e=>{e.stopPropagation();if(MENU){MENU.idx=i;renderCursor();chooseMenu();}});
-      mlistEl.appendChild(d);
+      (i===items.length-1?mexitEl:mlistEl).appendChild(d);
     });
     cmdwinEl.classList.add('on');
     renderCursor();
@@ -2593,7 +2594,7 @@ function ask(items,title){
 }
 function renderCursor(){
   if(!MENU)return;
-  [...mlistEl.children].forEach((el,i)=>el.classList.toggle('cur',i===MENU.idx));
+  [...mlistEl.children,...mexitEl.children].forEach((el,i)=>el.classList.toggle('cur',i===MENU.idx));
 }
 function chooseMenu(){
   if(!MENU)return;
@@ -3483,18 +3484,30 @@ async function runShop(){
     :'しょうにん「いらっしゃい！ ぶきと どうぐの みせだよ。」');
   while(true){
     const list=[];
+    let soldW=false,hadW=false,soldA=false,hadA=false;
     for(const it of SHOP){
       if(it.town&&Game.mapId!==it.town)continue; // 町かぎり品（まほうのかぎ＝ゆきのまち）
+      if(it.atk)soldW=true;
+      if(it.armor)soldA=true;
       if(it.atk&&Game.weaponAtk>=it.atk)continue;
       if(it.armor&&Game.armorDef>=it.armor)continue;
+      if(it.atk)hadW=true;
+      if(it.armor)hadA=true;
       if(it.def&&Game.shield)continue;
       if(it.key&&Game[it.key])continue; // 買い切り品（どこでもドア など）所持済みは ならべない
       const sp=it.atk?' ⚔+'+it.atk:(it.armor?' 🛡+'+it.armor:(it.def?' 🛡+'+it.def:'')); // 性能を そのばで くらべられるように
       list.push({id:it.id,label:it.label+sp+'  '+it.cost+'G',dis:Game.gold<it.cost});
     }
+    if(soldA&&!hadA)list.unshift({id:'infoA',label:'よろい：いまが この みせの さいきょう',dis:true});
+    if(soldW&&!hadW)list.unshift({id:'infoW',label:'ぶき：いまが この みせの さいきょう',dis:true});
     list.push({id:'back',label:'やめる'});
     const c=await ask(list,'かいもの（'+Game.gold+'G）');
     if(c==='back'){await say('しょうにん「まいど あり！ また きてくれよな。」');return;}
+    if(c==='infoW'||c==='infoA'){
+      const better=SHOP.some(it=>c==='infoW'?(it.atk&&it.atk>Game.weaponAtk):(it.armor&&it.armor>Game.armorDef));
+      await say(better?'しょうにん「ゆきのまちの みせなら もっと つよい そうびを あつかって いるよ。」'
+                      :'しょうにん「あんたの そうびは せかいいちだ！\nうちに それいじょうの しなは ないね。」');
+      continue;}
     const it=SHOP.find(s=>s.id===c);
     if(Game.gold<it.cost){await say('しょうにん「おっと、おかねが たりないよ！」');continue;}
     Game.gold-=it.cost;
