@@ -2330,6 +2330,24 @@ function renderQuest(){
     return '<div class="strow"><span class="stlabel">'+l+'</span><span class="stval">'+v+(sub?'<span class="stsub">'+sub+'</span>':'')+'</span></div>';
   };
   let h='<div class="qgoal">'+questText()+'</div>';
+  h+='<h3 class="bisle">でんせつのそうび</h3>';
+  {ownGear();
+   const LEG=[
+    {t:'w',v:52,hint:'くにを すくった ものに、おうが さずける という…'},
+    {t:'w',v:16,hint:'ちそこの たからのまに ねむる…（ゆきのまちの ちょうろうが しっている）'},
+    {t:'w',v:44,hint:'さとの ひろばの ぬしが、ほどけた あとに のこす という…'},
+    {t:'w',v:56,hint:'とわの ふちの はてに…'},
+    {t:'a',v:20,hint:'ようがんの きょじんの からだの ひみつ…'},
+    {t:'a',v:28,hint:'ひかりの こだまの なごり…'}];
+   let got=0;
+   for(const L of LEG){
+     const own=(L.t==='w'?Game.ownW:Game.ownA).includes(L.v);
+     if(own)got++;
+     const nm=own?((L.t==='w'?WNAME[L.v]:ANAME[L.v])+'✦'):'？？？';
+     const sub=own?((L.t==='w'?WFXDESC[L.v]:AFXDESC[L.v])||''):L.hint;
+     h+=row(nm,own?'てにいれた！':'',sub);
+   }
+   h=h.replace('でんせつのそうび</h3>','でんせつのそうび（'+got+' / '+LEG.length+'）</h3>');}
   h+='<h3 class="bisle">やりのこし</h3>';
   {let tot=0,got=0;const rem=[];
    for(const id in WORLDS){const w=WORLDS[id];if(!w.chests)continue;let r=0;
