@@ -108,7 +108,7 @@ body{
 
 /* ---------- フィールド ---------- */
 #ui-field{ flex-direction:column; align-items:flex-start; }
-#fstat{ position:absolute; top:max(12px, env(safe-area-inset-top)); left:12px; flex-wrap:wrap; }
+#fstat{ position:absolute; top:max(12px, env(safe-area-inset-top)); left:12px; flex-wrap:wrap; pointer-events:auto; cursor:pointer; } /* .chipのnoneを上書き=タップで つよさ */
 #fstat .lv{ white-space:nowrap; } /* 狭幅で難易度名が縦に潰れないよう＋次行に回す */
 #toast{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 58px); left:50%; transform:translateX(-50%); /* チップの下＝HP/なんいど表示を隠さない */
   padding:10px 22px; font-size:clamp(12px,2.1vmin,15px); letter-spacing:.06em; color:#f4eedb;
@@ -121,7 +121,7 @@ body{
   padding:max(10px, env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom)); }
 .b-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; width:100%; padding-right:48px; } /* 右上の🔊ボタンとHP/MPチップの重なり防止 */
 #ename{ font-size:clamp(13px,2.2vmin,17px); letter-spacing:.08em; }
-#fastbtn,#autobtn{ cursor:pointer; font-size:clamp(11px,1.9vmin,14px); align-self:flex-start; opacity:.85; }
+#fastbtn,#autobtn{ cursor:pointer; pointer-events:auto; font-size:clamp(11px,1.9vmin,14px); align-self:flex-start; opacity:.85; } /* .chipのpointer-events:noneを上書き=実タップ必須 */
 #fastbtn.on,#autobtn.on{ color:#ffd86b; border-color:rgba(255,216,107,.6); opacity:1; }
 #enamewrap{ display:flex; flex-direction:column; gap:4px; min-width:120px; }
 #ehpbar{ width:100%; height:6px; background:rgba(255,255,255,.16); border-radius:3px; overflow:hidden; }
@@ -226,7 +226,7 @@ body{
 #itembtn:hover{ opacity:1; }
 #itembtn:active{ transform:scale(.94); }
 #spellbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 100px); right:12px; z-index:70;
-  padding:10px 14px; border-radius:14px; font-size:14px; color:#dfe6ff; cursor:pointer; opacity:.92; }
+  padding:10px 14px; border-radius:14px; font-size:14px; color:#dfe6ff; cursor:pointer; pointer-events:auto; opacity:.92; }
 #spellbtn:hover{ opacity:1; }
 #spellbtn:active{ transform:scale(.94); }
 #doorbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 150px); right:12px; z-index:70;
