@@ -7108,6 +7108,10 @@ async function runBattle(ref){
     Game.nightHintB=true;
     await say('よるの まものは ひるまより きょうぼうだ…！\nそのぶん けいけんちと ゴールドも おおいぞ！');
   }
+  if(!Game.hidden.autoTip&&!foe.boss&&!foe.mboss&&Game.stats.battles>=4){ // 4戦目以降の雑魚戦で一度だけ：戦闘チップの案内
+    Game.hidden.autoTip=true;
+    await say('（うえの 「🤖オート」を おすと かってに たたかってくれる。\n「⚡はやさ」で はやおくりも できるぞ）');
+  }
   if(foe.boss){
     // まおうの さそい（DQ1オマージュ）：こたえは そのつど きかれる
     if(Game.saidYes){
