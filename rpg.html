@@ -3514,11 +3514,51 @@ async function runInn(){
   await say('（ぼうけんのしょに きろくした）');
   endTalk();
 }
+const SELL_PRICE={yakuso:4,iyakuso:30,tokusen:125,seisui:40,dokukesi:6,bakudan:75,inazuma:200}; // 売値=定価の半分
+async function runSell(){
+  while(true){
+    const list=[];
+    for(const k of ['yakuso','iyakuso','tokusen','seisui','dokukesi','bakudan','inazuma']){
+      const n=Game.items[k]||0;
+      if(n>0)list.push({id:'i_'+k,label:ITEMS[k].name+' ×'+n+'　+'+SELL_PRICE[k]+'G'});
+    }
+    const wIt=SHOP.find(t=>t.atk&&t.atk===Game.weaponAtk);
+    const aIt=SHOP.find(t=>t.armor&&t.armor===Game.armorDef);
+    if(wIt)list.push({id:'eq_w',label:wIt.label+'（そうびちゅう）　+'+Math.floor(wIt.cost/2)+'G'});
+    if(aIt)list.push({id:'eq_a',label:aIt.label+'（そうびちゅう）　+'+Math.floor(aIt.cost/2)+'G'});
+    if(Game.shield)list.push({id:'eq_s',label:'てつのたて（そうびちゅう）　+30G'});
+    if(!list.length){await say('しょうにん「うれる ものは なさそうだね。\nまものを たおして どうぐを あつめて おいで。」');return;}
+    list.push({id:'back',label:'もどる'});
+    const c=await ask(list,'なにを うる？（'+Game.gold+'G）');
+    if(c==='back'||!c)return;
+    if(c&&c.startsWith&&c.startsWith('i_')){
+      const k=c.slice(2);
+      Game.items[k]--;Game.gold+=SELL_PRICE[k];
+      sfxChest();updateBars();
+      await say('しょうにん「'+ITEMS[k].name+'だね。'+SELL_PRICE[k]+'ゴールドで かいとろう！」');
+      continue;
+    }
+    // そうび中の武具の売却=はだか確認
+    const eq=c==='eq_w'?{lab:wIt.label,price:Math.floor(wIt.cost/2),apply:()=>{Game.weaponAtk=0;}}
+          :c==='eq_a'?{lab:aIt.label,price:Math.floor(aIt.cost/2),apply:()=>{Game.armorDef=0;}}
+          :{lab:'てつのたて',price:30,apply:()=>{Game.shield=false;}};
+    const ok=await ask([{id:'no',label:'やめておく'},{id:'yes',label:'うる'}],'そうびを うると まるごしに なるぞ？');
+    if(ok!=='yes')continue;
+    eq.apply();recalcStats();
+    Game.gold+=eq.price;
+    sfxChest();updateBars();
+    await say('しょうにん「'+eq.lab+'、たしかに うけとった！\n'+eq.price+'ゴールドだ。」');
+  }
+}
 async function runShop(){
   await say(Game.mbossDown
     ?'しょうにん「いらっしゃい！ ゴーレムたいじの えいゆうさん！\nこおりと ほのおの たびに そなえて いきな。」'
     :'しょうにん「いらっしゃい！ ぶきと どうぐの みせだよ。」');
   while(true){
+    const mode=await ask([{id:'buy',label:'かう'},{id:'sell',label:'うる'},{id:'exit',label:'やめる'}],'みせ（'+Game.gold+'G）');
+    if(mode!=='buy'&&mode!=='sell'){await say('しょうにん「まいど あり！ また きてくれよな。」');return;}
+    if(mode==='sell'){await runSell();continue;}
+    while(true){
     const list=[];
     let soldW=false,hadW=false,soldA=false,hadA=false;
     for(const it of SHOP){
@@ -3536,9 +3576,9 @@ async function runShop(){
     }
     if(soldA&&!hadA)list.unshift({id:'infoA',label:'よろい：いまが この みせの さいきょう',dis:true});
     if(soldW&&!hadW)list.unshift({id:'infoW',label:'ぶき：いまが この みせの さいきょう',dis:true});
-    list.push({id:'back',label:'やめる'});
+    list.push({id:'back',label:'もどる'});
     const c=await ask(list,'かいもの（'+Game.gold+'G）');
-    if(c==='back'){await say('しょうにん「まいど あり！ また きてくれよな。」');return;}
+    if(c==='back'||!c)break;
     if(c==='infoW'||c==='infoA'){
       const better=SHOP.some(it=>c==='infoW'?(it.atk&&it.atk>Game.weaponAtk):(it.armor&&it.armor>Game.armorDef));
       await say(better?'しょうにん「ゆきのまちの みせなら もっと つよい そうびを あつかって いるよ。」'
@@ -3568,6 +3608,7 @@ async function runShop(){
       await say('やくそうを こうにゅうした！');
     }
     updateBars();
+    }
   }
 }
 
