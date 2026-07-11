@@ -3237,6 +3237,32 @@ async function talkKing(){
   }
   saveGame();
   await say('おうさま「そなたの ぼうけんを ぼうけんのしょに\nきろくして おいたぞ。」');
+  while(true){
+    const c=await ask([{id:'go',label:'たびに もどる'},{id:'tips',label:'つよくなる コツを きく'},{id:'diff',label:'たびの きびしさを かえる'}],'おうさまに そうだん');
+    if(c==='tips'){
+      const d=questDest(); const rec=d.map?(RECLV[d.map]||1):null;
+      for(const ln of powerAdvice(rec))await say('おうさま「'+ln+'」');
+      continue;
+    }
+    if(c==='diff'){
+      const cur=Game.diff;
+      const items=[];
+      for(let i=1;i<=7;i++)items.push({id:String(i),label:(i===cur?'▶ ':'')+DIFF[i].name+(i===1?'（のんびり）':i===2?'（おすすめ）':i===3?'（てごたえ）':i===4?'（かなり きびしい）':i===5?'（じゅくれんしゃ よう）':i===6?'（げきむず）':'（クリアふのう きゅう）')});
+      items.push({id:'back',label:'やめる'});
+      const dl=await ask(items,'たびの きびしさ（いま：'+DIFF[cur].name+'）');
+      if(dl&&dl!=='back'){
+        const nd=+dl;
+        if(nd>=5&&nd>cur){
+          const ok=await ask([{id:'yes',label:'のぞむところだ'},{id:'no',label:'やめておく'}],'とても きびしい みちだ。ほんとうに いいか？');
+          if(ok!=='yes')continue;
+        }
+        Game.diff=nd;updateBars();saveGame();
+        await say('おうさま「よかろう。きょうから たびの きびしさは\n「'+DIFF[nd].name+'」じゃ。いつでも また かえに くるがよい。」');
+      }
+      continue;
+    }
+    break;
+  }
   endTalk();
 }
 // 物語2幕「さらわれた むすめ」：中ボス後に こおりへ 入ると 発生（フラグ先行セットで再入防止）
@@ -6546,6 +6572,31 @@ function drawExitBeacons(){
   }
 }
 // めあてビーコン：いま すべきことの ばしょに 金の光柱（でぐちと同型・どのoverlayにも つぶされない）
+// しまごとの めやすレベル（この つよさが あれば あんしん）
+const RECLV={grass:1,forest:4,cave:5,ice:8,icetown:8,cave2:11,volcano:10,castle:12,sunken:13,mistsea:13,minamoto:15,edge:15,towa:16};
+// いま かえる いちばん いい そうび（みせ・まち限定も 案内）
+function bestBuy(){
+  let bw=null,ba=null;
+  for(const it of SHOP){
+    if(it.atk&&it.atk>Game.weaponAtk&&it.cost<=Game.gold)if(!bw||it.atk>bw.atk)bw=it;
+    if(it.armor&&it.armor>(Game.armorDef||0)&&it.cost<=Game.gold)if(!ba||it.armor>ba.armor)ba=it;
+  }
+  const pick=bw||ba; if(!pick)return null;
+  const town=pick.town==='icetown'?'ゆきのまちの みせ':'むらの みせ';
+  return {label:pick.label,town};
+}
+// つよくなる ための ぐたいてきな コツ（レベル・そうび・かせぎ）
+function powerAdvice(recLv){
+  const p=Game.p,L=[];
+  if(recLv&&p.lv<recLv)L.push('つぎの あいてには レベル'+recLv+'くらい ほしい（いま レベル'+p.lv+'）。');
+  const place=p.lv<=4?'むらの まわりや もり':(p.lv<=7?'どうくつの あたり':(p.lv<=9?'こおりの しま':(p.lv<=11?'かざんの しま':'いまの しまの まものたち')));
+  L.push('しゅぎょうは '+place+'が ちょうどいい。よるの くさはらは けいけんちが おおいぞ。');
+  L.push('きんいろスライムは おかねもち、ぎんいろの メタルスライムは けいけんちの かたまりだ。にがさず たおせ。');
+  const b=bestBuy();
+  if(b)L.push('いまの おかねで '+b.town+'の「'+b.label+'」が かえる。そうびで ぐっと つよくなるぞ。');
+  else L.push('おかねが たまったら みせで つよい ぶきと よろいを かならず かおう。それが いちばん きく。');
+  return L;
+}
 // 主線の「いま めざす しま」と ことばの せつめい（みちびき）
 function questDest(){
   const h=Game.hidden,p=Game.purified||0;
@@ -6583,6 +6634,14 @@ async function questGuide(){
   startTalk();sfxSel();
   await say('みちびきの こえ「'+d.exp+'」');
   if(!d.map){endTalk();return;}
+  // つよさが たりないなら、まず きたえかたを おしえる（むぼうな とつげきを させない）
+  {const rec=RECLV[d.map]||1;
+   if(Game.p.lv<rec&&d.map!=='grass'){
+     await say('みちびきの こえ「……だが いまの きみには まだ はやい。」');
+     for(const ln of powerAdvice(rec))await say('みちびきの こえ「'+ln+'」');
+     await say('みちびきの こえ「じゅんびが できたら、また もくてきを タップして くれ。」');
+     endTalk();return;
+   }}
   if(d.map===Game.mapId){
     endTalk();
     const ts=questBeaconTargets();
@@ -7572,6 +7631,10 @@ async function defeat(){
   startTalk();
   await say('おうさま「しんでしまうとは なさけない！」');
   await say('おうさま「だが あきらめては ならぬ。'+(lost>0?'\nゴールドの はんぶん（'+lost+'G）を ついやして いきかえらせたぞ。':'\nもういちど たちあがるのだ。')+'」');
+  {const d=questDest(); const rec=d.map?(RECLV[d.map]||1):null;
+   const adv=powerAdvice(rec);
+   await say('おうさま「'+adv[0]+'」');
+   if(adv.length>1)await say('おうさま「'+adv[adv.length-1]+'\nくわしくは わしに はなしかけて「つよくなる コツ」を きけ。」');}
   endTalk();
   saveGame();
 }
@@ -9230,7 +9293,7 @@ async function openingSequence(){
   await say('おうさま「おお、めざめたか ゆうしゃよ。まっておったぞ。」');
   await say('おうさま「たびの まえに、この ぼうけんの てごわさを きめておこう。」');
   // なんいど せんたく（Lv1〜7・Lv2=きじゅん）
-  const dl=await ask([{id:'1',label:'やさしい'},{id:'2',label:'ふつう（おすすめ）'},{id:'3',label:'むずかしい'},{id:'4',label:'ごくむず'},{id:'5',label:'でんせつ'},{id:'6',label:'しんわ'},{id:'7',label:'しんぱん'}],'なんいど');
+  const dl=await ask([{id:'1',label:'やさしい（のんびり）'},{id:'2',label:'ふつう（おすすめ）'},{id:'3',label:'むずかしい（てごたえ）'},{id:'4',label:'ごくむず（かなり きびしい）'},{id:'5',label:'でんせつ（じゅくれんしゃ よう）'},{id:'6',label:'しんわ（げきむず）'},{id:'7',label:'しんぱん（クリアふのう きゅう）'}],'なんいど（あとで おうさまに たのめば かえられる）');
   Game.diff=(+dl>=1&&+dl<=7)?+dl:2;
   await say('おうさま「やみのおう ヴォルガが ひかりのたまを うばい、\nせかいは ながい よるに のまれかけて おる。」');
   await say('おうさま「やつが なぜ たまを ねらったのか… それは まだ いえぬ。\nいつか そなたも しる ときが こよう。」');
