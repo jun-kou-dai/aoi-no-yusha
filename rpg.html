@@ -1096,7 +1096,9 @@ const SHOP=[
 // でんせつのぶき: weaponAtkの値が武器の同一性(全武器で一意)。効果はここで引く
 const WEAPONFX={16:{twice:true},44:{vsKage:1.5},52:{critUp:0.05},56:{critUp:0.08}};
 const WNAME={5:'どうのつるぎ',12:'はがねのつるぎ',16:'はやぶさのつるぎ',20:'ほのおのつるぎ',26:'ゆうしゃのつるぎ',36:'ふぶきのつるぎ',44:'かげぬいの たち',48:'らいめいのつるぎ',52:'おうじゃのけん',56:'とわのつるぎ'};
-const ANAME={4:'かわのよろい',9:'くさりかたびら',16:'はがねのよろい',24:'まほうのよろい',34:'ひかりのよろい'};
+const ANAME={4:'かわのよろい',9:'くさりかたびら',16:'はがねのよろい',20:'りゅうのうろこ',24:'まほうのよろい',28:'せいれいのころも',34:'ひかりのよろい'};
+// でんせつのよろい効果: 20=りゅうのうろこ(炎と聖の息を3割減) / 28=せいれいのころも(8%で攻撃をかわす)
+const ARMORFX={20:{elemGuard:0.7},28:{dodge:0.08}};
 // そうびの袋: 買った/授かった装備は消えず ここに残る(付け替え・売却可)。weaponAtk値=同一性
 function ownGear(){
   Game.ownW=Game.ownW||[];Game.ownA=Game.ownA||[];
@@ -2261,7 +2263,7 @@ function renderStatus(){
   const p=Game.p,lv=p.lv;
   const row=(l,v,sub)=>'<div class="strow"><span class="stlabel">'+l+'</span><span class="stval">'+v+(sub?'<span class="stsub">'+sub+'</span>':'')+'</span></div>';
   const wname=(WNAME[Game.weaponAtk]||(Game.weaponAtk?'ふしぎな ぶき':'すで'))+(WEAPONFX[Game.weaponAtk]?'✦':'');
-  const aname=(Game.armorDef||0)>=34?'ひかりのよろい':(Game.armorDef||0)>=24?'まほうのよろい':(Game.armorDef||0)>=16?'はがねのよろい':(Game.armorDef||0)>=9?'くさりかたびら':(Game.armorDef||0)>=4?'かわのよろい':'ぬののふく';
+  const aname=(ANAME[Game.armorDef||0]||((Game.armorDef||0)?'ふしぎな よろい':'ぬのの ふく'))+(ARMORFX[Game.armorDef||0]?'✦':'');
   const nextExp=lv<MAXLV?(LEVELS[lv+1].exp-p.exp):null;
   let h='<h3 class="bisle">のうりょく</h3>';
   h+=row('レベル',lv);
@@ -3758,7 +3760,11 @@ const HIDDENS=[
  {map:'volcano',x:11,y:10,key:'h7',gold:80,msg:'ようがんの そばに とけのこった ふくろ…\n80ゴールドも はいっている！'},
  {map:'castle',x:2,y:3,key:'h8',gold:120,msg:'いにしえの ゆうしゃの さいふだ…！\n120ゴールドを てにいれた！'},
  {map:'cave2',x:2,y:11,key:'h9',gold:100,msg:'ほねの やまの かげに ふるびた ふくろが…\n100ゴールドを てにいれた！'},
- {map:'cave2',x:16,y:5,key:'h10',gold:150,msg:'とびらの おくの こばこに 150ゴールドも はいっていた！'}];
+ {map:'cave2',x:16,y:5,key:'h10',gold:150,msg:'とびらの おくの こばこに 150ゴールドも はいっていた！'},
+ {map:'sunken',x:2,y:10,key:'h11',gold:250,msg:'しずんだ いえの かげに ぬれた かわぶくろ…\n250ゴールドも はいっていた！'},
+ {map:'mistsea',x:2,y:2,key:'h12',gold:300,msg:'きりの おくの いわだなに ふるい はこ…\n300ゴールドを てにいれた！'},
+ {map:'minamoto',x:1,y:11,key:'h13',gold:400,msg:'おおきの うろに きんかが かくされていた…！\n400ゴールドを てにいれた！'},
+ {map:'towa',x:17,y:6,key:'h14',gold:500,msg:'とわの ほとりに、いにしえの たびびとの ざいふ…\n500ゴールドも はいっていた！'}];
 function openChest(c){
   const p=Game.p;
   if(Game.chestsOpen.includes(c))return;
@@ -7710,9 +7716,18 @@ async function enemyAction(){
   if(!fire&&!holy)shakeBattle(heavy?12:9,heavy?0.45:0.35);
   flash('#c83030',fire||holy||heavy?0.36:0.22,0.45);
   if(foe.boss)playerBloodFx(fire||holy||heavy);
+  {const afx=ARMORFX[Game.armorDef]||{};
+   if(afx.dodge&&Math.random()<afx.dodge){
+     sfxRun();
+     const c0=playerChipPos();popup(c0.x,c0.y,'ミス','sp');
+     await say('せいれいの ころもが ゆらめき、こうげきを かわした！');
+     return;
+   }}
   let d=calcDmg(atk,(bt.abreak>0?Math.round(p.def*0.5):p.def)); // ぼうぎょくずし中は まもり半分（7割ではminFrac下限に沈んで体感ゼロ＝Lv16実測で確認）
   {const Dc0=curDiff(),mf=foe.boss?(Dc0.bossMinFrac||Dc0.minFrac||0):(Dc0.minFrac||0);
    d=Math.max(d,Math.round(atk*mf));} // なんいど：被ダメ下限。ボスはbossMinFrac優先（ふつう帯ボスの被弾が空気になる対処・未定義はminFracへ＝でんせつ以上とざこ・中ボスは不変）
+  {const afx=ARMORFX[Game.armorDef]||{};
+   if(afx.elemGuard&&(fire||holy))d=Math.max(1,Math.round(d*afx.elemGuard));}
   {const Dc=curDiff();d=Math.min(d,Math.max(1,Math.round(p.mhp*((fire||holy||heavy)?Dc.capHeavy:Dc.capNorm))));} // なんいど：被ダメ上限（即死防止・大技は高め天井）
   let kabau=false;
   if(bt.guard)d=Math.max(1,Math.ceil(d*0.45)); // ぼうぎょで 55%カット
@@ -7756,6 +7771,17 @@ async function victory(){
     await say(ggold+'ゴールドを てにいれた！');
   }
   if(foe.mboss&&foe===FOES.mboss){Game.mbossDown=true;showChapter('だい 2 しょう','こおりと ほのおの みち');}
+  if(foe===FOES.mgolem){
+    gainArmor(20);
+    await say('くずれた マグマの なかから、あかく かがやく うろこが——');
+    if(Game.armorDef<20){
+      Game.armorDef=20;recalcStats();updateBars();
+      sfxLevel();flash('#ff9a5a',0.4,0.9);
+      await say('でんせつのよろい りゅうのうろこを てにいれた！\n（しゅび+20・ほのおと ひかりの いきを 3わりへらす）');
+    }else{
+      await say('りゅうのうろこを てにいれた！（そうびの ふくろへ）');
+    }
+  }
   if(foe.winMsg)await say(foe.winMsg); // winMsgは ぜんての たいしょう（かげ雑魚の「ほどけ」も ここ）
   if(foe===FOES.satonushi){
     Game.hidden.sn1=true; // 章2b: さとぬし解放→フィールドで核心開示
@@ -7770,7 +7796,18 @@ async function victory(){
     }
   }
   if(foe===FOES.nukegara)Game.hidden.nk1=true; // 章2d: ぬけがら解放→フィールドで終章
-  if(foe===FOES.hikarinokodama)Game.hidden.ch3c=true; // 章3c: こだま=いのりを うけつぐ→いずみの しんじつ
+  if(foe===FOES.hikarinokodama){
+    Game.hidden.ch3c=true; // 章3c: こだま=いのりを うけつぐ→いずみの しんじつ
+    gainArmor(28);
+    await say('ひかりの なごりが おりかさなり、ころもの かたちに——');
+    if(Game.armorDef<28){
+      Game.armorDef=28;recalcStats();updateBars();
+      sfxLevel();flash('#f6ecc0',0.4,0.9);
+      await say('でんせつのよろい せいれいのころもを てにいれた！\n（しゅび+28・ときどき こうげきを ひらりと かわす）');
+    }else{
+      await say('せいれいのころもを てにいれた！（そうびの ふくろへ）');
+    }
+  }
   if(foe===FOES.kotae&&Game.hidden.ch3d&&!Game.hidden.towaGate){ // 裏: こたえを もつ ものが といを こえた→ふちが ひらく
     Game.hidden.towaGate=true;
     await say('たおれた といの おくで、くうかんが しずかに さけた——');
