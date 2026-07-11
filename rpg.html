@@ -5984,6 +5984,53 @@ function drawNpc(n){
   ctx.beginPath();ctx.ellipse(c.x+ts*0.02,fy,ts*0.19,ts*0.065,0,0,Math.PI*2);ctx.fill();
   ctx.save();
   ctx.translate(c.x,fy);
+  if(n.kind==='shop'){
+    // 露店：しょうにんの うしろに みせを たてる（「みせが みつからない」への絵の回答・当たり判定は不変）
+    ctx.save();
+    ctx.globalCompositeOperation='lighter'; // 吹雪・夜でも うかぶ 暖色の あかり
+    const gl=ctx.createRadialGradient(0,-ts*0.55,ts*0.1,0,-ts*0.55,ts*1.35);
+    gl.addColorStop(0,'rgba(255,205,120,0.30)');gl.addColorStop(1,'rgba(255,205,120,0)');
+    ctx.fillStyle=gl;ctx.beginPath();ctx.arc(0,-ts*0.55,ts*1.35,0,6.29);ctx.fill();
+    ctx.restore();
+    // 支柱
+    ctx.fillStyle='#5e3a20';
+    ctx.fillRect(-ts*0.56,-ts*0.98,ts*0.075,ts*0.98);
+    ctx.fillRect(ts*0.485,-ts*0.98,ts*0.075,ts*0.98);
+    ctx.strokeStyle=OL;ctx.lineWidth=olw;
+    ctx.strokeRect(-ts*0.56,-ts*0.98,ts*0.075,ts*0.98);
+    ctx.strokeRect(ts*0.485,-ts*0.98,ts*0.075,ts*0.98);
+    // テントやね（赤白ストライプ・すそは なみ形）
+    const awT=-ts*1.26, awB=-ts*0.92, awL=-ts*0.68, awR=ts*0.68, seg=(awR-awL)/5;
+    for(let i2=0;i2<5;i2++){
+      ctx.fillStyle=i2%2?'#f2ead6':'#d84848';
+      ctx.beginPath();
+      ctx.moveTo(awL+seg*i2,awT);ctx.lineTo(awL+seg*(i2+1),awT);
+      ctx.lineTo(awL+seg*(i2+1),awB);
+      ctx.arc(awL+seg*(i2+0.5),awB,seg*0.5,0,Math.PI);
+      ctx.lineTo(awL+seg*i2,awB);ctx.closePath();ctx.fill();
+    }
+    ctx.strokeStyle=OL;ctx.lineWidth=olw;
+    ctx.strokeRect(awL,awT,awR-awL,awB-awT);
+    // カウンター（このまえに しょうにんが たつ）
+    ctx.fillStyle='#a9713f';ctx.fillRect(-ts*0.60,-ts*0.30,ts*1.20,ts*0.07);
+    ctx.fillStyle='#7c4f28';ctx.fillRect(-ts*0.60,-ts*0.23,ts*1.20,ts*0.20);
+    ctx.strokeStyle=OL;ctx.strokeRect(-ts*0.60,-ts*0.30,ts*1.20,ts*0.27);
+    // ぶらさがる ⚔かんばん
+    const sw=Math.sin(TM*1.6+n.x)*ts*0.03;
+    ctx.fillStyle='#3a2a18';ctx.fillRect(ts*0.30+sw,-ts*0.92,ts*0.026,ts*0.16);
+    ctx.fillStyle='#efe6cf';ctx.fillRect(ts*0.20+sw,-ts*0.76,ts*0.24,ts*0.20);
+    ctx.strokeStyle=OL;ctx.strokeRect(ts*0.20+sw,-ts*0.76,ts*0.24,ts*0.20);
+    ctx.font='bold '+Math.max(9,Math.round(ts*0.15))+'px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='#7a3020';ctx.fillText('⚔',ts*0.32+sw,-ts*0.655);
+    // 「みせ」の じ（でぐちラベルと おなじ流儀・ふちどり つき）
+    ctx.font='bold '+Math.max(11,Math.round(ts*0.30))+'px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    const my=-ts*1.40+Math.sin(TM*1.8+n.x)*2.5;
+    ctx.lineWidth=3;ctx.strokeStyle='rgba(8,16,38,0.85)';ctx.strokeText('みせ',0,my);
+    ctx.fillStyle='rgba(255,238,190,'+(0.80+0.18*Math.sin(TM*2.6+n.x)).toFixed(2)+')';
+    ctx.fillText('みせ',0,my);
+  }
   if(n.kind==='stone'){
     // せきひ：いしばん＋ひかる きざみもじ（ひとの からだは えがかない）
     const sg=ctx.createLinearGradient(0,-ts*0.62,0,0);
