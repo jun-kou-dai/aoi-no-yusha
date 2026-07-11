@@ -1079,12 +1079,21 @@ const SHOP=[
   {id:'shield',label:'てつのたて',cost:60,def:6},
   {id:'dokukesi',label:'どくけしそう',cost:12,item:'dokukesi'},
   {id:'yakuso',label:'やくそう',cost:8},
+  {id:'iyakuso',label:'いいやくそう',cost:60,item:'iyakuso'},
+  {id:'bakudan',label:'ばくだんいし',cost:150,item:'bakudan'},
+  {id:'seisui2',label:'まほうのせいすい',cost:80,item:'seisui',town:'icetown'},
+  {id:'tokusen',label:'とくせんやくそう',cost:250,item:'tokusen',town:'icetown'},
+  {id:'inazuma',label:'いなずまだま',cost:400,item:'inazuma',town:'icetown'},
   {id:'door',label:'どこでもドア',cost:150,key:'door',hint:'フィールドの「🚪」ボタンで いつでも つかえる！'},
   {id:'cloak',label:'とうめいマント',cost:180,key:'cloak',hint:'フィールドの「👻」ボタンで ON/OFFできる！'},
   {id:'book',label:'冒険の書',cost:100,key:'book',hint:'フィールドの「📕」ボタンで モンスター図鑑を ひらける！'},
   {id:'mkey',label:'まほうのかぎ',cost:300,key:'mkey',town:'icetown',hint:'ちそこの とざされた とびらが ひらく！'}];
 const ITEMS={
   yakuso:{name:'やくそう'},
+  iyakuso:{name:'いいやくそう'},
+  tokusen:{name:'とくせんやくそう'},
+  bakudan:{name:'ばくだんいし'},
+  inazuma:{name:'いなずまだま'},
   seisui:{name:'まほうのせいすい'},
   dokukesi:{name:'どくけしそう'},
   tane:  {name:'ちからのたね'}};
@@ -1240,7 +1249,7 @@ function loadGame(){
   p.lv=Math.min(MAXLV,d.lv);p.exp=d.exp||0;p.bonusAtk=d.bonusAtk||0;
   Game.gold=d.gold||0;Game.weaponAtk=d.weaponAtk||0;Game.armorDef=d.armorDef||0;Game.shield=!!d.shield;
   Game.mbossDown=!!d.mbossDown;Game.springUsed=(d.springUsed&&typeof d.springUsed==='object')?d.springUsed:{};Game.saidYes=!!d.saidYes;
-  if(d.items)for(const k in Game.items)if(d.items[k])Game.items[k]=d.items[k];
+  if(d.items)for(const k in d.items)if(d.items[k])Game.items[k]=d.items[k]; // セーブ側のキーを正とする（新どうぐ追加時の取りこぼし防止）
   Game.kills=d.kills||0;Game.dmgTaken=d.dmgTaken||0;Game.goldT=d.goldT||12;
   Game.dayT=(typeof d.day==='number')?d.day:DAY_START;
   Game.qChild=d.qChild||0;Game.bonusDef=d.bonusDef||0;Game.bonusHp=d.bonusHp||0;Game.bonusMp=d.bonusMp||0;Game.gheart=d.gheart||0;Game.ng=d.ng||0;
@@ -2223,9 +2232,9 @@ function renderBook(){
   }
   h+='</div>';
   h+='<h3 class="bisle">じゅもん</h3><div class="bgear">'
-    +'<div class="bg">🔥 メラ（火）Lv1・MP3　／　ギラ（火）Lv3・MP7　／　ベギラマ（火）Lv7・MP12</div>'
-    +'<div class="bg">❄ ヒャド（氷）Lv4・MP5　／　ヒャダルコ（氷）Lv8・MP13</div>'
-    +'<div class="bg">💚 ホイミ Lv1・MP3　／　ベホイミ Lv5・MP8　／　キアリー（どく回復）Lv2・MP2</div>'
+    +'<div class="bg">🔥 メラ（火）Lv1・MP3　／　ギラ（火）Lv3・MP7　／　ベギラマ（火）Lv7・MP12　／　ベギラゴン（火）Lv12・MP20</div>'
+    +'<div class="bg">❄ ヒャド（氷）Lv4・MP5　／　ヒャダルコ（氷）Lv8・MP12　／　マヒャド（氷）Lv13・MP20</div>'
+    +'<div class="bg">💚 ホイミ Lv1・MP3　／　ベホイミ Lv5・MP8　／　ベホマ Lv11・MP22　／　キアリー（どく回復）Lv2・MP2</div>'
     +'</div>';
   return h;
 }
@@ -2248,7 +2257,7 @@ function renderStatus(){
   h+=row('たて',Game.shield?'てつのたて':'なし',Game.shield?'しゅび +6':'');
   {const dj=[];if(Game.door)dj.push('どこでもドア');if(Game.cloak)dj.push('とうめいマント');if(Game.book)dj.push('冒険の書');if(Game.mkey)dj.push('まほうのかぎ');
    h+='<h3 class="bisle">だいじなもの</h3>'+row('',dj.length?dj.join('　'):'なし');}
-  {const sp=[['メラ',1],['キアリー',2],['ギラ',3],['ヒャド',4],['ベホイミ',5],['バイキルト',6],['ベギラマ',7],['ヒャダルコ',8]];
+  {const sp=[['メラ',1],['キアリー',2],['ギラ',3],['ヒャド',4],['ベホイミ',5],['バイキルト',6],['ベギラマ',7],['ヒャダルコ',8],['ベホマ',11],['ベギラゴン',12],['マヒャド',13]];
    const learned=['ホイミ'].concat(sp.filter(s=>lv>=s[1]).map(s=>s[0]));
    h+='<h3 class="bisle">おぼえた じゅもん</h3>'+row('',learned.join('　'));}
   {const zAll=[].concat.apply([],BOOK_ISLES.map(pr=>pr[1])).concat(BOOK_SPECIAL);
@@ -2843,7 +2852,7 @@ async function useFieldItem(){
   const p=Game.p;
   startTalk();sfxSel();
   while(true){
-    const usable=['yakuso','seisui','dokukesi'].filter(k=>(Game.items[k]||0)>0);
+    const usable=['yakuso','iyakuso','tokusen','seisui','dokukesi','bakudan','inazuma'].filter(k=>(Game.items[k]||0)>0);
     if(!usable.length){await say('つかえる どうぐを もっていない。\nおみせで やくそうを かっておこう。');break;}
     const list=usable.map(k=>({id:k,label:(k==='seisui'?'せいすい':ITEMS[k].name)+' ×'+Game.items[k]}));
     list.push({id:'back',label:'もどる'});
@@ -2865,6 +2874,17 @@ async function useFieldItem(){
       p.mp+=n;updateBars();flash('#9fb6ff',0.18,0.5);
       {const q=playerChipPos();popup(q.x,q.y,'+'+n,'heal');}
       await say('せいすいを のんだ！\nMPが '+n+' かいふくした！');
+    }else if(c==='iyakuso'||c==='tokusen'){
+      if(p.hp>=p.mhp){await say('HPは まんたんだ！');continue;}
+      const big=c==='tokusen';
+      Game.items[c]--;
+      sfxHeal();
+      const n=Math.min(p.mhp-p.hp,big?200+ri(0,40):90+ri(0,20));
+      p.hp+=n;updateBars();flash('#9fe8b0',0.2,0.55);
+      {const q=playerChipPos();popup(q.x,q.y,'+'+n,'heal');}
+      await say((big?'とくせんやくそう':'いいやくそう')+'を つかった！\nHPが '+n+' かいふくした！');
+    }else if(c==='bakudan'||c==='inazuma'){
+      await say('これは たたかいの さいちゅうに つかう どうぐだ。');
     }else if(c==='dokukesi'){
       if(!p.poison){await say('いまは どくに かかっていない。');continue;}
       Game.items.dokukesi--;
@@ -2885,6 +2905,7 @@ async function useFieldSpell(){
   while(true){
     const list=[{id:'hoimi',label:'ホイミ',cost:3,dis:p.mp<3}];
     if(p.lv>=5)list.push({id:'behoimi',label:'ベホイミ',cost:8,dis:p.mp<8});
+    if(p.lv>=11)list.push({id:'behoma',label:'ベホマ',cost:22,dis:p.mp<22});
     if(p.lv>=2)list.push({id:'kiari',label:'キアリー',cost:2,dis:p.mp<2});
     list.push({id:'back',label:'もどる'});
     const c=await ask(list,'じゅもん（HP '+p.hp+'/'+p.mhp+'　MP '+p.mp+'/'+p.mmp+'）');
@@ -2899,6 +2920,15 @@ async function useFieldSpell(){
       p.hp+=n;updateBars();flash('#9fe8b0',0.18,0.5);
       {const q=playerChipPos();popup(q.x,q.y,'+'+n,'heal');}
       await say('ゆうしゃは '+(be?'ベホイミ':'ホイミ')+'を となえた！\nHPが '+n+' かいふくした！');
+    }else if(c==='behoma'){
+      if(p.mp<22){await say('MPが たりない！');continue;}
+      if(p.hp>=p.mhp){await say('HPは まんたんだ！');continue;}
+      p.mp-=22;
+      sfxHeal();
+      const n=p.mhp-p.hp;
+      p.hp=p.mhp;updateBars();flash('#b0ffd0',0.22,0.6);
+      {const q=playerChipPos();popup(q.x,q.y,'+'+n,'heal');}
+      await say('ゆうしゃは ベホマを となえた！\nHPが '+n+' かいふくした！');
     }else if(c==='kiari'){
       if(p.mp<2){await say('MPが たりない！');continue;}
       if(!p.poison){await say('いまは どくに かかっていない。');continue;}
@@ -3219,6 +3249,11 @@ async function talkKing(){
   }
   if(Game.hidden.cleared){
     await say('おうさま「やみのおうを うちやぶった まことの ゆうしゃよ！\nこの くにに よあけを かえした その な、わしは わすれぬぞ。」');
+    if(!Game.hidden.crown1){
+      Game.hidden.crown1=true;Game.gold+=500;updateBars();sfxChest();
+      await say('おうさま「くにを すくった ほうびじゃ。\n500ゴールドを とらせよう！」');
+      await say('おうさま「ゆきのまちの みせで、つよい そうびを\nととのえると よいぞ。」');
+    }
     if(Game.hidden.towaDown){
       await say('おうさま「とわの ふちを こえた ものよ……\nもはや わしが さずける ものは なにもない。」');
       await say('おうさま「この くにの ひかりを、これからも\nともに みまもって くれい。」');
@@ -7036,18 +7071,21 @@ async function commandPhase(){
       const list=[{id:'mera',label:'メラ',cost:3,dis:p.mp<3}];
       if(p.lv>=3)list.push({id:'gira',label:'ギラ',cost:7,dis:p.mp<7});
       if(p.lv>=7)list.push({id:'begirama',label:'ベギラマ',cost:12,dis:p.mp<12});
+      if(p.lv>=12)list.push({id:'begiragon',label:'ベギラゴン',cost:20,dis:p.mp<20});
       if(p.lv>=4)list.push({id:'hyado',label:'ヒャド',cost:5,dis:p.mp<5});
       if(p.lv>=8)list.push({id:'hyadaruko',label:'ヒャダルコ',cost:12,dis:p.mp<12});
+      if(p.lv>=13)list.push({id:'mahyado',label:'マヒャド',cost:20,dis:p.mp<20});
       list.push({id:'hoimi',label:'ホイミ',cost:3,dis:p.mp<3});
       if(p.lv>=5)list.push({id:'behoimi',label:'ベホイミ',cost:8,dis:p.mp<8});
+      if(p.lv>=11)list.push({id:'behoma',label:'ベホマ',cost:22,dis:p.mp<22});
       if(p.lv>=6)list.push({id:'baikiruto',label:'バイキルト',cost:6,dis:p.mp<6});
       if(p.lv>=2)list.push({id:'kiari',label:'キアリー',cost:2,dis:p.mp<2});
       list.push({id:'back',label:'もどる'});
       const s=await ask(list,'じゅもん');
       if(s==='back')continue;
-      const cost={mera:3,gira:7,begirama:12,hyado:5,hyadaruko:12,hoimi:3,behoimi:8,kiari:2,baikiruto:6}[s];
+      const cost={mera:3,gira:7,begirama:12,begiragon:20,hyado:5,hyadaruko:12,mahyado:20,hoimi:3,behoimi:8,behoma:22,kiari:2,baikiruto:6}[s];
       if(p.mp<cost){await say('MPが たりない！');continue;}
-      if((s==='hoimi'||s==='behoimi')&&p.hp>=p.mhp){await say('HPは まんたんだ！');continue;}
+      if((s==='hoimi'||s==='behoimi'||s==='behoma')&&p.hp>=p.mhp){await say('HPは まんたんだ！');continue;}
       if(s==='kiari'&&!Game.p.poison){await say('どくに かかっていない！');continue;}
       return{kind:s};
     }
@@ -7064,9 +7102,11 @@ async function commandPhase(){
   }
 }
 // じゅもんダメージ：mul<=0は0（むこう）、それいがいは さいてい1
-function spellDmg(base,mul){ return mul<=0?0:Math.max(1,Math.round(base*mul)); }
+let BOSO=false; // まほうのぼうそう（じゅもん会心10%×1.5）。spellDmgでロール→spellResultで演出
+function spellDmg(base,mul){ BOSO=false; if(mul<=0)return 0; let d=Math.max(1,Math.round(base*mul)); if(Math.random()<(curDiff().pcrit||0.1)){BOSO=true;d=Math.round(d*1.5);} return d; }
 // ダメージ表示＋ぞくせいの あいしょう（ばつぐん／いまひとつ／きかない）
 async function spellResult(foe,d,mul){
+  if(d>0&&BOSO){const bt=Game.bt;if(bt){bt.shock={t:0};}sfxCrit();flash('#ffe9b0',0.35,0.5);await say('まほうが ぼうそうした！');}
   if(d>0) await say(foe.name+'に '+d+'の ダメージ！');
   if(mul>1) await say('こうかは ばつぐん！');
   else if(mul<=0) await say(foe.name+'には きかない！');
@@ -7175,6 +7215,23 @@ async function playerAction(act){
       puff(ep.x,ep.y-ep.s*40,'rgba(255,245,210,.9)',26,190,0.55,{s0:2,s1:5});}
     await wait(0.15);
     await spellResult(bt.foe,d,mul);
+  }else if(act.kind==='begiragon'){
+    p.mp-=20;updateBars();
+    await say('ゆうしゃは ベギラゴンを となえた！');
+    bt.cast={t:0};
+    await wait(0.12);
+    bt.cast=null;
+    bt.spellFx={kind:'fire',t:0,pow:3};
+    sfxGira();bt.flash=1;bt.hitStop=0.11;bt.recoil=1.2;bt.blink=1;shakeBattle(18,0.65);
+    flash('#ffd066',0.55,0.8);
+    const mul=bt.foe.fireMul??1;
+    const d=spellDmg(p.atk+100-bt.foe.def+ri(0,10),mul);
+    bt.hp=Math.max(0,bt.hp-d);
+    if(d>0){popup(ep.x,ep.y-ep.s*70,d,'sp');
+      puff(ep.x,ep.y-ep.s*40,'rgba(255,210,130,.95)',60,340,0.9,{s0:3,s1:8});
+      puff(ep.x,ep.y-ep.s*40,'rgba(255,245,210,.9)',24,190,0.6,{s0:2,s1:5});}
+    await wait(0.16);
+    await spellResult(bt.foe,d,mul);
   }else if(act.kind==='hyado'){
     p.mp-=5;updateBars();
     await say('ゆうしゃは ヒャドを となえた！');
@@ -7208,6 +7265,23 @@ async function playerAction(act){
       puff(ep.x,ep.y-ep.s*40,'rgba(225,245,255,.9)',22,170,0.5,{s0:2,s1:5});}
     await wait(0.15);
     await spellResult(bt.foe,d,mul);
+  }else if(act.kind==='mahyado'){
+    p.mp-=20;updateBars();
+    await say('ゆうしゃは マヒャドを となえた！');
+    bt.cast={t:0};
+    await wait(0.12);
+    bt.cast=null;
+    bt.spellFx={kind:'ice',t:0,pow:3};
+    sfxGira();bt.flash=1;bt.hitStop=0.11;bt.recoil=1.2;bt.blink=1;shakeBattle(17,0.6);
+    flash('#a8e0ff',0.55,0.8);
+    const mul=bt.foe.iceMul??1;
+    const d=spellDmg(p.atk+100-bt.foe.def+ri(0,10),mul);
+    bt.hp=Math.max(0,bt.hp-d);
+    if(d>0){popup(ep.x,ep.y-ep.s*70,d,'sp');
+      puff(ep.x,ep.y-ep.s*40,'rgba(170,225,255,.95)',60,340,0.9,{s0:3,s1:8});
+      puff(ep.x,ep.y-ep.s*40,'rgba(235,250,255,.9)',24,190,0.6,{s0:2,s1:5});}
+    await wait(0.16);
+    await spellResult(bt.foe,d,mul);
   }else if(act.kind==='item'){
     Game.items[act.item]--;
     await say('ゆうしゃは '+ITEMS[act.item].name+'を つかった！');
@@ -7227,6 +7301,29 @@ async function playerAction(act){
       puff(c.x,c.y,'rgba(170,240,180,.9)',18,90,1,{up:true,s0:2,s1:4,spread:30});
       await wait(0.15);
       await say('HPが '+n+' かいふくした！');
+    }else if(act.item==='iyakuso'||act.item==='tokusen'){
+      const big=act.item==='tokusen';
+      const n=Math.min(p.mhp-p.hp,big?200+ri(0,40):90+ri(0,20));
+      p.hp+=n;updateBars();
+      flash('#9fe8b0',0.2,0.55);
+      popup(c.x,c.y,'+'+n,'heal');
+      puff(c.x,c.y,'rgba(170,240,180,.9)',24,110,1,{up:true,s0:2,s1:5,spread:32});
+      await wait(0.15);
+      await say('HPが '+n+' かいふくした！');
+    }else if(act.item==='bakudan'||act.item==='inazuma'){
+      const base=act.item==='inazuma'?160:80;
+      const d=(bt.foe.metal||bt.foe.gold)?1:((bt.foe.boss||bt.foe.mboss)?Math.round(base/2):base);
+      bt.spellFx={kind:'fire',t:0,pow:act.item==='inazuma'?3:2};
+      sfxGira();bt.flash=1;bt.hitStop=0.1;bt.recoil=1.1;bt.blink=1;shakeBattle(16,0.55);
+      flash(act.item==='inazuma'?'#fff3a0':'#ffb066',0.5,0.7);
+      const ep2=enemyPos();
+      bt.hp=Math.max(0,bt.hp-d);
+      popup(ep2.x,ep2.y-ep2.s*70,d,'sp');
+      puff(ep2.x,ep2.y-ep2.s*40,'rgba(255,190,110,.95)',48,300,0.85,{s0:3,s1:7});
+      await wait(0.15);
+      if(bt.foe.metal||bt.foe.gold)await say('かたくて つるつるだ！ はじかれて '+d+'の ダメージ！');
+      else if(bt.foe.boss||bt.foe.mboss)await say('つよきものには はんぶんしか きかない！\n'+bt.foe.name+'に '+d+'の ダメージ！');
+      else await say(bt.foe.name+'に '+d+'の ダメージ！');
     }else{
       const n=Math.min(p.mmp-p.mp,14+ri(0,4));
       p.mp+=n;updateBars();
@@ -7249,6 +7346,18 @@ async function playerAction(act){
     puff(c.x,c.y,'rgba(170,240,180,.9)',18,90,1.0,{up:true,s0:2,s1:4,spread:30});
     await wait(0.15);
     await say('HPが '+n+' かいふくした！');
+  }else if(act.kind==='behoma'){
+    p.mp-=22;updateBars();
+    await say('ゆうしゃは ベホマを となえた！');
+    sfxHeal();
+    const n=p.mhp-p.hp;
+    p.hp=p.mhp;updateBars();
+    flash('#b0ffd0',0.3,0.7);
+    {const c=playerChipPos();
+     popup(c.x,c.y,'+'+n,'heal');
+     puff(c.x,c.y,'rgba(170,255,200,.95)',30,150,1.1,{up:true,s0:2,s1:5,spread:34});}
+    await wait(0.15);
+    await say('HPが '+n+' かいふくした！ ちからが みなぎる！');
   }else if(act.kind==='kiari'){
     p.mp-=2;updateBars();
     await say('ゆうしゃは キアリーを となえた！');
@@ -7514,7 +7623,13 @@ async function victory(){
     if(p.lv===2)await say('あたらしい じゅもん キアリーを おぼえた！');
     if(p.lv===3)await say('あたらしい じゅもん ギラを おぼえた！');
     if(p.lv===5)await say('あたらしい じゅもん ベホイミを おぼえた！');
+    if(p.lv===4)await say('あたらしい じゅもん ヒャドを おぼえた！');
+    if(p.lv===6)await say('あたらしい じゅもん バイキルトを おぼえた！');
     if(p.lv===7)await say('あたらしい じゅもん ベギラマを おぼえた！');
+    if(p.lv===8)await say('あたらしい じゅもん ヒャダルコを おぼえた！');
+    if(p.lv===11)await say('あたらしい じゅもん ベホマを おぼえた！');
+    if(p.lv===12)await say('あたらしい じゅもん ベギラゴンを おぼえた！');
+    if(p.lv===13)await say('あたらしい じゅもん マヒャドを おぼえた！');
     // せいちょうボーナス：じぶんで そだてかたを えらぶ
     const b=await ask([
       {id:'pow',label:'ちから +2'},
@@ -7664,7 +7779,7 @@ async function defeat(){
   await say('ゆうしゃは ちからつきた…');
   sfxOver();
   await fadeTo(1,1.4);
-  const lost=Math.floor(Game.gold/2);
+  const lost=Game.gold>100?Math.floor((Game.gold-100)/2):0; // 100Gまでは王のおなさけ（序盤の貧困スパイラル防止・法則書L6）
   Game.gold-=lost;
   Game.bt=null;P.length=0;
   MSG=null;msgtextEl.textContent='';msgwinEl.classList.remove('done');msgwinEl.classList.remove('hasface');
@@ -7704,7 +7819,7 @@ async function badEnd(){
   await say('ゆうしゃは ふかい やみに のまれ、\nながい ねむりに おちてしまった…');
   sfxOver();
   await fadeTo(1,1.4);
-  const lost=Math.floor(Game.gold/2);
+  const lost=Game.gold>100?Math.floor((Game.gold-100)/2):0; // 100Gまでは王のおなさけ（序盤の貧困スパイラル防止・法則書L6）
   Game.gold-=lost;
   Game.bt=null;P.length=0;
   MSG=null;msgtextEl.textContent='';msgwinEl.classList.remove('done');msgwinEl.classList.remove('hasface');
