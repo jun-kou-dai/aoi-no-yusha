@@ -3694,7 +3694,8 @@ async function runShop(){
       if(it.def&&Game.shield)continue;
       if(it.key&&Game[it.key])continue; // 買い切り品（どこでもドア など）所持済みは ならべない
       const sp=it.atk?' ⚔+'+it.atk:(it.armor?' 🛡+'+it.armor:(it.def?' 🛡+'+it.def:'')); // 性能を そのばで くらべられるように
-      list.push({id:it.id,label:it.label+sp+'  '+it.cost+'G',dis:Game.gold<it.cost});
+      const fx=(it.armor&&ARMORFX[it.armor])?'✦':''; // 効果持ちの しるし（かうと 効果文が でる）
+      list.push({id:it.id,label:it.label+fx+sp+'  '+it.cost+'G',dis:Game.gold<it.cost});
     }
     if(soldA&&!hadA)list.unshift({id:'infoA',label:'よろい：いまが この みせの さいきょう',dis:true});
     if(soldW&&!hadW)list.unshift({id:'infoW',label:'ぶき：いまが この みせの さいきょう',dis:true});
@@ -3720,6 +3721,7 @@ async function runShop(){
       if(it.armor>Game.armorDef){Game.armorDef=it.armor;recalcStats();
         await say(it.label+'を こうにゅうした！\nしゅびりょくが あがった！');}
       else await say(it.label+'を こうにゅうした！（そうびの ふくろへ）');
+      if(AFXDESC[it.armor])await say('✦この よろいの こうか：\n'+AFXDESC[it.armor]+'！');
     }else if(it.def){
       Game.shield=true;recalcStats();
       await say(it.label+'を こうにゅうした！\nしゅびりょくが あがった！');
@@ -6909,6 +6911,7 @@ function powerAdvice(recLv){
   L.push('しゅぎょうは '+place+'が ちょうどいい。よるの くさはらは けいけんちが おおいぞ。');
   L.push('おかねなら むらの いけの ほとりに すむ きんいろスライムだ。1ぴきで 65ゴールドに なる。');
   L.push('ぎんいろの メタルスライムは けいけんちの かたまりだ。にがさず たおせ。');
+  L.push('たたかいの がめんの うえの 「🤖オート」は かってに たたかってくれる。「⚡はやさ」で はやおくりも できるぞ。');
   const b=bestBuy();
   if(b)L.push('いまの おかねで '+b.town+'の「'+b.label+'」が かえる。そうびで ぐっと つよくなるぞ。');
   else L.push('おかねが たまったら みせで つよい ぶきと よろいを かならず かおう。それが いちばん きく。');
