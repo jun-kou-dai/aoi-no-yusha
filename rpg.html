@@ -183,9 +183,10 @@ body{
   100%{ opacity:0; transform:translate(-50%,-140%) scale(1) } }
 /* ---------- もくてきガイド ---------- */
 #quest{ position:absolute; bottom:max(10px, env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
+  max-width:min(92vw,560px); white-space:normal; text-align:center; line-height:1.5;
   font-size:clamp(11px,1.8vmin,13px); letter-spacing:.12em; color:#d8ddf0;
   background:rgba(7,9,19,.8); border:1.5px solid rgba(236,229,207,.55); border-radius:6px;
-  padding:5px 16px; pointer-events:auto; white-space:nowrap; cursor:pointer; }
+  padding:5px 16px; pointer-events:auto; cursor:pointer; }
 #quest:active{ transform:translateX(-50%) scale(.97); }
 
 /* ---------- エンディング ---------- */
@@ -3933,7 +3934,7 @@ function updateField(dt){
   if(!Game.talking)Game.dayT+=dt; // かいわちゅうは ときが とまる
   if(Game.grace>0)Game.grace-=dt;
   const qt=questText();
-  if(qt!==Game._qt){Game._qt=qt;questEl.textContent=qt+'　▶';
+  const qloc='【'+(MAPNAME[Game.mapId]||'')+'】';if(qloc+qt!==Game._qt){Game._qt=qloc+qt;questEl.textContent=qloc+qt+'　▶';
     const db=document.getElementById('doorbtn');if(db)db.classList.toggle('quest',qt.indexOf('どこでもドア')>=0);}
   if(!Game._gTip&&TM>3&&!Game.talking&&!Game.battling){Game._gTip=true;toast('こまったら したの「もくてき」を タップ！ こえが みちびいて くれる');}
   if(Game.chCard){Game.chCard.t+=dt;if(Game.chCard.t>Game.chCard.dur)Game.chCard=null;}
