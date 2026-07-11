@@ -1102,10 +1102,10 @@ const SHOP=[
 const WEAPONFX={16:{twice:true},44:{vsKage:1.5},52:{critUp:0.05},56:{critUp:0.08}};
 const WNAME={5:'どうのつるぎ',12:'はがねのつるぎ',16:'はやぶさのつるぎ',20:'ほのおのつるぎ',26:'ゆうしゃのつるぎ',36:'ふぶきのつるぎ',44:'かげぬいの たち',48:'らいめいのつるぎ',52:'おうじゃのけん',56:'とわのつるぎ'};
 const ANAME={4:'かわのよろい',9:'くさりかたびら',16:'はがねのよろい',20:'りゅうのうろこ',24:'まほうのよろい',28:'せいれいのころも',34:'ひかりのよろい'};
-// でんせつのよろい効果: 20=りゅうのうろこ(炎と聖の息を3割減) / 28=せいれいのころも(8%で攻撃をかわす)
-const ARMORFX={20:{elemGuard:0.7},28:{dodge:0.08}};
+// よろい効果(armorDef値がキー): 9=くさり(どく5割減) / 16=はがね(つうこん25%減) / 20=りゅうのうろこ(炎と聖の息を3割減) / 24=まほう(ねむり・まひ5割減) / 28=せいれいのころも(8%で攻撃をかわす) / 34=ひかり(毎ターンHP+3)
+const ARMORFX={9:{poisonGuard:0.5},16:{critGuard:0.75},20:{elemGuard:0.7},24:{mindGuard:0.5},28:{dodge:0.08},34:{regen:3}};
 const WFXDESC={16:'1ターンに 2かい きる',44:'かげに 1.5ばい',52:'かいしんの いちげき +5%',56:'かいしんの いちげき +8%'};
-const AFXDESC={20:'ほのお・ひかりの いきを 3わり へらす',28:'8%で こうげきを ひらりと かわす'};
+const AFXDESC={9:'どくの きばを 5わり ふせぐ',16:'つうこんの いちげきを 25% へらす',20:'ほのお・ひかりの いきを 3わり へらす',24:'ねむり・まひを 5わり ふせぐ',28:'8%で こうげきを ひらりと かわす',34:'ターンの おわりに HPが 3 もどる'};
 // そうびの袋: 買った/授かった装備は消えず ここに残る(付け替え・売却可)。weaponAtk値=同一性
 function ownGear(){
   Game.ownW=Game.ownW||[];Game.ownA=Game.ownA||[];
@@ -7158,6 +7158,10 @@ async function runBattle(ref){
     if(Game.p.hp<=0){await defeat();return;}
     await mateTurn(); // みちづれの こうどう（ターンまつ）
     if(Game.bt&&Game.bt.hp<=0){await victory();return;} // ついげきで たおした（ヴォルガは みちづれと構造上 非共存＝変身分岐 不要）
+    {const afx=ARMORFX[Game.armorDef]||{}; // ひかりのよろい：ターンのおわりに しずかに 小かいふく
+     if(afx.regen&&Game.p.hp>0&&Game.p.hp<Game.p.mhp&&Game.bt&&Game.bt.hp>0){
+       Game.p.hp=Math.min(Game.p.mhp,Game.p.hp+afx.regen);updateBars();
+       const rc=playerChipPos();popup(rc.x,rc.y,'+'+afx.regen,'heal');}}
   }
 }
 // みちづれ：かげの従者4種（じょうか数で解禁・つよさ画面で選択）
@@ -7268,6 +7272,9 @@ async function tryInflict(foe){
   else if(foe===FOES.dslime){type=(Math.random()<0.5?'sleep':'para');prob=0.5;}
   else if(foe===FOES.mboss){type='para';prob=0.3;}
   else if(foe.boss){type='sleep';prob=0.3;}
+  {const afx=ARMORFX[Game.armorDef]||{}; // よろいの個性：状態異常の付与率を減衰
+   if(type==='poison'&&afx.poisonGuard)prob*=afx.poisonGuard;
+   if((type==='sleep'||type==='para')&&afx.mindGuard)prob*=afx.mindGuard;}
   if(!type||Math.random()>=prob*(bt.guard?0.3:1))return;
   if(type==='poison'){
     if(p.poison)return;
@@ -7744,7 +7751,7 @@ async function enemyAction(){
     bt.half=true;
     await bossAwaken();
   }
-  let atk=Math.round(foe.atk*(bt.night?1.3:1)*diffEnemyAtk(foe)),label=foe.name+'の こうげき！',fire=false,holy=false,heavy=false,spel=false; // なんいど：敵こうげき係数
+  let atk=Math.round(foe.atk*(bt.night?1.3:1)*diffEnemyAtk(foe)),label=foe.name+'の こうげき！',fire=false,holy=false,heavy=false,spel=false,ecrit=false; // なんいど：敵こうげき係数
   if(bt.soar){
     bt.soar=false;
     atk=Math.round(atk*1.3);
@@ -7758,7 +7765,7 @@ async function enemyAction(){
   }else if(!foe.boss&&Math.random()<curDiff().crit){
     atk=Math.round(atk*1.8);
     label=foe.name+'の つうこんの いちげき！';
-    heavy=true;
+    heavy=true;ecrit=true;
   }else if(foe.boss&&Math.random()<curDiff().bspecial){
     if(foe.draw==='boss2'){
       atk=Math.round(atk*1.4);
@@ -7796,7 +7803,8 @@ async function enemyAction(){
   {const Dc0=curDiff(),mf=foe.boss?(Dc0.bossMinFrac||Dc0.minFrac||0):(Dc0.minFrac||0);
    d=Math.max(d,Math.round(atk*mf));} // なんいど：被ダメ下限。ボスはbossMinFrac優先（ふつう帯ボスの被弾が空気になる対処・未定義はminFracへ＝でんせつ以上とざこ・中ボスは不変）
   {const afx=ARMORFX[Game.armorDef]||{};
-   if(afx.elemGuard&&(fire||holy))d=Math.max(1,Math.round(d*afx.elemGuard));}
+   if(afx.elemGuard&&(fire||holy))d=Math.max(1,Math.round(d*afx.elemGuard));
+   if(afx.critGuard&&ecrit)d=Math.max(1,Math.round(d*afx.critGuard));} // はがねのよろい：つうこんに つよい
   {const Dc=curDiff();d=Math.min(d,Math.max(1,Math.round(p.mhp*((fire||holy||heavy)?Dc.capHeavy:Dc.capNorm))));} // なんいど：被ダメ上限（即死防止・大技は高め天井）
   let kabau=false;
   if(bt.guard)d=Math.max(1,Math.ceil(d*0.45)); // ぼうぎょで 55%カット
