@@ -4925,6 +4925,7 @@ function drawFieldScene(){
     for(const c of CHESTS)if(c.x+c.y===d)drawChest(c);
     if(SPRING&&SPRING.x+SPRING.y===d)drawSpring();
     if(wld.npcs)for(const n of wld.npcs)if(n.x+n.y===d&&!npcGone(n))drawNpc(n);
+    if(wld.king&&wld.king.x+wld.king.y===d)drawKing(wld.king);
     for(const e of Game.enemies)if(Math.round(e.px+e.py)===d)drawFieldFoe(e);
     if(Game.minigame&&Game.mapId==='grass')for(const ms of Game.minigame.slimes)if(Math.round(ms.px+ms.py)===d)drawMiniSlime(ms);
     if(Game.hidden.mate1&&Game.mate&&Math.round(Game.mate.px+Game.mate.py)===d)drawMateField(); // みちづれは じぶんの おくゆき行で（あとの行のタイルに けされない）
@@ -5884,6 +5885,46 @@ function npcStoryPending(n){
     if(h.nk2&&(Game.purified||0)>=15&&!h.ch3m)return true; // 継承の ゆめ
   }
   return false;
+}
+// おうさま：やかたの まえに たつ（みえる 王）
+function drawKing(k){
+  const cam=Game.cam,ts=cam.TW*0.70;
+  const c=isoCtr(k.x,k.y);
+  const fy=c.y+cam.TH*0.30; // やかたの てまえに はんぶん おりて たつ
+  const bob=Math.sin(TM*1.6+2.2)*ts*0.012;
+  ctx.save();
+  // かげ
+  ctx.fillStyle='rgba(8,14,28,0.3)';
+  ctx.beginPath();ctx.ellipse(c.x,fy,ts*0.21,ts*0.07,0,0,Math.PI*2);ctx.fill();
+  const OL='rgba(12,16,34,0.45)',olw=Math.max(1,ts*0.02);
+  // ローブ（あか・しろい ふち）
+  ctx.fillStyle='#b8404e';
+  ctx.strokeStyle=OL;ctx.lineWidth=olw;
+  ctx.beginPath();
+  ctx.moveTo(c.x-ts*0.17,fy);
+  ctx.quadraticCurveTo(c.x-ts*0.19,fy-ts*0.34+bob,c.x,fy-ts*0.40+bob);
+  ctx.quadraticCurveTo(c.x+ts*0.19,fy-ts*0.34+bob,c.x+ts*0.17,fy);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#f0e6d2';
+  ctx.fillRect(c.x-ts*0.17,fy-ts*0.06,ts*0.34,ts*0.05);
+  // かお
+  ctx.fillStyle='#f2cfa6';
+  ctx.beginPath();ctx.arc(c.x,fy-ts*0.48+bob,ts*0.125,0,Math.PI*2);ctx.fill();ctx.stroke();
+  // しろい ひげ
+  ctx.fillStyle='#f5f0e6';
+  ctx.beginPath();ctx.arc(c.x,fy-ts*0.42+bob,ts*0.085,0.15*Math.PI,0.85*Math.PI);ctx.fill();
+  // おうかん（きん・3ほんの とげ＋あかい たま）
+  ctx.fillStyle='#ffd35e';ctx.strokeStyle='rgba(120,80,10,0.7)';ctx.lineWidth=Math.max(1,ts*0.018);
+  const cy0=fy-ts*0.585+bob;
+  ctx.beginPath();
+  ctx.moveTo(c.x-ts*0.115,cy0+ts*0.055);
+  ctx.lineTo(c.x-ts*0.115,cy0-ts*0.02);ctx.lineTo(c.x-ts*0.058,cy0+ts*0.012);
+  ctx.lineTo(c.x,cy0-ts*0.045);ctx.lineTo(c.x+ts*0.058,cy0+ts*0.012);
+  ctx.lineTo(c.x+ts*0.115,cy0-ts*0.02);ctx.lineTo(c.x+ts*0.115,cy0+ts*0.055);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#e05a5a';
+  ctx.beginPath();ctx.arc(c.x,cy0-ts*0.052,ts*0.028,0,Math.PI*2);ctx.fill();
+  ctx.restore();
 }
 function drawNpc(n){
   const cam=Game.cam,ts=cam.TW*0.66;
