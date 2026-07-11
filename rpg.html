@@ -181,7 +181,8 @@ body{
 #quest{ position:absolute; bottom:max(10px, env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
   font-size:clamp(11px,1.8vmin,13px); letter-spacing:.12em; color:#d8ddf0;
   background:rgba(7,9,19,.8); border:1.5px solid rgba(236,229,207,.55); border-radius:6px;
-  padding:5px 16px; pointer-events:none; white-space:nowrap; }
+  padding:5px 16px; pointer-events:auto; white-space:nowrap; cursor:pointer; }
+#quest:active{ transform:translateX(-50%) scale(.97); }
 
 /* ---------- エンディング ---------- */
 #ui-ending{ flex-direction:column; align-items:center; justify-content:center; gap:clamp(12px,2.6vh,22px); text-align:center; padding:24px; }
@@ -2699,6 +2700,9 @@ function getDirVec(){
   if(swipeVec)return swipeVec;
   return null;
 }
+$('#quest').addEventListener('pointerdown',e=>{
+  e.stopPropagation();firstGesture();questGuide();
+});
 $('#savebtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();firstGesture();fieldRecordMenu();
 });
@@ -3727,8 +3731,9 @@ function updateField(dt){
   if(!Game.talking)Game.dayT+=dt; // かいわちゅうは ときが とまる
   if(Game.grace>0)Game.grace-=dt;
   const qt=questText();
-  if(qt!==Game._qt){Game._qt=qt;questEl.textContent=qt;
+  if(qt!==Game._qt){Game._qt=qt;questEl.textContent=qt+'　▶';
     const db=document.getElementById('doorbtn');if(db)db.classList.toggle('quest',qt.indexOf('どこでもドア')>=0);}
+  if(!Game._gTip&&TM>3&&!Game.talking&&!Game.battling){Game._gTip=true;toast('こまったら したの「もくてき」を タップ！ こえが みちびいて くれる');}
   if(Game.chCard){Game.chCard.t+=dt;if(Game.chCard.t>Game.chCard.dur)Game.chCard=null;}
   if(Game.mapId==='castle'&&Game.hidden.cleared&&!Game.hidden.cTip&&!Game.talking&&!Game.battling){
     Game.hidden.cTip=true;
@@ -6541,6 +6546,65 @@ function drawExitBeacons(){
   }
 }
 // めあてビーコン：いま すべきことの ばしょに 金の光柱（でぐちと同型・どのoverlayにも つぶされない）
+// 主線の「いま めざす しま」と ことばの せつめい（みちびき）
+function questDest(){
+  const h=Game.hidden,p=Game.purified||0;
+  if(Game.qChild===1)return {map:'cave',exp:'まいごの ポポを どうくつで さがしてあげよう。ひだりの おくの ほうだ。'};
+  if(Game.qChild===2)return {map:'grass',exp:'ポポを むらの おかあさんの ところへ つれていこう。'};
+  if(h.k1&&!h.k2)return {map:'ice',exp:'さらわれた むすめを たすけよう。こおりの せかいの みぎうえの おくに いる。きんいろの はしらが めじるしだ。'};
+  if(!h.cleared){
+    if(h.k2&&!h.k3)return {map:'grass',exp:'むらへ もどろう。みんなが まっている。'};
+    if(!Game.mbossDown)return {map:'cave',exp:'きたの だいちの どうくつの おくへ。くろがねの ゴーレムが みちを ふさいでいる。'};
+    return {map:'castle',exp:'こおりと ほのおの さきに ある まおうの しろへ。ヴォルガを たおすのだ！'};
+  }
+  if(!h.k3)return {map:'grass',exp:'むらへ もどろう。みんなが まっている。'};
+  const stoneMap={t1:'grass',t2:'forest',t3:'cave',t4:'ice',t5:'volcano'};
+  if(!h.elderTold){
+    const miss=Object.keys(stoneMap).filter(k=>!h[k]);
+    if(miss.length)return {map:stoneMap[miss[0]],exp:'こだいの せきひを よもう（のこり '+miss.length+'まい）。つぎは「'+(MAPNAME[stoneMap[miss[0]]]||'')+'」の せきひだ。きんいろの はしらが たっている。'};
+    return {map:'grass',exp:'むらの じいさんが だいじな はなしを したがっている。'};
+  }
+  if(!h.ch2)return {map:'grass',exp:'じいさんの たのみを ききに いこう。'};
+  if(!h.sn2)return {map:'sunken',exp:'しずみのさとの かげたちを たたかって ときはなとう（かつことが すくいに なる）。さいごは ひろばの さとぬしだ。'};
+  if(!h.ch2end)return {map:'grass',exp:'さとで しった しんじつを、むらの じいさんに つたえよう。'};
+  if(!h.nk2)return {map:'castle',exp:'まおうの しろの おくに のこる「やみの ぬけがら」を ときはなとう。'};
+  if(p<15)return {map:'mistsea',exp:'わすれのうみで かげたちを ときはなち、じょうかを 15まで つもう（いま '+p+'）。'};
+  if(!h.ch3m)return {map:'grass',exp:'むらの こどもが ふしぎな ゆめを みたらしい。はなしを きいて あげよう。'};
+  if(!h.ch3a)return {map:'grass',exp:'じいさんが「みなもと」の てがかりを しっている。'};
+  if(!h.ch3t)return {map:'minamoto',exp:h.ch3b?'いずみの まえに あらわれた「ひかりの こだま」と むきあおう。':'きんいろの もりで「ひかりの しずく」に 3つ ふれよう。きんいろの はしらが めじるしだ。'};
+  if(!h.ch3d)return {map:'grass',exp:'みなもとで えた こたえを、じいさんに つたえよう。'};
+  if(!h.towaGate)return {map:'edge',exp:'はてのしまの「こたえなき もの」に、こたえを しめそう（たおせば みちが ひらく）。'};
+  if(!h.towaDown)return {map:'towa',exp:'とわのふちの おくで「といの けしん」を こえよう。さいごの しれんだ。'};
+  return {map:null,exp:'ものがたりは すべて むすばれた。あとは じゆうに たびを たのしもう！'};
+}
+async function questGuide(){
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
+  const d=questDest();
+  startTalk();sfxSel();
+  await say('みちびきの こえ「'+d.exp+'」');
+  if(!d.map){endTalk();return;}
+  if(d.map===Game.mapId){
+    endTalk();
+    const ts=questBeaconTargets();
+    if(ts.length){
+      const pp=Game.p; let best=ts[0],bd=1e9;
+      for(const t of ts){const dd=Math.hypot(t.x-pp.tx,t.y-pp.ty);if(dd<bd){bd=dd;best=t;}}
+      const q=isoCtr(best.x,best.y); const rc=cv.getBoundingClientRect();
+      tapMove(rc.left+q.x*rc.width/W, rc.top+q.y*rc.height/H);
+      if(Game.autoPath&&Game.autoPath.length)toast('きんいろの はしらへ あんないちゅう…（がめんタップで ちゅうだん）');
+    }
+    return;
+  }
+  if(Game.door){
+    await say('みちびきの こえ「どこでもドアで「'+(MAPNAME[d.map]||d.map)+'」へ おくろう。」');
+    endTalk();
+    const st=WORLDS[d.map].start;
+    await transitMap({to:d.map,tx:st.x,ty:st.y,msg:(MAPNAME[d.map]||'')+'へ みちびかれた！'});
+  }else{
+    await say('みちびきの こえ「めざすは「'+(MAPNAME[d.map]||d.map)+'」。あるいて わたるか、むらの みせの「どこでもドア」が あれば ひととびだ。」');
+    endTalk();
+  }
+}
 function questBeaconTargets(){
   const h=Game.hidden,w=WORLDS[Game.mapId],out=[];
   if(!w)return out;
