@@ -3456,7 +3456,10 @@ async function talkNpc(n){
 }
 // 進行ステージ＋夜で むらびとの セリフが かわる（msgNight＞msg4..msg1＞msg の順で採用）
 function pickNpcLines(n){
-  // 優先=物語の現在(鮮度順): 章4かんけつ > 章3かんけつ > 継承 > クリア後 > 救出後 > 夜 > 進行msgN
+  // 優先=物語の現在(鮮度順): 周回ヒント > 章4かんけつ > 章3かんけつ > 継承 > クリア後 > 救出後 > 夜 > 進行msgN
+  if(n.heir&&Game.hidden.ch4cEver&&!Game.hidden.cleared)return [ // 前周で章4完結→今周ヴォルガ前: 第3の答えへの みちしるべ
+    'こども「ゆめを みたの。おおきな くらい ひとが、\nずーっと 「こたえ」を まってるの。」',
+    'こども「……ねえ。 もし あえたら、あの ことばを\nきかせて あげて。 『わたしても、へらない』って！」'];
   if(n.msgCh4&&Game.hidden.ch4c)return n.msgCh4; // 章4(ぎしき)後の さしかえ台詞
   if(n.msgAnswered&&Game.hidden.ch3d)return n.msgAnswered; // 章3かんけつ後の さしかえ台詞
   if(n.msgHeir&&Game.hidden.ch3m)return n.msgHeir; // 章3ミニ後の さしかえ台詞
