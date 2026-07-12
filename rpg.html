@@ -3526,7 +3526,10 @@ async function talkKing(){
         await say('おうじゃのけんを さずかった！（そうびの ふくろへ）');
       }
     }
-    if(Game.hidden.towaDown){
+    if(Game.hidden.ch4c){
+      await say('おうさま「ぎしきの ひかりは、いまも あの この\nむねで ともって おるそうじゃ。」');
+      await say('おうさま「『わたしても、へらない』——そなたが たしかめた\nこの こたえ、くにの ものがたりに きざもうぞ。」');
+    }else if(Game.hidden.towaDown){
       await say('おうさま「とわの ふちを こえた ものよ……\nもはや わしが さずける ものは なにもない。」');
       await say('おうさま「この くにの ひかりを、これからも\nともに みまもって くれい。」');
     }else if(Game.hidden.ch3d){
