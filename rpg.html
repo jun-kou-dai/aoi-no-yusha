@@ -3301,6 +3301,19 @@ async function talkNpc(n){
       toast('はての しまの せきひに、あたらしい もじが きざまれた…！');
       endTalk();saveGame();return;
     }
+    // かたりべの継承（ループ27）: よみもの全読了後、こどもに物語を語る（一度きり・称号の"つとめ"を果たす）
+    if(n.heir&&(Game.spotsRead||[]).length>=spotTotal()&&!Game.hidden.ktold){
+      Game.hidden.ktold=true;
+      await say('こども「ゆうしゃさま、いろんな しまの おはなし\nいーっぱい しってるんでしょ？ きかせて きかせて！」');
+      await say('あなたは かたって きかせた──はかいしに ねむる けいしょうしゃのこと。\nたきびを かこんだ ほりびとたちのこと。ふちに のこった といのこと。');
+      await say('こども「…すごい。せかいって、そんなに ひろいんだ。」');
+      sfxLevel();flash('#fff2d0',0.35,0.9);
+      if(Game.cam){const q=isoCtr(n.x,n.y);puff(q.x,q.y-Game.cam.lift*0.2,'rgba(255,235,160,.95)',26,130,1.2,{up:true,s0:2,s1:4});}
+      await say('こども「わたし、きめた！ おおきくなったら たまを まもって、\nそれで…… ゆうしゃさまみたいな かたりべに なる！」');
+      await say('ものがたりは、かたりつがれて いく──\nだれかが いきた しるしは、もう わすれられない。');
+      toast('ものがたりは かたりつがれた');
+      endTalk();saveGame();return;
+    }
     // むらの あそび: スライムつかまえ（いつでも なんどでも）
     if(n.heir){
       await say('こども「ねえねえ、スライムつかまえで あそぼうよ！\nにげる スライムを 20びょうで 3びき つかまえるの！」');
