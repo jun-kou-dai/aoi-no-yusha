@@ -3362,6 +3362,21 @@ async function talkNpc(n){
       saveGame();
       return;
     }
+    // 章4の頭金(4a)『ぎしきの きざし』: 答えの結び(ch3d)+かたりべの継承(ktold)のあと、じいさんが「わたす」問いを開く(一度きり)
+    if(n.msgElder&&Game.hidden.ch3d&&Game.hidden.ktold&&!Game.hidden.ch4a){
+      Game.hidden.ch4a=true;
+      await say('じいさん「けいしょうの ぎしき、というものが あってな。\nたまの ひかりを、つぎの ものに わたす ぎしきじゃ。」');
+      await say('じいさん「わしと おとうとは、それを うけた がわ じゃった。\n…そして わしらの だいで、いちど とだえて しもうた。」');
+      await say('じいさん「あの こが『うけとめたい』と いうた。\nそなたが みちびいて くれたんじゃな、かたりべどの。」');
+      await say('じいさん「のう、ひとつ おしえて くれんか。\n──わたした あと、わしらには なにが のこるのかのう。」');
+      sfxLevel();flash('#fff2d0',0.35,0.9);
+      if(Game.cam){const q=isoCtr(n.x,n.y);puff(q.x,q.y-Game.cam.lift*0.2,'rgba(255,235,160,.95)',26,130,1.2,{up:true,s0:2,s1:4});}
+      await say('あなたは こたえの かわりに、よみものを ひとつ かたった——\nわたしても、へらなかった ものの はなしを。');
+      await say('じいさん「……そうか。 ひかりも、ものがたりと おなじか。」');
+      await say('じいさん「なら、こわがる ことは なにも ないのう。\nぎしきの したくを はじめると するかの。」');
+      toast('あたらしい ものがたりが うごきはじめた…');
+      endTalk();saveGame();return;
+    }
     // 章3: けいしょうの ゆめ(ch3m)のあと じいさんが みなもとを あかす（フル章3の とびら）
     if(n.msgElder&&Game.hidden.nk2&&Game.hidden.ch3m&&(Game.purified||0)>=15&&!Game.hidden.ch3a){
       Game.hidden.ch3a=true;
