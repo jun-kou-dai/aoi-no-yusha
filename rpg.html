@@ -994,7 +994,8 @@ icetown:{
   {id:'komari',x:15,y:9},
   {id:'kodamadori',x:3,y:4},
   {id:'kodamadori',x:16,y:5},
-  {id:'hikarinokodama',x:10,y:4,need:'ch3b',gone:'ch3c'}],
+  {id:'hikarinokodama',x:10,y:4,need:'ch3b',gone:'ch3c'},
+  {id:'koborebi',x:10,y:4,need:'ch4w',gone:'ch4c'}],
  chests:[{x:4,y:10,item:'taneH'}],
  exits:[
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'きんいろの ひかりを あとに、そうげんへ もどってきた。'}]},
@@ -1127,6 +1128,7 @@ const FOES={
   towakage:{name:'とわのかけら', hp:370, atk:111, def:30, exp:220, g:110, col:'#6a5a9a', draw:'golem', v:'iron', tint:'rgba(74,58,120,0.85)', physMul:0.8, fireMul:1.1, iceMul:1.1, winMsg:'かけらは くだけ、といの こなに かえった。'},
   jigencho:{name:'じげんちょう', hp:350, atk:108, def:26, exp:180, g:90, col:'#8a76c8', draw:'crow', tint:'rgba(110,90,170,0.78)', dodge:0.22, physMul:1, fireMul:1, iceMul:1, winMsg:'かけらは くだけ、といの こなに かえった。'},
   mugenslime:{name:'むげんスライム', hp:360, atk:106, def:28, exp:200, g:100, col:'#5a4a8a', draw:'slime', v:'dark', tint:'rgba(70,54,120,0.82)', spell:true, physMul:1, fireMul:1.15, iceMul:1.15, dodge:0.1, winMsg:'かけらは くだけ、といの こなに かえった。'},
+  koborebi:{charge:true, name:'こぼれびの けしん', hp:880, atk:96, def:38, exp:1400, g:1200, col:'#ffe9b0', draw:'boss2', tint:'rgba(255,236,180,0.85)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'こぼれびは しずかに ほどけ、ひかりは みなもとへ かえっていった。'},
   toikeshin:{charge:true, name:'といの けしん', hp:1020, atk:97, def:40, exp:1500, g:1500, col:'#4a3a7a', draw:'boss2', tint:'rgba(58,42,104,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'といは しずかに ほどけ、ふちに ほしが ともった。'},
   wslime:{name:'まどうスライム', hp:65, atk:12, def:7, exp:55, g:24, col:'#c8a8f0', draw:'slime', v:'dark', spell:true, watch:true, physMul:1, fireMul:1.2, iceMul:1.2, dodge:0.08},
   cuslime:{name:'のろいスライム', hp:200, atk:62, def:9, exp:78, g:34, col:'#e88ad0', draw:'slime', v:'dark', spell:true, physMul:1, fireMul:1.3, iceMul:1.3, dodge:0.12},
@@ -2196,7 +2198,7 @@ const BOOK_ISLES=[
   ['まおうの しろ',['dslime','dcrow','cuslime','chaoslord','boss','boss2','nukegara']],
   ['しずみの さと',['kagehito','nakikage','kagekishi','satonushi']],
   ['わすれの うみ',['uminokage','kirinokage']],
-  ['みなもとの もり',['komari','kodamadori','hikarinokodama']],
+  ['みなもとの もり',['komari','kodamadori','hikarinokodama','koborebi']],
   ['とわの ふち',['towakage','jigencho','mugenslime','toikeshin']]];
 const BOOK_SPECIAL=['gslime','metal','kotae'];
 // ずかんの ものがたり行（よみものとしての 図鑑）
@@ -2204,6 +2206,7 @@ const BOOK_LORE={
   komari:'いのりの しずくが まるく こごった もの。ふれると ほんのり あたたかい。',
   kodamadori:'よろこびの こえが とりの かたちを かりた もの。うたごえが ひびきあう。',
   hikarinokodama:'れきだいの いのりが かさなって うまれた ひかりの けしん。うけとめる うつわを ためしに くる。',
+  koborebi:'ぎしきで こぼれた ひかりが かたちを もとめた もの。わるさは ない、ただ まよって いる。',
   towakage:'とわれ つづけて かたまった といの かけら。こたえの ひかりを おそれる。',
   jigencho:'ふちの そらを まう とり。つばさが きる のは かぜでなく とき。',
   mugenslime:'おわりの ない といが ぷるぷるの かたちを とった もの。',
@@ -3377,6 +3380,16 @@ async function talkNpc(n){
       toast('あたらしい ものがたりが うごきはじめた…');
       endTalk();saveGame();return;
     }
+    // 章4c: ぎしきの よる——こぼれた ひかりが みなもとで かたちを もとめる
+    if(n.msgElder&&Game.hidden.ch4b&&!Game.hidden.ch4w){
+      Game.hidden.ch4w=true;
+      await say('じいさん「ゆうしゃどの…… ぎしきの よる から、\nみなもとの もりが ざわめいて おるのじゃ。」');
+      await say('じいさん「わたした ひかりの——こぼれた ぶんが、\nうけとめる ものを もとめて、かたちに なりかけて おる。」');
+      await say('じいさん「あれは わるい ものでは ない。じゃが、まよって おる。\nいって、しずめて やって くれぬか。」');
+      sfxEnc();flash('#ffe9b0',0.35,0.8);
+      toast('もくてき：みなもとの もりで「こぼれび」を しずめよ');
+      endTalk();saveGame();return;
+    }
     // 章3: けいしょうの ゆめ(ch3m)のあと じいさんが みなもとを あかす（フル章3の とびら）
     if(n.msgElder&&Game.hidden.nk2&&Game.hidden.ch3m&&(Game.purified||0)>=15&&!Game.hidden.ch3a){
       Game.hidden.ch3a=true;
@@ -3924,12 +3937,14 @@ function questText(){
     if(Game.mapId==='sunken')return Game.hidden.sn2?'もくてき：むらの じいさんに しんじつを つたえよう':'もくてき：かげを ときはなち、さとの ひろばの ぬしへ';
     if(Game.mapId==='mistsea')return 'もくてき：こえに みみを すませ、かげを ときはなとう';
     if(Game.mapId==='minamoto'){
+      if(Game.hidden.ch4w&&!Game.hidden.ch4c)return 'もくてき：まよう「こぼれび」を しずめよ';
       if(Game.hidden.ch3t)return Game.hidden.ch3d?'もくてき：きんいろの もりを こころゆくまで':'もくてき：むらの じいさんに こたえを つたえよう';
       if(Game.hidden.ch3b)return 'もくてき：いずみの まえに たつ ものと あいまみえよ';
       const g3=(Game.hidden.mem1?1:0)+(Game.hidden.mem2?1:0)+(Game.hidden.mem3?1:0);
       return 'もくてき：ひかりの しずくに ふれよう（'+g3+'/3）';
     }
     if(Game.mapId==='towa')return Game.hidden.towaDown?'もくてき：ふちは しずかに ねむっている':'もくてき：ふちの おくの「といの けしん」を こえよ';
+    if(Game.hidden.ch4w&&!Game.hidden.ch4c)return 'もくてき：どこでもドアで「みなもとの もり」へ——こぼれびを しずめよ';
     if(Game.hidden.towaGate&&!Game.hidden.towaDown&&!(Game.visited&&Game.visited.towa))return 'もくてき：どこでもドアで「とわの ふち」へ——さいごの しれん';
     if(Game.hidden.ch3t&&!Game.hidden.ch3d)return 'もくてき：むらの じいさんに みなもとの こたえを';
     if(Game.hidden.ch3a&&!(Game.visited&&Game.visited.minamoto))return 'もくてき：どこでもドアで「みなもとの もり」へ——はじまりの ばしょ';
@@ -7416,6 +7431,10 @@ async function runBattle(ref){
     await say('それは とい その ものの けしん——\nふちの おくで、しずかに まっていた。');
     await say('『こたえを もつ ものよ。\nその こたえ、ためさせて もらう。』');
   }
+  else if(foe===FOES.koborebi){
+    await say('それは ぎしきで こぼれた ひかりの あつまり——\nうけとめる ものを もとめて、ゆらいでいる。');
+    await say('『……あたたかい ばしょは、どこ……？』');
+  }
   else if(foe.mboss)await say('くろがねの きょたいが ゆくてを ふさいでいる…！');
   while(true){
     const skip=await playerStatusTick();
@@ -8175,6 +8194,14 @@ async function victory(){
     await say('『こたえを もつ ものよ。ふちが、おまえを まっている。』');
     sfxEnc();flash('#8a76c8',0.4,0.9);
     toast('どこでもドアが「とわの ふち」を とらえた…！');
+  }
+  if(foe===FOES.koborebi&&!Game.hidden.ch4c){ // 章4c: こぼれび鎮め=章4の結び
+    Game.hidden.ch4c=true;
+    sfxHeal();flash('#fff2d0',0.5,1.1);
+    await say('ほどけた ひかりの こなが、ゆっくりと まいあがり——\nとおくの むらの ほうへ、ながれて いった。');
+    await say('『わたす ひかりは、うけとめる ものが いて\nはじめて ひかりに なる。』');
+    await say('こころの なかで、あの この こえが した きが した。\n——だいじょうぶ。 ちゃんと、うけとめたよ。');
+    toast('だい4しょう『わたす ひかり』——むすび');
   }
   if(foe===FOES.toikeshin&&!Game.hidden.towaDown){ // 裏ボス: とい鎮め→隠し最強武器+称号
     Game.hidden.towaDown=true;
