@@ -7427,6 +7427,7 @@ async function runBattle(ref){
     const ans=await ask(vOpts,'どうする？');
     if(ans==='yes'){await badEnd();return;}
     if(ans==='kotae'){
+      Game.bt.vKotae=true; // 今際の言葉が変わる(勝利演出)
       flash('#fff2d0',0.4,0.9);
       await say('ヴォルガ「…………なに？」');
       await say('ヴォルガ「はんぶんを やる と いうたのだぞ。\nうばいあう ものを、なぜ わけあえると——」');
@@ -8360,6 +8361,10 @@ async function bossDefeat(){
   await wait(0.3);
   await say('ヴォルガ「わしは…… ただ しりたかっただけよ。\nなぜ ひかりは すべてを すくわぬのか と……。」');
   await say('ヴォルガ「こたえを もとめて やみに おちた。\nだが やみにも…… こたえは なかった……。」');
+  if(Game.bt&&Game.bt.vKotae){ // 第3の答えを きいた 周回だけ、こたえが とどいて きえる
+    await say('ヴォルガ「……いや。 こたえは、さいごに\nとどいて おったな……。」');
+    await say('ヴォルガ「『わたしても、へらない』……か。\nわしも…… うけとって、よかったのか……。」');
+  }
   await say('ヴォルガの めじりを ひとすじの しずくが つたう──');
   await say('やみのおう ヴォルガは ひかりに つつまれ きえさった！');
   if(Game.hidden.elderTold)await say('どこかで 「──ありがとう」と つぶやく こえが\nきこえた きが した。');
