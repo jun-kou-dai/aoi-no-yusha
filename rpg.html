@@ -2373,7 +2373,7 @@ function renderStatus(){
    h+=row('せきひ',sk+' / 5');
    h+=row('きょじんのこころ',(Game.gheart||0)+' / 5');
    if(Game.hidden&&Game.hidden.ch2)h+=row('じょうか',(Game.purified||0)+'にん の かげを ときはなった');if(Game.hidden&&Game.hidden.mate1){const Mm=MATES[mateKind()];h+=row('みちづれ',Mm.name+'（'+Mm.act+'）');}
-   {const tt=[];if(Game.hidden&&Game.hidden.zkomp)tt.push('まものはかせ');if(Game.hidden&&Game.hidden.slcatch)tt.push('スライムキャッチャー');if(Game.hidden&&Game.hidden.towaDown)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal())tt.push('かたりべ');if(Game.hidden&&Game.hidden.ch4b)tt.push('ひかりを わたせしもの');
+   {const tt=[],H=Game.hidden||{};if(H.zkomp)tt.push('まものはかせ');if(H.slcatch||H.slcatchEver)tt.push('スライムキャッチャー');if(H.towaDown||H.fuchiEver)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal())tt.push('かたりべ');if(H.ch4b||H.wataseEver)tt.push('ひかりを わたせしもの');
     h+=row('しょうごう',tt.length?tt.join('　'):'──');}}
   if(Game.hidden&&Game.hidden.mate1){
     h+='<h3 class="bisle">みちづれを えらぶ<span class="stsub">　じょうかが すすむほど つよくなる</span></h3><div class="mateswap">';
@@ -10115,7 +10115,9 @@ async function ngNewGame(){
     items:JSON.parse(JSON.stringify(Game.items)),weaponAtk:Game.weaponAtk,armorDef:(Game.armorDef||0),ownW:(Game.ownW||[]).slice(),ownA:(Game.ownA||[]).slice(),shield:Game.shield,
     bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,bonusMp:(Game.bonusMp||0),gheart:(Game.gheart||0),
     door:Game.door,mkey:!!Game.mkey,cloak:Game.cloak,book:Game.book,talkOff:!!Game.talkOff,seen:JSON.parse(JSON.stringify(Game.seen||{})),
-    zkomp:!!(Game.hidden&&Game.hidden.zkomp),ch3dEver:!!(Game.hidden&&(Game.hidden.ch3d||Game.hidden.ch3dEver)),spotsRead:(Game.spotsRead||[]).slice(),ng:(Game.ng||0)+1};
+    zkomp:!!(Game.hidden&&Game.hidden.zkomp),ch3dEver:!!(Game.hidden&&(Game.hidden.ch3d||Game.hidden.ch3dEver)),
+    fuchiEver:!!(Game.hidden&&(Game.hidden.towaDown||Game.hidden.fuchiEver)),slcatchEver:!!(Game.hidden&&(Game.hidden.slcatch||Game.hidden.slcatchEver)),wataseEver:!!(Game.hidden&&(Game.hidden.ch4b||Game.hidden.wataseEver)), // 称号は周回で消えない(勲章の記憶・進行フラグ本体はリセット=再挑戦可)
+    spotsRead:(Game.spotsRead||[]).slice(),ng:(Game.ng||0)+1};
   fadeColor('#070b1e');
   await fadeTo(1,0.8);
   resetGame();
@@ -10126,6 +10128,7 @@ async function ngNewGame(){
   Game.door=keep.door;Game.mkey=keep.mkey;Game.cloak=keep.cloak;Game.book=keep.book;Game.talkOff=keep.talkOff;Game.seen=keep.seen;Game.spotsRead=keep.spotsRead;
   if(keep.zkomp)Game.hidden.zkomp=true;
   if(keep.ch3dEver)Game.hidden.ch3dEver=true; // 章3の こたえは 周回でも きえない(EDの ことばに かかる)
+  if(keep.fuchiEver)Game.hidden.fuchiEver=true;if(keep.slcatchEver)Game.hidden.slcatchEver=true;if(keep.wataseEver)Game.hidden.wataseEver=true;
   Game.ng=keep.ng;
   const L=LEVELS[p.lv];p.mhp=L.hp+Game.bonusHp;p.mmp=L.mp+Game.bonusMp;recalcStats();p.hp=p.mhp;p.mp=p.mmp;
   updateBars();updateBadge();
