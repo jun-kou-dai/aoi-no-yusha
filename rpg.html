@@ -2170,6 +2170,11 @@ function relayoutSideBtns(){
     if(dyn[id]&&!el.classList.contains('show'))continue;
     el.style.top='calc(max(12px, env(safe-area-inset-top)) + '+(i*50)+'px)';i++;
   }
+  // フル装備(7ボタン全表示)時だけ長いラベルを短縮=右列の横占有を圧縮(A案の残穴)。非フル時は従来表記
+  const full=(i===8);
+  const db=document.getElementById('doorbtn');if(db)db.textContent=full?'🚪 ドア':'🚪 どこでもドア';
+  const tb=document.getElementById('talkbtn');if(tb)tb.textContent=(Game.talkOff?'🤫':'💬')+(full?' はなし':' はなしかけ')+(Game.talkOff?' OFF':' ON');
+  const cb=document.getElementById('cloakbtn');if(cb)cb.textContent='👻 とうめい'+(Game.invisible?(full?' ':' のこり')+Math.max(0,Game.cloakSteps)+'歩':'');
 }
 function updateDoorBtn(){const b=document.getElementById('doorbtn');if(b)b.classList.toggle('show',!!Game.door);relayoutSideBtns();}
 // ============== 冒険の書（モンスター図鑑）==============
@@ -3138,14 +3143,13 @@ function toggleTalkOff(){
 function updateTalkBtn(){
   const b=document.getElementById('talkbtn');if(!b)return;
   b.classList.toggle('on',!!Game.talkOff);
-  b.textContent=Game.talkOff?'🤫 はなしかけ OFF':'💬 はなしかけ ON';
+  relayoutSideBtns(); // ラベルはrelayoutSideBtnsで一元管理(フル装備時の短縮と整合)
 }
 function updateCloakBtn(){
   const b=document.getElementById('cloakbtn');if(!b)return;
   b.classList.toggle('show',!!Game.cloak);
   b.classList.toggle('on',!!Game.invisible);
-  b.textContent='👻 とうめい'+(Game.invisible?' のこり'+Math.max(0,Game.cloakSteps)+'歩':'');
-  relayoutSideBtns();
+  relayoutSideBtns(); // ラベルはrelayoutSideBtnsで一元管理(フル装備時の短縮と整合)
 }
 // しらべるポイントの語り（読み物・フラグ無し・何度でも読める）
 async function spotTalk(sp){
