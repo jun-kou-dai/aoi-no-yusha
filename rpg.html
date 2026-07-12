@@ -2152,9 +2152,19 @@ function updateBars(){
   updateDoorBtn();updateCloakBtn();updateBookBtn();updateTalkBtn();
 }
 // 🚪どこでもドアボタン：所持していれば フィールドに 表示
-function updateDoorBtn(){const b=document.getElementById('doorbtn');if(b)b.classList.toggle('show',!!Game.door);}
+// A案(誤爆対策): 右列ボタンは「表示中のものだけ」上から詰める。非表示ボタンの穴で メモ/はなしかけが 画面中央に浮き、下のワールド(商人/宿)タップを 奪うのが 誤爆の正体
+function relayoutSideBtns(){
+  const dyn={doorbtn:1,cloakbtn:1,bookbtn:1};
+  let i=1;
+  for(const id of ['itembtn','spellbtn','doorbtn','cloakbtn','bookbtn','questbtn','talkbtn']){
+    const el=document.getElementById(id);if(!el)continue;
+    if(dyn[id]&&!el.classList.contains('show'))continue;
+    el.style.top='calc(max(12px, env(safe-area-inset-top)) + '+(i*50)+'px)';i++;
+  }
+}
+function updateDoorBtn(){const b=document.getElementById('doorbtn');if(b)b.classList.toggle('show',!!Game.door);relayoutSideBtns();}
 // ============== 冒険の書（モンスター図鑑）==============
-function updateBookBtn(){const b=document.getElementById('bookbtn');if(b)b.classList.toggle('show',!!Game.book);}
+function updateBookBtn(){const b=document.getElementById('bookbtn');if(b)b.classList.toggle('show',!!Game.book);relayoutSideBtns();}
 function foeId(foe){for(const k in FOES)if(FOES[k]===foe)return k;return null;}
 function foeInfoCost(f){return f===FOES.boss2?0:(f.boss?200:(f.mboss?100:0));}
 function markSeen(id){if(!id)return;if(!Game.seen)Game.seen={};Game.seen[id]=1;if(id==='boss')Game.seen.boss2=1;}
@@ -3125,6 +3135,7 @@ function updateCloakBtn(){
   b.classList.toggle('show',!!Game.cloak);
   b.classList.toggle('on',!!Game.invisible);
   b.textContent='👻 とうめい'+(Game.invisible?' のこり'+Math.max(0,Game.cloakSteps)+'歩':'');
+  relayoutSideBtns();
 }
 // しらべるポイントの語り（読み物・フラグ無し・何度でも読める）
 async function spotTalk(sp){
