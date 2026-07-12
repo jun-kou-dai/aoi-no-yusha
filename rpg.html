@@ -5369,6 +5369,31 @@ function drawFieldScene(){
   drawExitBeacons(); // でぐちビーコンは さいごに えがく＝くらやみ/よる/きりに つぶされない
   drawQuestBeacons(); // めあての 金の光柱も どのoverlayにも つぶされない
   drawChapterCard(); // しょうタイトルは さいじょうそう
+  drawMinimap(); // ちいさな ちず（あかるい しまだけ・かいわちゅうは けす）
+}
+// ミニマップ：左上HUDの下。タイル色分け+勇者=白点(点滅)+でぐち=金。dark持ちマップは視界の意味が消えるため出さない
+function drawMinimap(){
+  const wld=WORLDS[Game.mapId];
+  if(wld.dark||Game.talking||Game.minigame||Game.transiting)return;
+  const px=4,pad=4,mx=12,my=118;
+  const w=MW*px+pad*2,h=MH*px+pad*2;
+  ctx.save();
+  ctx.globalAlpha=0.92;
+  ctx.fillStyle='rgba(10,14,28,0.72)';
+  rr(ctx,mx,my,w,h,8);ctx.fill();
+  const COL={G:'#4a8a4a',P:'#c8b088',W:'#3a5a9a',T:'#2e5e3a',R:'#6a6a72',H:'#8a6a4a',O:'#b89040',C:'#55505c',F:'#7a7060',B:'#4a4658',S:'#8a8694',L:'#c85a2a',E:'#ffd86b',I:'#a8d0e8',M:'#5a7a5a',N:'#5a7a5a',K:'#5a7a5a',J:'#5a7a5a',D:'#a07030'};
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+    const t=MAP[y][x];ctx.fillStyle=COL[t]||'#333';
+    ctx.fillRect(mx+pad+x*px,my+pad+y*px,px-0.5,px-0.5);
+  }
+  const hx=mx+pad+Game.p.px*px+px/2,hy=my+pad+Game.p.py*px+px/2;
+  ctx.fillStyle='#fff';
+  ctx.globalAlpha=0.75+0.25*Math.sin(TM*4);
+  ctx.beginPath();ctx.arc(hx,hy,2.6,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=0.5;
+  ctx.strokeStyle='#fff';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(hx,hy,4.5,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
 }
 function drawIsoBlock(x,y,cam){
   const t=MAP[y][x];
