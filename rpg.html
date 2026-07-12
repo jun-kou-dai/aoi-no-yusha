@@ -586,7 +586,7 @@ grass:{
   {x:1,y:11,kind:'musume',role:'haha',col:'#e8b0c0',msg:[]},
   {x:10,y:10,kind:'musume',small:true,col:'#90c8e8',heir:1,msgCh4:['こども「むねの ここ、まだ ぽかぽか してるの。\nゆうしゃさまの ひかり、だいじに そだてるね！」','こども「ねえ しってた？ ひかりはね、わたしても\nへらないんだよ。 ……ふふ、うけうり だけど！」'],msgCleared:['こども「ゆうしゃさま、かったんだね！ むらの みんな、\nきのうから ずーっと おまつりみたいだよ！」','こども「わたしも いつか、ゆうしゃさまみたいに\nつよくて やさしい ひとに なるんだ！」'],msg:['こども「おおきくなったら わたしが たまを まもるんだ！\nだから ゆうしゃさま、まけちゃ だめだよ！」'],msgNight:['こども「ほんとは もう ねる じかんなの。ないしょだよ？\nよるの ほしは ぜんぶ、まもられた ひとの ひかり なんだって！」'],msgHeir:['こども「むねの おくが、まだ ぽかぽか してるの。\nわたし、いつか ちゃんと うけとめて みせるよ！」'],msgAnswered:['こども「ひかりはね、えらばないんだって！\nうけとめれば、だれにでも やどるんだって！」','こども「だから わたし、おおきな うつわに なるの。\nゆうしゃさまみたいに！」']},
   {x:14,y:9,kind:'stone',col:'#9aa4b8',stoneKey:'t1',msg:['せきひ「ひかりのたまは よを てらす。\nこれを まもる ものを ── けいしょうしゃ と よぶ。」']},
-  {x:15,y:11,kind:'musume',col:'#5f5a78',needKey:'ch4c',msg:['フードの ひとかげは、こたえない。\nかぜの おとだけが、ふたりの あいだを すぎていく。']}],
+  {x:15,y:11,kind:'musume',col:'#5f5a78',needKey:'ch4c',hood:1,msg:['フードの ひとかげは、こたえない。\nかぜの おとだけが、ふたりの あいだを すぎていく。']}],
  king:{x:3,y:10}},
 forest:{
  song:'forest', bg:['#0a1f12','#13301d'],
@@ -3257,6 +3257,24 @@ async function talkNpc(n){
     saveGame();
     return;
   }
+  if(n.hood){ // 章5: とざしびと(3段の変化=となりに いる)
+    const H5=Game.hidden;
+    if(H5.ch5n2){
+      await say('ひとかげは、もう にげるように うつむかない。\nかぜが、ふたりの あいだを おだやかに とおりぬける。');
+    }else if(H5.ch5n1){
+      H5.ch5n2=true;
+      await say('……ひとかげが、ほんの わずかに こちらを むいた。');
+      flash('#c8c2e8',0.25,0.7);
+      await say('(まだ ことばは ない。\n……でも、いまは それで いい。)');
+      toast('ものがたりは、ゆっくり うごいている——(つづく)');
+    }else if(H5.ch5b){
+      H5.ch5n1=true;
+      await say('ひとかげは こたえない。けれど——さっきより ほんの すこし、\nかたの ちからが ぬけて みえる。');
+    }else{
+      await say('フードの ひとかげは、こたえない。\nかぜの おとだけが、ふたりの あいだを すぎていく。');
+    }
+    endTalk();saveGame();return;
+  }
   if(n.shop){await runShop();saveGame();}
   else if(n.child){
     // まいごの ポポ（どうくつ）
@@ -3411,6 +3429,15 @@ async function talkNpc(n){
       if(Game.cam){const q=isoCtr(n.x,n.y);puff(q.x,q.y-Game.cam.lift*0.2,'rgba(190,180,230,.9)',22,120,1.2,{up:true,s0:2,s1:4});}
       await say('あたらしい といが、しずかに むねに おちた。');
       toast('もくてき：むらはずれの ひとかげに こえを かけて みよう');
+      endTalk();saveGame();return;
+    }
+    // 章5b: 助言『となりに おれ』(ch5aのあと一度きり)
+    if(n.msgElder&&Game.hidden.ch5a&&!Game.hidden.ch5b){
+      Game.hidden.ch5b=true;
+      await say('じいさん「あの ものの ことか。……のう、ゆうしゃどの。\nむりに ひらかせようと すると、こころは もっと かたく とざす。」');
+      await say('じいさん「わたそうと するな。——となりに おれ。\nひかりは、いそがせると にげるもんじゃ。」');
+      await say('じいさん「なんども かよう ことじゃ。 こたえが なくてもな。\nそれが、とざした こころへの あいさつ じゃよ。」');
+      toast('もくてき：とざしびとの となりに、なんども いこう');
       endTalk();saveGame();return;
     }
     // 章3: けいしょうの ゆめ(ch3m)のあと じいさんが みなもとを あかす（フル章3の とびら）
@@ -3981,7 +4008,9 @@ function questText(){
     if(Game.hidden.ch3t&&!Game.hidden.ch3d)return 'もくてき：むらの じいさんに みなもとの こたえを';
     if(Game.hidden.ch3a&&!(Game.visited&&Game.visited.minamoto))return 'もくてき：どこでもドアで「みなもとの もり」へ——はじまりの ばしょ';
     if(Game.hidden.nk2&&(Game.purified||0)>=15&&!Game.hidden.ch3m)return 'もくてき：むらの こどもが ふしぎな ゆめを みたらしい';
-    if(Game.hidden.ch5a&&!Game.hidden.ch5b)return 'もくてき：むらはずれの ひとかげ——とざしびとの ことが きにかかる';
+    if(Game.hidden.ch5n2)return 'もくてき：とざしびとの こころが うごきはじめた——ものがたりは つづく';
+    if(Game.hidden.ch5b)return 'もくてき：とざしびとの となりに、なんども いこう';
+    if(Game.hidden.ch5a)return 'もくてき：むらはずれの ひとかげの こと、じいさんに そうだんしよう';
     if(Game.hidden.ch3d)return 'もくてき：こたえは むらに ひろがっていく——ものがたりは つづく';
     if(Game.hidden.nk2&&Game.hidden.ch3m&&(Game.purified||0)>=15&&!Game.hidden.ch3a)return 'もくてき：むらの じいさんが なにか しっている らしい';
     if(Game.hidden.nk2)return 'もくてき：ひかりを つないで いこう——ものがたりは つづく';
