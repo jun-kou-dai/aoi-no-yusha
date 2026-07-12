@@ -7421,9 +7421,20 @@ async function runBattle(ref){
       await say('ヴォルガ「たまを うばった と いうたか？ ちがうな……。\nわしは 『とりもどした』 だけよ。」');
       await say('ヴォルガ「もし わしの なかまに なれば、\nせかいの はんぶんを そなたに やろう。」');
     }
-    const ans=await ask([{id:'yes',label:'はい'},{id:'no',label:'いいえ'}],'どうする？');
+    // 章4の答えを携えた周回者だけ、第3の答えで応じられる(問いの系譜の環)
+    const vOpts=[{id:'yes',label:'はい'},{id:'no',label:'いいえ'}];
+    if(Game.hidden.ch4c||Game.hidden.ch4cEver)vOpts.push({id:'kotae',label:'「ひかりは わたしても へらない」'});
+    const ans=await ask(vOpts,'どうする？');
     if(ans==='yes'){await badEnd();return;}
-    await say('ヴォルガ「おろかな ゆうしゃよ…。\nならば その いのち、やみに かえすまでよ！」');
+    if(ans==='kotae'){
+      flash('#fff2d0',0.4,0.9);
+      await say('ヴォルガ「…………なに？」');
+      await say('ヴォルガ「はんぶんを やる と いうたのだぞ。\nうばいあう ものを、なぜ わけあえると——」');
+      await say('あなたは しずかに かまえた。\nこの こたえは、ことばで なく ものがたりで しめす もの。');
+      await say('ヴォルガ「……その め。 あの おとこと おなじ めを しおって……。\nならば ためして やろう、その こたえとやらを！」');
+    }else{
+      await say('ヴォルガ「おろかな ゆうしゃよ…。\nならば その いのち、やみに かえすまでよ！」');
+    }
   }
   else if(foe===FOES.ent)await say('こけむした きょじんが ゆくてを ふさいでいる…！');
   else if(foe===FOES.fgolem)await say('こおりの きょじんが ゆくてを ふさいでいる…！');
