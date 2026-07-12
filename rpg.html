@@ -2356,7 +2356,7 @@ function renderStatus(){
    h+=row('せきひ',sk+' / 5');
    h+=row('きょじんのこころ',(Game.gheart||0)+' / 5');
    if(Game.hidden&&Game.hidden.ch2)h+=row('じょうか',(Game.purified||0)+'にん の かげを ときはなった');if(Game.hidden&&Game.hidden.mate1){const Mm=MATES[mateKind()];h+=row('みちづれ',Mm.name+'（'+Mm.act+'）');}
-   {const tt=[];if(Game.hidden&&Game.hidden.zkomp)tt.push('まものはかせ');if(Game.hidden&&Game.hidden.slcatch)tt.push('スライムキャッチャー');if(Game.hidden&&Game.hidden.towaDown)tt.push('ふちを こえしもの');
+   {const tt=[];if(Game.hidden&&Game.hidden.zkomp)tt.push('まものはかせ');if(Game.hidden&&Game.hidden.slcatch)tt.push('スライムキャッチャー');if(Game.hidden&&Game.hidden.towaDown)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal())tt.push('かたりべ');
     h+=row('しょうごう',tt.length?tt.join('　'):'──');}}
   if(Game.hidden&&Game.hidden.mate1){
     h+='<h3 class="bisle">みちづれを えらぶ<span class="stsub">　じょうかが すすむほど つよくなる</span></h3><div class="mateswap">';
@@ -3122,8 +3122,12 @@ async function spotTalk(sp){
   for(const m of sp.msg)await say(m);
   endTalk();
   Game.spotsRead=Game.spotsRead||[];
-  if(!Game.spotsRead.includes(sp)){Game.spotsRead.push(sp);toast('よみものを みつけた！（たびのメモに きろく）');saveGame();}
+  if(!Game.spotsRead.includes(sp)){Game.spotsRead.push(sp);
+    if(Game.spotsRead.length>=spotTotal()){sfxLevel();flash('#ffe9b0',0.3,0.7);toast('すべての よみものを よんだ！ しょうごう「かたりべ」を えた！');}
+    else toast('よみものを みつけた！（たびのメモに きろく）');
+    saveGame();}
 }
+function spotTotal(){let n=0;for(const id in WORLDS){const w=WORLDS[id];if(w.spots)n+=w.spots.length;}return n;}
 function startTalk(){
   Game.talking=true;
   held.length=0;swipeVec=null;ptr=null;
