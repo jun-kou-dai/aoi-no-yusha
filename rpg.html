@@ -5174,7 +5174,8 @@ function drawFieldScene(){
   Game.dayNow=dm;
   const g=ctx.createLinearGradient(0,0,0,H);
   if(dm){g.addColorStop(0,rgbs(dm.s0));g.addColorStop(1,rgbs(dm.s1));}
-  else{g.addColorStop(0,wld.bg[0]);g.addColorStop(1,wld.bg[1]);}
+  else{const bgA=(Game.mapId==='castle'&&Game.hidden.cleared)?['#2c2140','#7a4a58']:wld.bg; // クリア後の しろ=よあけの そら
+    g.addColorStop(0,bgA[0]);g.addColorStop(1,bgA[1]);}
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   if(dm)drawSky(dm);
   else if((MAP===WORLDS.ice.map||MAP===WORLDS.icetown.map))drawIceSky();
