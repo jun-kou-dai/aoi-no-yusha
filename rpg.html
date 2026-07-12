@@ -595,7 +595,7 @@ forest:{
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TTGTTTGGJGGGTTTTTTTT',
- 'TTGTGGGTGGGTTTTTTGGT',
+ 'TTGGGGGGGGGTTTTTTGGT',
  'EPPGGGGJGNMNMTMNGGGT',
  'TTPGGWWTTTTTTTKGGGTT',
  'TGPPGWWTTTTTGKTGGGGT',
@@ -1345,6 +1345,9 @@ function loadGame(){
   Game.mkey=!!d.mkey; // まほうのかぎ 所持
   Game.cloak=!!d.cloak;Game.book=!!d.book;Game.talkOff=!!d.talkOff;Game.invisible=false;Game.cloakSteps=CLOAK_MAX;Game.seen=(d.seen&&typeof d.seen==='object')?d.seen:{}; // とうめいマント（所持のみ永続・透明状態は持ち越さない・バッテリー満タン）
   Game.visited=(d.visited&&typeof d.visited==='object')?d.visited:{};Game.visited.grass=true; // 訪問した島（旧セーブは草原を既訪あつかい）
+  {const h=Game.hidden; // 〜v20260712_1557: 城の章カード済みが ch4c を流用し「章4cこぼれび完了」と衝突（こぼれび不出現/ED行の先出し）→castleCardへ移行。真の章4c完了は 図鑑koborebi既見+ch4w を伴う
+   if(h.ch4c){h.castleCard=true;if(!(Game.seen.koborebi&&h.ch4w))delete h.ch4c;}
+   if(h.ch4cEver&&!Game.seen.koborebi)delete h.ch4cEver;}
   if(d.stats)Game.stats={battles:d.stats.battles||0,crits:d.stats.crits||0,deaths:d.stats.deaths||0};
   const keys=d.chests||[];
   Game.chestsOpen=[];
@@ -4269,7 +4272,7 @@ function updateField(dt){
     else if(Game.mapId==='castle'&&Game.hidden.ch2end&&!Game.hidden.nkIntro&&!Game.hidden.nk1)nukegaraIntroScene();
     else if(Game.mapId==='castle'&&Game.hidden.nk1&&!Game.hidden.nk2)nukegaraScene();
     else if(Game.mapId==='minamoto'&&Game.hidden.ch3c&&!Game.hidden.ch3t)truthScene();
-    else if(Game.mapId==='castle'&&!Game.hidden.cleared&&!Game.hidden.ch4c){Game.hidden.ch4c=true;showChapter('だい 4 しょう','やみの おうざ');saveGame();}
+    else if(Game.mapId==='castle'&&!Game.hidden.cleared&&!Game.hidden.castleCard){Game.hidden.castleCard=true;showChapter('だい 4 しょう','やみの おうざ');saveGame();}
     else if(Game.mapId==='minamoto'&&!Game.hidden.ch3card){Game.hidden.ch3card=true;showChapter('だい 3 ぶ','ひかりの みなもと');saveGame();}
     else if(Game.mapId==='towa'&&!Game.hidden.towaCard){Game.hidden.towaCard=true;showChapter('とわの ふち','といの ねむる ばしょ');saveGame();}
     else if(Game.hidden.ch2&&!Game.hidden.mate1&&(Game.purified||0)>=5)mateJoinScene();
