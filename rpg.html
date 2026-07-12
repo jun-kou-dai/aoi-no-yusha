@@ -5366,6 +5366,28 @@ function drawFieldScene(){
     tg.addColorStop(0,'rgba(255,180,90,0.12)');tg.addColorStop(1,'rgba(255,180,90,0)');
     ctx.fillStyle=tg;ctx.beginPath();ctx.arc(pc.x,pcy,r*0.55,0,Math.PI*2);ctx.fill();
     ctx.restore();
+    // よみものspotの微光は くらやみに つぶされるため、やみの うえに ともし直す（気づき導線。視界+2.2タイルまで=マップ全域は光らせない）
+    if(SPOTS&&SPOTS.length){
+      const lim=(wld.darkR||4.6)+2.2;
+      ctx.save();ctx.globalCompositeOperation='lighter';
+      for(const sp of SPOTS){
+        const dist=Math.hypot(sp.x-Game.p.px,sp.y-Game.p.py);
+        if(dist>lim)continue;
+        const read=(Game.spotsRead||[]).includes(sp);
+        const edge=Math.min(1,Math.max(0,(lim-dist)/1.2)); // 遠端1.2タイルだけフェード=くらやみの中でも一定の ほたる光
+        const a=(read?0.10:0.30)*edge*(0.75+0.25*Math.sin(TM*2.6+sp.x*1.7+sp.y));
+        if(a<=0.012)continue;
+        const c2=isoCtr(sp.x,sp.y),gy=c2.y-TW*0.26-propZ(sp.x,sp.y);
+        const gs=ctx.createRadialGradient(c2.x,gy,1,c2.x,gy,TW*0.5);
+        gs.addColorStop(0,'rgba(235,242,255,'+a.toFixed(3)+')');gs.addColorStop(1,'rgba(235,242,255,0)');
+        ctx.fillStyle=gs;ctx.beginPath();ctx.arc(c2.x,gy,TW*0.5,0,Math.PI*2);ctx.fill();
+        if(!read){ // ほたるの ような しん（みつけやすさの かく）
+          ctx.fillStyle='rgba(255,255,244,'+Math.min(0.85,a*2.4).toFixed(3)+')';
+          ctx.beginPath();ctx.arc(c2.x,gy,Math.max(1.2,TW*0.045),0,Math.PI*2);ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
   }
   // タップいどうの めじるし（もくてきちに あわい リング）
   if(Game.autoPath&&Game.autoPath.length){
