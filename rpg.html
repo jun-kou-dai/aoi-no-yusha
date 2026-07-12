@@ -2370,7 +2370,7 @@ function renderStatus(){
    h+=row('せきひ',sk+' / 5');
    h+=row('きょじんのこころ',(Game.gheart||0)+' / 5');
    if(Game.hidden&&Game.hidden.ch2)h+=row('じょうか',(Game.purified||0)+'にん の かげを ときはなった');if(Game.hidden&&Game.hidden.mate1){const Mm=MATES[mateKind()];h+=row('みちづれ',Mm.name+'（'+Mm.act+'）');}
-   {const tt=[];if(Game.hidden&&Game.hidden.zkomp)tt.push('まものはかせ');if(Game.hidden&&Game.hidden.slcatch)tt.push('スライムキャッチャー');if(Game.hidden&&Game.hidden.towaDown)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal())tt.push('かたりべ');
+   {const tt=[];if(Game.hidden&&Game.hidden.zkomp)tt.push('まものはかせ');if(Game.hidden&&Game.hidden.slcatch)tt.push('スライムキャッチャー');if(Game.hidden&&Game.hidden.towaDown)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal())tt.push('かたりべ');if(Game.hidden&&Game.hidden.ch4b)tt.push('ひかりを わたせしもの');
     h+=row('しょうごう',tt.length?tt.join('　'):'──');}}
   if(Game.hidden&&Game.hidden.mate1){
     h+='<h3 class="bisle">みちづれを えらぶ<span class="stsub">　じょうかが すすむほど つよくなる</span></h3><div class="mateswap">';
@@ -3463,6 +3463,28 @@ async function talkKing(){
     p.hp=p.mhp;p.mp=p.mmp;Game.cloakSteps=CLOAK_MAX;updateBars();
     sfxHeal();flash('#9fe8b0',0.2,0.6);
     await say('おうさま「たびの つかれを いやすが よい。」\nHPとMPが すべて かいふくした！');
+  }
+  // 章4b: けいしょうの ぎしき（一度きり・ch4a=きざし の あと、王から はじまる）
+  if(Game.hidden.ch4a&&!Game.hidden.ch4b){
+    Game.hidden.ch4b=true;
+    await say('おうさま「まって おったぞ、ゆうしゃよ。\n……ぎしきの したくが ととのった。」');
+    await say('おうさま「けいしょうの ぎしき——たまの ひかりを、\nつぎの こころへ わたす とき じゃ。」');
+    flash('#fff6dc',0.5,1.2);
+    await say('ひろばに むらの みなが あつまっている。\nじいさんが うなずき、こどもが まえに すすみでた。');
+    await say('こども「……きんちょう、 してきた。」');
+    await say('あなたは たまに てを かざし、\nひかりを そっと すくいとった——');
+    sfxLevel();flash('#ffe9b0',0.55,1.2);Game.fieldShake=Math.max(Game.fieldShake||0,10);
+    if(Game.cam){const k=WORLDS.grass.king;const q=isoCtr(k.x,k.y);puff(q.x,q.y-Game.cam.lift*0.2,'rgba(255,235,160,.95)',44,170,1.6,{up:true,s0:2,s1:5});}
+    await say('てのひらの ひかりを、ちいさな むねへ。');
+    await say('こども「──あったかい。 ……うん。 うけとめた！」');
+    sfxHeal();flash('#fff2d0',0.45,1.0);
+    if(Game.cam){const k=WORLDS.grass.king;const q=isoCtr(k.x,k.y);puff(q.x,q.y-Game.cam.lift*0.2,'rgba(210,235,255,.95)',30,140,1.3,{up:true,s0:2,s1:4});}
+    await say('こどもの むねで、ひかりが やわらかく ともる。\nふしぎな ことに——あなたの ひかりも、へっては いなかった。');
+    await say('じいさん「みたか。 ひかりは わたす たびに、\nふえて いくのじゃ。」');
+    await say('おうさま「この ひを、くにの あたらしい\nはじまりの ひ と さだめよう！」');
+    showChapter('だい 4 しょう','わたす ひかり');
+    toast('しょうごう「ひかりを わたせしもの」を えた！');
+    endTalk();saveGame();return;
   }
   if(Game.hidden.cleared){
     await say('おうさま「やみのおうを うちやぶった まことの ゆうしゃよ！\nこの くにに よあけを かえした その な、わしは わすれぬぞ。」');
