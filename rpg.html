@@ -4098,6 +4098,7 @@ function tapMove(cx,cy){
    if(w.king)ents.push({x:w.king.x,y:w.king.y});
    if(w.inn)ents.push({x:w.inn.x,y:w.inn.y});
    if(SPOTS)for(const sp of SPOTS)ents.push({x:sp.x,y:sp.y}); // しらべるポイントも吸着対象(NPC隣接時に負けない)
+   if(Game.enemies)for(const e of Game.enemies)if(e.def&&e.def.still)ents.push({x:e.tx,y:e.ty}); // 動かないボスもタップで挑める(となりまで歩いて最後の一歩で接触)
    let best=null,bd=1e9;
    for(const e of ents){const q=isoCtr(e.x,e.y);
      const dx=lx-q.x, dy=ly-(q.y-cam.TH*0.45); // 体の中心は足元タイルより上
@@ -4105,7 +4106,8 @@ function tapMove(cx,cy){
      if(dd<cam.TW*0.55&&dd<bd){bd=dd;best=e;}}
    if(best){tx=best.x;ty=best.y;}}
   if(tx<0||ty<0||tx>=MW||ty>=MH)return;
-  const isTalkT=(x,y)=>!!(npcAt(x,y)||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y)||spotAt(x,y));
+  const stillFoeAt=(x,y)=>!!(Game.enemies&&Game.enemies.find(e=>e.def&&e.def.still&&e.tx===x&&e.ty===y));
+  const isTalkT=(x,y)=>!!(npcAt(x,y)||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y)||spotAt(x,y)||stillFoeAt(x,y));
   const goalDoor=(Game.mapId==='cave2'&&tileAt(tx,ty)==='D'&&!Game.hidden.gate1); // とざされた とびらも タップで あけられる（となりまで あるいて たいあたり）
   const goalTalk=isTalkT(tx,ty)||goalDoor;
   if(!goalTalk&&!walkable(tx,ty))return;
