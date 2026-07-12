@@ -822,7 +822,8 @@ cave2:{
 icetown:{
  song:'village', bg:['#122334','#20384e'],
  spots:[
-  {x:7,y:2,kind:'sign',msg:['けいじばん「ゆきまつりは えんき。まものが しずまったら さいかい」\n── まちの ちょうろう']}],
+  {x:7,y:2,kind:'sign',msg:['けいじばん「ゆきまつりは えんき。まものが しずまったら さいかい」\n── まちの ちょうろう']},
+  {x:15,y:2,kind:'fire',msg:['ゆきかきの あとの たきび。ちいさな てぶくろが かわかしてある。\nこどもたちも てつだったらしい。']}],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TTTTTTTTTTTTTTTTTTTT',
@@ -6426,6 +6427,14 @@ function drawSpot(sp){
   ctx.save();ctx.translate(x,y);
   ctx.fillStyle='rgba(8,14,28,0.28)';
   ctx.beginPath();ctx.ellipse(ts*0.06,ts*0.30,ts*0.24,ts*0.075,0,0,Math.PI*2);ctx.fill();
+  { // しらべられる きづき: かすかな しろい ゆらぎ(宝箱の金光より ずっと ひかえめ)
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    ctx.globalAlpha=0.10+0.07*Math.sin(TM*2.2+sp.x*1.7+sp.y);
+    const gw=ctx.createRadialGradient(0,0,2,0,0,ts*0.42);
+    gw.addColorStop(0,'rgba(220,230,255,.7)');gw.addColorStop(1,'rgba(220,230,255,0)');
+    ctx.fillStyle=gw;ctx.beginPath();ctx.arc(0,0,ts*0.42,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
   if(sp.kind==='grave'){
     // 土盛り
     ctx.fillStyle='#4a3f30';
