@@ -3987,6 +3987,7 @@ function tapMove(cx,cy){
    if(w.npcs)for(const n of w.npcs)if(!npcGone(n))ents.push({x:n.x,y:n.y});
    if(w.king)ents.push({x:w.king.x,y:w.king.y});
    if(w.inn)ents.push({x:w.inn.x,y:w.inn.y});
+   if(SPOTS)for(const sp of SPOTS)ents.push({x:sp.x,y:sp.y}); // しらべるポイントも吸着対象(NPC隣接時に負けない)
    let best=null,bd=1e9;
    for(const e of ents){const q=isoCtr(e.x,e.y);
      const dx=lx-q.x, dy=ly-(q.y-cam.TH*0.45); // 体の中心は足元タイルより上
