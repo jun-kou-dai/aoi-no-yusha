@@ -7387,7 +7387,7 @@ async function runBattle(ref){
   enameEl.textContent=foe.name;
   msgtextEl.textContent='';
   updateBars();
-  playSong(foe===FOES.kotae?'kotae':foe.kage?'kage':foe.boss||foe.mboss?'boss':'battle');
+  playSong((foe===FOES.kotae||foe===FOES.koborebi)?'kotae':foe.kage?'kage':foe.boss||foe.mboss?'boss':'battle'); // こぼれび=神秘曲(kotae)。既存ボスの曲は不変
   await fadeTo(0,0.16);
   Game.bt.intro=1; // とうじょうスライド
   await wait(0.03);
