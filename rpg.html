@@ -2437,6 +2437,17 @@ function renderQuest(){
   h+=row('たたかった かず',(Game.stats&&Game.stats.battles)||0,'かいしん '+((Game.stats&&Game.stats.crits)||0)+'・ぜんめつ '+((Game.stats&&Game.stats.deaths)||0));
   {const mm=Math.floor(Math.max(0,performance.now()-Game.t0)/60000);
    h+=row('ぼうけんの じかん',Math.floor(mm/60)+'じかん '+(mm%60)+'ぷん');}
+  // よみものちょう：読了した語りを全文で読み返せる（未読は載せない=ネタバレ防止・0件なら節ごと出さない）
+  {const rd=[];for(const id in WORLDS){const w=WORLDS[id];if(!w.spots)continue;
+    for(const sp of w.spots)if((Game.spotsRead||[]).includes(sp))rd.push({id:id,sp:sp});}
+   if(rd.length){
+    h+='<h3 class="bisle">よみものちょう（'+rd.length+' / '+spotTotal()+'）</h3>';
+    const KN={grave:'はかいし',sign:'たてふだ',fire:'たきびあと'};
+    for(const e of rd){
+      const txt=(e.sp.msg||[]).join('\n').replace(/\n/g,'<br>');
+      h+=row((KN[e.sp.kind]||'よみもの')+'・'+(MAPNAME[e.id]||e.id),'',txt);
+    }
+   }}
   return h;
 }
 function openQuest(){
