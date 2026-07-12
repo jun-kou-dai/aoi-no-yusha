@@ -3945,6 +3945,8 @@ function questText(){
     }
     if(Game.mapId==='towa')return Game.hidden.towaDown?'もくてき：ふちは しずかに ねむっている':'もくてき：ふちの おくの「といの けしん」を こえよ';
     if(Game.hidden.ch4w&&!Game.hidden.ch4c)return 'もくてき：どこでもドアで「みなもとの もり」へ——こぼれびを しずめよ';
+    if(Game.hidden.ch4a&&!Game.hidden.ch4b)return 'もくてき：ぎしきの ときだ——おうさまの もとへ';
+    if(Game.hidden.ch4b&&!Game.hidden.ch4w)return 'もくてき：むらの じいさんに こえを かけよう';
     if(Game.hidden.towaGate&&!Game.hidden.towaDown&&!(Game.visited&&Game.visited.towa))return 'もくてき：どこでもドアで「とわの ふち」へ——さいごの しれん';
     if(Game.hidden.ch3t&&!Game.hidden.ch3d)return 'もくてき：むらの じいさんに みなもとの こたえを';
     if(Game.hidden.ch3a&&!(Game.visited&&Game.visited.minamoto))return 'もくてき：どこでもドアで「みなもとの もり」へ——はじまりの ばしょ';
