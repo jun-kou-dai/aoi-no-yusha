@@ -564,6 +564,9 @@ grass:{
   {x:3, y:2,  item:'tane'},
   {x:2, y:7,  item:'yakuso'},
   {x:16,y:11, item:'seisui'}],
+ spots:[
+  {x:5,y:11,kind:'grave',msg:['はかいし「ここに ねむるは 先代の けいしょうしゃ。\nたまを まもり、わらって たおれた──と きざまれている。」']},
+  {x:12,y:6,kind:'sign',msg:['たてふだ「いけの ぬしは きんいろ。にげあしは せかいいち。\nであえたら うんが いい」── むらの こどもの じ']}],
  spring:{x:17,y:5},
  inn:{x:2,y:9},
  exits:[{x:16,y:2,to:'forest',tx:4,ty:6,msg:'ふかい もりへ ふみこんだ…'}],
@@ -576,14 +579,18 @@ grass:{
   {x:11,y:5,kind:'musume',goneKid:true,msgCleared:['むすめ「そらの いろが かわったの、きづいてた？\nあさが ちゃんと、あさの いろを してるのよ。」','むすめ「あのかたが さいごに なにを おもったのか……\nいまなら すこし、わかる きが するの。」'],msgRescued:['むすめ「たすけてくれて ほんとうに ありがとう…！」','むすめ「あのかた… たまを 『とりもどす』と いっていたわ。\nまるで もともと じぶんの ものだった みたいに…」'],col:'#9ad0c0',msg:['むらびと「どうくつの ほねの まものは\nほのおの じゅもんが にがて らしい。」'],
    msg2:['むらびと「しろには やみの まものが うようよ いるって…。\nやくそうを わすれずに ね！」'],
    msg3:['むらびと「こおりの せかいには さまよう きょじんが いるって…。\nちかづくと おいかけて くるらしいわ！」'],
-   msg4:['むらびと「ヴォルガって もとは わるいひとじゃ なかったって\nおばあちゃんが いってたけど… ほんとう かしら。」']},
+   msg4:['むらびと「ヴォルガって もとは わるいひとじゃ なかったって\nおばあちゃんが いってたけど… ほんとう かしら。」'],
+   msgNight:['むらびと「よるの みずうみは つきが うつって きれいなのよ。\nでも きんのスライムは よるは かくれちゃう みたい。」','むらびと「よるに つよくなるのは まものだけじゃ ない──\nおかあさんが そう いってたわ。」']},
   {x:5,y:9,shop:true,kind:'shop',col:'#e8c880',msg:[]},
   {x:1,y:11,kind:'musume',role:'haha',col:'#e8b0c0',msg:[]},
-  {x:10,y:10,kind:'musume',small:true,col:'#90c8e8',heir:1,msgCleared:['こども「ゆうしゃさま、かったんだね！ むらの みんな、\nきのうから ずーっと おまつりみたいだよ！」','こども「わたしも いつか、ゆうしゃさまみたいに\nつよくて やさしい ひとに なるんだ！」'],msg:['こども「おおきくなったら わたしが たまを まもるんだ！\nだから ゆうしゃさま、まけちゃ だめだよ！」'],msgHeir:['こども「むねの おくが、まだ ぽかぽか してるの。\nわたし、いつか ちゃんと うけとめて みせるよ！」'],msgAnswered:['こども「ひかりはね、えらばないんだって！\nうけとめれば、だれにでも やどるんだって！」','こども「だから わたし、おおきな うつわに なるの。\nゆうしゃさまみたいに！」']},
+  {x:10,y:10,kind:'musume',small:true,col:'#90c8e8',heir:1,msgCleared:['こども「ゆうしゃさま、かったんだね！ むらの みんな、\nきのうから ずーっと おまつりみたいだよ！」','こども「わたしも いつか、ゆうしゃさまみたいに\nつよくて やさしい ひとに なるんだ！」'],msg:['こども「おおきくなったら わたしが たまを まもるんだ！\nだから ゆうしゃさま、まけちゃ だめだよ！」'],msgNight:['こども「ほんとは もう ねる じかんなの。ないしょだよ？\nよるの ほしは ぜんぶ、まもられた ひとの ひかり なんだって！」'],msgHeir:['こども「むねの おくが、まだ ぽかぽか してるの。\nわたし、いつか ちゃんと うけとめて みせるよ！」'],msgAnswered:['こども「ひかりはね、えらばないんだって！\nうけとめれば、だれにでも やどるんだって！」','こども「だから わたし、おおきな うつわに なるの。\nゆうしゃさまみたいに！」']},
   {x:14,y:9,kind:'stone',col:'#9aa4b8',stoneKey:'t1',msg:['せきひ「ひかりのたまは よを てらす。\nこれを まもる ものを ── けいしょうしゃ と よぶ。」']}],
  king:{x:3,y:10}},
 forest:{
  song:'forest', bg:['#0a1f12','#13301d'],
+ spots:[
+  {x:10,y:2,kind:'sign',msg:['たてふだ「この さき、ぬしの もり。しずかに あるくべし」\n── きこりたちの もうしあわせ']},
+  {x:5,y:3,kind:'fire',msg:['たきびあと。おのと なたが たてかけて ある。\nきこりは きょうも ぶじに かえったらしい。']}],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TTGTTTGGJGGGTTTTTTTT',
@@ -602,6 +609,8 @@ forest:{
  start:{x:2,y:3},
  spring:{x:4,y:5},
  npcs:[
+  {x:9,y:1,kind:'musume',col:'#a8d8a0',msg:['むすめ「やくそうつみに きたの。もりの やくそうは よく きくのよ。\nでも おくは ぬしの なわばり…… きを つけてね。」','むすめ「みなみの おくに、ふるい いずみが あるわ。\nつかれたら さがして みて。」'],
+   msgCleared:['むすめ「もりの くうきが かるくなった きが するの。\nやくそうも こころなしか いきいき してるわ。」']},
   {x:4,y:3,kind:'ojii',col:'#a8c86a',msg:['きこり「もりの おくに ぬしが おる。レベル5に なったら\nみちを ふさぐ きが どいて くれるじゃろう。」','きこり「やまばとは すばしっこいぞ。\nじゅもんなら かわされんがな！」'],
    msgCleared:['きこり「もどって きたんじゃな！ ぶじで なにより なにより！」','きこり「もりの けものたちも、こころなしか\nおだやかに なった きが するわい。」'],
    msg2:['きこり「ぬしを しずめたか、たいしたもんじゃ！\nどうくつの おくは ひえる。あたたかくして ゆけ。」'],
@@ -621,6 +630,9 @@ forest:{
   {x:18,y:12,to:'cave', tx:3, ty:1,msg:'くらい どうくつに ふみこんだ…'}]},
 cave:{
  song:'cave', bg:['#070410','#100a18'], dark:true,
+ spots:[
+  {x:5,y:2,kind:'sign',msg:['ほりびとの メモが おちている──\n「ひがしの かべは ひびく。おくに なにかが ねむる」']},
+  {x:16,y:2,kind:'fire',msg:['ふるい たきびあと。ほりびとたちの やどった あとだ。\nかべに「ほって ほって ほりぬいて」と らくがきが ある。']}],
  map:[
  'CCCCCCCCCCCCCCCCCCCC',
  'CCEFFFCCCCFFFFFFFFCC',
@@ -656,6 +668,12 @@ cave:{
   {x:10,y:6,kind:'stone',col:'#9aa4b8',stoneKey:'t3',msg:['せきひ「されど ひとりが といた。\n── なぜ ひかりは すべてを すくわぬのか、と。」']}]},
 castle:{
  song:'castle', bg:['#0a0410','#15071c'],
+ npcs:[
+  {x:6,y:2,kind:'ojii',col:'#8a8a92',msg:['ろうへい「…おお、いきた ひとか！ わしは 先の おうの へいし。\nにげそこねて、ながいこと ここに かくれておる。」','ろうへい「やみのおうの ほのおは たてでは ふせげん。\nHPを たかく たもて。けちると もえつきるぞ。」'],
+   msgCleared:['ろうへい「ヴォルガが たおれるとき、わしは みておった。\nやつ…… さいごに すこし わらったんじゃ。」','ろうへい「この しろにも いつか ひかりが さす。\nそう おもえる ひが くるとはのう。」']}],
+ spots:[
+  {x:7,y:2,kind:'fire',msg:['たきびあとが ある…… まだ あたたかい。\nこの しろに、だれか いきている。']},
+  {x:11,y:1,kind:'sign',msg:['こわれた たてふだ──「ここより やみのおうの ま。\nひきかえすなら いまの うち」']}],
  map:[
  'BBBBBBBBBBBBBBBBBBBB',
  'BLLSSSSSSBBSSSSSSLLB',
@@ -684,6 +702,9 @@ castle:{
  exits:[{x:9,y:12,to:'volcano',tx:17,ty:6,msg:'ねっぷうの せかいへ もどってきた。'}]},
 ice:{
  song:'ice', bg:['#0e1d2b','#1a3048'],
+ spots:[
+  {x:5,y:1,kind:'grave',msg:['こおりの したに だれかが ねむっている。\n「さむさより こどくが こたえた」と きざまれている。']},
+  {x:10,y:1,kind:'sign',msg:['たてふだ「ばんへいに ちかづくな。たちむかって かえった ものは いない」\n── ふるい けいこく']}],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TGGGGGGGGGGGGGGGGGGT',
@@ -724,6 +745,9 @@ ice:{
   {x:2,y:10,to:'icetown',tx:8,ty:10,msg:'ゆきの まちに たどりついた。あたたかい あかりが ともっている。'}]},
 volcano:{
  song:'volcano', bg:['#1c0808','#3a1410'],
+ spots:[
+  {x:6,y:1,kind:'grave',msg:['ようがんに のまれた たびびとの はか。\nかれた はなが そなえて ある。……だれが きたのだろう。']},
+  {x:12,y:1,kind:'sign',msg:['たてふだ「じめんが あつい ひは きょじんが めざめる」\n── ほりびとの ちえ']}],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TGGGGGGGTGGGGGGGGGGT',
@@ -760,6 +784,11 @@ volcano:{
   {x:18,y:6,to:'castle',tx:10,ty:11,msg:'ほのおの おくに そびえる まおうのしろに たどりついた…！'}]},
 cave2:{
  song:'cave', bg:['#050308','#0c0712'], dark:true, darkR:3.4,
+ npcs:[
+  {x:9,y:2,kind:'musume',small:true,col:'#e8c880',msg:['ほりびとのまご「じいちゃんは ここいらを ほりつくした ほりびとでね。\nメモに『とびらの おくで つるぎが ねむる』って のこしてた。」','ほりびとのまご「とざされた とびらは まほうのかぎで ひらくよ。\nかぎは ゆきのまちの みせに あるんだって。」'],
+   msgCleared:['ほりびとのまご「ちそこの かぜが かるく なった。\nじいちゃんの ほった みちが、ひかって みえるよ。」']}],
+ spots:[
+  {x:10,y:3,kind:'fire',msg:['ほりびとの キャンプあと。つるはしが たてかけてある。\nたきびの すみに『まごへ、つづきを たのむ』と ほってある。']}],
  map:[
  'CCCCCCCCCCCCCCCCCCCC',
  'CCCCCCCCCCCCCCCFFECC',
@@ -792,6 +821,8 @@ cave2:{
   {x:17,y:1,to:'cave',tx:14,ty:12,msg:'どうくつ B1に もどってきた。'}]},
 icetown:{
  song:'village', bg:['#122334','#20384e'],
+ spots:[
+  {x:7,y:2,kind:'sign',msg:['けいじばん「ゆきまつりは えんき。まものが しずまったら さいかい」\n── まちの ちょうろう']}],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TTTTTTTTTTTTTTTTTTTT',
@@ -823,6 +854,8 @@ icetown:{
   {x:8,y:11,to:'ice',tx:3,ty:10,msg:'こおりの だいちへ ふみだした。'}]},
  edge:{
  song:'edge', bg:['#0a0a18','#1c1434'],
+ spots:[
+  {x:5,y:2,kind:'grave',msg:['なまえの ない はか。ただ 『といびと』と だけ きざまれている。\nはかは うみを むいて たっている。']}],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TTTTTTTTTGGTTTTTTTTT',
@@ -845,11 +878,15 @@ icetown:{
   {x:4,y:9,item:'taneH'},
   {x:16,y:9,item:'seisui'}],
  npcs:[
+  {x:9,y:1,kind:'ojii',col:'#e8e8d8',msg:['せんにん「ほっほ…… こんな はてまで くるとは。\nわしは こたえを さがして、よを すてた ものよ。」','せんにん「この しまの ぬしは 『こたえなきもの』。\nとうことしか しらぬ もの。あれと はなすなら、しょうじきで おれ。」'],
+   msgCleared:['せんにん「やみのおうは きえたか。それでも といは のこる。\nそれが この よの おもしろさ という ものよ。」']},
   {x:10,y:2,kind:'stone',col:'#9a90c0',msg:['いしぶみには こう きざまれている——','「すくえなかった ものの ぶんまで、\nひかりを つないで いきること。\nそれが、とわの といへの こたえだ。」'],msgHeir:['いしぶみには こう きざまれている——','「すくえなかった ものの ぶんまで、\nひかりを つないで いきること。\nそれが、とわの といへの こたえだ。」','その したに、あたらしい もじが ほのかに ひかっている——','「ひかりは えらぶのか。それとも——\nうけとめる ものが いるだけ なのか。」','「こたえは、みなもとに ねむっている。」'],msgAnswered:['いしぶみには こう きざまれている——','「ひかりは えらばない。\nうけとめる こころが、ひかりの かたちを きめる。」','「すくえなかった ものの ぶんまで、うけとめて いく。\nつぐ ものが いる かぎり、すくいは つづく。」','もじは あさひの ように あたたかく ひかっている。']}],
  exits:[
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'しおかぜが やみ、みなれた そうげんに もどってきた。'}]},
  sunken:{
  song:'sunken', bg:['#241220','#3d1f33'],
+ spots:[
+  {x:4,y:2,kind:'sign',msg:['みずに とけかけた たてふだ──「ここは しずみのさと。\nおとずれる ものは、しずかに」']}],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TWWWWWWWWWWWWWWWWWWT',
@@ -867,9 +904,9 @@ icetown:{
  'TTTTTTTTTTTTTTTTTTTT'],
  start:{x:10,y:11},
  npcs:[
-  {x:2,y:2,kind:'musume',small:true,goneKey:'sk1',col:'#4a4468',msg:['こどものかげ「…にいちゃんたちだ。ふたりで たまを まもるんだって、\nいつも おかの うえで やくそく してた…」','こどものかげ「うみが きた よる、にいちゃんの こえが きこえたの。\n『にげろ！』って。…あれが さいごだった。」']},
-  {x:17,y:9,kind:'ojii',goneKey:'sk2',col:'#4a4468',msg:['りょうしのかげ「たまの けいしょうの ぎしきを みたことが あるかね。\nひかりが、えらばれた ものに ながれこむのじゃ。」','りょうしのかげ「あの ふたりの きょうだいは、さとの ほこり じゃった。\nどちらも、まことに こころの きれいな こども でな…」']},
-  {x:15,y:8,kind:'musume',goneKey:'sk3',col:'#5a4a6a',msg:['はなよめのかげ「その よる、わたしの こんれいだったの。\nさとじゅうが うたって、おどって…」','はなよめのかげ「なみが きたとき、そらが ひかったわ。\nだれかが たまに いのって くれたのね。…はんぶんは、たすかった。」']}],
+  {x:2,y:2,kind:'musume',small:true,goneKey:'sk1',col:'#4a4468',msg:['こどものかげ「…にいちゃんたちだ。ふたりで たまを まもるんだって、\nいつも おかの うえで やくそく してた…」','こどものかげ「うみが きた よる、にいちゃんの こえが きこえたの。\n『にげろ！』って。…あれが さいごだった。」'],msgCleared:['こどものかげ「そらが あかるく なったの、みずの そこからでも わかるよ。\nにいちゃん、みてる かなあ。」']},
+  {x:17,y:9,kind:'ojii',goneKey:'sk2',col:'#4a4468',msg:['りょうしのかげ「たまの けいしょうの ぎしきを みたことが あるかね。\nひかりが、えらばれた ものに ながれこむのじゃ。」','りょうしのかげ「あの ふたりの きょうだいは、さとの ほこり じゃった。\nどちらも、まことに こころの きれいな こども でな…」'],msgCleared:['りょうしのかげ「やみのおうが きえて、みずが すきとおって きたわい。\nさとの みんなの かおが、よく みえる。」']},
+  {x:15,y:8,kind:'musume',goneKey:'sk3',col:'#5a4a6a',msg:['はなよめのかげ「その よる、わたしの こんれいだったの。\nさとじゅうが うたって、おどって…」','はなよめのかげ「なみが きたとき、そらが ひかったわ。\nだれかが たまに いのって くれたのね。…はんぶんは、たすかった。」'],msgCleared:['はなよめのかげ「ふしぎね。あの よるから とまっていた とけいが、\nまた うごきだした きが するの。」']}],
  spawns:[
   {id:'kagehito',x:4,y:10},
   {id:'kagehito',x:16,y:2},
@@ -883,6 +920,8 @@ icetown:{
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'しずんだ さとを あとに、みなれた そうげんへ もどってきた。'}]},
  mistsea:{
  song:'sunken', bg:['#1a2030','#2c3a4e'], dark:true, darkR:5.0, darkCol:'56,72,92', darkA:0.66,
+ spots:[
+  {x:16,y:2,kind:'fire',msg:['きりの なかに たきびあと。ひは とうに きえたのに、\nだれかの ぬくもりだけが のこっている。']}],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TWWWWWWWWWWWWWWWWWWT',
@@ -900,10 +939,12 @@ icetown:{
  'TTTTTTTTTTTTTTTTTTTT'],
  start:{x:10,y:11},
  npcs:[
-  {x:2,y:2,kind:'stone',col:'#8fb4c8',msg:['こえ「……さむいよう、と ないていた こが いた。\nもう なかなくて いいんだよ、と つたえたい。」']},
-  {x:17,y:2,kind:'stone',col:'#8fb4c8',msg:['こえ「ふねを なおしかけの ままに してきた。\nだれか、つづきを たのめるだろうか。」']},
-  {x:2,y:10,kind:'stone',col:'#8fb4c8',msg:['こえ「むすめの こんれいの はなを つみに いく やくそくだった。\nはなばたけは、まだ あるだろうか。」']},
-  {x:17,y:10,kind:'stone',col:'#8fb4c8',msg:['こえ「わたしたちを わすれないで おくれ。\nわすれられた とき、ほんとうに しずむのだから。」']}],
+  {x:9,y:2,kind:'ojii',col:'#7a9ab0',msg:['わたしもり「わたしは、わすれられた ものを むこうぎしへ わたす もの。\nあんたは まだ、こっちがわの ひとだね。」','わたしもり「この きりは 『わすれ』そのもの。なまえを よばれなく\nなった ものが、ここへ ながれつく。」'],
+   msgCleared:['わたしもり「ちかごろ、わたる ものが へってきた。\nあんたが こえを ひろって くれた おかげかね。」']},
+  {x:2,y:2,kind:'stone',col:'#8fb4c8',msg:['こえ「……さむいよう、と ないていた こが いた。\nもう なかなくて いいんだよ、と つたえたい。」'],msgCleared:['こえ「……もう、さむくない。\nだれかが なまえを よんでくれた きが した。」']},
+  {x:17,y:2,kind:'stone',col:'#8fb4c8',msg:['こえ「ふねを なおしかけの ままに してきた。\nだれか、つづきを たのめるだろうか。」'],msgCleared:['こえ「ふねの つづきは、だれかに たくそう。\nこころのこりが、ひとつ かるくなった。」']},
+  {x:2,y:10,kind:'stone',col:'#8fb4c8',msg:['こえ「むすめの こんれいの はなを つみに いく やくそくだった。\nはなばたけは、まだ あるだろうか。」'],msgCleared:['こえ「はなばたけは まだ あると、かぜが おしえてくれた。\nもう おもいのこすことは ない。」']},
+  {x:17,y:10,kind:'stone',col:'#8fb4c8',msg:['こえ「わたしたちを わすれないで おくれ。\nわすれられた とき、ほんとうに しずむのだから。」'],msgCleared:['こえ「おぼえていて くれる ひとが いた。\nそれだけで、しずまずに いられる。」']}],
  spawns:[
   {id:'uminokage',x:7,y:6},
   {id:'uminokage',x:16,y:10},
@@ -916,6 +957,8 @@ icetown:{
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'きりが はれ、みなれた そうげんに もどってきた。'}]},
  minamoto:{ // 章3『ひかりの みなもと』：きんいろの もり。ひかりのしじま=白金の霧(darkの色替え=mistseaと同機構)
  song:'minamoto', bg:['#2e2410','#4a3a1a'], dark:true, darkR:5.5, darkCol:'255,246,214', darkA:0.5,
+ spots:[
+  {x:15,y:1,kind:'sign',msg:['ひかりで できた たてふだ──「ここより ひかりの みなもと。\nうけとめる こころだけが すすめる」']}],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TTGGGTTWWWWWWTTGGGTT',
@@ -933,6 +976,7 @@ icetown:{
  'TTTTTTTTTTTTTTTTTTTT'],
  start:{x:10,y:11},
  npcs:[
+  {x:3,y:2,kind:'musume',small:true,col:'#f6ecc0',msg:['いのりのこだま「……ここは、いのりの かえる ばしょ。\n……あなたの いのりも、いつか ここへ。」']},
   {x:5,y:5,kind:'stone',col:'#e8d89a',msg:['こえ「ここは いのりが かえる ばしょ。\nひかりも、ながれつく ばしょ。」']},
   {x:14,y:7,kind:'stone',col:'#e8d89a',msg:['こえ「といに きたのか。こたえに きたのか。\nもりは どちらも こばまない。」']},
   {x:3,y:3,kind:'stone',col:'#ffe9a0',memKey:'mem1',goneKey:'mem1',msg:['']},
@@ -949,6 +993,8 @@ icetown:{
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'きんいろの ひかりを あとに、そうげんへ もどってきた。'}]},
  towa:{ // 裏ダンジョン『とわの ふち』：こたえを もつ ものだけが たどりつく、といの すみか
  song:'towa', bg:['#0c0616','#1e1030'], dark:true, darkR:4.5, darkCol:'40,20,70', darkA:0.72,
+ spots:[
+  {x:9,y:1,kind:'fire',msg:['たきびあと…… この ふちに？ まだ あたたかい。\nじぶんより さきに、だれかが といに きた のだ。']}],
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TTGGGGGGGPPGGGGGGGTT',
@@ -966,6 +1012,7 @@ icetown:{
  'TTTTTTTTTTTTTTTTTTTT'],
  start:{x:10,y:11},
  npcs:[
+  {x:3,y:1,kind:'musume',small:true,col:'#9a86d8',msg:['といのかけら「トエバ、コタエルカ。コタエレバ、マタ トウ。\nソレデモ ススムナラ……フチノ オクヘ。」']},
   {x:6,y:8,kind:'stone',col:'#9a86d8',msg:['こえ「こたえを もつ ものだけが、ここに たてる。\nといは、ふちの おくで まっている。」']}],
  spawns:[
   {id:'towakage',x:4,y:3},
@@ -977,10 +1024,11 @@ icetown:{
  exits:[
   {x:10,y:12,to:'edge',tx:10,ty:11,msg:'ふちの しじまを ぬけ、はての しまに もどってきた。'}]}};
 let MAP=WORLDS.grass.map,SPAWNS=WORLDS.grass.spawns,CHESTS=WORLDS.grass.chests,
-    SPRING=WORLDS.grass.spring,BZONE=WORLDS.grass.bzone;
+    SPRING=WORLDS.grass.spring,BZONE=WORLDS.grass.bzone,SPOTS=WORLDS.grass.spots||[];
 const tileAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?'T':MAP[y][x];
 // R(やみの台地)は がけ：のぼれない。みちなりに あるけるように する
 const walkable=(x,y)=>{const t=tileAt(x,y);return t==='G'||t==='P'||t==='F'||t==='S'||t==='E'||t==='M'||t==='N'||t==='K';};
+const spotAt=(x,y)=>SPOTS&&SPOTS.find(sp=>sp.x===x&&sp.y===y); // しらべるポイント(体当たり式=NPC同格)
 const exitAt=(x,y)=>{const w=WORLDS[Game.mapId];return w.exits&&w.exits.find(e=>e.x===x&&e.y===y);};
 // 物語フラグつきNPCの表示判定（child=ポポ救出後は消える／goneKid=さらわれ中は消える／captive=とらわれ中だけ現れる）
 const npcGone=n=>{
@@ -1143,7 +1191,7 @@ function loadMap(id){
   const w=WORLDS[id];
   Game.mapId=id;
   Game.visited=Game.visited||{};Game.visited[id]=true; // 訪問記録（どこでもドアの 行き先かいきん）
-  MAP=w.map;SPAWNS=w.spawns;CHESTS=w.chests;SPRING=w.spring||null;BZONE=w.bzone||null;
+  MAP=w.map;SPAWNS=w.spawns;CHESTS=w.chests;SPRING=w.spring||null;BZONE=w.bzone||null;SPOTS=w.spots||[];Game._spotLast=null;
   if(id==='cave2'&&Game.hidden.gate1)MAP=MAP.map((row,i)=>i===8?row.slice(0,16)+'F'+row.slice(17):row); // ひらいた とびらは ひらいたまま
   Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!Game.hidden[s.need])&&!(s.gone&&Game.hidden[s.gone])).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
     seed:rnd(9),timer:rnd(0.5,1.5),moving:null}));
@@ -3055,6 +3103,13 @@ function updateCloakBtn(){
   b.classList.toggle('on',!!Game.invisible);
   b.textContent='👻 とうめい'+(Game.invisible?' のこり'+Math.max(0,Game.cloakSteps)+'歩':'');
 }
+// しらべるポイントの語り（読み物・フラグ無し・何度でも読める）
+async function spotTalk(sp){
+  if(Game.talking||Game.battling||Game.transiting||Game.minigame)return;
+  startTalk();sfxSel();
+  for(const m of sp.msg)await say(m);
+  endTalk();
+}
 function startTalk(){
   Game.talking=true;
   held.length=0;swipeVec=null;ptr=null;
@@ -3939,7 +3994,7 @@ function tapMove(cx,cy){
      if(dd<cam.TW*0.55&&dd<bd){bd=dd;best=e;}}
    if(best){tx=best.x;ty=best.y;}}
   if(tx<0||ty<0||tx>=MW||ty>=MH)return;
-  const isTalkT=(x,y)=>!!(npcAt(x,y)||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y));
+  const isTalkT=(x,y)=>!!(npcAt(x,y)||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y)||spotAt(x,y));
   const goalDoor=(Game.mapId==='cave2'&&tileAt(tx,ty)==='D'&&!Game.hidden.gate1); // とざされた とびらも タップで あけられる（となりまで あるいて たいあたり）
   const goalTalk=isTalkT(tx,ty)||goalDoor;
   if(!goalTalk&&!walkable(tx,ty))return;
@@ -4027,7 +4082,7 @@ function updateField(dt){
       };
       let acted=false;
       // NPC・おうさま・やどの マスは とおれない（すべりこみ先から じょがい）
-      const occ=(nx,ny)=>!!npcAt(nx,ny)||!!(w.king&&w.king.x===nx&&w.king.y===ny)||!!(w.inn&&w.inn.x===nx&&w.inn.y===ny);
+      const occ=(nx,ny)=>!!npcAt(nx,ny)||!!(w.king&&w.king.x===nx&&w.king.y===ny)||!!(w.inn&&w.inn.x===nx&&w.inn.y===ny)||!!spotAt(nx,ny);
       // 1) はなしかける（おした ほうこうの しょうめんだけ＝すべりこみで ひっかからない）
       {
         const nx=p.tx+d[0],ny=p.ty+d[1];
@@ -4036,6 +4091,7 @@ function updateField(dt){
         if(npc){if(!hush){talkNpc(npc);acted=true;}}
         else if(w.king&&w.king.x===nx&&w.king.y===ny){if(!hush){talkKing();acted=true;}}
         else if(w.inn&&w.inn.x===nx&&w.inn.y===ny){if(!hush){runInn();acted=true;}}
+        else if(spotAt(nx,ny)){if(!hush){spotTalk(spotAt(nx,ny));acted=true;}}
         else if(Game.mapId==='cave2'&&nx===16&&ny===8&&tileAt(nx,ny)==='D'){gateTry();acted=true;}
       }
       // 2) でいりぐち・たからばこ・いずみは おした ほうこうの 3マスから すいつく
@@ -5153,6 +5209,7 @@ function drawFieldScene(){
       else if(tt==='J')drawLog(d-y,y,cam);
     }
     for(const c of CHESTS)if(c.x+c.y===d)drawChest(c);
+    for(const sp of SPOTS)if(sp.x+sp.y===d)drawSpot(sp);
     if(SPRING&&SPRING.x+SPRING.y===d)drawSpring();
     if(wld.npcs)for(const n of wld.npcs)if(n.x+n.y===d&&!npcGone(n))drawNpc(n);
     if(wld.king&&wld.king.x+wld.king.y===d)drawKing(wld.king);
@@ -6334,6 +6391,66 @@ function drawNpc(n){
     ctx.fillText('！',mx,my);
     ctx.restore();
   }
+}
+// しらべるポイントの絵：はかいし／たてふだ／たきびあと（宝箱と同じ流儀・静物）
+function drawSpot(sp){
+  const ct=isoCtr(sp.x,sp.y),ts=Game.cam.TW*0.52;
+  const x=ct.x,y=ct.y-ts*0.12-propZ(sp.x,sp.y);
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='rgba(8,14,28,0.28)';
+  ctx.beginPath();ctx.ellipse(ts*0.06,ts*0.30,ts*0.24,ts*0.075,0,0,Math.PI*2);ctx.fill();
+  if(sp.kind==='grave'){
+    // 土盛り
+    ctx.fillStyle='#4a3f30';
+    ctx.beginPath();ctx.ellipse(0,ts*0.24,ts*0.22,ts*0.09,0,0,Math.PI*2);ctx.fill();
+    // 石板（丸頭）
+    const g=ctx.createLinearGradient(0,-ts*0.34,0,ts*0.2);
+    g.addColorStop(0,'#9a9aa6');g.addColorStop(1,'#5d5d68');
+    ctx.fillStyle=g;
+    ctx.beginPath();ctx.moveTo(-ts*0.13,ts*0.22);ctx.lineTo(-ts*0.13,-ts*0.2);
+    ctx.arc(0,-ts*0.2,ts*0.13,Math.PI,0);ctx.lineTo(ts*0.13,ts*0.22);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(30,30,40,0.45)';ctx.lineWidth=Math.max(1,ts*0.02);ctx.stroke();
+    // ひび と こけ
+    ctx.strokeStyle='rgba(35,35,45,0.5)';ctx.beginPath();ctx.moveTo(-ts*0.04,-ts*0.16);ctx.lineTo(ts*0.02,-ts*0.04);ctx.lineTo(-ts*0.02,ts*0.06);ctx.stroke();
+    ctx.fillStyle='rgba(96,140,84,0.55)';
+    ctx.beginPath();ctx.ellipse(-ts*0.08,ts*0.14,ts*0.05,ts*0.03,0,0,Math.PI*2);ctx.fill();
+  }else if(sp.kind==='sign'){
+    // 柱
+    ctx.fillStyle='#6a4e30';
+    ctx.fillRect(-ts*0.03,-ts*0.3,ts*0.06,ts*0.55);
+    // 板2枚（木目）
+    const b=ctx.createLinearGradient(0,-ts*0.3,0,-ts*0.06);
+    b.addColorStop(0,'#a87e4e');b.addColorStop(1,'#7e5c36');
+    ctx.fillStyle=b;
+    rr(ctx,-ts*0.22,-ts*0.32,ts*0.44,ts*0.13,ts*0.02);ctx.fill();
+    rr(ctx,-ts*0.22,-ts*0.16,ts*0.44,ts*0.13,ts*0.02);ctx.fill();
+    ctx.strokeStyle='rgba(50,34,16,0.5)';ctx.lineWidth=Math.max(1,ts*0.018);
+    rr(ctx,-ts*0.22,-ts*0.32,ts*0.44,ts*0.13,ts*0.02);ctx.stroke();
+    rr(ctx,-ts*0.22,-ts*0.16,ts*0.44,ts*0.13,ts*0.02);ctx.stroke();
+    // 文字らしき線
+    ctx.strokeStyle='rgba(46,30,14,0.7)';ctx.lineWidth=Math.max(1,ts*0.02);
+    ctx.beginPath();ctx.moveTo(-ts*0.15,-ts*0.26);ctx.lineTo(ts*0.13,-ts*0.26);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-ts*0.15,-ts*0.10);ctx.lineTo(ts*0.08,-ts*0.10);ctx.stroke();
+  }else{ // fire=たきびあと
+    // 石の輪
+    ctx.fillStyle='#6e6a62';
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2;
+      ctx.beginPath();ctx.ellipse(Math.cos(a)*ts*0.2,Math.sin(a)*ts*0.1+ts*0.16,ts*0.05,ts*0.035,0,0,Math.PI*2);ctx.fill();}
+    // 灰と炭
+    ctx.fillStyle='#3a3632';
+    ctx.beginPath();ctx.ellipse(0,ts*0.16,ts*0.13,ts*0.055,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#241f1a';ctx.lineWidth=Math.max(1,ts*0.03);
+    ctx.beginPath();ctx.moveTo(-ts*0.09,ts*0.13);ctx.lineTo(ts*0.06,ts*0.19);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-ts*0.02,ts*0.2);ctx.lineTo(ts*0.09,ts*0.12);ctx.stroke();
+    // 残り火（ゆらぐ）
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    ctx.globalAlpha=0.35+0.25*Math.sin(TM*3.1+sp.x*2);
+    const gg=ctx.createRadialGradient(0,ts*0.15,1,0,ts*0.15,ts*0.2);
+    gg.addColorStop(0,'rgba(255,150,70,.9)');gg.addColorStop(1,'rgba(255,150,70,0)');
+    ctx.fillStyle=gg;ctx.beginPath();ctx.arc(0,ts*0.15,ts*0.2,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
 }
 function drawChest(c){
   const open=Game.chestsOpen.includes(c);
