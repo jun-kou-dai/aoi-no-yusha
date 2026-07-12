@@ -9657,7 +9657,11 @@ function mix(a,b,k){
 let titleShoot=null; // ながれぼし（うばわれた ひかりの きせき）
 function drawTitleScene(){
   const g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,'#0a1030');g.addColorStop(0.55,'#1c2552');g.addColorStop(0.8,'#3a3666');g.addColorStop(1,'#6e4f59');
+  if(Game._titleCleared){ // クリアの余韻: よあけの そら
+    g.addColorStop(0,'#16204a');g.addColorStop(0.5,'#3a3670');g.addColorStop(0.78,'#7a5070');g.addColorStop(1,'#c88a6a');
+  }else{
+    g.addColorStop(0,'#0a1030');g.addColorStop(0.55,'#1c2552');g.addColorStop(0.8,'#3a3666');g.addColorStop(1,'#6e4f59');
+  }
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   for(const st of STARS){
     if(st.y>0.72)continue;
@@ -10030,6 +10034,8 @@ function updateTitleButtons(){
   $('#slotwin').style.display='none';
   $('#title-hint').style.display='';
   const has=hasAnySave();
+  {let cl=false;for(let n=1;n<=3;n++){try{const d=JSON.parse(localStorage.getItem('aoYushaSave'+n));if(d&&d.hidden&&d.hidden.cleared)cl=true;}catch(e){}}
+   Game._titleCleared=cl;} // クリアの余韻: どれかの冊がクリア済みなら タイトルの空が よあけに
   const bc=$('#btn-continue'),bs=$('#btn-start');
   bc.style.display=has?'':'none';
   bs.style.display='';
