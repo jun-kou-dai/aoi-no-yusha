@@ -3146,7 +3146,7 @@ async function spotTalk(sp){
   Game.spotsRead=Game.spotsRead||[];
   if(!Game.spotsRead.includes(sp)){Game.spotsRead.push(sp);
     if(Game.spotsRead.length>=spotTotal()){sfxLevel();flash('#ffe9b0',0.3,0.7);toast('すべての よみものを よんだ！ しょうごう「かたりべ」を えた！');}
-    else toast('よみものを みつけた！（たびのメモに きろく）');
+    else toast('よみものを みつけた！（🗺メモの「よみものちょう」で いつでも よみかえせる）');
     saveGame();}
 }
 function spotTotal(){let n=0;for(const id in WORLDS){const w=WORLDS[id];if(w.spots)n+=w.spots.length;}return n;}
