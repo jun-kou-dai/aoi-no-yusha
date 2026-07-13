@@ -4303,6 +4303,7 @@ function questText(){
     if(Game.hidden.ch7d)return 'もくてき：むらへ——じいさんに おもいでを とどけよう';
     if(Game.hidden.ch7w)return 'もくてき：はての しまの せきひへ——おわりを こばむものと むきあえ';
     if(Game.hidden.ch7a){const oc=['omo1','omo2','omo3'].filter(k=>Game.hidden[k]).length;return 'もくてき：三つの おもいでを たずねよう（'+oc+' / 3）';}
+    if(Game.hidden.ch6c&&!Game.hidden.ch7a)return 'もくてき：じいさんが むかしがたりを したがっている——ながいきの やくめの はなし';
     if(Game.hidden.ch6c)return 'もくてき：なまえは よばれて ひかる——ものがたりは つづく';
     if(Game.hidden.ch6d)return 'もくてき：むらはずれへ——なまえを とどけよう';
     if(Game.hidden.ch6w)return 'もくてき：きりの おくの「なまえをのむ もの」と むきあえ';
@@ -4311,8 +4312,10 @@ function questText(){
     if(Game.hidden.ch5c)return 'もくてき：むらはずれの あのひとが、なにか つたえたそうに している';
     if(Game.hidden.ch5n2)return 'もくてき：とざしびとが まねいている——こころの にわへ';
     if(Game.hidden.ch5b)return 'もくてき：とざしびとの となりに、なんども いこう';
+    if(Game.hidden.ch4c&&!Game.hidden.ch5a)return 'もくてき：むらはずれに うつむいた ひとかげが——じいさんも きに かけている';
     if(Game.hidden.ch5a)return 'もくてき：むらはずれの ひとかげの こと、じいさんに そうだんしよう';
     if(Game.hidden.ch3d&&Game.hidden.towaDown&&!Game.hidden.ktold){const sr=(Game.spotsRead||[]).length,st=spotTotal();return sr<st?'もくてき：こどもに きかせる「しまの おはなし」を あつめよう（'+sr+' / '+st+'）':'もくてき：あつめた おはなしを、むらの こどもに かたろう';}
+    if(Game.hidden.ktold&&!Game.hidden.ch4a)return 'もくてき：じいさんが「けいしょうの ぎしき」の はなしを したがっている';
     if(Game.hidden.ch3d)return 'もくてき：こたえは むらに ひろがっていく——ものがたりは つづく';
     if(Game.hidden.nk2&&Game.hidden.ch3m&&(Game.purified||0)>=15&&!Game.hidden.ch3a)return 'もくてき：むらの じいさんが なにか しっている らしい';
     if(Game.hidden.nk2)return 'もくてき：ひかりを つないで いこう——ものがたりは つづく';
