@@ -2484,6 +2484,27 @@ function renderQuest(){
      h+=row('みちづれ',Game.hidden.mate1?(MATES[mateKind()].name):'まだ いない',
        Game.hidden.mate1?(MATES[mateKind()].act+'で ささえてくれる'+(nx?('　つぎは じょうか'+nx.need+'にん'):'')):'かげを 5にん ときはなつと…');}
   }
+  // ものがたりの ちず：しまと ものがたりの つながり（おとずれた しまだけ すがおを みせる）
+  h+='<h3 class="bisle">ものがたりの ちず</h3>';
+  {const ROLE={
+    grass:['はじまりの むら','じいさんと こども——うけとめる こころが そだつ いえ。'],
+    forest:['きたへの みち','ぬしの もり。せきひが といを ささやく。'],
+    cave:['くろがねの ばんにん','たまが うばわれた よるへの、さいしょの せきもん。'],
+    cave2:['ほりびとの ちそこ','ひかりを ほった ものたちの あと。とじられた とびらの おく。'],
+    ice:['とざされた みち','むすめが さらわれた こおりの せかい。'],
+    icetown:['ゆきの まち','たびびとの やすらぎ。つよい そうびは ここに。'],
+    volcano:['ほのおの しれん','まおうの しろへ いたる さいごの みち。'],
+    castle:['やみの おうざ','ヴォルガの まよいと、ぬけがらの といが のこる。'],
+    edge:['せきひの つづき','こたえなき ものが、とわの といを といつづける。'],
+    sunken:['はんぶんの さと','たまが すくえなかった、のこりの はんぶん（だい2しょう）。'],
+    mistsea:['わすれられた こえ','なげきが きりに とけた うみ（だい2しょう）。'],
+    minamoto:['ひかりの みなもと','『ひかりは えらばない』——こたえの いずみ（だい3しょう）。'],
+    towa:['とわの ふち','といの けしんが まつ、こたえもちの しれん。'],
+    kokoro:['こころの にわ','とざしびとの こころ。『となりに いる こと』（だい5しょう）。']};
+   for(const id of Object.keys(ROLE)){
+     const v=Game.visited&&Game.visited[id];
+     h+=row(v?(MAPNAME[id]||id):'？？？',v?ROLE[id][0]:'',v?ROLE[id][1]:'まだ みぬ しま');
+   }}
   h+='<h3 class="bisle">きろく</h3>';
   h+=row('なんいど',curDiff().name,(Game.ng?(Game.ng+1)+'しゅうめ':''));
   h+=row('たたかった かず',(Game.stats&&Game.stats.battles)||0,'かいしん '+((Game.stats&&Game.stats.crits)||0)+'・ぜんめつ '+((Game.stats&&Game.stats.deaths)||0));
@@ -7348,7 +7369,20 @@ function questDest(){
   if(!h.ch3d)return {map:'grass',exp:'みなもとで えた こたえを、じいさんに つたえよう。'};
   if(!h.towaGate)return {map:'edge',exp:'はてのしまの「こたえなき もの」に、こたえを しめそう（たおせば みちが ひらく）。'};
   if(!h.towaDown)return {map:'towa',exp:'とわのふちの おくで「といの けしん」を こえよう。さいごの しれんだ。'};
-  return {map:null,exp:'ものがたりは すべて むすばれた。あとは じゆうに たびを たのしもう！'};
+  if(!h.ktold){
+    const sr=(Game.spotsRead||[]).length,st=spotTotal();
+    if(sr<st){let m=null;for(const id in WORLDS){const w=WORLDS[id];if(!w.spots)continue;if(w.spots.some(sp=>!(Game.spotsRead||[]).includes(sp))){m=id;break;}}
+      return {map:m,exp:'せかいの よみもの（はかいし・たてふだ・たきびあと）を あつめよう（いま '+sr+' / '+st+'）。ぜんぶ よんだら、むらの こどもに かたって きかせられる。のこりの しまは メモの「やりのこし」に。'};}
+    return {map:'grass',exp:'あつめた ものがたりを、むらの こどもに かたって きかせよう。——かたりべの けいしょうだ。'};
+  }
+  if(!h.ch4a)return {map:'grass',exp:'じいさんが「けいしょうの ぎしき」の はなしを したがっている。といは つぎの かたちへ。'};
+  if(!h.ch4b)return {map:'grass',exp:'ぎしきの ときだ。おうさまの もとへ——ひかりを「わたす」ときが きた。'};
+  if(!h.ch4w)return {map:'grass',exp:'ぎしきの よる、もりが ざわめいた という。じいさんに こえを かけよう。'};
+  if(!h.ch4c)return {map:'minamoto',exp:'みなもとの もりで まよう「こぼれび」を しずめよう。わたした ひかりの、こぼれた かけらだ。'};
+  if(!h.ch5a)return {map:'grass',exp:'むらはずれに、うつむいた ひとかげが たっている。じいさんが なにか きに かけている ようだ。'};
+  if(!h.ch5b)return {map:'grass',exp:'むらはずれの ひとの こと、じいさんに そうだんしよう。'};
+  if(!h.ch5c)return {map:'grass',exp:'とざしびとの となりへ、なんども かよおう。こじあけては いけない。まつのだ。'};
+  return {map:null,exp:'すべての こたえが むすばれた。おうさまに はなせば、あたらしい めぐり——「つよくて ニューゲーム」が はじまる。ものがたりは、なんども いきられる。'};
 }
 async function questGuide(){
   if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
