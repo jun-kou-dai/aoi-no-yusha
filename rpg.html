@@ -3293,6 +3293,7 @@ async function spotTalk(sp){
     saveGame();}
 }
 function spotTotal(){let n=0;for(const id in WORLDS){const w=WORLDS[id];if(w.spots)n+=w.spots.length;}return n;}
+const KATARIBE_NEED=10; // 物語(継承→章4)に必要な よみもの数。完集27は称号かたりべ(任意)
 function startTalk(){
   Game.talking=true;
   held.length=0;swipeVec=null;ptr=null;
@@ -3544,14 +3545,14 @@ async function talkNpc(n){
       endTalk();saveGame();return;
     }
     // かたりべの継承（ループ27）: よみもの全読了後、こどもに物語を語る（一度きり・称号の"つとめ"を果たす）
-    if(n.heir&&Game.hidden.ch3d&&!Game.hidden.ktold&&(Game.spotsRead||[]).length<spotTotal()&&!Game.hidden.kAsk){
+    if(n.heir&&Game.hidden.ch3d&&!Game.hidden.ktold&&(Game.spotsRead||[]).length<KATARIBE_NEED&&!Game.hidden.kAsk){
       Game.hidden.kAsk=true;
       await say('こども「ねえねえ、ゆうしゃさまって いろんな しまに いってるんでしょ？\nいいなあ。わたしも いつか いくんだ！」');
       await say('こども「はかいしとか、たてふだとか、たきびの あととか——\nしまの おはなし、いーっぱい あつめて きかせて ほしいの！」');
-      await say('（しまじまの よみものを しらべて、ものがたりを あつめよう。\nあつめた かずは メモの「やりのこし」で みられる）');
+      await say('（しまじまの よみものを 10こ しらべて、ものがたりを あつめよう。\nあつめた かずは メモの「やりのこし」で みられる）');
       endTalk();saveGame();return;
     }
-    if(n.heir&&(Game.spotsRead||[]).length>=spotTotal()&&!Game.hidden.ktold){
+    if(n.heir&&(Game.spotsRead||[]).length>=KATARIBE_NEED&&!Game.hidden.ktold){
       Game.hidden.ktold=true;
       await say('こども「ゆうしゃさま、いろんな しまの おはなし\nいーっぱい しってるんでしょ？ きかせて きかせて！」');
       await say('あなたは かたって きかせた──はかいしに ねむる けいしょうしゃのこと。\nたきびを かこんだ ほりびとたちのこと。ふちに のこった といのこと。');
@@ -4314,7 +4315,7 @@ function questText(){
     if(Game.hidden.ch5b)return 'もくてき：とざしびとの となりに、なんども いこう';
     if(Game.hidden.ch4c&&!Game.hidden.ch5a)return 'もくてき：むらはずれに うつむいた ひとかげが——じいさんも きに かけている';
     if(Game.hidden.ch5a)return 'もくてき：むらはずれの ひとかげの こと、じいさんに そうだんしよう';
-    if(Game.hidden.ch3d&&Game.hidden.towaDown&&!Game.hidden.ktold){const sr=(Game.spotsRead||[]).length,st=spotTotal();return sr<st?'もくてき：こどもに きかせる「しまの おはなし」を あつめよう（'+sr+' / '+st+'）':'もくてき：あつめた おはなしを、むらの こどもに かたろう';}
+    if(Game.hidden.ch3d&&Game.hidden.towaDown&&!Game.hidden.ktold){const sr=(Game.spotsRead||[]).length;return sr<KATARIBE_NEED?'もくてき：こどもに きかせる「しまの おはなし」を あつめよう（'+sr+' / '+KATARIBE_NEED+'）':'もくてき：あつめた おはなしを、むらの こどもに かたろう';}
     if(Game.hidden.ktold&&!Game.hidden.ch4a)return 'もくてき：じいさんが「けいしょうの ぎしき」の はなしを したがっている';
     if(Game.hidden.ch3d)return 'もくてき：こたえは むらに ひろがっていく——ものがたりは つづく';
     if(Game.hidden.nk2&&Game.hidden.ch3m&&(Game.purified||0)>=15&&!Game.hidden.ch3a)return 'もくてき：むらの じいさんが なにか しっている らしい';
@@ -7601,9 +7602,9 @@ function questDest(){
   if(!h.towaGate)return {map:'edge',exp:'はてのしまの「こたえなき もの」に、こたえを しめそう（たおせば みちが ひらく）。'};
   if(!h.towaDown)return {map:'towa',exp:'とわのふちの おくで「といの けしん」を こえよう。さいごの しれんだ。'};
   if(!h.ktold){
-    const sr=(Game.spotsRead||[]).length,st=spotTotal();
-    if(sr<st){let m=null;for(const id in WORLDS){const w=WORLDS[id];if(!w.spots)continue;if(w.spots.some(sp=>!(Game.spotsRead||[]).includes(sp))){m=id;break;}}
-      return {map:m,exp:'むらの こどもが、しまじまの おはなしを ききたがっている。はかいし・たてふだ・たきびあとを しらべて、ものがたりを あつめて やろう（いま '+sr+' / '+st+'）。のこりの しまは メモの「やりのこし」に。'};}
+    const sr=(Game.spotsRead||[]).length;
+    if(sr<KATARIBE_NEED){let m=null;for(const id in WORLDS){const w=WORLDS[id];if(!w.spots)continue;if(w.spots.some(sp=>!(Game.spotsRead||[]).includes(sp))){m=id;break;}}
+      return {map:m,exp:'むらの こどもが、しまじまの おはなしを ききたがっている。はかいし・たてふだ・たきびあとを しらべて、ものがたりを 10こ あつめて やろう（いま '+sr+' / '+KATARIBE_NEED+'）。ちかくの しまの ぶんだけで じゅうぶんだ。'};}
     return {map:'grass',exp:'あつめた ものがたりを、むらの こどもに かたって きかせよう。——かたりべの けいしょうだ。'};
   }
   if(!h.ch4a)return {map:'grass',exp:'じいさんが「けいしょうの ぎしき」の はなしを したがっている。といは つぎの かたちへ。'};
