@@ -3544,6 +3544,13 @@ async function talkNpc(n){
       endTalk();saveGame();return;
     }
     // かたりべの継承（ループ27）: よみもの全読了後、こどもに物語を語る（一度きり・称号の"つとめ"を果たす）
+    if(n.heir&&Game.hidden.ch3d&&!Game.hidden.ktold&&(Game.spotsRead||[]).length<spotTotal()&&!Game.hidden.kAsk){
+      Game.hidden.kAsk=true;
+      await say('こども「ねえねえ、ゆうしゃさまって いろんな しまに いってるんでしょ？\nいいなあ。わたしも いつか いくんだ！」');
+      await say('こども「はかいしとか、たてふだとか、たきびの あととか——\nしまの おはなし、いーっぱい あつめて きかせて ほしいの！」');
+      await say('（しまじまの よみものを しらべて、ものがたりを あつめよう。\nあつめた かずは メモの「やりのこし」で みられる）');
+      endTalk();saveGame();return;
+    }
     if(n.heir&&(Game.spotsRead||[]).length>=spotTotal()&&!Game.hidden.ktold){
       Game.hidden.ktold=true;
       await say('こども「ゆうしゃさま、いろんな しまの おはなし\nいーっぱい しってるんでしょ？ きかせて きかせて！」');
@@ -4305,6 +4312,7 @@ function questText(){
     if(Game.hidden.ch5n2)return 'もくてき：とざしびとが まねいている——こころの にわへ';
     if(Game.hidden.ch5b)return 'もくてき：とざしびとの となりに、なんども いこう';
     if(Game.hidden.ch5a)return 'もくてき：むらはずれの ひとかげの こと、じいさんに そうだんしよう';
+    if(Game.hidden.ch3d&&Game.hidden.towaDown&&!Game.hidden.ktold){const sr=(Game.spotsRead||[]).length,st=spotTotal();return sr<st?'もくてき：こどもに きかせる「しまの おはなし」を あつめよう（'+sr+' / '+st+'）':'もくてき：あつめた おはなしを、むらの こどもに かたろう';}
     if(Game.hidden.ch3d)return 'もくてき：こたえは むらに ひろがっていく——ものがたりは つづく';
     if(Game.hidden.nk2&&Game.hidden.ch3m&&(Game.purified||0)>=15&&!Game.hidden.ch3a)return 'もくてき：むらの じいさんが なにか しっている らしい';
     if(Game.hidden.nk2)return 'もくてき：ひかりを つないで いこう——ものがたりは つづく';
@@ -7592,7 +7600,7 @@ function questDest(){
   if(!h.ktold){
     const sr=(Game.spotsRead||[]).length,st=spotTotal();
     if(sr<st){let m=null;for(const id in WORLDS){const w=WORLDS[id];if(!w.spots)continue;if(w.spots.some(sp=>!(Game.spotsRead||[]).includes(sp))){m=id;break;}}
-      return {map:m,exp:'せかいの よみもの（はかいし・たてふだ・たきびあと）を あつめよう（いま '+sr+' / '+st+'）。ぜんぶ よんだら、むらの こどもに かたって きかせられる。のこりの しまは メモの「やりのこし」に。'};}
+      return {map:m,exp:'むらの こどもが、しまじまの おはなしを ききたがっている。はかいし・たてふだ・たきびあとを しらべて、ものがたりを あつめて やろう（いま '+sr+' / '+st+'）。のこりの しまは メモの「やりのこし」に。'};}
     return {map:'grass',exp:'あつめた ものがたりを、むらの こどもに かたって きかせよう。——かたりべの けいしょうだ。'};
   }
   if(!h.ch4a)return {map:'grass',exp:'じいさんが「けいしょうの ぎしき」の はなしを したがっている。といは つぎの かたちへ。'};
