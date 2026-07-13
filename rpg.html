@@ -3635,11 +3635,21 @@ async function talkKing(){
   saveGame();
   await say('おうさま「そなたの ぼうけんを ぼうけんのしょに\nきろくして おいたぞ。」');
   while(true){
-    const c=await ask([{id:'go',label:'たびに もどる'},{id:'tips',label:'つよくなる コツを きく'},{id:'diff',label:'たびの きびしさを かえる'}],'おうさまに そうだん');
+    const kingItems=[{id:'go',label:'たびに もどる'},{id:'tips',label:'つよくなる コツを きく'},{id:'diff',label:'たびの きびしさを かえる'}];
+    if(Game.hidden.cleared)kingItems.push({id:'ngp',label:'つよくて ニューゲーム'});
+    const c=await ask(kingItems,'おうさまに そうだん');
     if(c==='tips'){
       const d=questDest(); const rec=d.map?(RECLV[d.map]||1):null;
       for(const ln of powerAdvice(rec))await say('おうさま「'+ln+'」');
       continue;
+    }
+    if(c==='ngp'){
+      const ok=await ask([{id:'yes',label:'はじめる'},{id:'no',label:'やめておく'}],'ものがたりは さいしょに もどる（つよさ・そうび・ずかん・しょうごうは のこる）。よいか？');
+      if(ok!=='yes')continue;
+      await say('おうさま「うむ。なんども めぐる ものがたりにこそ、\nあたらしい こたえは やどるのじゃ。いって まいれ！」');
+      endTalk();
+      ngNewGame(true);
+      return;
     }
     if(c==='diff'){
       const cur=Game.diff;
@@ -10240,8 +10250,9 @@ async function openingSequence(){
   Game.started=false;
 }
 // つよくて ニューゲーム：つよさ・おかね・そうび・ずかん・しょうごうを もちこして さいしょから
-async function ngNewGame(){
-  if(Game.scene!=='ending'||Game.started)return;
+async function ngNewGame(fromKing){
+  if(Game.started)return;
+  if(Game.scene!=='ending'&&!fromKing)return;
   Game.started=true;
   sfxOk();
   const p0=Game.p;
