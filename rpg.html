@@ -2431,6 +2431,32 @@ function openStatus(){
   if(typeof sfxSel==='function')sfxSel();
 }
 function closeStatus(){const w=document.getElementById('statuswin');if(w)w.classList.remove('show');Game.statusOpen=false;}
+// 海図(フェーズ1): 正典地理(MASTERPLAN§2)を一枚のSVGで見せる。解禁=ドアと同条件・未解禁=霧・現在地=金の輪
+function seaChartSVG(){
+  const H=Game.hidden||{};
+  const unlocked=id=>!!(Game.visited&&Game.visited[id])||(id==='edge'&&H.elderTold)||(id==='sunken'&&H.ch2)||(id==='mistsea'&&H.ch2end)||(id==='minamoto'&&H.ch3a)||(id==='towa'&&H.towaGate);
+  const P={grass:[168,142],forest:[150,116],cave:[172,96],cave2:[200,92],ice:[154,70],icetown:[124,86],volcano:[184,52],castle:[168,26],
+           sunken:[150,196],mistsea:[96,214],edge:[304,120],minamoto:[56,128],towa:[314,214]};
+  const NM={grass:'むら',forest:'もり',cave:'どうくつ',cave2:'ちそこ',ice:'こおり',icetown:'ゆきのまち',volcano:'かざん',castle:'まおうのしろ',sunken:'しずみのさと',mistsea:'わすれのうみ',edge:'はてのしま',minamoto:'みなもとのもり',towa:'とわのふち'};
+  let el='';
+  for(const id of ['sunken','mistsea','edge','minamoto','towa'])if(unlocked(id)){
+    el+='<line x1="168" y1="142" x2="'+P[id][0]+'" y2="'+P[id][1]+'" stroke="#d9b96c" stroke-width="0.8" stroke-dasharray="3 4" opacity="0.5"/>';}
+  for(const id in P){
+    const u=unlocked(id),x=P[id][0],y=P[id][1];
+    if(u){
+      el+='<circle cx="'+x+'" cy="'+y+'" r="3.2" fill="'+(id===Game.mapId?'#ffd97a':'#9fd6a8')+'"/>';
+      if(id===Game.mapId)el+='<circle cx="'+x+'" cy="'+y+'" r="6.5" fill="none" stroke="#ffd97a" stroke-width="1.2"/>';
+      el+='<text x="'+x+'" y="'+(y+12)+'" font-size="8" fill="#cfd8ea" text-anchor="middle">'+NM[id]+'</text>';
+    }else{
+      el+='<circle cx="'+x+'" cy="'+y+'" r="7" fill="#3a4a63" opacity="0.5"/><text x="'+x+'" y="'+(y+3)+'" font-size="8" fill="#8593ab" text-anchor="middle">？</text>';}}
+  if(Game.visited&&Game.visited.kokoro)
+    el+='<rect x="240" y="6" width="92" height="18" rx="6" fill="none" stroke="#b9a8e8" stroke-dasharray="3 3" opacity="0.8"/><text x="286" y="18.5" font-size="7.5" fill="#c9bcee" text-anchor="middle">ちずのそと：こころのにわ</text>';
+  const land='<path d="M168,10 C210,14 214,44 200,66 C216,90 210,116 192,124 C196,140 186,158 168,158 C150,160 138,146 142,130 C122,120 118,96 132,84 C118,64 124,34 144,22 C152,14 160,10 168,10 Z" fill="#22402e" stroke="#3b5a44" stroke-width="1"/>';
+  return '<svg viewBox="0 0 340 240" style="width:100%;display:block;border-radius:10px;background:#0b1526;margin:4px 0 8px" xmlns="http://www.w3.org/2000/svg">'
+   +'<rect x="0" y="0" width="340" height="240" fill="#0b1526"/>'+land+el
+   +'<text x="10" y="16" font-size="9" fill="#8ea3c4">きた ↑</text>'
+   +'<text x="330" y="234" font-size="8" fill="#5d6f8d" text-anchor="end">せかいの ふち——</text></svg>';
+}
 // たびのメモ：いまの もくてき＋やりのこし＋きろく（ぜんぶ 実データ走査）
 function renderQuest(){
   const row=(l,v,sub)=>{
@@ -2486,6 +2512,7 @@ function renderQuest(){
   }
   // ものがたりの ちず：しまと ものがたりの つながり（おとずれた しまだけ すがおを みせる）
   h+='<h3 class="bisle">ものがたりの ちず</h3>';
+  h+=seaChartSVG();
   {const ROLE={
     grass:['はじまりの むら','せかいの まんなか。じいさんと こども——うけとめる こころが そだつ いえ。'],
     forest:['きたへの みち','むらの きた。ぬしの もり。せきひが といを ささやく。'],
