@@ -6696,10 +6696,22 @@ function npcStoryPending(n){
     if(h.sn2&&!h.ch2end)return true; // さとの しんじつの ほうこく
     if(h.nk2&&h.ch3m&&(Game.purified||0)>=15&&!h.ch3a)return true; // 章3の みちびき
     if(h.ch3t&&!h.ch3d)return true; // こたえを つたえる
+    if(h.ch3d&&h.ktold&&!h.ch4a)return true; // 章4a: ぎしきの きざし
+    if(h.ch4b&&!h.ch4w)return true; // 章4c: ぎしきの よるの ざわめき
+    if(h.ch4c&&!h.ch5a)return true; // 章5a: むらはずれの ひとかげ
+    if(h.ch5a&&!h.ch5b)return true; // 章5b: 助言「となりに おれ」
+    if(h.ch6c&&!h.ch7a)return true; // 章7a: ゆうやけの ちかい
+    if(h.ch7d&&!h.ch7c)return true; // 章7c: おもいでを とどける
     return false;
   }
   if(n.heir){
     if(h.nk2&&(Game.purified||0)>=15&&!h.ch3m)return true; // 継承の ゆめ
+    if(h.ch3d&&!h.ktold&&(!h.kAsk||(Game.spotsRead||[]).length>=KATARIBE_NEED))return true; // かたりべの継承: おねがい/かたる
+  }
+  if(n.hood){
+    if(h.ch5b&&!h.ch5c)return true; // 章5: となりに かよう
+    if(h.ch5c&&!h.ch6a)return true; // 章6a: なまえの きざし
+    if(h.ch6d&&!h.ch6c)return true; // 章6c: なまえを とどける
   }
   return false;
 }
@@ -7668,9 +7680,24 @@ function questBeaconTargets(){
   // 章1後: とらわれの むすめ
   if(Game.mapId==='ice'&&h.k1&&!h.k2)push(17,2);
   // 村: じいさん・こども(はなす用事が あるとき)
-  if(Game.mapId==='grass'&&w.npcs)for(const n of w.npcs)if((n.msgElder||n.heir)&&npcStoryPending(n))push(n.x,n.y);
+  if(Game.mapId==='grass'&&w.npcs)for(const n of w.npcs)if((n.msgElder||n.heir||n.hood)&&npcStoryPending(n))push(n.x,n.y);
   // クリア後・告白前: いまの しまの みよんでいない せきひ
   if(h.cleared&&h.k3&&!h.elderTold&&w.npcs)for(const n of w.npcs)if(n.stoneKey&&!h[n.stoneKey])push(n.x,n.y);
+  // かたりべの継承: いまの しまの まだ よんでいない よみもの(はかいし・たてふだ・たきびあと)
+  if(h.ch3d&&h.towaDown&&!h.ktold&&(Game.spotsRead||[]).length<KATARIBE_NEED&&w.spots)
+    for(const sp of w.spots)if(!(Game.spotsRead||[]).includes(sp))push(sp.x,sp.y);
+  // 章4b: ぎしきは おうさまから はじまる
+  if(Game.mapId==='grass'&&h.ch4a&&!h.ch4b&&w.king)push(w.king.x,w.king.y);
+  // 章4c: みなもとの こぼれび
+  if(Game.mapId==='minamoto'&&h.ch4w&&!h.ch4c)foeB(e=>e.def===FOES.koborebi);
+  // 章5c: こころのにわの とざすもの
+  if(Game.mapId==='kokoro'&&!h.ch5c)foeB(e=>e.def===FOES.tozasu);
+  // 章6: なまえの こえ 3つ → なまえをのむ もの
+  if(Game.mapId==='mistsea'&&h.ch6b&&!h.ch6w&&w.npcs)for(const n of w.npcs)if(n.voiceKey&&!h[n.voiceKey])push(n.x,n.y);
+  if(Game.mapId==='mistsea'&&h.ch6w&&!h.ch6d)foeB(e=>e.def===FOES.nanomu);
+  // 章7: 三つの おもいで → おわりを こばむもの
+  if(h.ch7a&&!h.ch7w&&w.npcs)for(const n of w.npcs)if(n.omoKey&&!h[n.omoKey])push(n.x,n.y);
+  if(Game.mapId==='edge'&&h.ch7w&&!h.ch7d)foeB(e=>e.def===FOES.kobamu);
   // 章2: しずみのさとの かげたち→さとぬし（たおす＝ときはなつ）
   if(Game.mapId==='sunken'&&h.ch2&&!h.sn1)foeB(e=>e.def.kage);
   // 章2後半: わすれのうみの かげ（じょうかを つみ、ぬけがら・継承へ）
