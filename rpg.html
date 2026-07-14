@@ -1390,6 +1390,12 @@ function loadGame(){
   {const h=Game.hidden; // 〜v20260712_1557: 城の章カード済みが ch4c を流用し「章4cこぼれび完了」と衝突（こぼれび不出現/ED行の先出し）→castleCardへ移行。真の章4c完了は 図鑑koborebi既見+ch4w を伴う
    if(h.ch4c){h.castleCard=true;if(!(Game.seen.koborebi&&h.ch4w))delete h.ch4c;}
    if(h.ch4cEver&&!Game.seen.koborebi)delete h.ch4cEver;}
+  {const h=Game.hidden; // 〜v20260714: そうびの袋(7/11)以前に買った装備が袋に無く売れない→装備中より弱い店売り段は「買い進めた」とみなし一度だけ補填(bagMigで再補填=無限金策を防ぐ)
+   if(!h.bagMig){h.bagMig=true;
+     for(const it of SHOP){
+       if(it.atk&&it.atk<Game.weaponAtk&&!Game.ownW.includes(it.atk))Game.ownW.push(it.atk);
+       if(it.armor&&it.armor<Game.armorDef&&!Game.ownA.includes(it.armor))Game.ownA.push(it.armor);}
+     Game.ownW.sort((a,b)=>a-b);Game.ownA.sort((a,b)=>a-b);}}
   if(d.stats)Game.stats={battles:d.stats.battles||0,crits:d.stats.crits||0,deaths:d.stats.deaths||0};
   const keys=d.chests||[];
   Game.chestsOpen=[];
@@ -10587,7 +10593,7 @@ async function ngNewGame(fromKing){
     bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,bonusMp:(Game.bonusMp||0),gheart:(Game.gheart||0),
     door:Game.door,mkey:!!Game.mkey,cloak:Game.cloak,book:Game.book,talkOff:!!Game.talkOff,seen:JSON.parse(JSON.stringify(Game.seen||{})),
     zkomp:!!(Game.hidden&&Game.hidden.zkomp),ch3dEver:!!(Game.hidden&&(Game.hidden.ch3d||Game.hidden.ch3dEver)),
-    fuchiEver:!!(Game.hidden&&(Game.hidden.towaDown||Game.hidden.fuchiEver)),slcatchEver:!!(Game.hidden&&(Game.hidden.slcatch||Game.hidden.slcatchEver)),wataseEver:!!(Game.hidden&&(Game.hidden.ch4b||Game.hidden.wataseEver)),ch4cEver:!!(Game.hidden&&(Game.hidden.ch4c||Game.hidden.ch4cEver)),ch5cEver:!!(Game.hidden&&(Game.hidden.ch5c||Game.hidden.ch5cEver)),ch6cEver:!!(Game.hidden&&(Game.hidden.ch6c||Game.hidden.ch6cEver)),ch7cEver:!!(Game.hidden&&(Game.hidden.ch7c||Game.hidden.ch7cEver)), // 称号と章の答えは周回で消えない(進行フラグ本体はリセット=再挑戦可)
+    fuchiEver:!!(Game.hidden&&(Game.hidden.towaDown||Game.hidden.fuchiEver)),slcatchEver:!!(Game.hidden&&(Game.hidden.slcatch||Game.hidden.slcatchEver)),wataseEver:!!(Game.hidden&&(Game.hidden.ch4b||Game.hidden.wataseEver)),ch4cEver:!!(Game.hidden&&(Game.hidden.ch4c||Game.hidden.ch4cEver)),ch5cEver:!!(Game.hidden&&(Game.hidden.ch5c||Game.hidden.ch5cEver)),ch6cEver:!!(Game.hidden&&(Game.hidden.ch6c||Game.hidden.ch6cEver)),ch7cEver:!!(Game.hidden&&(Game.hidden.ch7c||Game.hidden.ch7cEver)),bagMig:!!(Game.hidden&&Game.hidden.bagMig), // 称号と章の答えは周回で消えない(進行フラグ本体はリセット=再挑戦可)。bagMig=袋補填済み印(装備ごと持ち越すため)
     spotsRead:(Game.spotsRead||[]).slice(),ng:(Game.ng||0)+1};
   fadeColor('#070b1e');
   await fadeTo(1,0.8);
@@ -10599,7 +10605,7 @@ async function ngNewGame(fromKing){
   Game.door=keep.door;Game.mkey=keep.mkey;Game.cloak=keep.cloak;Game.book=keep.book;Game.talkOff=keep.talkOff;Game.seen=keep.seen;Game.spotsRead=keep.spotsRead;
   if(keep.zkomp)Game.hidden.zkomp=true;
   if(keep.ch3dEver)Game.hidden.ch3dEver=true; // 章3の こたえは 周回でも きえない(EDの ことばに かかる)
-  if(keep.fuchiEver)Game.hidden.fuchiEver=true;if(keep.slcatchEver)Game.hidden.slcatchEver=true;if(keep.wataseEver)Game.hidden.wataseEver=true;if(keep.ch4cEver)Game.hidden.ch4cEver=true;if(keep.ch5cEver)Game.hidden.ch5cEver=true;if(keep.ch6cEver)Game.hidden.ch6cEver=true;if(keep.ch7cEver)Game.hidden.ch7cEver=true;
+  if(keep.fuchiEver)Game.hidden.fuchiEver=true;if(keep.slcatchEver)Game.hidden.slcatchEver=true;if(keep.wataseEver)Game.hidden.wataseEver=true;if(keep.ch4cEver)Game.hidden.ch4cEver=true;if(keep.ch5cEver)Game.hidden.ch5cEver=true;if(keep.ch6cEver)Game.hidden.ch6cEver=true;if(keep.ch7cEver)Game.hidden.ch7cEver=true;if(keep.bagMig)Game.hidden.bagMig=true;
   Game.ng=keep.ng;
   const L=LEVELS[p.lv];p.mhp=L.hp+Game.bonusHp;p.mmp=L.mp+Game.bonusMp;recalcStats();p.hp=p.mhp;p.mp=p.mmp;
   updateBars();updateBadge();
