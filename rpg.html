@@ -4265,6 +4265,14 @@ function questText(){
   if(Game.hidden.k1&&!Game.hidden.k2)return Game.mapId==='ice'?'もくてき：みぎうえ（きたの はて）で むすめを すくいだせ！':'もくてき：さらわれた むすめを おえ！ こおりの せかいへ！';
   if(Game.hidden.k2&&!Game.hidden.k3)return 'もくてき：むらの じいさんの もとへ';
   if(Game.hidden.cleared){
+    // かたりべの あつめ期は、島別の上書き行より さきに n/10 を出す(バーと声の一致)
+    if(Game.hidden.ch3d&&Game.hidden.towaDown&&!Game.hidden.ktold&&Game.mapId!=='grass'){
+      const sr=(Game.spotsRead||[]).length;
+      if(sr>=KATARIBE_NEED)return 'もくてき：むらへ——あつめた おはなしを こどもに かたろう';
+      const w=WORLDS[Game.mapId];
+      if(w&&w.spots&&w.spots.some(sp=>!(Game.spotsRead||[]).includes(sp)))return 'もくてき：この しまの よみものを しらべよう（'+sr+' / '+KATARIBE_NEED+'）';
+      return 'もくてき：この しまは よみつくした——ほかの しまで あつめよう（'+sr+' / '+KATARIBE_NEED+'）';
+    }
     if(Game.mapId==='edge'&&Game.hidden.ch7a&&!Game.hidden.ch7c){
       if(Game.hidden.ch7d)return 'もくてき：むらへ——じいさんに おもいでを とどけよう';
       if(Game.hidden.ch7w)return 'もくてき：せきひの まえの「おわりを こばむもの」と むきあえ';
