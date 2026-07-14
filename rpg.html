@@ -794,6 +794,7 @@ volcano:{
 cave2:{
  song:'cave', bg:['#050308','#0c0712'], dark:true, darkR:3.4,
  npcs:[
+  {x:13,y:11,shop:true,kind:'ojii',col:'#d8b880',msg:[]},
   {x:9,y:2,kind:'musume',small:true,col:'#e8c880',msg:['ほりびとのまご「じいちゃんは ここいらを ほりつくした ほりびとでね。\nメモに『とびらの おくで つるぎが ねむる』って のこしてた。」','ほりびとのまご「とざされた とびらは まほうのかぎで ひらくよ。\nかぎは ゆきのまちの みせに あるんだって。」'],
    msgCleared:['ほりびとのまご「ちそこの かぜが かるく なった。\nじいちゃんの ほった みちが、ひかって みえるよ。」']}],
  spots:[
@@ -858,7 +859,7 @@ icetown:{
   {x:6,y:8,kind:'musume',col:'#bfd8f0',msg:['まちむすめ「どうくつの おくの たてあなの したに\nちそこの どうくつが あるんですって。」','まちむすめ「ちからのたねが ねむってる って\nもっぱらの うわさよ。」'],
    msgCleared:['まちむすめ「おかえりなさい！ ゆうべは まちの あかりが\nひとつも きえなかったの。こんなの はじめて！」','まちむすめ「かえってきてくれて…… ほんとうに よかった。」'],
    msg4:['まちむすめ「まおうの しろへ いくのね…。\nかならず かえってきてね。まってるから。」']},
-  {x:13,y:8,kind:'ojii',col:'#c8d8e8',msgGeo:'ちょうろう「むかし、ひがしの はてへ わたった たびびとが おっての。\nふるい せきひの つづきを みた、と いうとったよ。」',msg:['ちょうろう「さまよう きょじんを たおすと、まれに\n『きょじんのこころ』を おとすそうな。からだが つよくなるぞ。」','ちょうろう「よるの まものは てごわいが けいけんちも おおい。\nやどで あさまで やすむのも ちえの うちじゃ。」','ちょうろう「ちそこの ぬしの まの おくに、とざされた とびらが あるそうな。\nかぎなら うちの みせが あつかっとるよ。」','ちょうろう「ちそこの たからのまには、1ターンに 2どぎりする\nでんせつの けんが ねむっとる…という うわさじゃ。」'],
+  {x:13,y:8,kind:'ojii',col:'#c8d8e8',msgGeo:'ちょうろう「むかし、ひがしの はてへ わたった たびびとが おっての。\nふるい せきひの つづきを みた、と いうとったよ。」',msg:['ちょうろう「さまよう きょじんを たおすと、まれに\n『きょじんのこころ』を おとすそうな。からだが つよくなるぞ。」','ちょうろう「よるの まものは てごわいが けいけんちも おおい。\nやどで あさまで やすむのも ちえの うちじゃ。」','ちょうろう「ちそこの ぬしの まの おくに、とざされた とびらが あるそうな。\nかぎなら うちの みせが あつかっとるよ。」','ちょうろう「ちそこの たからのまには、1ターンに 2どぎりする\nでんせつの けんが ねむっとる…という うわさじゃ。」','ちょうろう「ちそこの ほりびとの あなに、いちが たった そうな。\nほしの てつの そうび——たかいが、ほんものじゃ。」'],
    msgCleared:['ちょうろう「ゆきの まちに とりの こえが もどってきた。\nすべて そなたの おかげじゃ。」','ちょうろう「はての しまの せきひ…… あれには まだ つづきが\nあると いう。いつか たしかめて みなされ。」'],
    msg4:['ちょうろう「しろに いどむか…。\nむりだけは するでないぞ。」']}],
  exits:[
@@ -886,7 +887,9 @@ icetown:{
  start:{x:10,y:11},
  spawns:[
   {id:'kotae',x:10,y:4},
-  {id:'kobamu',x:11,y:3,need:'ch7w',gone:'ch7d'}],
+  {id:'kobamu',x:11,y:3,need:'ch7w',gone:'ch7d'},
+  {id:'owarika',x:5,y:6,need:'towaDown'},
+  {id:'owarika',x:14,y:8,need:'towaDown'}],
  chests:[
   {x:4,y:9,item:'taneH'},
   {x:16,y:9,item:'seisui'}],
@@ -894,6 +897,7 @@ icetown:{
   {x:9,y:1,kind:'ojii',col:'#e8e8d8',msgGeo:'せんにん「ここは ひがしの はて。じゃが はての さらに むこう——\nうみの そこよりも ふかい 『ふち』に、といの ぬしが おるでな。」',msg:['せんにん「ほっほ…… こんな はてまで くるとは。\nわしは こたえを さがして、よを すてた ものよ。」','せんにん「この しまの ぬしは 『こたえなきもの』。\nとうことしか しらぬ もの。あれと はなすなら、しょうじきで おれ。」'],
    msgCleared:['せんにん「やみのおうは きえたか。それでも といは のこる。\nそれが この よの おもしろさ という ものよ。」']},
   {x:12,y:4,kind:'musume',small:true,needKey:'ch7a',goneKey:'omo1',omoKey:'omo1',col:'#ffdca0',msg:['おもいでの ひかり——わかき ひの ふたりが、せきひに といを きざんで いる。','「ふたりで たまを まもろう」「さきに ゆく ほうが、のこる ほうに\nものがたりを たくす」——ゆうやけが、ちいさな かげを ながく のばして いた。']},
+  {x:12,y:1,kind:'stone',trial:1,col:'#c8bce0',msg:[]},
   {x:10,y:2,kind:'stone',col:'#9a90c0',msg:['いしぶみには こう きざまれている——','「すくえなかった ものの ぶんまで、\nひかりを つないで いきること。\nそれが、とわの といへの こたえだ。」'],msgHeir:['いしぶみには こう きざまれている——','「すくえなかった ものの ぶんまで、\nひかりを つないで いきること。\nそれが、とわの といへの こたえだ。」','その したに、あたらしい もじが ほのかに ひかっている——','「ひかりは えらぶのか。それとも——\nうけとめる ものが いるだけ なのか。」','「こたえは、みなもとに ねむっている。」'],msgAnswered:['いしぶみには こう きざまれている——','「ひかりは えらばない。\nうけとめる こころが、ひかりの かたちを きめる。」','「すくえなかった ものの ぶんまで、うけとめて いく。\nつぐ ものが いる かぎり、すくいは つづく。」','もじは あさひの ように あたたかく ひかっている。']}],
  exits:[
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'しおかぜが やみ、みなれた そうげんに もどってきた。'}]},
@@ -968,6 +972,8 @@ icetown:{
  spawns:[
   {id:'uminokage',x:7,y:6},
   {id:'uminokage',x:16,y:10},
+  {id:'nanashi',x:5,y:5,need:'ch6c'},
+  {id:'nanashi',x:14,y:9,need:'ch6c'},
   {id:'kirinokage',x:9,y:2},
   {id:'kirinokage',x:12,y:6},
   {id:'nanomu',x:12,y:4,need:'ch6w',gone:'ch6d'}],
@@ -1010,7 +1016,9 @@ icetown:{
   {id:'kodamadori',x:3,y:4},
   {id:'kodamadori',x:16,y:5},
   {id:'hikarinokodama',x:10,y:4,need:'ch3b',gone:'ch3c'},
-  {id:'koborebi',x:10,y:4,need:'ch4w',gone:'ch4c'}],
+  {id:'koborebi',x:10,y:4,need:'ch4w',gone:'ch4c'},
+  {id:'hikabake',x:7,y:10,need:'ch4c'},
+  {id:'hikabake',x:14,y:3,need:'ch4c'}],
  chests:[{x:4,y:10,item:'taneH'}],
  exits:[
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'きんいろの ひかりを あとに、そうげんへ もどってきた。'}]},
@@ -1032,7 +1040,7 @@ icetown:{
  'TTTTTTTTTGETTTTTTTTT',
  'TTTTTTTTTTTTTTTTTTTT'],
  start:{x:10,y:11},
- spawns:[{id:'tozasu',x:10,y:5,gone:'ch5c'}],
+ spawns:[{id:'tozasu',x:10,y:5,gone:'ch5c'},{id:'tozakage',x:6,y:8,need:'ch5c'},{id:'tozakage',x:13,y:6,need:'ch5c'}],
  chests:[],
  exits:[{x:10,y:12,to:'grass',tx:14,ty:11,msg:'……きがつくと、むらはずれに たっていた。'}],
  npcs:[]},
@@ -1172,6 +1180,10 @@ const FOES={
   tozasu:{charge:true, name:'とざすもの', hp:960, atk:98, def:40, exp:1500, g:1300, col:'#3a3654', draw:'boss2', tint:'rgba(46,40,72,0.9)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'とざすものは ほどけ、にわに かぜが とおった。'},
   nanomu:{charge:true, name:'なまえをのむ もの', hp:1000, atk:99, def:38, exp:1600, g:1200, col:'#5a6a80', draw:'boss2', tint:'rgba(86,100,122,0.88)', mboss:true, still:true, huge:true, watch:true, physMul:1, winMsg:'なまえをのむ ものは きりに ほどけ、\nちいさな こえが てのひらに のこった。'},
   kobamu:{charge:true, name:'おわりを こばむもの', hp:1050, atk:100, def:40, exp:1800, g:1500, col:'#b06a48', draw:'boss2', tint:'rgba(122,74,52,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'おわりを こばむものは ゆうやけの いろに ほどけ、\nせきひが しずかに ひかった。'},
+  hikabake:{name:'ひかりのばけもの', hp:400, atk:120, def:48, exp:300, g:150, col:'#ffe9a8', draw:'golem', tint:'rgba(240,220,150,0.8)', physMul:1, fireMul:0.8, iceMul:0.8, spell:true, watch:true, winMsg:'ひかりは ほどけ、しずかに もりへ かえった。'},
+  nanashi:{name:'なまえなきもの', hp:430, atk:124, def:52, exp:320, g:170, col:'#7a8aa2', draw:'crow', tint:'rgba(96,110,132,0.85)', dodge:0.2, spell:true, winMsg:'なまえなきものは きりに とけて きえた。'},
+  owarika:{name:'おわりのかけら', hp:450, atk:128, def:54, exp:350, g:190, col:'#c08a58', draw:'golem', v:'iron', tint:'rgba(150,95,60,0.85)', charge:true, physMul:0.9, fireMul:1.1, iceMul:1.1, winMsg:'かけらは ゆうやけの いろに くだけちった。'},
+  tozakage:{name:'とざしのかげ', hp:380, atk:116, def:50, exp:280, g:140, col:'#6a5a88', draw:'crow', tint:'rgba(90,74,120,0.85)', watch:true, winMsg:'かげは ほどけ、にわに しずけさが もどった。'},
   wslime:{name:'まどうスライム', hp:65, atk:12, def:7, exp:55, g:24, col:'#c8a8f0', draw:'slime', v:'dark', spell:true, watch:true, physMul:1, fireMul:1.2, iceMul:1.2, dodge:0.08},
   cuslime:{name:'のろいスライム', hp:200, atk:62, def:9, exp:78, g:34, col:'#e88ad0', draw:'slime', v:'dark', spell:true, physMul:1, fireMul:1.3, iceMul:1.3, dodge:0.12},
   kotae:{charge:true, name:'こたえなき もの', hp:820, atk:104, def:18, exp:400, g:300, col:'#8a76c8', draw:'golem', v:'iron', mboss:true, still:true, huge:true, spell:true, watch:true, physMul:1, fireMul:0.5, iceMul:0.5, dodge:0, winMsg:'こたえなき ものは しずかに くずれ、なみの おとだけが のこった。\nおくの いしぶみが あわく ひかっている…'}};
@@ -1186,6 +1198,11 @@ const SHOP=[
   {id:'a3',label:'はがねのよろい',cost:260,armor:16,town:'grass'},
   {id:'a4',label:'まほうのよろい',cost:600,armor:24,town:'icetown'},
   {id:'a5',label:'ひかりのよろい',cost:1350,armor:34,town:'icetown'},
+  {id:'w6',label:'ちそこのつるぎ',cost:4800,atk:64,town:'cave2'},
+  {id:'w7',label:'ほしくだきのつるぎ',cost:12000,atk:82,town:'cave2'},
+  {id:'a6c',label:'ほりびとのころも',cost:5200,armor:46,town:'cave2'},
+  {id:'a7h',label:'ほしのよろい',cost:13000,armor:60,town:'cave2'},
+  {id:'shield2',label:'ひかりのたて',cost:3000,def2:12,town:'cave2'},
   {id:'shield',label:'てつのたて',cost:60,def:6},
   {id:'dokukesi',label:'どくけしそう',cost:12,item:'dokukesi'},
   {id:'yakuso',label:'やくそう',cost:8},
@@ -1199,13 +1216,13 @@ const SHOP=[
   {id:'book',label:'冒険の書',cost:100,key:'book',hint:'フィールドの「📕」ボタンで モンスター図鑑を ひらける！'},
   {id:'mkey',label:'まほうのかぎ',cost:300,key:'mkey',town:'icetown',hint:'ちそこの とざされた とびらが ひらく！'}];
 // でんせつのぶき: weaponAtkの値が武器の同一性(全武器で一意)。効果はここで引く
-const WEAPONFX={16:{twice:true},44:{vsKage:1.5},52:{critUp:0.05},56:{critUp:0.08}};
-const WNAME={5:'どうのつるぎ',12:'はがねのつるぎ',16:'はやぶさのつるぎ',20:'ほのおのつるぎ',26:'ゆうしゃのつるぎ',36:'ふぶきのつるぎ',44:'かげぬいの たち',48:'らいめいのつるぎ',52:'おうじゃのけん',56:'とわのつるぎ'};
-const ANAME={4:'かわのよろい',9:'くさりかたびら',16:'はがねのよろい',20:'りゅうのうろこ',24:'まほうのよろい',28:'せいれいのころも',34:'ひかりのよろい'};
+const WEAPONFX={16:{twice:true},44:{vsKage:1.5},52:{critUp:0.05},56:{critUp:0.08},64:{critUp:0.06},82:{critUp:0.10}};
+const WNAME={5:'どうのつるぎ',12:'はがねのつるぎ',16:'はやぶさのつるぎ',20:'ほのおのつるぎ',26:'ゆうしゃのつるぎ',36:'ふぶきのつるぎ',44:'かげぬいの たち',48:'らいめいのつるぎ',52:'おうじゃのけん',56:'とわのつるぎ',64:'ちそこのつるぎ',82:'ほしくだきのつるぎ'};
+const ANAME={4:'かわのよろい',9:'くさりかたびら',16:'はがねのよろい',20:'りゅうのうろこ',24:'まほうのよろい',28:'せいれいのころも',34:'ひかりのよろい',46:'ほりびとのころも',60:'ほしのよろい'};
 // よろい効果(armorDef値がキー): 9=くさり(どく5割減) / 16=はがね(つうこん25%減) / 20=りゅうのうろこ(炎と聖の息を3割減) / 24=まほう(ねむり・まひ5割減) / 28=せいれいのころも(8%で攻撃をかわす) / 34=ひかり(毎ターンHP+3)
-const ARMORFX={9:{poisonGuard:0.5},16:{critGuard:0.75},20:{elemGuard:0.7},24:{mindGuard:0.5},28:{dodge:0.08},34:{regen:3}};
-const WFXDESC={16:'1ターンに 2かい きる',44:'かげに 1.5ばい',52:'かいしんの いちげき +5%',56:'かいしんの いちげき +8%'};
-const AFXDESC={9:'どくの きばを 5わり ふせぐ',16:'つうこんの いちげきを 25% へらす',20:'ほのお・ひかりの いきを 3わり へらす',24:'ねむり・まひを 5わり ふせぐ',28:'8%で こうげきを ひらりと かわす',34:'ターンの おわりに HPが 3 もどる'};
+const ARMORFX={9:{poisonGuard:0.5},16:{critGuard:0.75},20:{elemGuard:0.7},24:{mindGuard:0.5},28:{dodge:0.08},34:{regen:3},46:{regen:5},60:{regen:6,critGuard:0.6}};
+const WFXDESC={16:'1ターンに 2かい きる',44:'かげに 1.5ばい',52:'かいしんの いちげき +5%',56:'かいしんの いちげき +8%',64:'かいしんの いちげき +6%',82:'かいしんの いちげき +10%'};
+const AFXDESC={9:'どくの きばを 5わり ふせぐ',16:'つうこんの いちげきを 25% へらす',20:'ほのお・ひかりの いきを 3わり へらす',24:'ねむり・まひを 5わり ふせぐ',28:'8%で こうげきを ひらりと かわす',34:'ターンの おわりに HPが 3 もどる',46:'ターンの おわりに HPが 5 もどる',60:'ターンおわりに HP6・つうこんを 4わり へらす'};
 // そうびの袋: 買った/授かった装備は消えず ここに残る(付け替え・売却可)。weaponAtk値=同一性
 function ownGear(){
   Game.ownW=Game.ownW||[];Game.ownA=Game.ownA||[];
@@ -1255,11 +1272,11 @@ function loadMap(id){
 function recalcStats(){
   const p=Game.p,L=LEVELS[p.lv];
   p.atk=L.atk+p.bonusAtk+Game.weaponAtk;
-  p.def=L.def+(Game.shield?6:0)+(Game.armorDef||0)+(Game.bonusDef||0);
+  p.def=L.def+(Game.shield2?12:(Game.shield?6:0))+(Game.armorDef||0)+(Game.bonusDef||0);
 }
 function resetGame(){
   Game.p=newPlayer();
-  Game.gold=0;Game.weaponAtk=0;Game.armorDef=0;Game.ownW=[];Game.ownA=[];Game.shield=false;Game.mbossDown=false;Game.talking=false;Game.transiting=false;
+  Game.gold=0;Game.weaponAtk=0;Game.armorDef=0;Game.ownW=[];Game.ownA=[];Game.shield=false;Game.shield2=false;Game.mbossDown=false;Game.talking=false;Game.transiting=false;
   battleUiEl.classList.remove('talk');
   Game.bt=null;Game.grace=0;Game.kills=0;Game.battling=false;Game.endT=0;Game.introShown=false;
   Game.items={yakuso:0,seisui:0,dokukesi:0};Game.chestsOpen=[];Game.spotsRead=[];Game.springUsed={};Game.dmgTaken=0;Game.t0=0;
@@ -1284,7 +1301,7 @@ function saveData(){
   const p=Game.p;
   return {v:1,diff:Game.diff,
       lv:p.lv,exp:p.exp,hp:p.hp,mp:p.mp,bonusAtk:p.bonusAtk,tx:p.tx,ty:p.ty,dir:p.dir,
-      gold:Game.gold,items:Game.items,weaponAtk:Game.weaponAtk,armorDef:(Game.armorDef||0),ownW:(Game.ownW||[]),ownA:(Game.ownA||[]),shield:Game.shield,
+      gold:Game.gold,items:Game.items,weaponAtk:Game.weaponAtk,armorDef:(Game.armorDef||0),ownW:(Game.ownW||[]),ownA:(Game.ownA||[]),shield:Game.shield,shield2:!!Game.shield2,
       mbossDown:Game.mbossDown,springUsed:Game.springUsed,mapId:Game.mapId,door:Game.door,mkey:!!Game.mkey,visited:Game.visited,cloak:Game.cloak,book:Game.book,talkOff:!!Game.talkOff,seen:Game.seen,purified:Game.purified||0,
       kills:Game.kills,dmgTaken:Game.dmgTaken,goldT:Game.goldT,saidYes:Game.saidYes,day:Game.dayT,
       qChild:Game.qChild,bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,bonusMp:Game.bonusMp,gheart:Game.gheart,ng:Game.ng||0,hidden:Game.hidden,
@@ -1375,7 +1392,7 @@ function loadGame(){
   const p=Game.p;
   Game.diff=(d.diff>=1&&d.diff<=7)?d.diff:2; // なんいど（範囲外・未定義はふつう）
   p.lv=Math.min(MAXLV,d.lv);p.exp=d.exp||0;p.bonusAtk=d.bonusAtk||0;
-  Game.gold=d.gold||0;Game.weaponAtk=d.weaponAtk||0;Game.armorDef=d.armorDef||0;Game.ownW=(d.ownW||[]).slice();Game.ownA=(d.ownA||[]).slice();Game.shield=!!d.shield;ownGear();
+  Game.gold=d.gold||0;Game.weaponAtk=d.weaponAtk||0;Game.armorDef=d.armorDef||0;Game.ownW=(d.ownW||[]).slice();Game.ownA=(d.ownA||[]).slice();Game.shield=!!d.shield;Game.shield2=!!d.shield2;ownGear();
   Game.mbossDown=!!d.mbossDown;Game.springUsed=(d.springUsed&&typeof d.springUsed==='object')?d.springUsed:{};Game.saidYes=!!d.saidYes;
   if(d.items)for(const k in d.items)if(d.items[k])Game.items[k]=d.items[k]; // セーブ側のキーを正とする（新どうぐ追加時の取りこぼし防止）
   Game.kills=d.kills||0;Game.dmgTaken=d.dmgTaken||0;Game.goldT=d.goldT||12;
@@ -2253,11 +2270,11 @@ const BOOK_ISLES=[
   ['かざんの しま',['lslime','ecrow','mgolem','magmalord']],
   ['まおうの しろ',['dslime','dcrow','cuslime','chaoslord','boss','boss2','nukegara']],
   ['しずみの さと',['kagehito','nakikage','kagekishi','satonushi']],
-  ['わすれの うみ',['uminokage','kirinokage','nanomu']],
-  ['みなもとの もり',['komari','kodamadori','hikarinokodama','koborebi']],
+  ['わすれの うみ',['uminokage','kirinokage','nanashi','nanomu']],
+  ['みなもとの もり',['komari','kodamadori','hikabake','hikarinokodama','koborebi']],
   ['とわの ふち',['towakage','jigencho','mugenslime','toikeshin']],
-  ['こころのにわ',['tozasu']],
-  ['はての しま',['kobamu']]];
+  ['こころのにわ',['tozakage','tozasu']],
+  ['はての しま',['owarika','kobamu']]];
 const BOOK_SPECIAL=['gslime','metal','kotae'];
 // ずかんの ものがたり行（よみものとしての 図鑑）
 const BOOK_LORE={
@@ -2312,6 +2329,10 @@ const BOOK_LORE={
   metal:'はがねの からだに けいけんの かたまり。であえた ひは うんが いい。',
   kotae:'とわに といつづける もの。こたえを もつ ものを、しずかに ためしに くる。'};
 const BOOK_TRAITS={
+  hikabake:['ためこんだ ひかりで じゅもんを はなつ','ほのお・こおりは ききにくい'],
+  nanashi:['みうごきが はやく こうげきを かわす','なまえを よぶ こえに よわい…？'],
+  owarika:['ちからを ためて おおわざを くりだす','いわの からだ——じゅもんが よく きく'],
+  tozakage:['ようすを うかがい ふいに おそう','にわの しずけさを まもって いるのかも しれない'],
   slime:['たまに にげだす','なかまを よんで かさなる（たおすと ほうびも ふえる）'],
   crow:['そらを とぶ（こうげきを かわす）','HPが へると おびえて にげる'],
   golem:['ちからを ためる（つよい いちげき）'],
@@ -2398,6 +2419,7 @@ function renderBook(){
     +'<div class="bg">🔥 メラ（火）Lv1・MP3　／　ギラ（火）Lv3・MP7　／　ベギラマ（火）Lv7・MP12　／　ベギラゴン（火）Lv12・MP20</div>'
     +'<div class="bg">❄ ヒャド（氷）Lv4・MP5　／　ヒャダルコ（氷）Lv8・MP12　／　マヒャド（氷）Lv13・MP20</div>'
     +'<div class="bg">💚 ホイミ Lv1・MP3　／　ベホイミ Lv5・MP8　／　ベホマ Lv11・MP22　／　キアリー（どく回復）Lv2・MP2</div>'
+    +'<div class="bg">✨ 章のあかし（といの こたえが じゅもんに なったもの）：とわのまもり（章5・MP10・てきの こうげき3かいを 4わり やわらげる）／　ソラのよびごえ（章6・MP12・てきの うごきを とめる）／　つぐものがたり（章7・MP25・おおわざ＋じぶんを かいふく）</div>'
     +'</div>';
   return h;
 }
@@ -2426,6 +2448,9 @@ function renderStatus(){
    h+='<h3 class="bisle">だいじなもの</h3>'+row('',dj.length?dj.join('　'):'なし');}
   {const sp=[['メラ',1],['キアリー',2],['ギラ',3],['ヒャド',4],['ベホイミ',5],['バイキルト',6],['ベギラマ',7],['ヒャダルコ',8],['ベホマ',11],['ベギラゴン',12],['マヒャド',13]];
    const learned=['ホイミ'].concat(sp.filter(s=>lv>=s[1]).map(s=>s[0]));
+   if(Game.hidden.ch5c||Game.hidden.ch5cEver)learned.push('とわのまもり');
+   if(Game.hidden.ch6c||Game.hidden.ch6cEver)learned.push('ソラのよびごえ');
+   if(Game.hidden.ch7c||Game.hidden.ch7cEver)learned.push('つぐものがたり');
    h+='<h3 class="bisle">おぼえた じゅもん</h3>'+row('',learned.join('　'));}
   {const zAll=[].concat.apply([],BOOK_ISLES.map(pr=>pr[1])).concat(BOOK_SPECIAL);
    const zk=zAll.filter(id=>Game.seen&&Game.seen[id]).length;
@@ -3409,6 +3434,8 @@ async function talkNpc(n){
       await say('「……ふふ。 なまえって、よばれると あったかい のね。」');
       await say('『なまえは、よぶ こえが あって はじめて なまえに なる。』\n——といの こたえが、むねに ともった。');
       Game.hidden.ch6c=true;
+      await say('なまえの ちからが やどった——\nじゅもん「ソラのよびごえ」を さずかった！');
+      Game.hidden.spTold=true;
       showChapter('だい 6 しょう','なまえを よぶ こえ');
       toast('しょうごう「なまえを よぶもの」を えた！');
       saveGame();
@@ -3446,6 +3473,23 @@ async function talkNpc(n){
       await say('フードの ひとかげは、こたえない。\nかぜの おとだけが、ふたりの あいだを すぎていく。');
     }
     endTalk();saveGame();return;
+  }
+  if(n.trial){ // こだまのしれん: たおした ぬしとの さいせん(ほうび=つうじょうの ぼうけんと おなじ)
+    const cand=[['koborebi','こぼれびの けしん'],['tozasu','とざすもの'],['nanomu','なまえをのむ もの'],['kobamu','おわりを こばむもの'],['kotae','こたえなきもの'],['toikeshin','といの けしん']].filter(c=>Game.seen&&Game.seen[c[0]]);
+    if(!cand.length){
+      await say('こだまの せきひ「……たたかいの きおくが、まだ ここには ない。\nぬしを たおした もののみ、こだまと あいまみえる。」');
+      endTalk();return;
+    }
+    await say('こだまの せきひ「たおした ぬしの こだまと、もういちど たたかえる。\nかちどきは、ほうびと なって かえって くる。」');
+    const pick=await ask(cand.map(c=>({id:c[0],label:c[1]})).concat([{id:'no',label:'やめておく'}]),'どの こだまと たたかう？');
+    if(pick&&pick!=='no'&&FOES[pick]){
+      await say('せきひが ひかり、'+FOES[pick].name+'の こだまが たちあがる——！');
+      endTalk();
+      startEncounter({def:FOES[pick]});
+      return;
+    }
+    await say('こだまの せきひ「いつでも くると いい。」');
+    endTalk();return;
   }
   if(n.shop){await runShop();saveGame();}
   else if(n.child){
@@ -3626,6 +3670,8 @@ async function talkNpc(n){
       await say('じいさんは ゆうやけの なかで、しずかに めを とじた。\n……その かおは、わらって いた。');
       await say('『おわりは、うけつがれた ものの なかで つづく。』\n——といの こたえが、むねに ともった。');
       Game.hidden.ch7c=true;
+      await say('ものがたりが ちからに なった——\nじゅもん「つぐものがたり」を さずかった！');
+      Game.hidden.spTold=true;
       showChapter('だい 7 しょう','ながいきの やくめ');
       toast('しょうごう「ものがたりを つぐもの」を えた！');
       endTalk();
@@ -4135,7 +4181,8 @@ async function runSell(){
       if(!it)continue;
       list.push({id:'sa_'+v,label:(ANAME[v]||'よろい')+(v===Game.armorDef?'（そうびちゅう）':'')+'　+'+Math.floor(it.cost/2)+'G'});
     }
-    if(Game.shield)list.push({id:'eq_s',label:'てつのたて（そうびちゅう）　+30G'});
+    if(Game.shield)list.push({id:'eq_s',label:'てつのたて'+(Game.shield2?'':'（そうびちゅう）')+'　+30G'});
+    if(Game.shield2)list.push({id:'eq_s2',label:'ひかりのたて（そうびちゅう）　+1500G'});
     if(!list.length){await say('しょうにん「うれる ものは なさそうだね。\nまものを たおして どうぐを あつめて おいで。」');return;}
     list.push({id:'back',label:'もどる'});
     const c=await ask(list,'なにを うる？（'+Game.gold+'G）');
@@ -4161,8 +4208,10 @@ async function runSell(){
         Game.ownA=Game.ownA.filter(x=>x!==v);
         if(Game.armorDef===v)Game.armorDef=Game.ownA.length?Math.max(...Game.ownA):0;
       },equipped:v===Game.armorDef};
+    }else if(c==='eq_s2'){
+      eq={lab:'ひかりのたて',price:1500,apply:()=>{Game.shield2=false;},equipped:true};
     }else{
-      eq={lab:'てつのたて',price:30,apply:()=>{Game.shield=false;},equipped:true};
+      eq={lab:'てつのたて',price:30,apply:()=>{Game.shield=false;},equipped:!Game.shield2};
     }
     if(eq.equipped){
       const ok=await ask([{id:'no',label:'やめておく'},{id:'yes',label:'うる'}],'そうびちゅうの ものだが うるか？');
@@ -4175,9 +4224,11 @@ async function runSell(){
   }
 }
 async function runShop(){
-  await say(Game.mbossDown
+  await say(Game.mapId==='cave2'
+    ?'ほりびとの あきんど「ちそこの いちへ ようこそ。\nほりびとが のこした さいごの しごと——ほしの てつの そうびだ。」'
+    :(Game.mbossDown
     ?'しょうにん「いらっしゃい！ ゴーレムたいじの えいゆうさん！\nこおりと ほのおの たびに そなえて いきな。」'
-    :'しょうにん「いらっしゃい！ ぶきと どうぐの みせだよ。」');
+    :'しょうにん「いらっしゃい！ ぶきと どうぐの みせだよ。」'));
   while(true){
     const mode=await ask([{id:'buy',label:'かう'},{id:'sell',label:'うる'},{id:'exit',label:'やめる'}],'みせ（'+Game.gold+'G）');
     if(mode!=='buy'&&mode!=='sell'){await say('しょうにん「まいど あり！ また きてくれよな。」');return;}
@@ -4194,8 +4245,9 @@ async function runShop(){
       if(it.atk)hadW=true;
       if(it.armor)hadA=true;
       if(it.def&&Game.shield)continue;
+      if(it.def2&&Game.shield2)continue;
       if(it.key&&Game[it.key])continue; // 買い切り品（どこでもドア など）所持済みは ならべない
-      const sp=it.atk?' ⚔+'+it.atk:(it.armor?' 🛡+'+it.armor:(it.def?' 🛡+'+it.def:'')); // 性能を そのばで くらべられるように
+      const sp=it.atk?' ⚔+'+it.atk:(it.armor?' 🛡+'+it.armor:(it.def?' 🛡+'+it.def:(it.def2?' 🛡+'+it.def2:''))); // 性能を そのばで くらべられるように
       const fx=(it.armor&&ARMORFX[it.armor])?'✦':''; // 効果持ちの しるし（かうと 効果文が でる）
       list.push({id:it.id,label:it.label+fx+sp+'  '+it.cost+'G',dis:Game.gold<it.cost});
     }
@@ -4227,6 +4279,9 @@ async function runShop(){
     }else if(it.def){
       Game.shield=true;recalcStats();
       await say(it.label+'を こうにゅうした！\nしゅびりょくが あがった！');
+    }else if(it.def2){
+      Game.shield2=true;recalcStats();
+      await say(it.label+'を こうにゅうした！\nしゅびりょくが おおきく あがった！');
     }else if(it.item){
       Game.items[it.item]=(Game.items[it.item]||0)+1;
       await say(it.label+'を こうにゅうした！');
@@ -4540,6 +4595,10 @@ function updateField(dt){
   const qloc='【'+(MAPNAME[Game.mapId]||'')+'】';if(qloc+qt!==Game._qt){Game._qt=qloc+qt;questEl.textContent=qloc+qt+'　▶';
     const db=document.getElementById('doorbtn');if(db)db.classList.toggle('quest',qt.indexOf('どこでもドア')>=0);}
   if(!Game._gTip&&TM>3&&!Game.talking&&!Game.battling){Game._gTip=true;toast('こまったら したの「もくてき」を タップ！ こえが みちびいて くれる');}
+  if(!Game.hidden.spTold&&!Game.talking&&!Game.battling&&(Game.hidden.ch5c||Game.hidden.ch5cEver||Game.hidden.ch6c||Game.hidden.ch6cEver||Game.hidden.ch7c||Game.hidden.ch7cEver)){
+    Game.hidden.spTold=true;toast('といの こたえが じゅもんに なった！ せんとうで「じゅもん」を ひらいて みよう');saveGame();}
+  else if(!Game.hidden.ichiTold&&!Game.talking&&!Game.battling&&(Game.hidden.ch4c||Game.hidden.towaDown)){
+    Game.hidden.ichiTold=true;toast('ちそこの おくに「ほりびとの いち」が ひらいた…！ ほしの てつの そうびを あきなう らしい');saveGame();}
   if(Game.chCard){Game.chCard.t+=dt;if(Game.chCard.t>Game.chCard.dur)Game.chCard=null;}
   if(Game.mapId==='castle'&&Game.hidden.cleared&&!Game.hidden.cTip&&!Game.talking&&!Game.battling){
     Game.hidden.cTip=true;
@@ -8082,10 +8141,13 @@ async function commandPhase(){
       if(p.lv>=11)list.push({id:'behoma',label:'ベホマ',cost:22,dis:p.mp<22});
       if(p.lv>=6)list.push({id:'baikiruto',label:'バイキルト',cost:6,dis:p.mp<6});
       if(p.lv>=2)list.push({id:'kiari',label:'キアリー',cost:2,dis:p.mp<2});
+      if(Game.hidden.ch5c||Game.hidden.ch5cEver)list.push({id:'mamori',label:'とわのまもり',cost:10,dis:p.mp<10});
+      if(Game.hidden.ch6c||Game.hidden.ch6cEver)list.push({id:'yobigoe',label:'ソラのよびごえ',cost:12,dis:p.mp<12});
+      if(Game.hidden.ch7c||Game.hidden.ch7cEver)list.push({id:'monogatari',label:'つぐものがたり',cost:25,dis:p.mp<25});
       list.push({id:'back',label:'もどる'});
       const s=await ask(list,'じゅもん');
       if(s==='back')continue;
-      const cost={mera:3,gira:7,begirama:12,begiragon:20,hyado:5,hyadaruko:12,mahyado:20,hoimi:3,behoimi:8,behoma:22,kiari:2,baikiruto:6}[s];
+      const cost={mera:3,gira:7,begirama:12,begiragon:20,hyado:5,hyadaruko:12,mahyado:20,hoimi:3,behoimi:8,behoma:22,kiari:2,baikiruto:6,mamori:10,yobigoe:12,monogatari:25}[s];
       if(p.mp<cost){await say('MPが たりない！');continue;}
       if((s==='hoimi'||s==='behoimi'||s==='behoma')&&p.hp>=p.mhp){await say('HPは まんたんだ！');continue;}
       if(s==='kiari'&&!Game.p.poison){await say('どくに かかっていない！');continue;}
@@ -8385,6 +8447,47 @@ async function playerAction(act){
     popup(c.x,c.y,'どく かいふく','heal');
     await wait(0.12);
     await say('どくが きれいに けされた！');
+  }else if(act.kind==='mamori'){
+    p.mp-=10;updateBars();
+    await say('ゆうしゃは とわのまもりを となえた！');
+    sfxHeal();bt.guardT=3;
+    flash('#9fc8ff',0.3,0.7);
+    {const c=playerChipPos();
+     popup(c.x,c.y,'まもり','heal');
+     puff(c.x,c.y,'rgba(150,200,255,.9)',24,120,1.1,{up:true,s0:2,s1:5,spread:34});}
+    await wait(0.15);
+    await say('しずかな ひかりが ゆうしゃを つつむ！\n（てきの こうげき 3かいを やわらげる）');
+  }else if(act.kind==='yobigoe'){
+    p.mp-=12;updateBars();
+    await say('ゆうしゃは ソラのよびごえを となえた！');
+    sfxGira();
+    flash('#cfe0f2',0.35,0.7);shakeBattle(8,0.35);
+    {const epq=enemyPos();puff(epq.x,epq.y-epq.s*40,'rgba(207,224,242,.95)',30,220,0.9,{s0:2,s1:6});}
+    bt.foeBind=Math.max(bt.foeBind||0,(bt.foe.boss||bt.foe.mboss)?1:2);
+    await wait(0.15);
+    await say('よばれた なが こだまする——\n'+bt.foe.name+'は うごきを とめた！');
+  }else if(act.kind==='monogatari'){
+    p.mp-=25;updateBars();
+    await say('ゆうしゃは つぐものがたりを となえた！');
+    bt.cast={t:0};
+    await wait(0.3);
+    bt.cast=null;
+    bt.spellFx={kind:'fire',t:0,pow:3};
+    sfxCrit();bt.flash=1;bt.hitStop=0.12;bt.recoil=1.2;bt.blink=1;shakeBattle(16,0.6);bt.shock={t:0};
+    flash('#ffd9a0',0.5,0.8);
+    {const epq=enemyPos();
+     const d=Math.max(1,Math.round(p.atk*2.2*(bt.atkUp||1))-bt.foe.def+ri(0,6));
+     bt.hp=Math.max(0,bt.hp-d);
+     popup(epq.x,epq.y-epq.s*70,d,'crit');
+     puff(epq.x,epq.y-epq.s*40,'rgba(255,220,150,.95)',40,320,0.9,{s0:3,s1:7});
+     await wait(0.15);
+     await say('うけつがれた ものがたりが ほとばしる！\n'+bt.foe.name+'に '+d+'の ダメージ！');}
+    if(p.hp<p.mhp){
+      const n=Math.min(p.mhp-p.hp,Math.round(p.mhp*0.3));
+      p.hp+=n;updateBars();sfxHeal();
+      const c=playerChipPos();popup(c.x,c.y,'+'+n,'heal');
+      await say('ものがたりの ぬくもりが めぐる——HPが '+n+' かいふくした！');
+    }
   }else if(act.kind==='baikiruto'){
     p.mp-=6;updateBars();
     await say('ゆうしゃは バイキルトを となえた！');
@@ -8556,6 +8659,7 @@ async function enemyAction(){
    if(afx.elemGuard&&(fire||holy))d=Math.max(1,Math.round(d*afx.elemGuard));
    if(afx.critGuard&&ecrit)d=Math.max(1,Math.round(d*afx.critGuard));} // はがねのよろい：つうこんに つよい
   {const Dc=curDiff();d=Math.min(d,Math.max(1,Math.round(p.mhp*((fire||holy||heavy)?Dc.capHeavy:Dc.capNorm))));} // なんいど：被ダメ上限（即死防止・大技は高め天井）
+  if(bt.guardT>0){d=Math.max(1,Math.round(d*0.6));bt.guardT--;} // とわのまもり: 3回ぶん4わり軽減
   let kabau=false;
   if(bt.guard)d=Math.max(1,Math.ceil(d*0.45)); // ぼうぎょで 55%カット
   else if(mateOn()&&mateKind()==='kagekishi'&&Math.random()<mateGuardP()){kabau=true;d=Math.max(1,Math.ceil(d*0.55));} // かげのきしが かばう
@@ -8661,6 +8765,8 @@ async function victory(){
     await say('にわの おくで、ちいさな こえが した。\n「……こわかったの。 うけとめるのが。 かわって しまうのが。」');
     await say('「でも、あなたは こじあけなかった。\nずっと、となりに いて くれた。」');
     await say('『すくうとは、こじあける ことじゃない。\nとなりに いる ことだ。』——といの こたえが、むねに ともった。');
+    await say('こたえが ちからに なった——\nじゅもん「とわのまもり」を さずかった！');
+    Game.hidden.spTold=true;
     toast('しょうごう「となりびと」を えた！');
   }
   if(foe===FOES.koborebi&&!Game.hidden.ch4c){ // 章4c: こぼれび鎮め=章4の結び
@@ -10589,7 +10695,7 @@ async function ngNewGame(fromKing){
   sfxOk();
   const p0=Game.p;
   const keep={lv:p0.lv,exp:p0.exp,bonusAtk:p0.bonusAtk,gold:Game.gold,
-    items:JSON.parse(JSON.stringify(Game.items)),weaponAtk:Game.weaponAtk,armorDef:(Game.armorDef||0),ownW:(Game.ownW||[]).slice(),ownA:(Game.ownA||[]).slice(),shield:Game.shield,
+    items:JSON.parse(JSON.stringify(Game.items)),weaponAtk:Game.weaponAtk,armorDef:(Game.armorDef||0),ownW:(Game.ownW||[]).slice(),ownA:(Game.ownA||[]).slice(),shield:Game.shield,shield2:!!Game.shield2,
     bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,bonusMp:(Game.bonusMp||0),gheart:(Game.gheart||0),
     door:Game.door,mkey:!!Game.mkey,cloak:Game.cloak,book:Game.book,talkOff:!!Game.talkOff,seen:JSON.parse(JSON.stringify(Game.seen||{})),
     zkomp:!!(Game.hidden&&Game.hidden.zkomp),ch3dEver:!!(Game.hidden&&(Game.hidden.ch3d||Game.hidden.ch3dEver)),
@@ -10600,7 +10706,7 @@ async function ngNewGame(fromKing){
   resetGame();
   const p=Game.p;
   p.lv=Math.min(MAXLV,keep.lv);p.exp=keep.exp;p.bonusAtk=keep.bonusAtk;
-  Game.gold=keep.gold;Game.items=keep.items;Game.weaponAtk=keep.weaponAtk;Game.armorDef=keep.armorDef;Game.ownW=keep.ownW;Game.ownA=keep.ownA;Game.shield=keep.shield;
+  Game.gold=keep.gold;Game.items=keep.items;Game.weaponAtk=keep.weaponAtk;Game.armorDef=keep.armorDef;Game.ownW=keep.ownW;Game.ownA=keep.ownA;Game.shield=keep.shield;Game.shield2=!!keep.shield2;
   Game.bonusDef=keep.bonusDef;Game.bonusHp=keep.bonusHp;Game.bonusMp=keep.bonusMp;Game.gheart=keep.gheart;
   Game.door=keep.door;Game.mkey=keep.mkey;Game.cloak=keep.cloak;Game.book=keep.book;Game.talkOff=keep.talkOff;Game.seen=keep.seen;Game.spotsRead=keep.spotsRead;
   if(keep.zkomp)Game.hidden.zkomp=true;
