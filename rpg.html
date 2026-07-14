@@ -6697,6 +6697,7 @@ function drawHouse(x,y,cam,palace){
 function npcStoryPending(n){
   const h=Game.hidden;
   if(n.captive)return !!(h.k1&&!h.k2); // とらわれの むすめ=すくいだすまで！
+  if(n.ferry)return !!(h.ch6a&&!h.ch6b); // 章6b: わたしもりに なまえの ゆくえを きく
   if(Game.mapId!=='grass')return false;
   if(n.msgElder){
     if(!h.elderTold&&(h.cleared||h.k3&&['t1','t2','t3','t4','t5'].every(k=>h[k])))return true; // 告白待ち or クリア後の導き
@@ -7700,7 +7701,8 @@ function questBeaconTargets(){
   if(Game.mapId==='minamoto'&&h.ch4w&&!h.ch4c)foeB(e=>e.def===FOES.koborebi);
   // 章5c: こころのにわの とざすもの
   if(Game.mapId==='kokoro'&&!h.ch5c)foeB(e=>e.def===FOES.tozasu);
-  // 章6: なまえの こえ 3つ → なまえをのむ もの
+  // 章6: わたしもり → なまえの こえ 3つ → なまえをのむ もの
+  if(Game.mapId==='mistsea'&&h.ch6a&&!h.ch6b&&w.npcs)for(const n of w.npcs)if(n.ferry)push(n.x,n.y);
   if(Game.mapId==='mistsea'&&h.ch6b&&!h.ch6w&&w.npcs)for(const n of w.npcs)if(n.voiceKey&&!h[n.voiceKey])push(n.x,n.y);
   if(Game.mapId==='mistsea'&&h.ch6w&&!h.ch6d)foeB(e=>e.def===FOES.nanomu);
   // 章7: 三つの おもいで → おわりを こばむもの
