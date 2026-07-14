@@ -1090,7 +1090,7 @@ icetown:{
  'WWWWWWWWWWWWWWWWWWWW',
  'WWWWWWWWGGGWWWWWWWWW',
  'WWWWGGGGGGGGGGWWWWWW',
- 'WWWGGGGGGGGGGGGGPEWW',
+ 'WWWGYGGGGGGGGGGGPEWW',
  'WWGGGGTTGGGGGGGGGGWW',
  'WWGGGGTTGGPPPPPPGGWW',
  'WWGGGGGGGGPGGGGGGGWW',
@@ -1103,13 +1103,15 @@ icetown:{
  'WWWWWWWWWWWWWWWWWWWW'],
  start:{x:10,y:11},
  npcs:[
-  {x:5,y:5,shop:true,kind:'musume',col:'#c8b8d8',msg:[]}],
+  {x:5,y:5,shop:true,kind:'musume',col:'#c8b8d8',msg:[]},
+  {x:12,y:6,kind:'ojii',needKey:'ch8c',col:'#b0a8c0',msgGeo:'ふなびとの おばあ「ここは みなみの おきの、きりの むこう。\nむかしは みおくりの ふねで にぎわった きしさ。」',msg:['ふなびとの おばあ「むすこを ここから みおくってねえ。\nナギさんの ふねが うごいたと きいて、わたって きたんだよ。」','ふなびとの おばあ「なまえを よんで もらえるって、いいねえ。\nうちの こも、うみの どこかで きいてる かしら。」']},
+  {x:6,y:6,kind:'musume',small:true,needKey:'ch8c',col:'#a8d0c8',msg:['ふなのりみならい「おれ、ナギせんちょうに ひろって もらったんだ！\nいつか おれも、だれかを むこうぎしまで おくるんだ。」','ふなのりみならい「せんちょうが いってた。『ふねの しごとは はこぶ ことじゃ ない。\nちゃんと みおくる ことだ』って。かっこいい よなあ。」']}],
  spawns:[
   {id:'nagorikage',x:6,y:7},
   {id:'nagorikage',x:13,y:5},
   {id:'shionomukuro',x:8,y:3},
   {id:'miokure',x:14,y:3,need:'ch8w',gone:'ch8d'}],
- chests:[{x:3,y:5,item:'inochi'}],
+ chests:[{x:3,y:5,item:'inochi'},{x:12,y:6,item:'hoshikake'},{x:4,y:8,item:'tane'}],
  exits:[
   {x:10,y:12,to:'mistsea',tx:10,ty:11,msg:'きりの うみへ もどった。'},
   {x:17,y:3,to:'fune',tx:9,ty:5,msg:'みおくりの ふねに のりこんだ。'}]},
@@ -1120,7 +1122,7 @@ icetown:{
  'WWWWWWWWWWWWWWWWWWWW',
  'WWWWWWWPPPPPWWWWWWWW',
  'WWWWWWPPPPPPPWWWWWWW',
- 'WWWWWWPPPPPPPWWWWWWW',
+ 'WWWWWWPPPPPVPWWWWWWW',
  'WWWWWWWPPPPPWWWWWWWW',
  'WWWWWWWWWEWWWWWWWWWW',
  'WWWWWWWWWWWWWWWWWWWW',
@@ -1138,7 +1140,7 @@ icetown:{
  exits:[
   {x:9,y:6,to:'misaki',tx:16,ty:3,msg:'みさきへ もどった。'}]},
  ohori:{ // 章9『ほりびとのともしび』: ちそこ第2層(くらやみ・ともしび5基)
- song:'cave', bg:['#040207','#0a060e'], dark:true, darkR:2.8,
+ song:'tomoshibi', bg:['#040207','#0a060e'], dark:true, darkR:2.8,
  spots:[
   {x:5,y:2,kind:'fire',msg:['ふるい かじばの あと。すみに『てつは ほしから ふってくる。\nひろって、きたえて、とどける』と ほってある。']},
   {x:14,y:10,kind:'grave',msg:['ほりびとたちの はか。『われら、ひかりの とどかぬ ところを ほる。\nとどかぬ ままに して おかぬ ために』']}],
@@ -1159,23 +1161,23 @@ icetown:{
  'CCCCCCCCCCCCCCCCCCCC'],
  start:{x:10,y:11},
  npcs:[
-  {x:3,y:1,kind:'stone',toKey:'to1',col:'#5a4a30',msg:[]},
-  {x:16,y:1,kind:'stone',toKey:'to2',col:'#5a4a30',msg:[]},
-  {x:3,y:11,kind:'stone',toKey:'to3',col:'#5a4a30',msg:[]},
-  {x:16,y:11,kind:'stone',toKey:'to4',col:'#5a4a30',msg:[]},
-  {x:10,y:8,kind:'stone',toKey:'to5',col:'#5a4a30',msg:[]}],
+  {x:3,y:1,kind:'lantern',toKey:'to1',col:'#5a4a30',msg:['とうろうの ほりもじ『われは 三ばんめの ひ。\nふたつめの ひの つぎに ともされる さだめ』']},
+  {x:16,y:1,kind:'lantern',toKey:'to2',col:'#5a4a30',msg:['とうろうの ほりもじ『われは 一ばんめの ひ。\nすべての ともしびは ここから はじまる』']},
+  {x:3,y:11,kind:'lantern',toKey:'to3',col:'#5a4a30',msg:['とうろうの ほりもじ『われは 四ばんめの ひ。\nおわりの ひとつ まえを あずかる』']},
+  {x:16,y:11,kind:'lantern',toKey:'to4',col:'#5a4a30',msg:['とうろうの ほりもじ『われは 五ばんめ——しまいの ひ。\nじゅんに ともした ものに、ほりびとの ほこりを』']},
+  {x:10,y:8,kind:'lantern',toKey:'to5',col:'#5a4a30',msg:['とうろうの ほりもじ『われは 二ばんめの ひ。\nはじまりの つぎを ともせ』']}],
  spawns:[
   {id:'iwanuke',x:5,y:5},
   {id:'iwanuke',x:14,y:8},
   {id:'fukayami',x:8,y:2},
   {id:'fukayami',x:12,y:10},
   {id:'yamihori',x:10,y:4,need:'ch9w',gone:'ch9d'}],
- chests:[{x:5,y:10,item:'inochi'}],
+ chests:[{x:5,y:10,item:'inochi'},{x:3,y:3,item:'taneH'},{x:16,y:3,item:'hoshitetsu'}],
  exits:[
   {x:10,y:12,to:'cave2',tx:10,ty:12,msg:'たてあなを のぼり、ちそこに もどった。'},
   {x:10,y:0,to:'tomoshibi',tx:10,ty:4,need:'ch9w',msg:'ひらかれた みちの さきへ——あたたかい ひかりが みえる。'}]},
  tomoshibi:{ // 章9: ともしびのま(かじば+ほりびとの きろく・たたかいなし)
- song:'minamoto', bg:['#1e1608','#3a2c12'],
+ song:'tomoshibi', bg:['#1e1608','#3a2c12'],
  spots:[
   {x:8,y:1,kind:'sign',msg:['かべの ほりもじ。『ここまで きたか。なら、つづきは たのんだ』\n——ほりびとの わらいごえが きこえる きが する。']}],
  map:[
@@ -2159,6 +2161,24 @@ const SONGS={};
       {i:'bell',g:0.085,pan:0.25,seq:bell},
       {i:'flute',g:0.085,pan:0.05,seq:mel},
       {drum:1,g:0.10,seq:wave}]};
+  }
+  // ほりびとの ともしび：ちそこの いのり(イたんちょう48・ふかい ドローン+しずくの かね=くらやみに ひが ともる)
+  {
+    const drone=[],pad=[],bell=[],mel=[];
+    const CH=[[33,[57,60,64]],[38,[57,62,65]],[36,[55,60,64]],[40,[59,64,67]],
+              [33,[57,60,64]],[31,[55,59,62]],[36,[55,60,64]],[33,[57,61,64]]];
+    CH.forEach((c,b)=>{const o=b*16;drone.push([o,c[0],16]);c[1].forEach(m=>pad.push([o,m,16]));});
+    bell.push([0,69,3],[20,64,3],[40,72,3],[64,69,3],[88,64,3],[108,73,3],[120,76,6]);
+    mel.push([8,64,6],[16,62,4],[20,60,4],[24,57,8],
+      [40,60,6],[48,64,8],[56,62,4],
+      [64,65,8],[72,64,4],[76,62,4],
+      [80,60,8],[96,64,6],[104,67,6],
+      [112,69,8],[120,68,4],[124,69,4]);
+    SONGS.tomoshibi={bpm:48,div:4,steps:128,echo:0.3,tracks:[
+      {i:'warm',g:0.12,pan:0,seq:drone},
+      {i:'choir',g:0.04,pan:-0.2,seq:pad},
+      {i:'bell',g:0.09,pan:0.22,seq:bell},
+      {i:'flute',g:0.075,pan:0.04,seq:mel}]};
   }
   // こたえなき もの：しんぱんの かね（Eフリギア146・はんおん オスティナート・さいご F→E も といは のこる）
   {
@@ -3690,9 +3710,11 @@ async function talkNpc(n){
     toast('ちそこの みなみに たてあなが ひらいた——おおほりあとへ！');
     endTalk();saveGame();return;
   }
-  if(n.toKey&&!Game.hidden[n.toKey]){ // 章9: ともしびを ともす(5基で みちが ひらく)
-    await say('つめたい とうろうが たっている。……ほりびとの ともしびだ。\nそっと てを かざすと——');
+  if(n.toKey&&!Game.hidden[n.toKey]){ // 章9: ともしびを ともす(5基で みちが ひらく・詩の順=ほりびとのほこり)
+    if(n.msg&&n.msg[0])await say(n.msg[0]);
+    await say('そっと てを かざすと——');
     Game.hidden[n.toKey]=true;
+    Game.hidden.toOrd=(Game.hidden.toOrd||'')+n.toKey.slice(2);
     sfxHeal();flash('#ffd88a',0.45,0.9);
     if(Game.cam){const q=isoCtr(n.x,n.y);puff(q.x,q.y-Game.cam.lift*0.2,'rgba(255,216,138,.95)',26,140,1.2,{up:true,s0:2,s1:5});}
     const tc=['to1','to2','to3','to4','to5'].filter(k=>Game.hidden[k]).length;
@@ -3704,6 +3726,12 @@ async function talkNpc(n){
       if(Game.mapId==='ohori'&&!Game.enemies.some(e=>(e.sp&&e.sp.id)==='yamihori'))
         Game.enemies.push({id:'yamihori',sp:{id:'yamihori',x:10,y:4},def:FOES.yamihori,tx:10,ty:4,px:10,py:4,hx:10,hy:4,seed:rnd(9),timer:rnd(0.5,1.5),moving:null});
       toast('おくで なにかが うごめいている…！');
+      if(Game.hidden.toOrd==='25134'){ // 詩の順どおり=ほりびとのほこり
+        await say('五つの ひが、ほりもじの うたの とおりに ならんだ——\nどこかで、ほりびとたちの わらいごえが した きが する。');
+        Game.items.hoshitetsu=(Game.items.hoshitetsu||0)+2;
+        sfxChest();
+        toast('ほりびとの ほこりを みとめられた！ ほしのてつ×2 を さずかった');
+      }
     }
     endTalk();saveGame();return;
   }
@@ -6119,6 +6147,8 @@ function drawFieldScene(){
       if(tt==='T')drawIsoTree(d-y,y,cam);
       else if(tt==='H')drawHouse(d-y,y,cam,false);
       else if(tt==='O')drawHouse(d-y,y,cam,true);
+      else if(tt==='Y')drawLighthouse(d-y,y,cam);
+      else if(tt==='V')drawMast(d-y,y,cam);
       else if(tt==='M')drawBush(d-y,y,cam);
       else if(tt==='N')drawFern(d-y,y,cam);
       else if(tt==='K')drawMushroom(d-y,y,cam);
@@ -6427,7 +6457,7 @@ function drawIsoBlock(x,y,cam){
     ctx.fillStyle=eg;ctx.beginPath();ctx.ellipse(cx,cy,TW*0.34,TH*0.34,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
-  if(t==='G'||t==='T'||t==='H'||t==='O'||t==='M'||t==='N'||t==='K'){
+  if(t==='G'||t==='T'||t==='H'||t==='O'||t==='M'||t==='N'||t==='K'||t==='Y'||t==='V'){
     if(MAP===WORLDS.forest.map){
       // もりの じめん：おち葉・こけのまだら・こいし（はな・しろはんは ださない）
       for(let i=0;i<3;i++){
@@ -7059,6 +7089,44 @@ function drawLog(x,y,cam){
   }
 }
 // むらの いえ／おうのやかた（palace=true で おおきく・あおやね・はた）
+function drawLighthouse(x,y,cam){ // みおくりのみさきの とうだい(ひは きえている——なごりが ときどき またたく)
+  const{TW,TH}=cam;const c=isoCtr(x,y);const S=TW*0.72;
+  ctx.save();ctx.translate(c.x,c.y);
+  ctx.fillStyle='rgba(8,14,28,0.30)';
+  ctx.beginPath();ctx.ellipse(S*0.06,TH*0.14,S*0.42,TH*0.30,0,0,Math.PI*2);ctx.fill();
+  const tg=ctx.createLinearGradient(-S*0.3,0,S*0.3,0);
+  tg.addColorStop(0,'#e8e2d4');tg.addColorStop(0.5,'#cfc6b4');tg.addColorStop(1,'#9a8f7e');
+  ctx.fillStyle=tg;
+  ctx.beginPath();ctx.moveTo(-S*0.26,S*0.1);ctx.lineTo(-S*0.17,-S*1.5);ctx.lineTo(S*0.17,-S*1.5);ctx.lineTo(S*0.26,S*0.1);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(30,26,40,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#a85040';
+  ctx.beginPath();ctx.moveTo(-S*0.235,-S*0.4);ctx.lineTo(-S*0.215,-S*0.72);ctx.lineTo(S*0.215,-S*0.72);ctx.lineTo(S*0.235,-S*0.4);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#3a3648';ctx.fillRect(-S*0.20,-S*1.74,S*0.40,S*0.26);
+  const wk=Math.max(0,Math.sin(TM*0.7)-0.9)*6;
+  ctx.fillStyle='rgba(255,220,150,'+(0.12+wk).toFixed(2)+')';
+  ctx.fillRect(-S*0.13,-S*1.70,S*0.26,S*0.18);
+  ctx.fillStyle='#2a2632';
+  ctx.beginPath();ctx.moveTo(-S*0.26,-S*1.74);ctx.lineTo(0,-S*1.94);ctx.lineTo(S*0.26,-S*1.74);ctx.closePath();ctx.fill();
+  ctx.restore();
+}
+function drawMast(x,y,cam){ // みおくりのふねの ほばしら(ほは かぜに ゆれる)
+  const{TW,TH}=cam;const c=isoCtr(x,y);const S=TW*0.8;
+  ctx.save();ctx.translate(c.x,c.y);
+  ctx.fillStyle='#6a5138';
+  ctx.beginPath();ctx.ellipse(0,TH*0.05,TW*0.34,TH*0.22,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#5a4430';ctx.lineWidth=S*0.07;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(0,TH*0.05);ctx.lineTo(0,-S*1.7);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-S*0.55,-S*1.35);ctx.lineTo(S*0.55,-S*1.35);ctx.stroke();
+  const bl=Math.sin(TM*1.1)*S*0.07;
+  ctx.fillStyle='#e8dfc8';
+  ctx.beginPath();ctx.moveTo(-S*0.52,-S*1.32);
+  ctx.quadraticCurveTo(bl,-S*0.95,-S*0.36,-S*0.6);
+  ctx.lineTo(S*0.36,-S*0.6);
+  ctx.quadraticCurveTo(bl+S*0.1,-S*0.95,S*0.52,-S*1.32);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(90,70,45,0.6)';ctx.lineWidth=S*0.02;ctx.stroke();
+  ctx.restore();
+}
 function drawHouse(x,y,cam,palace){
   const{TW,TH}=cam;
   const c=isoCtr(x,y);
@@ -7247,6 +7315,31 @@ function drawNpc(n){
     ctx.lineWidth=3;ctx.strokeStyle='rgba(8,16,38,0.85)';ctx.strokeText('みせ',0,my);
     ctx.fillStyle='rgba(255,238,190,'+(0.80+0.18*Math.sin(TM*2.6+n.x)).toFixed(2)+')';
     ctx.fillText('みせ',0,my);
+  }
+  if(n.kind==='lantern'){ // 章9: ほりびとの ともしび(点灯で あたたかく ひかる)
+    const lit=n.toKey&&Game.hidden[n.toKey];
+    ctx.fillStyle='#2e2a24';ctx.fillRect(-ts*0.06,-ts*0.30,ts*0.12,ts*0.30);
+    const bg2=ctx.createLinearGradient(0,-ts*0.62,0,-ts*0.28);
+    bg2.addColorStop(0,'#4a4438');bg2.addColorStop(1,'#332e26');
+    ctx.fillStyle=bg2;
+    ctx.beginPath();ctx.moveTo(-ts*0.20,-ts*0.30);ctx.lineTo(-ts*0.14,-ts*0.60);ctx.lineTo(ts*0.14,-ts*0.60);ctx.lineTo(ts*0.20,-ts*0.30);ctx.closePath();ctx.fill();
+    ctx.strokeStyle=OL;ctx.lineWidth=olw;ctx.stroke();
+    ctx.fillStyle='#221e18';
+    ctx.beginPath();ctx.moveTo(-ts*0.22,-ts*0.60);ctx.lineTo(0,-ts*0.74);ctx.lineTo(ts*0.22,-ts*0.60);ctx.closePath();ctx.fill();
+    if(lit){
+      ctx.save();ctx.globalCompositeOperation='lighter';
+      const fl=0.7+0.3*Math.sin(TM*6+n.x*3);
+      const gl=ctx.createRadialGradient(0,-ts*0.45,1,0,-ts*0.45,ts*0.9);
+      gl.addColorStop(0,'rgba(255,210,120,'+(0.55*fl).toFixed(2)+')');gl.addColorStop(1,'rgba(255,210,120,0)');
+      ctx.fillStyle=gl;ctx.beginPath();ctx.arc(0,-ts*0.45,ts*0.9,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(255,236,170,'+(0.85*fl).toFixed(2)+')';
+      ctx.beginPath();ctx.ellipse(0,-ts*0.45,ts*0.07,ts*0.11*fl,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }else{
+      ctx.fillStyle='rgba(20,18,24,0.9)';
+      ctx.beginPath();ctx.ellipse(0,-ts*0.45,ts*0.07,ts*0.09,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();return;
   }
   if(n.kind==='stone'){
     // せきひ：いしばん＋ひかる きざみもじ（ひとの からだは えがかない）
@@ -7877,7 +7970,7 @@ function drawMiniFoe(def,t,k){
   if(def.draw==='slime')drawSlime(k,t,def.v);
   else if(def.draw==='crow')drawCrow(k,t,def.v);
   else if(def.draw==='golem')drawGolem(k,t,def.v);
-  else if(def.draw==='boss2')drawBoss2(k,t,null);
+  else if(def.draw==='boss2')drawBoss2(k,t,null,def);
   else drawBoss(k,t,null);
   ctx.restore();
 }
@@ -8326,6 +8419,8 @@ async function runBattle(ref){
     await say('それは ぎしきで こぼれた ひかりの あつまり——\nうけとめる ものを もとめて、ゆらいでいる。');
     await say('『……あたたかい ばしょは、どこ……？』');
   }
+  else if(foe===FOES.miokure)await say('ふねを こばむ おもいが、なみの ように わだかまっている…！\nみおくられなかった ものの、ふかい さびしさだ。');
+  else if(foe===FOES.yamihori)await say('やみの そこで、なにかが いまも ほりつづけている…！\nつるはしの おとが、くらやみに こだまする。');
   else if(foe.mboss)await say('くろがねの きょたいが ゆくてを ふさいでいる…！');
   while(true){
     const skip=await playerStatusTick();
@@ -9588,6 +9683,8 @@ const BT_MINAMOTO={sky:[[0,'#3a2c0e'],[0.30,'#7a5c1e'],[0.46,'#c89c3e'],[0.54,'#
 const BT_TOWA={sky:[[0,'#0a0616'],[0.30,'#1c1034'],[0.46,'#342054'],[0.54,'#4e3274'],[0.62,'#241542'],[1,'#0c081e']],
   mtn:['#2e2050','#221740','#170f2e'],ground:['#251b44','#1c1336','#110b24'],stars:1.0,
   pg:'170,140,230',fog:'120,95,180',bokeh:'185,155,240'};
+const BT_MISAKI={sky:[[0,'#241c2e'],[0.30,'#4a3448'],[0.46,'#8a5658'],[0.54,'#d8926a'],[0.62,'#5a3a50'],[1,'#201828']],
+  hills:['#3a2c42','#2c2236'],ground:['#4a3a4e','#382c40']};
 const BT_KOKORO={sky:[[0,'#0c0a1c'],[0.30,'#1e1838'],[0.46,'#342a52'],[0.54,'#4a3e6a'],[0.62,'#241e42'],[1,'#0e0c20']],
   mtn:['#2a2448','#1f1a3a','#14102a'],ground:['#221c40','#191434','#0f0c22'],stars:0.5,
   pg:'150,138,200',fog:'110,100,160',bokeh:'170,158,220'};
@@ -9606,6 +9703,8 @@ function battleTheme(bt){
   if(Game.mapId==='minamoto')return BT_MINAMOTO;
   if(Game.mapId==='towa')return BT_TOWA;
   if(Game.mapId==='kokoro')return BT_KOKORO;
+  if(Game.mapId==='misaki'||Game.mapId==='fune')return BT_MISAKI;
+  if(Game.mapId==='ohori'||Game.mapId==='tomoshibi')return BT_CAVE;
   return bt.night?BT_NIGHT:BT_DAY;
 }
 function drawMountains(baseY,col,amp){
@@ -9776,7 +9875,7 @@ function drawFoe(bt,ep){
   if(bt.foe.draw==='slime')drawSlime(s,t,bt.foe.v);
   else if(bt.foe.draw==='crow')drawCrow(s,t,bt.foe.v);
   else if(bt.foe.draw==='golem')drawGolem(s,t,bt.foe.v);
-  else if(bt.foe.draw==='boss2')drawBoss2(s,t,bt);
+  else if(bt.foe.draw==='boss2')drawBoss2(s,t,bt,bt.foe);
   else drawBoss(s,t,bt);
   if(bt.flash>0){
     ctx.globalCompositeOperation='lighter';
@@ -10728,7 +10827,7 @@ function drawBoss(s,t,bt){
   ctx.restore();
 }
 // ---- ヴォルガ しんのすがた（第2形態・白金の堕ちた継承者）----
-function drawBoss2(s,t,bt){
+function drawBoss2(s,t,bt,vf){
   const lev=Math.sin(t*1.8)*12*s;
   ctx.save();
   ctx.translate(0,lev);
@@ -10807,6 +10906,48 @@ function drawBoss2(s,t,bt){
   ctx.moveTo(-9*s,-10*s);ctx.lineTo(9*s,-10*s);
   ctx.stroke();
   ctx.restore();
+  // ぬしごとの しるし(シルエット使い回しの返上=それぞれの物語の徴)
+  if(vf&&typeof FOES!=='undefined'&&vf!==FOES.boss2){
+    ctx.save();
+    if(vf===FOES.koborebi){ // こぼれび: 頭上を巡る 光の雫
+      ctx.globalCompositeOperation='lighter';
+      for(let i=0;i<5;i++){const a=t*1.2+i*Math.PI*2/5;
+        ctx.fillStyle='rgba(255,236,180,'+(0.5+0.3*Math.sin(t*3+i)).toFixed(2)+')';
+        ctx.beginPath();ctx.ellipse(Math.cos(a)*46*s,-140*s+Math.sin(a)*10*s,5*s,8*s,0,0,Math.PI*2);ctx.fill();}
+    }else if(vf===FOES.tozasu){ // とざすもの: 胸の錠と鎖
+      ctx.strokeStyle='rgba(90,80,130,0.9)';ctx.lineWidth=5*s;
+      ctx.beginPath();ctx.moveTo(-56*s,-58*s);ctx.quadraticCurveTo(0,-20*s,56*s,-58*s);ctx.stroke();
+      ctx.fillStyle='#3a3454';ctx.fillRect(-12*s,-44*s,24*s,20*s);
+      ctx.strokeStyle='#8a80b8';ctx.lineWidth=3*s;ctx.beginPath();ctx.arc(0,-46*s,8*s,Math.PI,0);ctx.stroke();
+    }else if(vf===FOES.nanomu){ // なまえをのむもの: 何も書かれていない 白い面
+      ctx.fillStyle='rgba(205,214,228,0.88)';
+      ctx.beginPath();ctx.ellipse(0,-96*s,22*s,29*s,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(60,70,90,0.8)';ctx.lineWidth=2*s;ctx.stroke();
+    }else if(vf===FOES.kobamu){ // おわりをこばむもの: 閉じきらない 夕焼けの環
+      ctx.strokeStyle='rgba(255,150,90,0.85)';ctx.lineWidth=6*s;
+      ctx.beginPath();ctx.arc(0,-98*s,50*s,Math.PI*0.15,Math.PI*1.6);ctx.stroke();
+    }else if(vf===FOES.miokure){ // みおくれぬもの: 折れた櫂と もやい綱
+      ctx.strokeStyle='#a8845a';ctx.lineWidth=9*s;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-70*s,24*s);ctx.lineTo(-32*s,-88*s);ctx.stroke();
+      ctx.fillStyle='#a8845a';ctx.beginPath();ctx.ellipse(-27*s,-100*s,12*s,22*s,-0.4,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(180,200,215,0.7)';ctx.lineWidth=3*s;
+      ctx.beginPath();ctx.moveTo(-70*s,24*s);ctx.quadraticCurveTo(0,62*s,60*s,32*s);ctx.stroke();
+    }else if(vf===FOES.yamihori){ // やみをほるもの: つるはしと 額のともしび
+      ctx.strokeStyle='#9a7a4e';ctx.lineWidth=9*s;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(62*s,30*s);ctx.lineTo(26*s,-86*s);ctx.stroke();
+      ctx.strokeStyle='#c8c2b0';ctx.lineWidth=8*s;
+      ctx.beginPath();ctx.arc(22*s,-94*s,20*s,Math.PI*0.9,Math.PI*1.9);ctx.stroke();
+      ctx.save();ctx.globalCompositeOperation='lighter';
+      const lg=0.6+0.3*Math.sin(t*5);
+      const lgg=ctx.createRadialGradient(0,-118*s,1,0,-118*s,26*s);
+      lgg.addColorStop(0,'rgba(255,220,140,'+lg.toFixed(2)+')');lgg.addColorStop(1,'rgba(255,220,140,0)');
+      ctx.fillStyle=lgg;ctx.beginPath();ctx.arc(0,-118*s,26*s,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(255,236,170,'+lg.toFixed(2)+')';
+      ctx.beginPath();ctx.arc(0,-118*s,8*s,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
   ctx.restore();
 }
 // ============================================================
