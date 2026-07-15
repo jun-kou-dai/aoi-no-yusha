@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0c1230">
+<link rel="icon" href="data:,">
 <title>蒼の勇者 − AZURE HERO −</title>
 <style>
 :root{
@@ -123,9 +124,22 @@ body{
 #ename{ font-size:clamp(13px,2.2vmin,17px); letter-spacing:.08em; }
 #fastbtn,#autobtn{ cursor:pointer; pointer-events:auto; font-size:clamp(11px,1.9vmin,14px); align-self:flex-start; opacity:.85; } /* .chipのpointer-events:noneを上書き=実タップ必須 */
 #fastbtn.on,#autobtn.on{ color:#ffd86b; border-color:rgba(255,216,107,.6); opacity:1; }
-#enamewrap{ display:flex; flex-direction:column; gap:4px; min-width:120px; }
+#enamewrap{ display:flex; flex-direction:column; gap:4px; min-width:120px; max-width:min(360px,100%); position:relative; }
 #ehpbar{ width:100%; height:6px; background:rgba(255,255,255,.16); border-radius:3px; overflow:hidden; }
 #ehpfill{ display:block; height:100%; width:100%; background:#8fd0a0; border-radius:3px; transition:width .25s ease, background .25s ease; }
+#weakclue{ font-size:clamp(9px,1.5vmin,11px); line-height:1.45; color:#d8c896; letter-spacing:.03em; }
+#weakclue b{ color:#ffe6a8; margin-right:5px; }
+#eweak{ display:flex; flex-wrap:wrap; gap:4px; }
+.ew{ padding:2px 6px; border-radius:6px; background:rgba(255,255,255,.07); color:#aeb7d7; font-size:clamp(9px,1.45vmin,11px); font-weight:700; white-space:nowrap; }
+.ew.weak{ background:rgba(214,90,74,.88); color:#fff0ec; }
+.ew.normal{ background:rgba(82,142,112,.84); color:#effff4; }
+.ew.res{ background:rgba(74,120,196,.88); color:#eaf2ff; }
+.ew.imm{ background:rgba(115,122,145,.86); color:#f0f2f7; }
+.ew.guess{ border:1px dashed rgba(255,222,142,.75); color:#ffe29a; background:rgba(255,210,100,.08); }
+#weakrecord{ position:absolute; left:8px; top:calc(100% + 7px); z-index:8; opacity:0; transform:translateY(-4px);
+  padding:5px 9px; border-radius:7px; background:rgba(255,226,150,.94); color:#171a2b; font-size:10px; font-weight:800; white-space:nowrap; pointer-events:none; }
+#weakrecord.show{ animation:weakrecord 2.2s ease forwards; }
+@keyframes weakrecord{ 0%{opacity:0;transform:translateY(-5px) scale(.94)} 12%,72%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-3px)} }
 .b-bottom{ display:flex; gap:12px; align-items:stretch; width:100%; }
 /* DQふう：くろじに しろの にじゅうわく */
 #msgwin,#cmdwin{
@@ -224,10 +238,13 @@ body{
   font-size:clamp(12px,1.9vmin,14px); letter-spacing:.1em; color:#e8e2cc; gap:6px; }
 #savebtn:hover{ opacity:1; }
 #savebtn:active{ transform:scale(.94); }
-#itembtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 50px); right:12px; z-index:70;
-  height:42px; padding:0 16px; border-radius:21px; display:flex; align-items:center; justify-content:center;
+#itembtn{ position:absolute; left:12px; right:auto; top:auto; bottom:max(96px, calc(env(safe-area-inset-bottom) + 96px)); z-index:70;
+  min-height:38px; max-width:calc(100vw - 24px); padding:6px 9px; border-radius:12px; display:flex; align-items:center; justify-content:center;
   cursor:pointer; pointer-events:auto; opacity:.92; transition:opacity .2s, transform .12s;
-  font-size:clamp(12px,1.9vmin,14px); letter-spacing:.1em; color:#e8e2cc; gap:6px; }
+  font-size:clamp(10px,1.7vmin,13px); letter-spacing:.02em; color:#e8e2cc; gap:7px; }
+#itembtn .belt-item{ display:flex; align-items:center; gap:2px; white-space:nowrap; }
+#itembtn .belt-item b{ color:#fff0bd; font-variant-numeric:tabular-nums; }
+#itembtn .belt-bag{ padding-left:5px; border-left:1px solid rgba(236,229,207,.24); font-size:1.15em; }
 #itembtn:hover{ opacity:1; }
 #itembtn:active{ transform:scale(.94); }
 #spellbtn{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 100px); right:12px; z-index:70;
@@ -299,6 +316,50 @@ body{
 #questclose{ cursor:pointer; padding:4px 12px; border-radius:8px; background:rgba(255,255,255,.10); font-size:.82em; }
 #questclose:active{ transform:scale(.92); }
 #questbody{ padding:6px 16px; }
+/* ---------- 蒼珠・旅支度 ---------- */
+#proofhud{ position:absolute; left:12px; bottom:max(52px, calc(env(safe-area-inset-bottom) + 52px)); z-index:68;
+  display:flex; align-items:center; gap:8px; max-width:calc(100vw - 24px); padding:5px 8px; pointer-events:auto; cursor:pointer; }
+.proof-label{ color:#dce7ff; font-size:clamp(9px,1.55vmin,12px); font-weight:700; white-space:nowrap; }
+.proof-label b{ color:#fff0bd; font-variant-numeric:tabular-nums; }
+.proof-orbs{ display:flex; flex-wrap:wrap; align-items:center; gap:3px; }
+.proof-orb{ width:clamp(13px,2.2vmin,18px); height:clamp(13px,2.2vmin,18px); border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid rgba(176,196,238,.28); color:#68718f; background:rgba(25,31,64,.72); font-size:clamp(7px,1.15vmin,9px); font-weight:800; box-shadow:inset 0 0 6px rgba(10,14,34,.8); }
+.proof-orb.got{ color:#eef7ff; border-color:rgba(184,222,255,.88); background:radial-gradient(circle at 35% 30%,#e9fbff 0 9%,#68b9ed 24%,#345fb5 58%,#151f55 100%); box-shadow:0 0 8px rgba(91,175,255,.72),inset 0 0 4px rgba(255,255,255,.5); }
+.proof-orb.next{ border-color:rgba(120,168,235,.55); color:#a8b8dc; animation:proofpulse 1.8s ease-in-out infinite; }
+@keyframes proofpulse{ 0%,100%{box-shadow:0 0 3px rgba(90,150,230,.18)} 50%{box-shadow:0 0 10px rgba(90,170,255,.62)} }
+#bproofhud{ display:flex; align-items:center; gap:6px; margin-top:1px; opacity:.94; }
+#bproofhud .proof-label{ font-size:9px; }
+#bproofhud .proof-orb{ width:11px; height:11px; font-size:6px; }
+#proofwin,#inventorywin{ position:fixed; inset:0; z-index:200; display:none; justify-content:center; align-items:flex-start;
+  background:rgba(6,10,28,.84); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); overflow:auto; padding:20px 10px; }
+#proofwin.show,#inventorywin.show{ display:flex; }
+#proofpanel,#inventorypanel{ width:100%; max-width:600px; max-height:94vh; overflow-y:auto; padding:0 0 18px; color:var(--text); }
+#proofhead,#inventoryhead{ position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between;
+  padding:13px 18px; font-size:1.08em; font-weight:700; letter-spacing:.06em; background:var(--indigo); border-bottom:1px solid var(--line); border-radius:10px 10px 0 0; }
+#proofclose,#inventoryclose{ cursor:pointer; padding:4px 12px; border-radius:8px; background:rgba(255,255,255,.10); font-size:.82em; }
+#proofbody,#inventorybody{ padding:8px 16px; }
+.proof-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.proof-card{ min-width:0; padding:9px 10px; border:1px solid rgba(125,151,210,.22); border-radius:10px; background:rgba(255,255,255,.04); display:grid; grid-template-columns:30px 1fr; gap:8px; align-items:center; }
+.proof-card .proof-orb{ width:28px; height:28px; font-size:11px; }
+.proof-card b{ display:block; color:#fbf3da; font-size:.9em; }
+.proof-card small{ display:block; color:#9eabd0; font-size:.72em; line-height:1.45; margin-top:2px; }
+.proof-card.locked b{ color:#657093; }.proof-card.locked small{ color:#555f7f; }
+.inv-summary{ color:#cdd5ef; font-size:.86em; line-height:1.7; margin:4px 2px 8px; }
+.inventory-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+.invcard{ min-width:0; padding:8px 10px; border:1px solid rgba(160,170,210,.20); border-radius:9px; background:rgba(255,255,255,.045); display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.invcard .invname{ min-width:0; line-height:1.4; font-size:.9em; overflow-wrap:anywhere; }
+.invcard .invname small{ display:block; color:#8f9bc0; font-size:.72em; }
+.invcard .invcount{ color:#ffe6a8; font-weight:800; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.invcard.equipped{ border-color:rgba(255,226,150,.55); background:rgba(255,226,150,.08); }
+.inv-empty{ color:#687292; padding:8px 4px; font-size:.86em; }
+#inventoryuse{ display:block; margin:14px auto 2px; padding:10px 20px; width:min(100%,320px); text-align:center; font-size:.92em; }
+#proofgain{ position:fixed; left:50%; top:40%; z-index:190; opacity:0; transform:translate(-50%,-50%) scale(.86); pointer-events:none;
+  width:min(88vw,430px); padding:18px 20px; text-align:center; background:rgba(11,18,48,.94); border:1px solid rgba(173,211,255,.72); border-radius:16px; box-shadow:0 0 42px rgba(65,140,245,.48),inset 0 0 24px rgba(130,180,255,.12); }
+#proofgain.show{ animation:proofgain 3.1s ease forwards; }
+#proofgain .gain-orb{ width:54px; height:54px; margin:0 auto 9px; font-size:18px; }
+#proofgain b{ display:block; color:#f6f1df; font-size:clamp(16px,3.3vmin,22px); letter-spacing:.08em; }
+#proofgain span{ display:block; color:#aecdff; margin-top:7px; font-size:clamp(12px,2.2vmin,15px); }
+@keyframes proofgain{ 0%{opacity:0;transform:translate(-50%,-42%) scale(.78)} 10%,78%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-55%) scale(.96)} }
 /* ---------- ふっかつのじゅもん ---------- */
 #jumonwin{ position:fixed; inset:0; z-index:210; display:none; justify-content:center; align-items:flex-start;
   background:rgba(6,10,28,.82); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); overflow:auto; padding:20px 10px; }
@@ -340,6 +401,7 @@ body{
 .bdg.weak{ background:rgba(214,90,74,.92); color:#fff0ec; }
 .bdg.res{ background:rgba(74,120,196,.9); color:#eaf2ff; }
 .bdg.imm{ background:rgba(120,128,150,.85); color:#f0f2f7; }
+.bdg.normal{ background:rgba(82,142,112,.84); color:#effff4; }
 .bdg.boss{ background:rgba(160,90,220,.9); color:#f6ecff; }
 .bdg.mboss{ background:rgba(150,120,90,.92); color:#fff3e0; }
 .bdg.hunt{ background:rgba(198,62,102,.92); color:#ffe9f0; }
@@ -392,6 +454,9 @@ body{
   .num{ min-width:3.6em; }
   .chip{ gap:6px; padding:8px 10px; }
   #mute{ width:36px; height:36px; }
+  .proof-grid,.inventory-grid{ grid-template-columns:1fr; }
+  #proofhud{ gap:5px; padding:4px 6px; }
+  #itembtn{ gap:5px; padding:5px 7px; }
 }
 </style>
 </head>
@@ -455,11 +520,12 @@ body{
       <span class="lv"><b id="fweap"></b></span>
       <span class="lv" id="fnk"></span>
     </div>
+    <div id="proofhud" class="glass" aria-label="蒼珠のきろく"></div>
     <div class="ailbadge" id="failbadge"></div>
     <div id="toast" class="glass"></div>
     <div id="quest"></div>
     <div id="savebtn" class="glass">📖 きろく</div>
-    <div id="itembtn" class="glass">🧪 どうぐ</div>
+    <div id="itembtn" class="glass" aria-label="旅支度をひらく"></div>
     <div id="spellbtn" class="glass">🔮 じゅもん</div>
     <div id="doorbtn" class="glass">🚪 どこでもドア</div>
     <div id="cloakbtn" class="glass">👻 とうめい</div>
@@ -470,7 +536,7 @@ body{
 
   <div id="ui-battle" class="ui">
     <div class="b-top">
-      <div class="chip glass" id="enamewrap"><div id="ename">スライム</div><div id="ehpbar"><i id="ehpfill"></i></div></div>
+      <div class="chip glass" id="enamewrap"><div id="ename">スライム</div><div id="ehpbar"><i id="ehpfill"></i></div><div id="weakclue"></div><div id="eweak"></div><div id="bproofhud"></div><div id="weakrecord"></div></div>
       <div class="chip glass" id="fastbtn">⚡ はやさ ×1</div>
       <div class="chip glass" id="autobtn">🤖 オート OFF</div>
       <div class="chip glass" id="bstat">
@@ -507,6 +573,8 @@ body{
 
   <div id="bookwin"><div id="bookpanel" class="glass"><div id="bookhead"><span>📕 冒険の書</span><span id="bookclose">✕ とじる</span></div><div id="bookbody"></div></div></div>
   <div id="statuswin"><div id="statuspanel" class="glass"><div id="statushead"><span>💪 つよさ</span><span id="statusclose">✕ とじる</span></div><div id="statusbody"></div></div></div>
+  <div id="proofwin"><div id="proofpanel" class="glass"><div id="proofhead"><span>🔵 蒼珠のきろく</span><span id="proofclose">✕ とじる</span></div><div id="proofbody"></div></div></div>
+  <div id="inventorywin"><div id="inventorypanel" class="glass"><div id="inventoryhead"><span>🎒 旅支度</span><span id="inventoryclose">✕ とじる</span></div><div id="inventorybody"></div><div class="btn" id="inventoryuse">つかう・そうびする</div></div></div>
   <div id="questwin"><div id="questpanel" class="glass"><div id="questhead"><span>🗺 たびのメモ</span><span id="questclose">✕ とじる</span></div><div id="questbody"></div></div></div>
   <div id="jumonwin"><div id="jumonpanel" class="glass"><div id="jumonhead"><span>🔮 ふっかつの じゅもん</span><span id="jumonclose">✕ とじる</span></div><div id="jumonbody"><textarea id="jumontext" spellcheck="false" autocomplete="off" autocorrect="off"></textarea><div id="jumonbtns"><div class="btn" id="jumoncopy">コピー</div><div class="btn" id="jumoncast">となえる</div></div><div class="jumon-note" id="jumonnote"></div></div></div></div>
   <div id="mute" class="glass" title="サウンド">
@@ -518,6 +586,7 @@ body{
       <line class="x" x1="21" y1="9.5" x2="16" y2="14.5"/>
     </svg>
   </div>
+  <div id="proofgain"></div>
 
   <div id="fade"></div>
 </div>
@@ -605,7 +674,9 @@ grass:{
   {x:7,y:10,kind:'stone',col:'#d8cba8',needKey:'ch7c',msgCh10:['ちいさな せきひ。つみたての はなの となりに、かたりべちょうの きれはしが\nそなえて ある。『じいちゃん。わたし、かたったよ』','ゆうやけの ひかりの なかで、せきひが しずかに あたたかい。\n——どこかで、じいさんが わらった きが した。'],msg:['ちいさな せきひ「かたりべ、ここに ねむる。\nものがたりは、つがれた。」','せきひの まえに、つみたての はなが そなえてある。\n……あの この てわざだ。']},
   {x:13,y:7,kind:'musume',small:true,needKey:'ch7a',goneKey:'omo3',omoKey:'omo3',col:'#ffdca0',msg:['おもいでの ひかり——えんがわで、じいさんが こどもらの こえを きいて わらっている。','「ながいきの やくめとは、これを みとどける ことじゃったのう」\nおだやかな ひるさがりの ひかりが、そこに あった。']},
   {x:14,y:9,kind:'stone',col:'#9aa4b8',stoneKey:'t1',msg:['せきひ「ひかりのたまは よを てらす。\nこれを まもる ものを ── けいしょうしゃ と よぶ。」']},
-  {x:15,y:11,kind:'musume',col:'#5f5a78',needKey:'ch4c',hood:1,msg:['フードの ひとかげは、こたえない。\nかぜの おとだけが、ふたりの あいだを すぎていく。']}],
+  {x:15,y:11,kind:'musume',col:'#5f5a78',needKey:'ch4c',hood:1,msg:['フードの ひとかげは、こたえない。\nかぜの おとだけが、ふたりの あいだを すぎていく。']},
+  {x:12,y:10,kind:'tent',troupeTent:1,needKey:'ch11c',col:'#d94b5b',msg:[]},
+  {x:8,y:12,kind:'ship',troupeShip:1,needKey:'ch11c',col:'#d8bd78',msg:[]}],
  king:{x:3,y:10}},
 forest:{
  song:'forest', bg:['#0a1f12','#13301d'],
@@ -1290,7 +1361,33 @@ icetown:{
   {x:6,y:7,to:'minamoto',tx:4,ty:11,msg:'きんいろの きしに ふねを つけた——みなもとの もりだ。'},
   {x:16,y:6,to:'edge',tx:14,ty:11,msg:'ひがしの きしに ふねを つけた——はての しまだ。'},
   {x:4,y:10,to:'mistsea',tx:17,ty:9,msg:'きりの きしに ふねを つけた——わすれの うみだ。'},
-  {x:10,y:11,to:'sunken',tx:16,ty:10,msg:'みなみの きしに ふねを つけた——しずみの さとだ。'}]}};
+  {x:10,y:11,to:'sunken',tx:16,ty:10,msg:'みなみの きしに ふねを つけた——しずみの さとだ。'}]},
+ theater:{ // 章12『ものがたりは、だれの ものか』: 旅芸人の一座の仮設舞台
+ song:'village', bg:['#250b20','#6e2634'],
+ map:[
+  'CCCCCCCCCCCCCCCCCCCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSSSSSSSSSSSCC',
+  'CCSSSSSSESSESSSSSSCC',
+  'CCCCCCCCCCCCCCCCCCCC'],
+ start:{x:9,y:10},
+ npcs:[
+  {x:10,y:6,kind:'troupe',troupeLeader:1,col:'#d95a68',msg:[]},
+  {x:6,y:4,kind:'actor',stageActor:1,col:'#5c83c8',msg:['いちざの やくしゃ「この つるぎ、きで できてるんだ。\nほんきで ふったら おれちゃうから、ぶたいの うえだけの ひみつだよ。」']},
+  {x:14,y:4,kind:'actor',stageActor:1,col:'#d5a34f',msg:['いちざの がくし「ものがたりは、うたう ひとで すこしずつ かわる。\nでも——きえた なまえは、うたえないんだよな。」']},
+  {x:15,y:10,shop:true,kind:'shop',needKey:'ch12c',col:'#e8c880',msg:[]}],
+ spawns:[],chests:[],spots:[],
+ exits:[{x:8,y:12,to:'grass',tx:12,ty:11,msg:'あかい まくを くぐり、むらの ひろばへ もどった。'},
+        {x:11,y:12,to:'grass',tx:12,ty:11,msg:'あかい まくを くぐり、むらの ひろばへ もどった。'}]}};
 let MAP=WORLDS.grass.map,SPAWNS=WORLDS.grass.spawns,CHESTS=WORLDS.grass.chests,
     SPRING=WORLDS.grass.spring,BZONE=WORLDS.grass.bzone,SPOTS=WORLDS.grass.spots||[];
 const tileAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?'T':MAP[y][x];
@@ -1345,8 +1442,8 @@ const DIFF={
  7:{name:'しんぱん',   ehp:1.9,  eatk:1.05, bhp:1.9,  batk:1.05, exp:0.4,  gold:0.5,  capNorm:0.88, capHeavy:0.97, crit:1/9,  bspecial:0.60, pcrit:0.05, minFrac:0.20, bossMinFrac:0.34, giantHp:1.3, giantAtk:1.6, baiki:1.25}}; // 2026-07-11再正規化: 敵の素の数値を実戦シム最適化で引き上げたため、難易度は「HP係数=戦いの長さと資源消費」で運ぶ設計へ。atk係数はシム上ほぼ1.0が最適(上げると勝率が崩壊)。床(minFrac系)は保険役に降格し緩勾配へ
 function curDiff(){return DIFF[Game.diff]||DIFF[2];}
 // 稼ぎ敵(メタル/金スラ)は係数なし。中ボス・ボスはbhp/batk、通常はehp/eatk
-function diffEnemyHP(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.bhp:D.ehp;if(foe.giant&&D.giantHp)m*=D.giantHp;return m;}
-function diffEnemyAtk(foe){if(foe.gold||foe.metal)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.batk:D.eatk;if(foe.giant&&D.giantAtk)m*=D.giantAtk;return m;}
+function diffEnemyHP(foe){if(foe.gold||foe.metal||foe.stage)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.bhp:D.ehp;if(foe.giant&&D.giantHp)m*=D.giantHp;return m;}
+function diffEnemyAtk(foe){if(foe.gold||foe.metal||foe.stage)return 1;const D=curDiff();let m=(foe.boss||foe.mboss)?D.batk:D.eatk;if(foe.giant&&D.giantAtk)m*=D.giantAtk;return m;}
 const FOES={
   slime:{name:'スライム',     hp:28, atk:7,  def:2, exp:11, g:4,  col:'#8fd0a0', draw:'slime', physMul:1,   fireMul:1,   iceMul:1,   dodge:0, drop:'yakuso'},
   crow: {name:'おおがらす',   hp:27, atk:7, def:3, exp:16, g:6,  coward:true, col:'#a9b7ff', draw:'crow',  physMul:1,   fireMul:1,   iceMul:1,   dodge:0.18},
@@ -1415,6 +1512,7 @@ const FOES={
   yamihori:{charge:true, name:'やみをほるもの', hp:1200, atk:136, def:58, exp:2600, g:1800, col:'#3a3020', draw:'boss2', tint:'rgba(60,50,32,0.9)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.9, iceMul:0.9, winMsg:'やみをほるものは くずおれ、あとには ちいさな ひかりが のこった。'},
   wslime:{name:'まどうスライム', hp:65, atk:12, def:7, exp:55, g:24, col:'#c8a8f0', draw:'slime', v:'dark', spell:true, watch:true, physMul:1, fireMul:1.2, iceMul:1.2, dodge:0.08},
   cuslime:{name:'のろいスライム', hp:200, atk:62, def:9, exp:78, g:34, col:'#e88ad0', draw:'slime', v:'dark', spell:true, physMul:1, fireMul:1.3, iceMul:1.3, dodge:0.12},
+  niseyusha:{name:'ぶたいの にせもの勇者', hp:920, atk:112, def:46, exp:0, g:0, col:'#e6b95e', draw:'stagehero', stage:true, mboss:true, still:true, watch:true, physMul:0.7, fireMul:1.6, iceMul:0.9, dodge:0, winMsg:'にせもの勇者は おおげさに くるりと まわり、あかい まくの うしろへ ころがりこんだ！'},
   kotae:{charge:true, name:'こたえなき もの', hp:820, atk:104, def:18, exp:400, g:300, col:'#8a76c8', draw:'golem', v:'iron', mboss:true, still:true, huge:true, spell:true, watch:true, physMul:1, fireMul:0.5, iceMul:0.5, dodge:0, winMsg:'こたえなき ものは しずかに くずれ、なみの おとだけが のこった。\nおくの いしぶみが あわく ひかっている…'}};
 const SHOP=[
   {id:'w1',label:'どうのつるぎ',cost:30,atk:5,town:'grass'},
@@ -1438,6 +1536,8 @@ const SHOP=[
   {id:'funauta',label:'ふなうたのふえ',cost:2500,uitem:'funautaOwn',town:'umi'},
   {id:'inochi3',label:'いのちのしずく',cost:600,item:'inochi',town:'umi'},
   {id:'hoshikake3',label:'ほしのかけら',cost:1200,item:'hoshikake',town:'umi'},
+  {id:'troupeMask',label:'にせもの勇者の おめん',cost:300,uitem:'troupeMask',town:'theater',hint:'旅支度の「だいじなもの」に ならぶ、一座だけの おみやげ。'},
+  {id:'troupeScript',label:'ほんとうのこえの だいほん',cost:600,uitem:'troupeScript',town:'theater',hint:'ソラ・ナギ・ほりびとの こえが かきとめられた、なくならない だいほん。'},
   {id:'nkw',label:'ものがたりのつえ',cost:4800,nk:'w',town:'grass',need:'ch10a'},
   {id:'nka',label:'かたりべのマント',cost:5200,nk:'a',town:'grass',need:'ch10a'},
   {id:'inochi2',label:'いのちのしずく',cost:600,item:'inochi',town:'misaki'},
@@ -1483,6 +1583,128 @@ const ITEMS={
   hoshikake:{name:'ほしのかけら'},
   hoshitetsu:{name:'ほしのてつ'},
   tane:  {name:'ちからのたね'}};
+// 章の結びが「蒼珠」と「物語呪文」へ同時につながる。珠は現行の章完了だけ、既存4呪文は従来の解禁条件をそのまま使う
+const CHAPTER_PROOF=[
+  {no:1,title:'ひかりのたまを とりもどす',spell:'ひかりのさとり',id:'satori',cost:4,icon:'✦',desc:'いちばん とどきそうな こうげきを よそうする'},
+  {no:2,title:'ひかりを つぐもの',spell:'かげはらい',id:'kageharai',cost:6,icon:'◐',desc:'どくと まもりダウンを はらい、わざわいを ふせぐ'},
+  {no:3,title:'ひかりは うけとめる こころに やどる',spell:'うけとめるひかり',id:'uketome',cost:8,icon:'◇',desc:'うけた いたみを MPへ かえる'},
+  {no:4,title:'わたす ひかり',spell:'わたすひかり',id:'watashi',cost:9,icon:'↝',desc:'つぎの 火・氷じゅもんを もういちど とどける'},
+  {no:5,title:'となりに いる こと',spell:'とわのまもり',id:'mamori',cost:10,icon:'🛡',desc:'てきの こうげき3かいを やわらげる'},
+  {no:6,title:'なまえを よぶ こえ',spell:'ソラのよびごえ',id:'yobigoe',cost:12,icon:'🕊',desc:'てきの うごきを とめる'},
+  {no:7,title:'ながいきの やくめ',spell:'つぐものがたり',id:'monogatari',cost:25,icon:'📖',desc:'おおわざと じぶんの かいふく'},
+  {no:8,title:'みおくりの ふね',spell:'ナギのうた',id:'nagiuta',cost:16,icon:'🌊',desc:'てきの こうげきを 3わり さげる'},
+  {no:9,title:'ほりびとの ともしび',spell:'ともしびのみち',id:'tomoshibimichi',cost:18,icon:'🔥',desc:'つぎの3回、かわされず たいせいを みちにする'},
+  {no:10,title:'となりを あるく ものがたり',spell:'ふたりがたり',id:'futarigatari',cost:16,icon:'👥',desc:'このターン こどもが 2回 こうどうする'},
+  {no:11,title:'ひとつの うみ',spell:'ひとつのうみ',id:'hitotsunoumi',cost:24,icon:'◎',desc:'ちがう こうげきを つなぎ MPを めぐらせる'},
+  {no:12,title:'ものがたりは、だれの ものか',spell:'みんなのこえ',id:'minnanokoe',cost:18,icon:'🎭',desc:'ほんとうの こえで相性をあかし、つぎの弱点を強める'}];
+function hasChapterProof(no){
+  const h=(Game&&Game.hidden)||{};
+  if(no===1)return !!(h.cleared&&h.elderTold);
+  if(no===2)return !!h.nk2;
+  if(no===3)return !!h.ch3d;
+  if(no===4)return !!h.ch4c;
+  return !!h['ch'+no+'c'];
+}
+function hasStorySpell(no){
+  const h=(Game&&Game.hidden)||{};
+  if(no===5)return !!(h.ch5c||h.ch5cEver);
+  if(no===6)return !!(h.ch6c||h.ch6cEver);
+  if(no===7)return !!(h.ch7c||h.ch7cEver);
+  if(no===8)return !!(h.ch8c||h.ch8cEver);
+  return hasChapterProof(no);
+}
+function storySpellById(id){return CHAPTER_PROOF.find(x=>x.id===id);}
+function storySpellDisabled(s){
+  const bt=Game.bt;
+  if(s.id==='satori'&&bt&&bt.satoriUsed)return true;
+  if(s.id==='uketome'&&bt&&bt.uketomeUsed)return true;
+  if(s.id==='watashi'&&bt&&bt.watashiEcho)return true;
+  if(s.id==='tomoshibimichi'&&bt&&bt.tomoshibi>0)return true;
+  if(s.id==='futarigatari'&&(!nkFollowing()||Game.nkHp<=0))return true;
+  if(s.id==='hitotsunoumi'&&bt&&bt.umiPath&&(bt.umiPath.mask||0)!==7)return true;
+  if(s.id==='minnanokoe'&&bt&&bt.minnaUsed)return true;
+  return false;
+}
+function chapterProofMask(){let m=0;for(const c of CHAPTER_PROOF)if(hasChapterProof(c.no))m|=1<<(c.no-1);return m;}
+function proofOrbsHTML(compact){
+  const got=CHAPTER_PROOF.filter(c=>hasChapterProof(c.no)).length;
+  const next=(CHAPTER_PROOF.find(c=>!hasChapterProof(c.no))||{}).no;
+  const orbs=CHAPTER_PROOF.map(c=>{
+    const state=hasChapterProof(c.no)?'got':(c.no===next?'next':'locked');
+    return '<span class="proof-orb '+state+'" data-chapter-token="'+c.no+'" data-state="'+state+'">'+(state==='got'?c.no:'?')+'</span>';
+  }).join('');
+  return '<span class="proof-label">蒼珠 <b>'+got+'/'+CHAPTER_PROOF.length+'</b></span><span class="proof-orbs">'+orbs+'</span>';
+}
+function updateProofHud(){
+  const f=document.getElementById('proofhud'),b=document.getElementById('bproofhud');
+  if(f)f.innerHTML=proofOrbsHTML(false);if(b)b.innerHTML=proofOrbsHTML(true);
+}
+function renderProof(){
+  const next=(CHAPTER_PROOF.find(c=>!hasChapterProof(c.no))||{}).no;
+  const cards=CHAPTER_PROOF.map(c=>{
+    const got=hasChapterProof(c.no),isNext=c.no===next;
+    return '<div class="proof-card '+(got?'':'locked')+'"><span class="proof-orb '+(got?'got':(isNext?'next':'locked'))+'">'+(got?c.no:'?')+'</span><div><b>'+(got?('第'+c.no+'章　'+c.title):(isNext?'つぎの 蒼珠':'まだ みえない'))+'</b><small>'+(got?(c.icon+' '+c.spell+'　MP '+c.cost):(isNext?'ものがたりの つづきで ともる':'?'))+'</small></div></div>';
+  }).join('');
+  return '<div class="bsec-note">ものがたりの 結びで 一つずつ ともる。ともった 珠には、その章の こたえから 生まれた じゅもんが やどる。</div><div class="proof-grid">'+cards+'</div>';
+}
+function openProof(){
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
+  const w=document.getElementById('proofwin');if(!w)return;
+  document.getElementById('proofbody').innerHTML=renderProof();w.classList.add('show');Game.proofOpen=true;Game._proofT=performance.now();
+  if(w.firstElementChild)w.firstElementChild.scrollTop=0;Game.autoPath=null;held.length=0;swipeVec=null;ptr=null;if(typeof sfxSel==='function')sfxSel();
+}
+function closeProof(){const w=document.getElementById('proofwin');if(w)w.classList.remove('show');Game.proofOpen=false;}
+function showProofGain(no){
+  const c=CHAPTER_PROOF[no-1],el=document.getElementById('proofgain');if(!c||!el)return;
+  if(Game._proofGainOn){Game._proofGainQueue=Game._proofGainQueue||[];Game._proofGainQueue.push(no);return;}
+  Game._proofGainOn=true;el.innerHTML='<span class="proof-orb got gain-orb">'+no+'</span><b>蒼珠が ともった！</b><span>＋ '+c.spell+' を おぼえた</span>';
+  el.classList.remove('show');void el.offsetWidth;el.classList.add('show');if(typeof sfxLevel==='function')sfxLevel();
+  setTimeout(()=>{el.classList.remove('show');Game._proofGainOn=false;const q=Game._proofGainQueue||[];if(q.length)showProofGain(q.shift());},3200);
+}
+function checkChapterProof(){
+  const now=chapterProofMask();if(Game._proofMask==null){Game._proofMask=now;updateProofHud();return;}
+  const gained=now&~Game._proofMask;Game._proofMask=now;updateProofHud();if(!gained)return;
+  for(let no=1;no<=CHAPTER_PROOF.length;no++)if(gained&(1<<(no-1)))showProofGain(no);
+}
+function updateInventoryBelt(){
+  const b=document.getElementById('itembtn');if(!b)return;
+  const heal=(Game.items.yakuso||0)+(Game.items.iyakuso||0)+(Game.items.tokusen||0)+(Game.items.inochi||0);
+  const mp=(Game.items.seisui||0)+(Game.items.hoshikake||0),iron=Game.items.hoshitetsu||0,flute=Game.hidden&&Game.hidden.funautaOwn?1:0;
+  b.innerHTML='<span class="belt-item">🌿<b>'+heal+'</b></span><span class="belt-item">💧<b>'+mp+'</b></span><span class="belt-item">⭐<b>'+iron+'</b></span><span class="belt-item">🎵<b>'+flute+'</b></span><span class="belt-bag">🎒</span>';
+}
+function renderInventory(){
+  const meta={
+    yakuso:['🌿','やくそう','HPを すこし かいふく'],iyakuso:['🌿','いいやくそう','HPを おおきく かいふく'],tokusen:['🌿','とくせんやくそう','HPを とても おおきく かいふく'],
+    seisui:['💧','まほうのせいすい','MPを かいふく'],dokukesi:['🍃','どくけしそう','どくを なおす'],bakudan:['💣','ばくだんいし','たたかいで ダメージ'],inazuma:['⚡','いなずまだま','たたかいで 大ダメージ'],
+    inochi:['💚','いのちのしずく','HPを ぜんかいふく'],hoshikake:['✦','ほしのかけら','MPを ぜんかいふく'],hoshitetsu:['⭐','ほしのてつ','ほしの そうびを きたえる'],tane:['🌱','ちからのたね','こうげきの ちから']};
+  const card=(icon,name,count,sub,cls)=>'<div class="invcard'+(cls?' '+cls:'')+'"><span class="invname">'+icon+' '+name+(sub?'<small>'+sub+'</small>':'')+'</span><span class="invcount">'+count+'</span></div>';
+  const itemOrder=['yakuso','iyakuso','tokusen','seisui','dokukesi','bakudan','inazuma','inochi','hoshikake'];
+  const matOrder=['hoshitetsu','tane'];let h='';
+  const positive=Object.keys(Game.items||{}).filter(k=>(Game.items[k]||0)>0).length;
+  h+='<div class="inv-summary">いま もっているものを、一枚に まとめた旅支度。つかう時と そうびを かえる時は、下のボタンから。</div>';
+  h+='<h3 class="bisle">つかうもの（'+itemOrder.filter(k=>(Game.items[k]||0)>0).length+'しゅ）</h3><div class="inventory-grid">';
+  for(const k of itemOrder){const m=meta[k];h+=card(m[0],m[1],'×'+(Game.items[k]||0),m[2]);}h+='</div>';
+  h+='<h3 class="bisle">素材</h3><div class="inventory-grid">';for(const k of matOrder){const m=meta[k];h+=card(m[0],m[1],'×'+(Game.items[k]||0),m[2]);}
+  for(const k of Object.keys(Game.items||{}))if(!meta[k]&&(Game.items[k]||0)>0)h+=card('・',(ITEMS[k]&&ITEMS[k].name)||k,'×'+Game.items[k],'');h+='</div>';
+  const ow=[...new Set([...(Game.ownW||[]),...(Game.weaponAtk?[Game.weaponAtk]:[])])].sort((a,b)=>a-b);
+  const oa=[...new Set([...(Game.ownA||[]),...(Game.armorDef?[Game.armorDef]:[])])].sort((a,b)=>a-b);
+  h+='<h3 class="bisle">武器（'+ow.length+'）</h3><div class="inventory-grid">';
+  if(!ow.length)h+='<div class="inv-empty">なし</div>';for(const v of ow)h+=card('⚔',WNAME[v]||'ぶき',v===Game.weaponAtk?'● そうび中':'もっている',WFXDESC[v]||('こうげき +'+v),v===Game.weaponAtk?'equipped':'');h+='</div>';
+  h+='<h3 class="bisle">防具（'+oa.length+'）</h3><div class="inventory-grid">';
+  if(!oa.length)h+='<div class="inv-empty">よろい なし</div>';for(const v of oa)h+=card('🛡',ANAME[v]||'よろい',v===Game.armorDef?'● そうび中':'もっている',AFXDESC[v]||('しゅび +'+v),v===Game.armorDef?'equipped':'');
+  if(Game.shield)h+=card('🛡','てつのたて',Game.shield2?'もっている':'● そうび中','しゅび +6',Game.shield2?'':'equipped');
+  if(Game.shield2)h+=card('🛡','ひかりのたて','● そうび中','しゅび +12','equipped');h+='</div>';
+  const keys=[['🚪','どこでもドア',Game.door],['👻','とうめいマント',Game.cloak],['📕','冒険の書',Game.book],['🔑','まほうのかぎ',Game.mkey],['🗺','うみのちず',Game.hidden&&Game.hidden.umichizu],['🎵','ふなうたのふえ',Game.hidden&&Game.hidden.funautaOwn],['🎟','一座の はんけん',Game.hidden&&Game.hidden.troupeTicket],['🎭','にせもの勇者の おめん',Game.hidden&&Game.hidden.troupeMask],['📜','ほんとうのこえの だいほん',Game.hidden&&Game.hidden.troupeScript]];
+  h+='<h3 class="bisle">だいじなもの</h3><div class="inventory-grid">';const ownedKeys=keys.filter(x=>x[2]);if(!ownedKeys.length)h+='<div class="inv-empty">なし</div>';for(const k of ownedKeys)h+=card(k[0],k[1],'●','なくならない');h+='</div>';
+  h+='<div class="inv-summary">所持 '+positive+'しゅ　／　武器 '+ow.length+'　／　防具 '+oa.length+'</div>';
+  return h;
+}
+function openInventory(){
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
+  const w=document.getElementById('inventorywin');if(!w)return;document.getElementById('inventorybody').innerHTML=renderInventory();w.classList.add('show');Game.inventoryOpen=true;Game._inventoryT=performance.now();
+  if(w.firstElementChild)w.firstElementChild.scrollTop=0;Game.autoPath=null;held.length=0;swipeVec=null;ptr=null;if(typeof sfxSel==='function')sfxSel();
+}
+function closeInventory(){const w=document.getElementById('inventorywin');if(w)w.classList.remove('show');Game.inventoryOpen=false;}
 // どこでもドアの 行き先（じゅんばん＝そうげん→…→しろ。表示名つき）
 const ISLE=[['grass','むらの そうげん'],['forest','ふかい もり'],['cave','どうくつ'],['ice','こおりの せかい'],['icetown','ゆきの まち'],['volcano','かざんの しま'],['castle','まおうの しろ'],['edge','はての しま'],['sunken','しずみの さと'],['mistsea','わすれの うみ'],['minamoto','みなもとの もり'],['towa','とわの ふち'],['misaki','みおくりの みさき'],['ohori','おおほりあと'],['oka','かたりのおか']];
 const CLOAK_MAX=60; // とうめいマントの 最大歩数（歩数制バッテリー）
@@ -1493,7 +1715,7 @@ const CLOAK_MAX=60; // とうめいマントの 最大歩数（歩数制バッ�
 const Game={scene:'boot', p:null, enemies:[], bt:null, grace:0, kills:0, battling:false, endT:0, introShown:false, started:false,
   items:{yakuso:0,seisui:0,dokukesi:0}, chestsOpen:[], spotsRead:[], springUsed:{}, dmgTaken:0, t0:0, respawnQ:[], goldT:12,
   gold:0, mapId:'grass', weaponAtk:0, armorDef:0, ownW:[], ownA:[], shield:false, mbossDown:false, talking:false, transiting:false,
-  saidYes:false, dayT:0, metalT:20, qChild:0, bonusDef:0, bonusHp:0, bonusMp:0, gheart:0, ng:0, hidden:{}, popo:null, popoT:null, mate:null, mateT:null, nkOn:false, nkRest:false, nkHp:0, nkMp:0, nkTac:'omakase', nkW:0, nkA:0, nkm:null, nkmT:null, kakage:'', stats:{battles:0,crits:0,deaths:0}, diff:2, door:false, mkey:false, visited:{}, cloak:false, invisible:false, cloakSteps:0, book:false, seen:{}, fieldShake:0};
+  saidYes:false, dayT:0, metalT:20, qChild:0, bonusDef:0, bonusHp:0, bonusMp:0, gheart:0, ng:0, hidden:{weakV:1,weakKnown:{}}, popo:null, popoT:null, mate:null, mateT:null, nkOn:false, nkRest:false, nkHp:0, nkMp:0, nkTac:'omakase', nkW:0, nkA:0, nkm:null, nkmT:null, kakage:'', stats:{battles:0,crits:0,deaths:0}, diff:2, door:false, mkey:false, visited:{}, cloak:false, invisible:false, cloakSteps:0, book:false, seen:{}, fieldShake:0};
 window.G=Game;
 function newPlayer(){const L=LEVELS[1],st=WORLDS.grass.start;return{lv:1,exp:0,hp:L.hp,mhp:L.hp,mp:L.mp,mmp:L.mp,atk:L.atk,def:L.def,bonusAtk:0,poison:false,poisonT:0,
   tx:st.x,ty:st.y,px:st.x,py:st.y,face:1,dir:'D',moving:null,bump:null};}
@@ -1525,8 +1747,10 @@ function resetGame(){
   Game.bt=null;Game.grace=0;Game.kills=0;Game.battling=false;Game.endT=0;Game.introShown=false;
   Game.items={yakuso:0,seisui:0,dokukesi:0};Game.chestsOpen=[];Game.spotsRead=[];Game.springUsed={};Game.dmgTaken=0;Game.t0=0;
   Game.goldT=35;Game.saidYes=false;Game.dayT=DAY_START;Game.metalT=20;Game.stats={battles:0,crits:0,deaths:0};
-  Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.purified=0;Game.hidden={};Game.popo=null;Game.popoT=null;Game.mate=null;Game.mateT=null;Game.minigame=null;Game.nkOn=false;Game.nkRest=false;Game.nkHp=0;Game.nkMp=0;Game.nkTac='omakase';Game.nkW=0;Game.nkA=0;Game.nkm=null;Game.nkmT=null;Game.kakage='';
+  Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.purified=0;Game.hidden={weakV:1,weakKnown:{}};Game.popo=null;Game.popoT=null;Game.mate=null;Game.mateT=null;Game.minigame=null;Game.nkOn=false;Game.nkRest=false;Game.nkHp=0;Game.nkMp=0;Game.nkTac='omakase';Game.nkW=0;Game.nkA=0;Game.nkm=null;Game.nkmT=null;Game.kakage='';
   Game.door=false;Game.mkey=false;Game.chCard=null;Game.visited={};Game.cloak=false;Game.invisible=false;Game.cloakSteps=0;Game.book=false;Game.talkOff=false;Game.seen={};
+  Game.proofOpen=false;Game.inventoryOpen=false;Game._proofMask=0;Game._proofGainOn=false;Game._proofGainQueue=[];
+  {const pw=document.getElementById('proofwin'),iw=document.getElementById('inventorywin'),pg=document.getElementById('proofgain');if(pw)pw.classList.remove('show');if(iw)iw.classList.remove('show');if(pg)pg.classList.remove('show');}
   loadMap('grass');
   P.length=0;fxL.innerHTML='';
   MSG=null;MENU=null;cmdwinEl.classList.remove('on');msgtextEl.textContent='';msgwinEl.classList.remove('done');msgwinEl.classList.remove('hasface');
@@ -1537,7 +1761,7 @@ function resetGame(){
 // ============================================================
 let curSlot=1; // いま あそんでいる ぼうけんのしょ(1-3)。きどうじは 1=きゅうセーブと ごかん
 const saveKey=()=>'aoYushaSave'+curSlot;
-const MAPNAME={grass:'そうげん',forest:'もり',cave:'どうくつ',cave2:'ちそこ',ice:'こおりのしま',icetown:'ゆきのまち',volcano:'かざん',castle:'まおうのしろ',edge:'はてのしま',sunken:'しずみのさと',mistsea:'わすれのうみ',minamoto:'みなもとのもり',towa:'とわのふち',kokoro:'こころのにわ',misaki:'みおくりのみさき',fune:'みおくりのふね',ohori:'おおほりあと',tomoshibi:'ともしびのま',oka:'かたりのおか',umi:'ひとつのうみ'};
+const MAPNAME={grass:'そうげん',forest:'もり',cave:'どうくつ',cave2:'ちそこ',ice:'こおりのしま',icetown:'ゆきのまち',volcano:'かざん',castle:'まおうのしろ',edge:'はてのしま',sunken:'しずみのさと',mistsea:'わすれのうみ',minamoto:'みなもとのもり',towa:'とわのふち',kokoro:'こころのにわ',misaki:'みおくりのみさき',fune:'みおくりのふね',ohori:'おおほりあと',tomoshibi:'ともしびのま',oka:'かたりのおか',umi:'ひとつのうみ',theater:'旅芸人の ぶたい'};
 // 宝箱はオブジェクト参照で管理しているため「マップ:座標」の文字列に変換して保存する
 function chestKey(c){for(const id in WORLDS){const w=WORLDS[id];if(w.chests&&w.chests.includes(c))return id+':'+c.x+':'+c.y;}return'';}
 function spotKey(sp){for(const id in WORLDS){const w=WORLDS[id];if(w.spots&&w.spots.includes(sp))return id+':'+sp.x+':'+sp.y;}return'';}
@@ -1649,6 +1873,9 @@ function loadGame(){
   Game.purified=d.purified||0; // じょうか数（かげ解放）
   Game.mkey=!!d.mkey; // まほうのかぎ 所持
   Game.cloak=!!d.cloak;Game.book=!!d.book;Game.talkOff=!!d.talkOff;Game.invisible=false;Game.cloakSteps=CLOAK_MAX;Game.seen=(d.seen&&typeof d.seen==='object')?d.seen:{}; // とうめいマント（所持のみ永続・透明状態は持ち越さない・バッテリー満タン）
+  {const h=Game.hidden;
+   if(h.weakV!==1){const known={};for(const id in Game.seen)if(Game.seen[id])known[id]=7;h.weakKnown=known;h.weakV=1;}
+   else if(!h.weakKnown||typeof h.weakKnown!=='object'||Array.isArray(h.weakKnown))h.weakKnown={};}
   Game.visited=(d.visited&&typeof d.visited==='object')?d.visited:{};Game.visited.grass=true; // 訪問した島（旧セーブは草原を既訪あつかい）
   {const h=Game.hidden; // 〜v20260712_1557: 城の章カード済みが ch4c を流用し「章4cこぼれび完了」と衝突（こぼれび不出現/ED行の先出し）→castleCardへ移行。真の章4c完了は 図鑑koborebi既見+ch4w を伴う
    if(h.ch4c){h.castleCard=true;if(!(Game.seen.koborebi&&h.ch4w))delete h.ch4c;}
@@ -1680,6 +1907,7 @@ function loadGame(){
    Game.nkMp=Game.nkOn?Math.max(0,Math.min(st.mmp,(typeof d.nkMp==='number')?d.nkMp:st.mmp)):0;}
   nkSpawnFollower();
   Game.t0=performance.now()-(d.playMs||0);
+  Game._proofMask=chapterProofMask();
   updateBars();
   return true;
 }
@@ -2569,6 +2797,8 @@ function updateBars(){
      if(fn)fn.textContent='こども '+Game.nkHp+'/'+stn.mhp;}
    else if(fn)fn.textContent='';}
   if(typeof updateBadge==='function')updateBadge();
+  if(typeof updateProofHud==='function')updateProofHud();
+  if(typeof updateInventoryBelt==='function')updateInventoryBelt();
   updateDoorBtn();updateCloakBtn();updateBookBtn();updateTalkBtn();
 }
 // 🚪どこでもドアボタン：所持していれば フィールドに 表示
@@ -2576,7 +2806,7 @@ function updateBars(){
 function relayoutSideBtns(){
   const dyn={doorbtn:1,cloakbtn:1,bookbtn:1};
   let i=1;
-  for(const id of ['itembtn','spellbtn','doorbtn','cloakbtn','bookbtn','questbtn','talkbtn']){
+  for(const id of ['spellbtn','doorbtn','cloakbtn','bookbtn','questbtn','talkbtn']){
     const el=document.getElementById(id);if(!el)continue;
     if(dyn[id]&&!el.classList.contains('show'))continue;
     el.style.top='calc(max(12px, env(safe-area-inset-top)) + '+(i*50)+'px)';i++;
@@ -2591,13 +2821,65 @@ function updateDoorBtn(){const b=document.getElementById('doorbtn');if(b)b.class
 // ============== 冒険の書（モンスター図鑑）==============
 function updateBookBtn(){const b=document.getElementById('bookbtn');if(b)b.classList.toggle('show',!!Game.book);relayoutSideBtns();}
 function foeId(foe){for(const k in FOES)if(FOES[k]===foe)return k;return null;}
+const WEAK_BIT={phys:1,fire:2,ice:4};
+const WEAK_ICON={phys:'⚔',fire:'🔥',ice:'❄'};
+function weakStore(){const h=Game.hidden||(Game.hidden={});if(!h.weakKnown||typeof h.weakKnown!=='object'||Array.isArray(h.weakKnown))h.weakKnown={};return h.weakKnown;}
+function weakKnown(id,kind){return !!((weakStore()[id]||0)&WEAK_BIT[kind]);}
+function rawAffinity(foe,kind){
+  if(kind==='phys'){
+    if(Game.bt&&Game.bt.foe===foe&&typeof foePhys==='function')return foePhys(Game.bt);
+    return foe.physMul==null?1:foe.physMul;
+  }
+  return kind==='fire'?(foe.fireMul==null?1:foe.fireMul):(foe.iceMul==null?1:foe.iceMul);
+}
+function affinityResult(m){
+  if(m<=0)return{cls:'imm',mark:'×',word:'きかない'};
+  if(m>1)return{cls:'weak',mark:'◎',word:'よくきく'};
+  if(m<1)return{cls:'res',mark:'△',word:'いまひとつ'};
+  return{cls:'normal',mark:'○',word:'ふつう'};
+}
+function weakBadgeHTML(id,foe,kind,book){
+  const known=weakKnown(id,kind),wg=Game.bt&&Game.bt.weakGuess,guess=!known&&Game.bt&&Game.bt.foe===foe&&(Array.isArray(wg)?wg.includes(kind):wg===kind);
+  const r=known?affinityResult(rawAffinity(foe,kind)):null;
+  const cls=book?'bdg':'ew',state=known?'confirmed':(guess?'hypothesis':'unknown');
+  return '<span class="'+cls+' '+(known?r.cls:(guess?'guess':'unk'))+'" data-foe="'+id+'" data-affinity="'+kind+'" data-knowledge="'+state+'" data-result="'+(known?r.cls:'unknown')+'">'+WEAK_ICON[kind]+' '+(known?(r.mark+' '+r.word):(guess?'? よそう':'?'))+'</span>';
+}
+function weakClueText(foe){
+  const p=foe.physMul==null?1:foe.physMul,f=foe.fireMul==null?1:foe.fireMul,i=foe.iceMul==null?1:foe.iceMul;
+  if(foe.stage)return 'ぬのと かみの よろい。ひのこが うつれば よく もえそうだ';
+  if(f===0)return 'ほのおを まとい、ひを のみこんでいる';
+  if(i===0)return 'こおりの うろこが、つめたく ひかる';
+  if(i>Math.max(f,p))return 'ひびの おくから、あつい けむりが もれる';
+  if(f>Math.max(i,p))return 'からだの すきまから、つめたい いきが こぼれる';
+  if(p<1)return foe.v==='bone'?'かたい ほねが、からだを おおっている':'かたい からだが、つるぎを はじきそうだ';
+  if(foe.dodge)return 'すばやい うごき。ねらいを さだめにくい';
+  if(foe.kage)return 'ゆれる かげ。ひかりの ちがいに びんかんそうだ';
+  return 'すがたと うごきを よく みて、こうげきを ためそう';
+}
+function renderBattleWeakness(){
+  const bt=Game.bt;if(!bt)return;const id=foeId(bt.foe);if(!id)return;
+  const c=document.getElementById('weakclue'),w=document.getElementById('eweak');
+  if(c)c.innerHTML='<b>手がかり</b>'+weakClueText(bt.foe);
+  if(w)w.innerHTML=['phys','fire','ice'].map(k=>weakBadgeHTML(id,bt.foe,k,false)).join('');
+}
+function showWeakRecord(kind,foe){
+  const el=document.getElementById('weakrecord');if(!el)return;const r=affinityResult(rawAffinity(foe,kind));
+  el.textContent='📕 記録　'+WEAK_ICON[kind]+' '+r.mark+' '+r.word;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
+}
+function recordWeakness(foe,kind){
+  const id=foeId(foe),bit=WEAK_BIT[kind];if(!id||!bit)return false;const s=weakStore(),old=s[id]||0;if(old&bit)return false;
+  s[id]=old|bit;renderBattleWeakness();showWeakRecord(kind,foe);
+  const bb=document.getElementById('bookbody');if(Game.bookOpen&&bb)bb.innerHTML=renderBook();
+  return true;
+}
+function revealAllWeak(id){if(!id||!FOES[id])return;const s=weakStore();s[id]=7;if(id==='boss')s.boss2=7;renderBattleWeakness();}
 function foeInfoCost(f){return f===FOES.boss2?0:(f.boss?200:(f.mboss?100:0));}
 function markSeen(id){if(!id)return;if(!Game.seen)Game.seen={};Game.seen[id]=1;if(id==='boss')Game.seen.boss2=1;}
 function buyFoeInfo(id){
   const f=FOES[id];if(!f||(Game.seen&&Game.seen[id]))return;
   const cost=foeInfoCost(f);if(cost<=0)return;
   if(Game.gold<cost){sfxSel();toast('ゴールドが たりない…（'+cost+'G ひつよう）');return;}
-  Game.gold-=cost;markSeen(id);updateBars();sfxChest();
+  Game.gold-=cost;markSeen(id);revealAllWeak(id);updateBars();sfxChest();saveGame();
   toast(f.name+'の よわてんが わかった！（-'+cost+'G）');
   const bb=document.getElementById('bookbody');if(bb)bb.innerHTML=renderBook();
 }
@@ -2625,7 +2907,7 @@ const BOOK_ISLES=[
   ['かたりのおか',['wasuredori','katarikuzushi','kataranu']],
   ['ひとつの うみ',['namigarasu','shiouzu','uminohebi','hedatsu']],
   ['はての しま',['owarika','kobamu']]];
-const BOOK_SPECIAL=['gslime','metal','kotae'];
+const BOOK_SPECIAL=['gslime','metal','kotae','niseyusha'];
 // ずかんの ものがたり行（よみものとしての 図鑑）
 const BOOK_LORE={
   komari:'いのりの しずくが まるく こごった もの。ふれると ほんのり あたたかい。',
@@ -2638,6 +2920,7 @@ const BOOK_LORE={
   wasuredori:'かたられなく なった ものがたりの きれはしが、とりの かたちを かりた もの。ゆうやけの おかを さまよって いる。',
   katarikuzushi:'とちゅうで わすれられた かたりの つみかさなり。おわりを きいて くれる ものを、ちからずくで ためす。',
   kataranu:'だれにも かたられなかった ものがたりの ぬし。とじた ほんの すがたで、ききてを まちつづけて いた。かたりべの こえだけが、その ページを ひらく。',
+  niseyusha:'旅芸人の一座が つくった、ぶたいの うえだけの勇者。かみの よろいと きの つるぎで、ほんものより おおげさに たたかう。',
   namigarasu:'なみがしらの しぶきが とりの かたちを かりた もの。ふねの ほかげを おいかけて あそぶ。',
   shiouzu:'ふるい うずしおに なげきが とけこんだ もの。ちかづく ものを まきこもうと する。',
   uminohebi:'ふかみに すむ ながい ながい ぬし。ふねの したを とおる かげは、やまの ように おおきい。',
@@ -2687,6 +2970,7 @@ const BOOK_LORE={
   metal:'はがねの からだに けいけんの かたまり。であえた ひは うんが いい。',
   kotae:'とわに といつづける もの。こたえを もつ ものを、しずかに ためしに くる。'};
 const BOOK_TRAITS={
+  niseyusha:['ぶたいの たたかい。勝っても 負けても ものがたりは すすむ','ぬのと かみの よろい——ほのおが よく きく'],
   iwanuke:['いわの からだは こうげきを はんぶんに する','じゅもんが よく きく。ほしのてつを おとす'],
   fukayami:['そらを とび、どくを つける','ほしのてつを おとす'],
   yamihori:['ちからを ため、じゅもんも つかう','ひかりの とどかぬ ところを ほりつづけた おもい'],
@@ -2726,19 +3010,8 @@ const BOOK_TRAITS={
   lslime:['なかまを よんで かさなる（たおすと ほうびも ふえる）','HPが へると おびえて にげる'],
   yamabato:['そらを とぶ','HPが へると おびえて にげる'],
   kagekishi:['ぶつりに つよい（ぶきが ききにくい）','ぼうぎょくずしで まもりを ゆるめてくる']};
-function bookElemBadges(f){
-  const b=[];
-  if(f.def>=20)b.push(['imm','物理 ほぼ無効']);
-  else if((f.physMul||1)<1)b.push(['res','物理 '+Math.round(f.physMul*100)+'%']);
-  const fm=(f.fireMul==null?1:f.fireMul);
-  if(fm>1)b.push(['weak','火 ばつぐん ×'+fm]);
-  else if(fm===0)b.push(['imm','火 きかない']);
-  else if(fm<1)b.push(['res','火 ×'+fm]);
-  const im=(f.iceMul==null?1:f.iceMul);
-  if(im>1)b.push(['weak','氷 ばつぐん ×'+im]);
-  else if(im===0)b.push(['imm','氷 きかない']);
-  else if(im<1)b.push(['res','氷 ×'+im]);
-  return b;
+function bookElemBadges(id,f){
+  return ['phys','fire','ice'].map(k=>weakBadgeHTML(id,f,k,true));
 }
 function bookMonCard(id){
   const f=FOES[id];if(!f)return '';
@@ -2751,11 +3024,11 @@ function bookMonCard(id){
   const tags=(BOOK_TRAITS[id]||[]).slice();
   if(f.drop)tags.push('たまに '+ITEMS[f.drop].name+'を おとす');
   if(f.dodge)tags.unshift('回避 '+Math.round(f.dodge*100)+'%');
-  const badges=bookElemBadges(f).map(x=>'<span class="bdg '+x[0]+'">'+x[1]+'</span>').join('');
+  const badges=bookElemBadges(id,f).join('');
   const role=f.boss?'<span class="bdg boss">ボス</span>':(f.mboss?'<span class="bdg mboss">中ボス</span>':(f.hunter?'<span class="bdg hunt">さまよう巨人</span>':''));
   return '<div class="bmon"><div class="bmh"><span class="bsw" style="background:'+f.col+'"></span><b>'+f.name+'</b>'+role+'</div>'
     +'<div class="bstat">'+stat+(gain?'　｜　'+gain:'')+'</div>'
-    +(badges?'<div class="bbadges">'+badges+'</div>':'')
+    +'<div class="bbadges">'+badges+'</div>'
     +(tags.length?'<div class="btags">'+tags.map(t=>'・'+t).join('　')+'</div>':'')
     +(BOOK_LORE[id]?'<div class="blore">'+BOOK_LORE[id]+'</div>':'')+'</div>';
 }
@@ -2763,7 +3036,7 @@ function renderBook(){
   const _allIds=[].concat.apply([],BOOK_ISLES.map(p=>p[1])).concat(BOOK_SPECIAL);
   const _seenN=_allIds.filter(id=>Game.seen&&Game.seen[id]).length;
   let h='<div class="bprogwrap"><span class="bprog">ずかん　'+_seenN+' / '+_allIds.length+'たい</span></div>';
-  h+='<div class="bsec-note">こうかの 見かた：<span class="bdg weak">ばつぐん＝弱点</span> <span class="bdg res">いまひとつ＝耐性</span> <span class="bdg imm">きかない＝無効</span>　／　物理＝つるぎ・火＝メラ系・氷＝ヒャド系</div>';
+  h+='<div class="bsec-note">こうかの 見かた：実際に あてた こうげきだけ 記録される。<span class="bdg weak">◎ よくきく</span> <span class="bdg normal">○ ふつう</span> <span class="bdg res">△ いまひとつ</span> <span class="bdg imm">× きかない</span>　／　⚔＝つるぎ・🔥＝メラ系・❄＝ヒャド系</div>';
   h+='<div class="bsec-note">※ HP・こうげき・けいけんち・おかねは いまの なんいど「'+curDiff().name+'」・昼の あたい（よるは さらに ふえる）。しゅびは なんいど共通。EXP＝けいけんち／G＝おかね。</div>';
   h+='<h3 class="bisle">なんいど 係数（この値を 素の値に かけている）</h3>';
   h+='<div class="bdtbl"><table><thead><tr><th>なんいど</th><th>敵HP</th><th>敵こうげき</th><th>ボスHP</th><th>ボス攻撃</th><th>けいけんち</th><th>おかね</th></tr></thead><tbody>';
@@ -2783,7 +3056,7 @@ function renderBook(){
     +'<div class="bg">🔥 メラ（火）Lv1・MP3　／　ギラ（火）Lv3・MP7　／　ベギラマ（火）Lv7・MP12　／　ベギラゴン（火）Lv12・MP20</div>'
     +'<div class="bg">❄ ヒャド（氷）Lv4・MP5　／　ヒャダルコ（氷）Lv8・MP12　／　マヒャド（氷）Lv13・MP20</div>'
     +'<div class="bg">💚 ホイミ Lv1・MP3　／　ベホイミ Lv5・MP8　／　ベホマ Lv11・MP22　／　キアリー（どく回復）Lv2・MP2</div>'
-    +'<div class="bg">✨ 章のあかし（といの こたえが じゅもんに なったもの）：とわのまもり（章5・MP10・てきの こうげき3かいを 4わり やわらげる）／　ソラのよびごえ（章6・MP12・てきの うごきを とめる）／　つぐものがたり（章7・MP25・おおわざ＋じぶんを かいふく）／　ナギのうた（章8・MP16・てきの こうげきを 3わり さげる）</div>'
+    +'<div class="bg">🔵 物語じゅもん：'+(CHAPTER_PROOF.filter(c=>hasStorySpell(c.no)).map(c=>'章'+c.no+' '+c.spell+'（MP'+c.cost+'・'+c.desc+'）').join('　／　')||'まだ おぼえていない')+'</div>'
     +'</div>';
   return h;
 }
@@ -2808,14 +3081,11 @@ function renderStatus(){
    const bag=[...Game.ownW.map(v=>(WNAME[v]||'ぶき')+(v===Game.weaponAtk?'●':'')),
               ...Game.ownA.map(v=>(ANAME[v]||'よろい')+(v===Game.armorDef?'●':''))];
    h+=row('そうびの ふくろ',bag.join('　'),'●=そうびちゅう。つけかえは どうぐ から');}
-  {const dj=[];if(Game.door)dj.push('どこでもドア');if(Game.cloak)dj.push('とうめいマント');if(Game.book)dj.push('冒険の書');if(Game.mkey)dj.push('まほうのかぎ');
+  {const dj=[];if(Game.door)dj.push('どこでもドア');if(Game.cloak)dj.push('とうめいマント');if(Game.book)dj.push('冒険の書');if(Game.mkey)dj.push('まほうのかぎ');if(Game.hidden&&Game.hidden.troupeTicket)dj.push('一座の はんけん');if(Game.hidden&&Game.hidden.troupeMask)dj.push('にせもの勇者の おめん');if(Game.hidden&&Game.hidden.troupeScript)dj.push('ほんとうのこえの だいほん');
    h+='<h3 class="bisle">だいじなもの</h3>'+row('',dj.length?dj.join('　'):'なし');}
   {const sp=[['メラ',1],['キアリー',2],['ギラ',3],['ヒャド',4],['ベホイミ',5],['バイキルト',6],['ベギラマ',7],['ヒャダルコ',8],['ベホマ',11],['ベギラゴン',12],['マヒャド',13]];
    const learned=['ホイミ'].concat(sp.filter(s=>lv>=s[1]).map(s=>s[0]));
-   if(Game.hidden.ch5c||Game.hidden.ch5cEver)learned.push('とわのまもり');
-   if(Game.hidden.ch6c||Game.hidden.ch6cEver)learned.push('ソラのよびごえ');
-   if(Game.hidden.ch7c||Game.hidden.ch7cEver)learned.push('つぐものがたり');
-   if(Game.hidden.ch8c||Game.hidden.ch8cEver)learned.push('ナギのうた');
+   for(const c of CHAPTER_PROOF)if(hasStorySpell(c.no))learned.push(c.spell);
    h+='<h3 class="bisle">おぼえた じゅもん</h3>'+row('',learned.join('　'));}
   {const zAll=[].concat.apply([],BOOK_ISLES.map(pr=>pr[1])).concat(BOOK_SPECIAL);
    const zk=zAll.filter(id=>Game.seen&&Game.seen[id]).length;
@@ -2862,6 +3132,8 @@ function renderStatus(){
     }
     h+='</div>';
    }}
+  {const copied=ch12CopiedTitle();
+   if(copied)h+=row('かたりべちょうへ つたわった しょうごう',copied.name,'あなたの しょうごうは そのまま のこっている');}
   if(Game.hidden&&Game.hidden.funautaOwn){
     h+='<h3 class="bisle">ふなうたの ふえ</h3><div class="mateswap"><div class="mopt'+(Game.hidden.funautaOn?' cur':'')+'" data-funauta="1"><b>'+(Game.hidden.funautaOn?'ふいている（まものが みちを あける）':'しまっている')+'</b><span class="msub">タップで きりかえ。うみの まものと ふれあいにくく なる</span></div></div>';
   }
@@ -2929,6 +3201,8 @@ function renderQuest(){
    }
    h=h.replace('でんせつのそうび</h3>','でんせつのそうび（'+got+' / '+LEG.length+'）</h3>');}
   h+='<h3 class="bisle">やりのこし</h3>';
+  if(Game.hidden&&Game.hidden.ch12a&&!Game.hidden.ch12c)
+    h+=row('ほんとうのこえ',ch12VoiceCount()+' / 3',Game.hidden.ch12w?'三つ そろった——旅芸人の ぶたいへ':'ソラ・ナギ・ほりびとのまご');
   {let tot=0,got=0;const rem=[];
    for(const id in WORLDS){const w=WORLDS[id];if(!w.chests)continue;let r=0;
      for(const c of w.chests){tot++;if(Game.chestsOpen.includes(c))got++;else r++;}
@@ -2977,7 +3251,8 @@ function renderQuest(){
     misaki:['みおくりの みさき','みなみの おきの きりの むこう。ふねを まつ ゆうなぎの きし（だい8しょう）。'],
     ohori:['ほりびとの ともしび','ちそこの さいしんぶ。とどかない ところへ ひかりを とどけた ものたちの あと（だい9しょう）。'],
     oka:['ゆうやけの かたりば','むらの きた。じいさんの ものがたりが うまれ、こどもの ものがたりが はじまる おか（だい10しょう）。'],
-    umi:['ひとつの うみ','しまと しまの あいだ。ナギの ふねで わたる、ひとつづきの うみ（だい11しょう）。']};
+    umi:['ひとつの うみ','しまと しまの あいだ。ナギの ふねで わたる、ひとつづきの うみ（だい11しょう）。'],
+    theater:['旅芸人の ぶたい','むらに やってきた 一座の まくの うち。ほんとうと しばいが、ひとつの ぶたいで ぶつかる（だい12しょう）。']};
    for(const id of Object.keys(ROLE)){
      const v=Game.visited&&Game.visited[id];
      h+=row(v?(MAPNAME[id]||id):'？？？',v?ROLE[id][0]:'',v?ROLE[id][1]:'まだ みぬ しま');
@@ -3314,6 +3589,9 @@ function firstGesture(){
 window.addEventListener('keydown',e=>{
   if(Game.jumonOpen){ if(e.key==='Escape')closeJumon(); return; } // じゅもん入力中は ゲームキーを うけない
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+  if(Game.inventoryOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeInventory(); return; }
+  if(Game.proofOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeProof(); return; }
+  if(Game.statusOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeStatus(); return; }
   if(Game.bookOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeBook(); return; }
   if(Game.questOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeQuest(); return; }
   firstGesture();
@@ -3413,8 +3691,14 @@ $('#btn-jumon').addEventListener('pointerdown',e=>{
   openJumon('cast','');
 });
 $('#itembtn').addEventListener('pointerdown',e=>{
-  e.stopPropagation();firstGesture();useFieldItem();
+  e.stopPropagation();firstGesture();openInventory();
 });
+$('#proofhud').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openProof();});
+$('#proofclose').addEventListener('pointerdown',e=>{e.stopPropagation();closeProof();});
+$('#proofwin').addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.id==='proofwin'&&performance.now()-(Game._proofT||0)>450)closeProof();});
+$('#inventoryclose').addEventListener('pointerdown',e=>{e.stopPropagation();closeInventory();});
+$('#inventorywin').addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.id==='inventorywin'&&performance.now()-(Game._inventoryT||0)>450)closeInventory();});
+$('#inventoryuse').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();closeInventory();useFieldItem();});
 $('#spellbtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();firstGesture();useFieldSpell();
 });
@@ -3843,9 +4127,131 @@ async function truthScene(){
   endTalk();
   saveGame();
 }
+function ch12VoiceCount(){
+  const h=Game.hidden||{};
+  return ['ch12Sora','ch12Nagi','ch12Mago'].filter(k=>h[k]).length;
+}
+function ch12CopiedTitle(){
+  const h=Game.hidden||{},owned=KAKAGE.filter(e=>e.own());
+  return owned.find(e=>e.k===h.ch12TitleKey)||null;
+}
+async function ch12TakeVoice(key,lines){
+  const h=Game.hidden;
+  for(const line of lines)await say(line);
+  h[key]=true;
+  const n=ch12VoiceCount();
+  sfxHeal();flash('#ffe7b0',0.28,0.7);
+  await say('ほんとうの こえを、かたりべちょうに かきとめた。\n（'+n+' / 3）');
+  if(n>=3&&!h.ch12w){
+    h.ch12w=true;
+    sfxEnc();flash('#ffd88a',0.42,0.9);
+    await say('三つの こえが そろった。\n旅芸人の ぶたいへ もどろう——ほんとうを まくあいへ とどける ときだ。');
+    toast('三つの ほんとうのこえが そろった！ 一座の ぶたいへ');
+  }
+}
+async function talkTroupeLeader(){
+  const h=Game.hidden;
+  if(!h.ch12d){
+    await say('いちざの だんちょう「ようこそ！ しんさく『蒼の勇者』の はじまりだ！」');
+    await say('ぶたいの 勇者は ひとりで まものを たおし、\nなもなき ふなのりを したがえ、すべての ひかりを ひとりじめに した。');
+    if(nkFollowing())await say('こども「ちがうよ！ ソラさんも、ナギさんも、ほりびとの ひとたちも——\nちゃんと なまえが ある。ひとりの おはなしじゃ ないよ！」');
+    else await say('きゃくせきの こども「ちがうよ！ その おはなし、だれかを けしてる！」');
+    await say('だんちょう「ならば ぶたいで しめして みせろ。\nわれらの にせもの勇者より、ほんとうらしい こたえを！」');
+    endTalk();
+    await startEncounter({def:FOES.niseyusha,stageSource:true});
+    return;
+  }
+  if(!h.ch12w){
+    const n=ch12VoiceCount();
+    await say('だんちょう「わしらが きいたのは、ゆうしゃの うわさだけ。\nほんとうを そえるなら、けされた ひとの こえを きかせてくれ。」');
+    await say('ソラ、ナギ、ほりびとのまご——\n三人の ほんとうの こえを あつめよう。（'+n+' / 3）');
+    endTalk();return;
+  }
+  if(!h.ch12c){
+    await say('あなたたちは、三つの こえを ぶたいへ とどけた。');
+    await say('ソラの なまえ。ナギが わたった うみ。\nほりびとが ひかりへ のばした て——だんちょうは えんもくを かえず、まくあいに ひとことだけ くわえた。');
+    flash('#ffe9b0',0.36,0.9);sfxHeal();
+    await say('——まくあい。\n「この おはなしには、もとに なった ほんとうの ひとたちが いる」');
+    await say('まくが おりた。テントを でた かえりみち——\nこえを とどけに きた ソラが、そっと まっていた。');
+    endTalk();
+    await transitMap({to:'grass',tx:11,ty:11,msg:'まくがおり、あかいテントの そとへ でた——'});
+    startTalk();
+    await say('きゃくせきに いた こども「おねえさん。\nおなまえ、きいても いい？」');
+    await say('ソラ「……ソラ。わたしは、ソラ。\nきいてくれて、ありがとう。」');
+    const owned=KAKAGE.filter(e=>e.own());
+    const current=owned.find(e=>e.k===Game.kakage)||null;
+    const ordered=current?[current,...owned.filter(e=>e!==current)]:owned;
+    let chosen=ordered[0]||null;
+    if(ordered.length>1){
+      const titleKey=await ask(ordered.map(e=>({id:e.k,label:(e===current?'● ':'')+e.name})),'こどもの かたりべちょうへ うつす しょうごう');
+      chosen=ordered.find(e=>e.k===titleKey)||chosen;
+    }
+    h.ch12TitleKey=chosen?chosen.k:'';
+    if(chosen)await say('いっしょに あるいた こどもは、あなたが いままで えてきた しょうごう\n「'+chosen.name+'」を じぶんの かたりべちょうへ うつした。');
+    else await say('いっしょに あるいた こどもは、ほんとうの こえを\nじぶんの かたりべちょうへ いっしょうけんめい うつした。');
+    await say('しょうごうは うばわれない。\nうつされた ことばは、べつの ひとの なかでも いきはじめた。');
+    h.troupeTicket=true;
+    h.ch12c=true;
+    sfxLevel();flash('#cfe8ff',0.58,1.15);
+    await say('『ものがたりは、かたった ひとだけの ものではない。\nうけとった ひとの なかで、また いきはじめる。』');
+    await say('十二ばんめの 蒼珠が ともった！\nじゅもん「みんなのこえ」を おぼえた！');
+    await say('いちざの はんけんを もらった。\nぶたいの みせで、おみやげを かえるように なった！');
+    showChapter('だい 12 しょう','ものがたりは、だれの ものか');
+    toast('蒼珠 12 / 12　みんなのこえを おぼえた！');
+    endTalk();saveGame();return;
+  }
+  const copied=ch12CopiedTitle();
+  await say('だんちょう「こんやも おなじ えんもくで まくが あがる。\nだが まくあいの ひとことは、もう けさないぞ。」');
+  if(copied)await say('こどもの かたりべちょうには、\n「'+copied.name+'」の もじが たいせつに のこっている。');
+  await say('だんちょう「おくの みせも のぞいて いってくれ。ぶたいだけの おみやげだ！」');
+  endTalk();
+}
 async function talkNpc(n){
   if(Game.talking||Game.minigame)return;
   startTalk();sfxSel();
+  if(n.troupeTent){
+    if(!Game.hidden.ch12a){
+      await say('むらの ひろばに、きのうまで なかった おおきな あかい テントが たっている。\nうみから きた 旅芸人の 一座だ。');
+      if(nkFollowing())await say('こども「『蒼の勇者』を やるんだって！\nでも、かんばんの おはなし……なんだか ちがう。いっしょに みよう。」');
+      else await say('テントの なかから「蒼の勇者」の なまえが きこえる。\nけれど、うたわれている おはなしは どこか ちがっていた。');
+      await say('テントの てっぺんで、十二ばんめの からっぽの 蒼珠が ゆれている。\nこの ものがたりを ほんとうの こえへ つなげば、ひかりが ともりそうだ。');
+      Game.hidden.ch12a=true;
+      showChapter('だい 12 しょう','ものがたりは、だれの ものか');
+    }else if(Game.hidden.ch12c){
+      await say('あかい テントの おなじ えんもくに、\nほんとうの ひとたちを つたえる まくあいが くわわっている。');
+    }else{
+      await say('あかい テントの おくで、旅芸人の ぶたいが まっている。');
+    }
+    endTalk();
+    await transitMap({to:'theater',tx:9,ty:10,msg:'あかい まくを くぐると、かりそめの ものがたりが はじまった——'});
+    saveGame();return;
+  }
+  if(n.troupeShip){
+    if(Game.hidden.ch12c)await say('一座の ふね。つぎの まちへ はこぶ だいほんと おめんが、\nつきあかりの したで つみこまれている。');
+    else await say('一座の ふね。いろとりどりの はたが かぜに はためいている。\nまだ どこへも でない——いまは ぶたいの まくが あがる ときだ。');
+    endTalk();return;
+  }
+  if(n.troupeLeader){await talkTroupeLeader();return;}
+  if(Game.hidden.ch12d&&!Game.hidden.ch12c){
+    if(n.hood&&!Game.hidden.ch12Sora){
+      await ch12TakeVoice('ch12Sora',[
+        'ソラ「おはなしの なかで なまえが きえると、\nじぶんまで いなかった みたいに なるの。」',
+        'ソラ「勇者が たすけた ひと、じゃなくて——ソラ。\nきいてくれる ひとに、わたしの なまえを たずねて ほしい。」']);
+      endTalk();saveGame();return;
+    }
+    if((n.ferry||n.minatoNagi)&&!Game.hidden.ch12Nagi){
+      await ch12TakeVoice('ch12Nagi',[
+        'ナギ「ふねを だいほんから けすのは かまわない。\nだが、うみを わたった ひとまで けしちゃ いけない。」',
+        'ナギ「みちは、わたった あしあとで できる。\n勇者ひとりじゃ つながらなかった うみだ——そう つたえてくれ。」']);
+      endTalk();saveGame();return;
+    }
+    if(n.mago&&!Game.hidden.ch12Mago){
+      await ch12TakeVoice('ch12Mago',[
+        'ほりびとのまご「じいちゃんの ドアを『勇者の まほう』って かいても、\nみる ひとには わからないかも しれない。」',
+        'ほりびとのまご「でもね、ひかりへ とどきたいって ほりつづけた きもちは、\nけさないで。そこが じいちゃんの おはなし だから。」']);
+      endTalk();saveGame();return;
+    }
+  }
   if(n.captive){
     if(Game.enemies.some(e=>e.id==='icewarden')){
       await say('むすめ「きて くれたのね…！ でも あぶない！\nこおりの ばんへいが みはっているの…！」');
@@ -3883,6 +4289,7 @@ async function talkNpc(n){
       if(Game.hidden.ch8c)await say('ソラ「ナギさんの ふね、うごいたのね。……ふふ、しってた。\nなまえを おくるのが どんなに あったかいか、わたしが いちばん しってるもの。」');
       if(Game.hidden.ch10c)await say('ソラ「むらの ちいさな かたりべさん、わたしの おはなしを かたって くれたの。\n——なまえを よばれた ひの おはなし。……うれしかった。」');
       if(Game.hidden.ch11c)await say('ソラ「ナギさんの ふね、うみじゅうを はしって いるのね。\nきりの うみにも、しおの かおりが とどくように なった の。」');
+      if(Game.hidden.ch12c)await say('ソラ「ぶたいの かえりみち、きゃくせきの こが\nわたしに まっすぐ なまえを きいてくれたの。……わたし、じぶんで『ソラ』って こたえた。」');
     }else if(H5.ch6d){
       // 章6c: なまえを とどける=結び
       await say('「……おかえり なさい。 それで——」');
@@ -3972,6 +4379,9 @@ async function talkNpc(n){
       Game.hidden.ch11c=true;
       showChapter('だい 11 しょう','ひとつの うみ');
       toast('しょうごう「うみを つなぐもの」を えた！');
+      await say('ナギ「そうだ。きたの むらへ、ずいぶん はでな ふねが むかったよ。\n旅芸人の 一座だってさ。ひろばに おおきな あかいテントを たてる らしい。」');
+      sfxEnc();flash('#ffd88a',0.3,0.75);
+      toast('むらの ひろばに、旅芸人の おおきな あかいテントが たった！');
       endTalk();saveGame();return;
     }
     await say('ナギ「よう、ふなのり。かぜは どうだい。」');
@@ -4585,7 +4995,14 @@ async function talkKing(){
         await say('おうじゃのけんを さずかった！（そうびの ふくろへ）');
       }
     }
-    if(Game.hidden.ch11c){
+    if(Game.hidden.ch12c){
+      await say('おうさま「旅芸人の おなじ えんもくに、ほんとうの ひとたちを つたえる\nまくあいが くわわったそうじゃな。きゃくせきの こが ソラどのへ なを きいたとか。」');
+      await say('おうさま「そして、そなたと あるいた こどもは\nそなたの しょうごうを じぶんの かたりべちょうへ うつしたそうじゃな。」');
+      await say('おうさま「ものがたりは、かたった ものだけの ものではない。\nうけとった ものの なかで、また いきはじめるのじゃな。」');
+    }else if(Game.hidden.ch12a){
+      await say('おうさま「ひろばの あかいテントが ずいぶん にぎやかじゃ。\nだが、そなたの たびを ひとりだけの てがらに しておるとか。」');
+      await say('おうさま「ほんとうに そこに いた ものの こえを、ぶたいへ とどけて やるのじゃ。」');
+    }else if(Game.hidden.ch11c){
       await say('おうさま「うみに みなとが ひらいた そうじゃな！ ふねで しまじまが\nつながる——くにの れきしが うごいた ひじゃ。」');
       await say('おうさま「『うみは、わたる ものが いて はじめて みちに なる』——\nそなたは また ひとつ、せかいを ひろげて くれたのう。」');
     }else if(Game.hidden.ch10c){
@@ -4938,7 +5355,9 @@ async function runSell(){
   }
 }
 async function runShop(){
-  await say(Game.mapId==='umi'
+  await say(Game.mapId==='theater'
+    ?'いちざの うりこ「おつかれさま！ ぶたいを みた ひとだけの おみやげやだよ。\nかみの おめんも、ほんとうの こえを うつした だいほんも あるよ！」'
+    :Game.mapId==='umi'
     ?'うきみせの あきんど「おおっ、ふねの おきゃくさん！ なかうみの うきみせへ ようこそ。\nうみわたりの みちぐさに、めずらしい ものを そろえて いるよ。」'
     :Game.mapId==='cave2'
     ?'ほりびとの あきんど「ちそこの いちへ ようこそ。\nほりびとが のこした さいごの しごと——ほしの てつの そうびだ。」'
@@ -4955,6 +5374,7 @@ async function runShop(){
     const list=[];
     let soldW=false,hadW=false,soldA=false,hadA=false;
     for(const it of SHOP){
+      if(Game.mapId==='theater'&&it.town!=='theater')continue; // 一座の店は おみやげだけ
       if(it.town&&Game.mapId!==it.town)continue; // 町かぎり品（まほうのかぎ＝ゆきのまち）
       if(it.need&&!(Game.hidden&&Game.hidden[it.need]))continue; // 物語で ならぶ品（こども用そうび）
       if(it.nk==='w'&&Game.nkW)continue;
@@ -5008,7 +5428,7 @@ async function runShop(){
       Game.hidden[it.uitem]=true;
       if(it.uitem==='funautaOwn')Game.hidden.funautaOn=true;
       sfxLevel();
-      await say(it.label+'を こうにゅうした！\n'+(it.uitem==='umichizu'?'うみの たからの ありかに、ひかりの はしらが たつ！':'ふえの ねいろで うみの まものが みちを あける！(つよさで ON/OFF)'));
+      await say(it.label+'を こうにゅうした！\n'+(it.hint||(it.uitem==='umichizu'?'うみの たからの ありかに、ひかりの はしらが たつ！':'ふえの ねいろで うみの まものが みちを あける！(つよさで ON/OFF)')));
       saveGame();
     }else if(it.nk){
       if(it.nk==='w')Game.nkW=12;else Game.nkA=14;
@@ -5060,6 +5480,13 @@ function questText(){
   if(Game.hidden.k1&&!Game.hidden.k2)return Game.mapId==='ice'?'もくてき：みぎうえ（きたの はて）で むすめを すくいだせ！':'もくてき：さらわれた むすめを おえ！ こおりの せかいへ！';
   if(Game.hidden.k2&&!Game.hidden.k3)return 'もくてき：むらの じいさんの もとへ';
   if(Game.hidden.cleared){
+    // 章12は 章11後の全島共通の主線。島別の文より先に出す
+    if(Game.hidden.ch12c&&Game.diff===7&&!Game.hidden.meguriDown)return 'もくてき：とわの ふちに あらわれた「めぐりのけしん」と むきあおう';
+    if(Game.hidden.ch12c)return 'もくてき：おなじ えんもくの まくあいで、ほんとうの ひとたちの こえが つづく——';
+    if(Game.hidden.ch12w)return 'もくてき：旅芸人の ぶたいへ——三つの ほんとうのこえを まくあいへ とどけよう';
+    if(Game.hidden.ch12d)return 'もくてき：ソラ・ナギ・ほりびとのまごから「ほんとうのこえ」を あつめよう（'+ch12VoiceCount()+' / 3）';
+    if(Game.hidden.ch12a)return 'もくてき：旅芸人の ぶたいで、まちがった「蒼の勇者」と むきあおう';
+    if(Game.hidden.ch11c)return 'もくてき：むらの ひろばに あらわれた おおきな あかいテントへ';
     // かたりべの あつめ期は、島別の上書き行より さきに n/10 を出す(バーと声の一致)
     if(Game.hidden.ch3d&&Game.hidden.towaDown&&!Game.hidden.ktold&&Game.mapId!=='grass'){
       const sr=(Game.spotsRead||[]).length;
@@ -5367,6 +5794,8 @@ function autoStep(){
 }
 function updateField(dt){
   const p=Game.p;
+  if(Game.inventoryOpen||Game.proofOpen){held.length=0;Game.autoPath=null;return;}
+  if(!Game.talking&&!Game.battling&&!Game.transiting)checkChapterProof();
   if(!Game.talking)Game.dayT+=dt; // かいわちゅうは ときが とまる
   if(Game.grace>0)Game.grace-=dt;
   const qt=questText();
@@ -5630,7 +6059,7 @@ function updateField(dt){
     }
   }
   // エンカウント
-  if(!Game.battling&&!Game.talking&&!Game.transiting&&!Game.bookOpen&&!Game.statusOpen&&!Game.questOpen&&!Game.jumonOpen&&Game.grace<=0){
+  if(!Game.battling&&!Game.talking&&!Game.transiting&&!Game.bookOpen&&!Game.statusOpen&&!Game.questOpen&&!Game.jumonOpen&&!Game.inventoryOpen&&!Game.proofOpen&&Game.grace<=0){
     for(const e of Game.enemies){
       if(Game.invisible&&e.def&&!e.def.boss&&!e.def.mboss)continue; // とうめい中は つうじょうの てきが はんのうしない（ボス/中ボスは のぞく）
       {const rr2=(Game.mapId==='umi'&&Game.hidden.funautaOn&&e.def&&!e.def.hunter)?0.38:0.85; // ふなうたのふえ: まものが みちを あける
@@ -6346,6 +6775,29 @@ function drawCastleSky(){
   }
   ctx.restore();
 }
+function drawTheaterAtmos(){
+  ctx.save();
+  // ぶたいを かこむ あかい そでまく（中央の そうさは みえる）
+  const sw=Math.max(34,W*0.085);
+  const lg=ctx.createLinearGradient(0,0,sw,0);lg.addColorStop(0,'rgba(76,10,30,.96)');lg.addColorStop(1,'rgba(122,28,48,.22)');
+  ctx.fillStyle=lg;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(sw,0);ctx.quadraticCurveTo(sw*0.64,H*0.48,sw,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+  const rg=ctx.createLinearGradient(W,0,W-sw,0);rg.addColorStop(0,'rgba(76,10,30,.96)');rg.addColorStop(1,'rgba(122,28,48,.22)');
+  ctx.fillStyle=rg;ctx.beginPath();ctx.moveTo(W,0);ctx.lineTo(W-sw,0);ctx.quadraticCurveTo(W-sw*0.64,H*0.48,W-sw,H);ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(92,15,35,.94)';ctx.fillRect(0,0,W,H*0.075);
+  ctx.fillStyle='#d6aa55';ctx.fillRect(0,H*0.068,W,Math.max(3,H*0.008));
+  // しょうめいの ひかり
+  ctx.globalCompositeOperation='lighter';
+  for(const x of [0.27,0.5,0.73]){
+    const beam=ctx.createLinearGradient(W*x,0,W*x,H*0.72);
+    beam.addColorStop(0,'rgba(255,235,170,.20)');beam.addColorStop(1,'rgba(255,225,140,0)');
+    ctx.fillStyle=beam;ctx.beginPath();ctx.moveTo(W*x-W*0.025,H*0.07);ctx.lineTo(W*x+W*0.025,H*0.07);ctx.lineTo(W*x+W*0.20,H*0.78);ctx.lineTo(W*x-W*0.20,H*0.78);ctx.closePath();ctx.fill();
+  }
+  ctx.globalCompositeOperation='source-over';
+  ctx.font='bold '+Math.max(13,Math.round(Math.min(W,H)*0.028))+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.lineWidth=4;ctx.strokeStyle='rgba(40,12,18,.88)';ctx.strokeText('旅芸人の ぶたい',W/2,H*0.038);
+  ctx.fillStyle='#ffe5a0';ctx.fillText('旅芸人の ぶたい',W/2,H*0.038);
+  ctx.restore();
+}
 function drawCastleAtmos(){
   ctx.save();
   // ゆかを はう むらさきの しょうき
@@ -6730,6 +7182,7 @@ function drawFieldScene(){
   else if(MAP===WORLDS.volcano.map){drawEmbers();drawHeatHaze();}
   else if(MAP===WORLDS.castle.map)drawCastleAtmos();
   else if(MAP===WORLDS.minamoto.map)drawLightMotes();
+  else if(MAP===WORLDS.theater.map)drawTheaterAtmos();
   drawVignette();
   drawExitBeacons(); // でぐちビーコンは さいごに えがく＝くらやみ/よる/きりに つぶされない
   drawQuestBeacons(); // めあての 金の光柱も どのoverlayにも つぶされない
@@ -7593,9 +8046,14 @@ function drawHouse(x,y,cam,palace){
 // つぎの ものがたりが この人で まっているか（村の じいさん・こども の章フック）
 function npcStoryPending(n){
   const h=Game.hidden;
+  if(n.troupeTent)return !!(h.ch11c&&(!h.ch12a||(h.ch12w&&!h.ch12c)));
+  if(n.troupeLeader)return !!(h.ch12a&&(!h.ch12d||(h.ch12w&&!h.ch12c)));
+  if(n.troupeShip)return false;
   if(n.captive)return !!(h.k1&&!h.k2); // とらわれの むすめ=すくいだすまで！
-  if(n.ferry)return !!((h.ch6a&&!h.ch6b)||(h.ch8a&&!h.ch8b)||(h.ch10c&&!h.ch11a)); // 章6b/章8b/章11a: わたしもり(ナギ)に きく
-  if(n.mago)return !!(h.ch8c&&!h.ch9a); // 章9a: まごの解読
+  if(n.ferry)return !!((h.ch12d&&!h.ch12Nagi&&!h.ch12c)||(h.ch6a&&!h.ch6b)||(h.ch8a&&!h.ch8b)||(h.ch10c&&!h.ch11a)); // 章6b/章8b/章11a/章12: ナギに きく
+  if(n.minatoNagi)return !!(h.ch12d&&!h.ch12Nagi&&!h.ch12c);
+  if(n.mago)return !!((h.ch12d&&!h.ch12Mago&&!h.ch12c)||(h.ch8c&&!h.ch9a)); // 章9a/章12: まごの こえ
+  if(n.hood&&h.ch12d&&!h.ch12Sora&&!h.ch12c)return true;
   if(Game.mapId!=='grass')return false;
   if(n.msgElder){
     if(!h.elderTold&&(h.cleared||h.k3&&['t1','t2','t3','t4','t5'].every(k=>h[k])))return true; // 告白待ち or クリア後の導き
@@ -7623,6 +8081,63 @@ function npcStoryPending(n){
     if(h.ch7c&&!h.ch8a)return true; // 章8a: ソラの しらせ
   }
   return false;
+}
+function drawNpcStoryMark(n,c,fy,ts){
+  if(!npcStoryPending(n))return;
+  const mb=Math.sin(TM*3.2)*ts*0.045;
+  const mx=c.x,my=fy-ts*0.86+mb;
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  const g=ctx.createRadialGradient(mx,my,1,mx,my,ts*0.3);
+  g.addColorStop(0,'rgba(255,225,130,0.5)');g.addColorStop(1,'rgba(255,225,130,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(mx,my,ts*0.3,0,Math.PI*2);ctx.fill();ctx.restore();
+  ctx.save();ctx.fillStyle='#ffdf7e';ctx.strokeStyle='rgba(90,60,10,0.85)';ctx.lineWidth=Math.max(1,ts*0.03);
+  ctx.font='bold '+Math.round(ts*0.42)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.strokeText('！',mx,my);ctx.fillText('！',mx,my);ctx.restore();
+}
+function drawTroupeTent(ts){
+  ctx.save();
+  const pulse=0.84+0.16*Math.sin(TM*2.1);
+  ctx.globalCompositeOperation='lighter';
+  const gl=ctx.createRadialGradient(0,-ts*0.55,ts*0.08,0,-ts*0.55,ts*1.45);
+  gl.addColorStop(0,'rgba(255,205,115,'+(0.30*pulse).toFixed(2)+')');gl.addColorStop(1,'rgba(255,205,115,0)');
+  ctx.fillStyle=gl;ctx.beginPath();ctx.arc(0,-ts*0.55,ts*1.45,0,Math.PI*2);ctx.fill();ctx.restore();
+  const OL='rgba(38,14,22,.72)';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.5,ts*0.025);
+  // おおやね（あか・きんの しま）
+  ctx.fillStyle='#b52f45';ctx.beginPath();ctx.moveTo(-ts*0.92,-ts*0.08);ctx.lineTo(0,-ts*1.48);ctx.lineTo(ts*0.92,-ts*0.08);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#efd07b';
+  for(const side of [-0.62,-0.2,0.22,0.64]){
+    ctx.beginPath();ctx.moveTo(ts*side,-ts*0.10);ctx.lineTo(0,-ts*1.43);ctx.lineTo(ts*(side+0.18),-ts*0.10);ctx.closePath();ctx.fill();
+  }
+  ctx.strokeStyle=OL;ctx.beginPath();ctx.moveTo(-ts*0.92,-ts*0.08);ctx.lineTo(0,-ts*1.48);ctx.lineTo(ts*0.92,-ts*0.08);ctx.closePath();ctx.stroke();
+  // まくと いりぐち
+  ctx.fillStyle='#8e2038';ctx.fillRect(-ts*0.86,-ts*0.10,ts*1.72,ts*0.24);ctx.strokeRect(-ts*0.86,-ts*0.10,ts*1.72,ts*0.24);
+  ctx.fillStyle='#3a1220';ctx.beginPath();ctx.moveTo(-ts*0.30,ts*0.14);ctx.lineTo(0,-ts*0.24);ctx.lineTo(ts*0.30,ts*0.14);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#d64554';ctx.beginPath();ctx.moveTo(-ts*0.84,-ts*0.08);ctx.lineTo(-ts*0.30,ts*0.14);ctx.lineTo(-ts*0.02,-ts*0.25);ctx.lineTo(-ts*0.28,-ts*0.36);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(ts*0.84,-ts*0.08);ctx.lineTo(ts*0.30,ts*0.14);ctx.lineTo(ts*0.02,-ts*0.25);ctx.lineTo(ts*0.28,-ts*0.36);ctx.closePath();ctx.fill();
+  // はた
+  ctx.strokeStyle='#ecd69a';ctx.lineWidth=Math.max(2,ts*0.035);ctx.beginPath();ctx.moveTo(0,-ts*1.40);ctx.lineTo(0,-ts*1.83);ctx.stroke();
+  ctx.fillStyle='#55a9c9';ctx.beginPath();ctx.moveTo(0,-ts*1.82);ctx.quadraticCurveTo(ts*0.40,-ts*1.75,ts*0.52,-ts*1.60);ctx.lineTo(0,-ts*1.58);ctx.closePath();ctx.fill();ctx.stroke();
+  // かんばん
+  ctx.fillStyle='#f4deb0';ctx.fillRect(-ts*0.43,-ts*0.83,ts*0.86,ts*0.30);ctx.strokeStyle='#7a4b26';ctx.strokeRect(-ts*0.43,-ts*0.83,ts*0.86,ts*0.30);
+  ctx.fillStyle='#6f1e32';ctx.font='bold '+Math.max(11,Math.round(ts*0.20))+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('蒼の勇者',0,-ts*0.68);
+  ctx.fillStyle='#ffe29a';for(const x of [-0.68,0.68]){ctx.beginPath();ctx.arc(ts*x,-ts*0.26,ts*0.075,0,Math.PI*2);ctx.fill();}
+}
+function drawTroupeShip(ts){
+  ctx.save();ctx.strokeStyle='rgba(28,20,18,.72)';ctx.lineWidth=Math.max(1.5,ts*0.025);
+  // ふなぞこ
+  const hg=ctx.createLinearGradient(0,-ts*0.22,0,ts*0.35);hg.addColorStop(0,'#b8783c');hg.addColorStop(1,'#5f341e');ctx.fillStyle=hg;
+  ctx.beginPath();ctx.moveTo(-ts*1.05,-ts*0.20);ctx.lineTo(ts*0.98,-ts*0.20);ctx.quadraticCurveTo(ts*0.70,ts*0.38,0,ts*0.48);ctx.quadraticCurveTo(-ts*0.70,ts*0.38,-ts*1.05,-ts*0.20);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#efd07b';ctx.fillRect(-ts*0.92,-ts*0.15,ts*1.82,ts*0.12);ctx.strokeRect(-ts*0.92,-ts*0.15,ts*1.82,ts*0.12);
+  // ほばしらと しまもようの ほ
+  ctx.fillStyle='#5d351f';ctx.fillRect(-ts*0.04,-ts*1.48,ts*0.08,ts*1.55);ctx.strokeRect(-ts*0.04,-ts*1.48,ts*0.08,ts*1.55);
+  ctx.fillStyle='#f4e5bd';ctx.beginPath();ctx.moveTo(ts*0.07,-ts*1.40);ctx.lineTo(ts*0.07,-ts*0.30);ctx.lineTo(ts*0.78,-ts*0.44);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#c93c51';ctx.beginPath();ctx.moveTo(ts*0.10,-ts*1.30);ctx.lineTo(ts*0.10,-ts*1.08);ctx.lineTo(ts*0.62,-ts*1.18);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(ts*0.10,-ts*0.90);ctx.lineTo(ts*0.10,-ts*0.68);ctx.lineTo(ts*0.72,-ts*0.76);ctx.closePath();ctx.fill();
+  // いちざの はた
+  ctx.fillStyle='#4da4c8';ctx.beginPath();ctx.moveTo(0,-ts*1.48);ctx.quadraticCurveTo(ts*0.38,-ts*1.44,ts*0.55,-ts*1.28);ctx.lineTo(0,-ts*1.24);ctx.closePath();ctx.fill();ctx.stroke();
+  // まるい まど
+  for(const x of [-0.58,-0.22,0.20]){ctx.fillStyle='#67b9d1';ctx.beginPath();ctx.arc(ts*x,0,ts*0.09,0,Math.PI*2);ctx.fill();ctx.stroke();}
+  ctx.restore();
 }
 // おうさま：やかたの まえに たつ（みえる 王）
 function drawKing(k){
@@ -7674,6 +8189,12 @@ function drawNpc(n){
   ctx.beginPath();ctx.ellipse(c.x+ts*0.02,fy,ts*0.19,ts*0.065,0,0,Math.PI*2);ctx.fill();
   ctx.save();
   ctx.translate(c.x,fy);
+  if(n.kind==='tent'){
+    drawTroupeTent(ts*1.35);ctx.restore();drawNpcStoryMark(n,c,fy-ts*1.10,ts);return;
+  }
+  if(n.kind==='ship'){
+    drawTroupeShip(ts*1.25);ctx.restore();drawNpcStoryMark(n,c,fy-ts*0.75,ts);return;
+  }
   if(n.kind==='shop'){
     // 露店：しょうにんの うしろに みせを たてる（「みせが みつからない」への絵の回答・当たり判定は不変）
     ctx.save();
@@ -7849,24 +8370,7 @@ function drawNpc(n){
   }
   ctx.restore();
   // ものがたりが まっている人の あたまに 金の「！」（浮き沈み+光）
-  if(npcStoryPending(n)){
-    const mb=Math.sin(TM*3.2)*ts*0.045;
-    const mx=c.x, my=fy-ts*0.86+mb;
-    ctx.save();
-    ctx.globalCompositeOperation='lighter';
-    const g=ctx.createRadialGradient(mx,my,1,mx,my,ts*0.3);
-    g.addColorStop(0,'rgba(255,225,130,0.5)');g.addColorStop(1,'rgba(255,225,130,0)');
-    ctx.fillStyle=g;ctx.beginPath();ctx.arc(mx,my,ts*0.3,0,Math.PI*2);ctx.fill();
-    ctx.restore();
-    ctx.save();
-    ctx.fillStyle='#ffdf7e';
-    ctx.strokeStyle='rgba(90,60,10,0.85)';ctx.lineWidth=Math.max(1,ts*0.03);
-    ctx.font='bold '+Math.round(ts*0.42)+'px sans-serif';
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.strokeText('！',mx,my);
-    ctx.fillText('！',mx,my);
-    ctx.restore();
-  }
+  drawNpcStoryMark(n,c,fy,ts);
 }
 // しらべるポイントの絵：はかいし／たてふだ／たきびあと（宝箱と同じ流儀・静物）
 function drawSpot(sp){
@@ -8623,7 +9127,7 @@ function drawExitBeacons(){
 }
 // めあてビーコン：いま すべきことの ばしょに 金の光柱（でぐちと同型・どのoverlayにも つぶされない）
 // しまごとの めやすレベル（この つよさが あれば あんしん）
-const RECLV={grass:1,forest:4,cave:5,ice:8,icetown:8,cave2:11,volcano:10,castle:12,sunken:13,mistsea:13,minamoto:15,edge:15,towa:16,misaki:16,fune:16,ohori:16,tomoshibi:16,oka:16,umi:16};
+const RECLV={grass:1,forest:4,cave:5,ice:8,icetown:8,cave2:11,volcano:10,castle:12,sunken:13,mistsea:13,minamoto:15,edge:15,towa:16,misaki:16,fune:16,ohori:16,tomoshibi:16,oka:16,umi:16,theater:16};
 // いま かえる いちばん いい そうび（みせ・まち限定も 案内）
 function bestBuy(){
   let bw=null,ba=null;
@@ -8715,6 +9219,16 @@ function questDest(){
   if(!h.ch11a)return {map:'mistsea',exp:'わすれのうみの ナギが よんでいる。ふねの はなしだ——うみは ほんとうは ひとつ ながり らしい。'};
   if(!h.ch11d)return {map:'umi',exp:'しまの きしの「ふなつきば」から ふねで うみへ。うみを さまよう ぬし「へだつもの」が、うみの まんなかの みなとへの みちを ふさいで いる。'};
   if(!h.ch11c)return {map:'umi',exp:'あらなみが ほどけた。うみの まんなかの「なかうみの みなと」で、ナギが まっている。'};
+  if(!h.ch12a)return {map:'grass',exp:'むらの ひろばに、旅芸人の 一座が おおきな あかいテントを たてた。「蒼の勇者」の ぶたいを みにいこう。'};
+  if(!h.ch12d)return {map:'theater',exp:'あかいテントの ぶたいへ。まちがって かたられた「蒼の勇者」と、ことばを ぶつけよう。'};
+  if(!h.ch12w){
+    if(!h.ch12Sora)return {map:'grass',exp:'むらはずれの ソラに、だいほんから けされた なまえの こえを きこう。'};
+    if(!h.ch12Nagi)return {map:'mistsea',exp:'わすれのうみの ナギに、だいほんから けされた わたりびとの こえを きこう。'};
+    return {map:'cave2',exp:'ちそこの ほりびとのまごに、だいほんから けされた ほりびとの こえを きこう。'};
+  }
+  if(!h.ch12c)return {map:'theater',exp:'三つの「ほんとうのこえ」が そろった。旅芸人の ぶたいへ もどり、まくあいの ひとことへ とどけよう。'};
+  if(h.ch12c&&Game.diff===7&&!h.meguriDown)return {map:'towa',exp:'とわの ふちに「めぐりのけしん」が かたちを もった。すべての といを こえた ものへ、もうひとつの しれんだ。'};
+  if(h.ch12c)return {map:null,exp:'ものがたりは、うけとった ひとの なかで また いきはじめた。あかいテントでは、おなじ えんもくの まくあいが ほんとうの ひとたちを つたえている。'};
   if(Game.diff===7&&!h.meguriDown)return {map:'towa',exp:'しんぱんの みちを ゆく ものへ——とわの ふちに「めぐりのけしん」が かたちを もった。すべての といの、さいごの ひとつだ。'};
   return {map:null,exp:'すべての こたえが むすばれた。おうさまに はなせば、あたらしい めぐり——「つよくて ニューゲーム」が はじまる。ものがたりは、なんども いきられる。'};
 }
@@ -8747,7 +9261,7 @@ async function questGuide(){
   if(Game.door){
     await say('みちびきの こえ「どこでもドアで「'+(MAPNAME[d.map]||d.map)+'」へ おくろう。」');
     endTalk();
-    const st=WORLDS[d.map].start;
+    const st=(d.map==='grass'&&Game.hidden.ch11c&&!Game.hidden.ch12a)?{x:11,y:11}:WORLDS[d.map].start;
     await transitMap({to:d.map,tx:st.x,ty:st.y,msg:(MAPNAME[d.map]||'')+'へ みちびかれた！'});
   }else{
     await say('みちびきの こえ「めざすは「'+(MAPNAME[d.map]||d.map)+'」。あるいて わたるか、むらの みせの「どこでもドア」が あれば ひととびだ。」');
@@ -8759,6 +9273,20 @@ function questBeaconTargets(){
   if(!w)return out;
   const push=(x,y)=>out.push({x,y});
   const foeB=(pred)=>{for(const e of Game.enemies)if(e.def&&pred(e))push(Math.round(e.px),Math.round(e.py));};
+  // 章12: あかいテント → ぶたい → 三つの ほんとうのこえ → ぶたい
+  if(Game.mapId==='grass'&&w.npcs){
+    if(h.ch11c&&!h.ch12a)for(const n of w.npcs)if(n.troupeTent)push(n.x,n.y);
+    if(h.ch12d&&!h.ch12Sora&&!h.ch12c)for(const n of w.npcs)if(n.hood)push(n.x,n.y);
+    if(h.ch12w&&!h.ch12c)for(const n of w.npcs)if(n.troupeTent)push(n.x,n.y);
+  }
+  if(Game.mapId==='theater'&&w.npcs&&h.ch12a&&!h.ch12c)
+    for(const n of w.npcs)if(n.troupeLeader&&(!h.ch12d||h.ch12w))push(n.x,n.y);
+  if(Game.mapId==='mistsea'&&w.npcs&&h.ch12d&&!h.ch12Nagi&&!h.ch12c)
+    for(const n of w.npcs)if(n.ferry)push(n.x,n.y);
+  if(Game.mapId==='umi'&&w.npcs&&h.ch12d&&!h.ch12Nagi&&!h.ch12c)
+    for(const n of w.npcs)if(n.minatoNagi)push(n.x,n.y);
+  if(Game.mapId==='cave2'&&w.npcs&&h.ch12d&&!h.ch12Mago&&!h.ch12c)
+    for(const n of w.npcs)if(n.mago)push(n.x,n.y);
   // 章1後: とらわれの むすめ
   if(Game.mapId==='ice'&&h.k1&&!h.k2)push(17,2);
   // 村: じいさん・こども(はなす用事が あるとき)
@@ -8895,18 +9423,25 @@ async function runBattle(ref){
   const foe=ref.def;
   markSeen(foeId(foe));
   Game.scene='battle';
+  const stageSnap=foe.stage?{
+    hp:Game.p.hp,mp:Game.p.mp,poison:Game.p.poison,
+    nkHp:Game.nkHp,nkMp:Game.nkMp,items:Object.assign({},Game.items),
+    dmgTaken:Game.dmgTaken,stats:Object.assign({},Game.stats)
+  }:null;
   // よるの くさはらの まものは つよい（HP1.35倍・こうげき1.3倍・ほうしゅう1.6倍）
-  const night=isNightNow()&&!foe.boss;
+  const night=!foe.stage&&isNightNow()&&!foe.boss;
   const nhp=Math.round(foe.hp*(night?1.35:1)*diffEnemyHP(foe)); // なんいど：敵HP係数
   Game.bt={foe,ref,night,hp:nhp,mhp:nhp,t:0,flash:0,lunge:0,shakeT:0,shakeP:0,hitStop:0,recoil:0,blink:0,slash:null,cast:null,dying:null,half:false,
-    turn:0,soar:false,soarK:0,charge:false,guard:false,sleep:0,para:0,pflash:0,boltT:0,bolt:null,shock:null,awakenT:0,ghosts:null};
-  Game.stats.battles++;updateBadge();
+    turn:0,soar:false,soarK:0,charge:false,guard:false,sleep:0,para:0,pflash:0,boltT:0,bolt:null,shock:null,awakenT:0,ghosts:null,stageSnap};
+  if(!foe.stage)Game.stats.battles++;
+  updateBadge();
   P.length=0;
   showUI('ui-battle');
   enameEl.textContent=foe.name;
   msgtextEl.textContent='';
   updateBars();
-  playSong((foe===FOES.kotae||foe===FOES.koborebi||foe===FOES.tozasu||foe===FOES.nanomu||foe===FOES.kataranu)?'kotae':foe.kage?'kage':foe.boss||foe.mboss?'boss':'battle'); // こぼれび=神秘曲(kotae)。既存ボスの曲は不変
+  renderBattleWeakness();
+  playSong(foe.stage?'battle':(foe===FOES.kotae||foe===FOES.koborebi||foe===FOES.tozasu||foe===FOES.nanomu||foe===FOES.kataranu)?'kotae':foe.kage?'kage':foe.boss||foe.mboss?'boss':'battle'); // こぼれび=神秘曲(kotae)。既存ボスの曲は不変
   await fadeTo(0,0.16);
   Game.bt.intro=1; // とうじょうスライド
   await wait(0.03);
@@ -8945,6 +9480,10 @@ async function runBattle(ref){
     }else{
       await say('ヴォルガ「おろかな ゆうしゃよ…。\nならば その いのち、やみに かえすまでよ！」');
     }
+  }
+  else if(foe.stage){
+    await say('あかい まくが ひらき、かみの よろいが きらりと ひかった！');
+    await say('だんちょう「これは しあいでは ない。ものがたりの けんかだ！\n勝っても 負けても、さいごまで ことばを とどけて みせろ！」');
   }
   else if(foe===FOES.ent)await say('こけむした きょじんが ゆくてを ふさいでいる…！');
   else if(foe===FOES.fgolem)await say('こおりの きょじんが ゆくてを ふさいでいる…！');
@@ -9002,8 +9541,11 @@ async function runBattle(ref){
         if(Game.bt.foe===FOES.boss&&!Game.bt.transformed){await transformPhase2();continue;}
         await victory();return;
       }
-      if(r==='fled'){await leaveBattle(false);return;}
-      await nkTurn(); // なかま(こども)の手番
+      if(r==='fled'){
+        if(Game.bt.foe.stage){await leaveStageBattleUnfinished();return;}
+        await leaveBattle(false);return;
+      }
+      if(r!=='nkDone')await nkTurn(); // なかま(こども)の手番（ふたりがたりは playerAction内で2回行動済み）
       if(Game.bt&&Game.bt.hp<=0){
         if(Game.bt.foe===FOES.boss&&!Game.bt.transformed){await transformPhase2();continue;}
         await victory();return;
@@ -9216,6 +9758,7 @@ async function tryInflict(foe){
   else if(foe===FOES.dslime){type=(Math.random()<0.5?'sleep':'para');prob=0.5;}
   else if(foe===FOES.mboss){type='para';prob=0.3;}
   else if(foe.boss){type='sleep';prob=0.3;}
+  if(type&&bt.ailGuard>0){bt.ailGuard--;sfxHeal();flash('#d9d2ff',0.2,0.45);await say('かげはらいの ひかりが、わざわいを はねかえした！');return;}
   {const afx=ARMORFX[Game.armorDef]||{}; // よろいの個性：状態異常の付与率を減衰
    if(type==='poison'&&afx.poisonGuard)prob*=afx.poisonGuard;
    if((type==='sleep'||type==='para')&&afx.mindGuard)prob*=afx.mindGuard;}
@@ -9285,14 +9828,14 @@ async function commandPhase(){
       if(p.lv>=11)list.push({id:'behoma',label:'ベホマ',cost:22,dis:p.mp<22});
       if(p.lv>=6)list.push({id:'baikiruto',label:'バイキルト',cost:6,dis:p.mp<6});
       if(p.lv>=2)list.push({id:'kiari',label:'キアリー',cost:2,dis:p.mp<2});
-      if(Game.hidden.ch5c||Game.hidden.ch5cEver)list.push({id:'mamori',label:'とわのまもり',cost:10,dis:p.mp<10});
-      if(Game.hidden.ch6c||Game.hidden.ch6cEver)list.push({id:'yobigoe',label:'ソラのよびごえ',cost:12,dis:p.mp<12});
-      if(Game.hidden.ch7c||Game.hidden.ch7cEver)list.push({id:'monogatari',label:'つぐものがたり',cost:25,dis:p.mp<25});
-      if(Game.hidden.ch8c||Game.hidden.ch8cEver)list.push({id:'nagiuta',label:'ナギのうた',cost:16,dis:p.mp<16});
+      for(const ss of CHAPTER_PROOF)if(hasStorySpell(ss.no))list.push({id:ss.id,label:ss.icon+' '+ss.spell,cost:ss.cost,dis:p.mp<ss.cost||storySpellDisabled(ss)});
       list.push({id:'back',label:'もどる'});
       const s=await ask(list,'じゅもん');
       if(s==='back')continue;
-      const cost={mera:3,gira:7,begirama:12,begiragon:20,hyado:5,hyadaruko:12,mahyado:20,hoimi:3,behoimi:8,behoma:22,kiari:2,baikiruto:6,mamori:10,yobigoe:12,monogatari:25,nagiuta:16}[s];
+      const story=storySpellById(s);
+      const cost=story?story.cost:{mera:3,gira:7,begirama:12,begiragon:20,hyado:5,hyadaruko:12,mahyado:20,hoimi:3,behoimi:8,behoma:22,kiari:2,baikiruto:6}[s];
+      const exhausted=story&&Game.bt&&((s==='satori'&&Game.bt.satoriUsed)||(s==='uketome'&&Game.bt.uketomeUsed)||(s==='minnanokoe'&&Game.bt.minnaUsed));
+      if(story&&storySpellDisabled(story)){await say(s==='futarigatari'?'いまは こどもと いっしょに となえられない！':exhausted?'その じゅもんは この たたかいでは もう つかえない！':'その じゅもんの ちからは すでに はたらいている！');continue;}
       if(p.mp<cost){await say('MPが たりない！');continue;}
       if((s==='hoimi'||s==='behoimi'||s==='behoma')&&p.hp>=p.mhp){await say('HPは まんたんだ！');continue;}
       if(s==='kiari'&&!Game.p.poison){await say('どくに かかっていない！');continue;}
@@ -9314,13 +9857,48 @@ async function commandPhase(){
 // じゅもんダメージ：mul<=0は0（むこう）、それいがいは さいてい1
 let BOSO=false; // まほうのぼうそう（じゅもん会心10%×1.5）。spellDmgでロール→spellResultで演出
 function spellDmg(base,mul){ BOSO=false; if(mul<=0)return 0; if(kkOn('zkomp'))base=Math.round(base*1.1); let d=Math.max(1,Math.round(base*mul)); if(Math.random()<(curDiff().pcrit||0.1)){BOSO=true;d=Math.round(d*1.5);} return d; }
+function battleAffinityMul(kind,raw){const bt=Game.bt;return bt&&bt.tomoshibi>0&&raw>0&&raw<1?1:raw;}
+async function storyAffinityAfter(kind,d,rawMul){
+  const bt=Game.bt,p=Game.p;if(!bt||!kind)return;
+  recordWeakness(bt.foe,kind);
+  if(bt.minnaBoost&&d>0&&rawMul>1){
+    bt.minnaBoost=0;const md=Math.max(1,Math.round(d*0.5)),ep=enemyPos();bt.hp=Math.max(0,bt.hp-md);
+    sfxLevel();flash('#ffe4a8',0.3,0.65);popup(ep.x,ep.y-ep.s*58,md,'crit');
+    puff(ep.x,ep.y-ep.s*38,'rgba(255,225,150,.95)',32,230,0.75,{s0:2,s1:6});
+    await say('みんなの こえが よわいところへ かさなった！'+String.fromCharCode(10)+'さらに '+md+'の ダメージ！');
+  }
+  if(bt.tomoshibi>0){
+    const opened=rawMul>0&&rawMul<1;bt.tomoshibi--;
+    if(opened)await say('ともしびが たいせいを「みち」に かえた！');
+    if(bt.tomoshibi<=0)await say('ともしびの みちは、しずかに きえた。');
+  }
+  if((kind==='fire'||kind==='ice')&&bt.watashiEcho){
+    bt.watashiEcho=0;const ed=d>0?Math.max(1,Math.round(d*0.75)):0;
+    if(ed>0){const ep=enemyPos();bt.hp=Math.max(0,bt.hp-ed);sfxGira();bt.recoil=Math.max(bt.recoil||0,0.8);bt.blink=Math.max(bt.blink||0,0.7);
+      popup(ep.x,ep.y-ep.s*54,ed,'sp');puff(ep.x,ep.y-ep.s*36,'rgba(210,235,255,.9)',24,190,0.65,{s0:2,s1:5});
+      await say('わたした ひかりが こだました！'+String.fromCharCode(10)+'さらに '+ed+'の ダメージ！');}
+    else await say('わたした ひかりは、とどかずに ほどけた……。');
+  }
+  if(bt.umiPath&&(bt.umiPath.mask||0)!==7&&d>0&&rawMul>0){
+    const u=bt.umiPath,bit=kind==='phys'?1:(kind==='fire'?2:4),oldMask=u.mask||0;
+    if(!(oldMask&bit)){
+      u.mask=oldMask|bit;
+      if(oldMask===0)await say('ひとつのうみが '+WEAK_ICON[kind]+'を みちの はじまりにした。');
+      else{const old=p.mp;p.mp=Math.min(p.mmp,p.mp+6);const gain=p.mp-old;updateBars();sfxHeal();
+        await say(WEAK_ICON[kind]+'へ あたらしい みちが つながった！'+String.fromCharCode(10)+(gain?('MPが '+gain+' もどった！'):'MPは まんたんだ。'));
+        if(u.mask===7)await say('三つの みちが めぐり、ひとつのうみは しずかに ほどけた。');}
+    }
+  }
+}
 // ダメージ表示＋ぞくせいの あいしょう（ばつぐん／いまひとつ／きかない）
-async function spellResult(foe,d,mul){
+async function spellResult(foe,d,rawMul,kind,effectiveMul){
+  const mul=effectiveMul==null?rawMul:effectiveMul;
   if(d>0&&BOSO){const bt=Game.bt;if(bt){bt.shock={t:0};}sfxCrit();flash('#ffe9b0',0.35,0.5);await say('まほうが ぼうそうした！');}
   if(d>0) await say(foe.name+'に '+d+'の ダメージ！');
-  if(mul>1) await say('こうかは ばつぐん！');
-  else if(mul<=0) await say(foe.name+'には きかない！');
-  else if(mul<1) await say('こうかは いまひとつの ようだ…');
+  if(rawMul>1) await say('こうかは ばつぐん！');
+  else if(rawMul<=0) await say(foe.name+'には きかない！');
+  else if(rawMul<1&&mul===rawMul) await say('こうかは いまひとつの ようだ…');
+  await storyAffinityAfter(kind,d,rawMul);
 }
 async function playerAction(act){
   const p=Game.p,bt=Game.bt,ep=enemyPos();
@@ -9338,7 +9916,8 @@ async function playerAction(act){
     await wait(0.08);
     const wfx=WEAPONFX[Game.weaponAtk]||{};
     const crit=Math.random()<((curDiff().pcrit||0.1)+(wfx.critUp||0)+(kkOn('tsugu')?0.04:0));
-    const dodgeP=bt.soar?0.5:(bt.foe.dodge||0);
+    const physRaw=foePhys(bt),physMul=battleAffinityMul('phys',physRaw);
+    const dodgeP=bt.tomoshibi>0?0:(bt.soar?0.5:(bt.foe.dodge||0));
     if(!crit&&dodgeP&&Math.random()<dodgeP){
       sfxRun();
       popup(ep.x,ep.y-ep.s*70,'ミス','sp');
@@ -9362,7 +9941,7 @@ async function playerAction(act){
     }else{
       sfxHit();bt.flash=1;bt.hitStop=0.08;bt.recoil=1;bt.blink=1;shakeBattle(10,0.3);
       d=calcDmg(Math.round(p.atk*(bt.atkUp||1)),bt.foe.def);
-      d=Math.max(1,Math.round(d*foePhys(bt)));
+      d=Math.max(1,Math.round(d*physMul));
       if(wfx.vsKage&&bt.foe.kage){d=Math.round(d*wfx.vsKage);}
       popup(ep.x,ep.y-ep.s*70,d);
       puff(ep.x,ep.y-ep.s*40,'rgba(255,245,220,.9)',18,220,0.6,{s0:2,s1:5});
@@ -9374,7 +9953,7 @@ async function playerAction(act){
       bt.slash={t:0};sfxSlash();bt.flash=1;bt.hitStop=0.06;bt.recoil=0.9;bt.blink=1;shakeBattle(8,0.25);
       await wait(0.10);
       let d2=calcDmg(Math.round(p.atk*0.75*(bt.atkUp||1)),bt.foe.def);
-      d2=Math.max(1,Math.round(d2*foePhys(bt)));
+      d2=Math.max(1,Math.round(d2*physMul));
       if(wfx.vsKage&&bt.foe.kage)d2=Math.round(d2*wfx.vsKage);
       bt.hp=Math.max(0,bt.hp-d2);
       popup(ep.x,ep.y-ep.s*58,d2);
@@ -9386,10 +9965,11 @@ async function playerAction(act){
       bt.hintG=true;
       await say('からだが きんぞくのように かたい！ こうげきが ほとんど きかない！');
     }
-    if(!crit&&foePhys(bt)<0.9&&!bt.hintP){
+    if(!crit&&physRaw<0.9&&physMul===physRaw&&!bt.hintP){
       bt.hintP=true;
       await say((bt.foe.v==='bone'?'かたい ほねは':'いわの からだは')+' こうげきを はんぶんに してしまう…！');
     }
+    await storyAffinityAfter('phys',d,physRaw);
   }else if(act.kind==='mera'){
     p.mp-=3;updateBars();
     await say('ゆうしゃは メラを となえた！');
@@ -9399,13 +9979,13 @@ async function playerAction(act){
     bt.spellFx={kind:'fire',t:0,pow:1};
     sfxFire();bt.flash=1;bt.hitStop=0.07;bt.recoil=0.9;bt.blink=1;shakeBattle(8,0.35);
     flash('#ff9b54',0.3,0.5);
-    const mul=bt.foe.fireMul??1;
+    const rawMul=bt.foe.fireMul??1,mul=battleAffinityMul('fire',rawMul);
     const d=spellDmg(p.atk+10-bt.foe.def+ri(0,4),mul);
     bt.hp=Math.max(0,bt.hp-d);
     if(d>0){popup(ep.x,ep.y-ep.s*70,d,'sp');
       puff(ep.x,ep.y-ep.s*40,'rgba(255,160,80,.95)',28,240,0.7,{s0:2,s1:6});}
     await wait(0.12);
-    await spellResult(bt.foe,d,mul);
+    await spellResult(bt.foe,d,rawMul,'fire',mul);
   }else if(act.kind==='gira'){
     p.mp-=7;updateBars();
     await say('ゆうしゃは ギラを となえた！');
@@ -9415,14 +9995,14 @@ async function playerAction(act){
     bt.spellFx={kind:'fire',t:0,pow:2};
     sfxGira();bt.flash=1;bt.hitStop=0.07;bt.recoil=0.9;bt.blink=1;shakeBattle(12,0.45);
     flash('#ffb066',0.42,0.6);
-    const mul=bt.foe.fireMul??1;
+    const rawMul=bt.foe.fireMul??1,mul=battleAffinityMul('fire',rawMul);
     const d=spellDmg(p.atk+22-bt.foe.def+ri(0,5),mul);
     bt.hp=Math.max(0,bt.hp-d);
     if(d>0){popup(ep.x,ep.y-ep.s*70,d,'sp');
       puff(ep.x,ep.y-ep.s*40,'rgba(255,190,110,.95)',46,300,0.8,{s0:3,s1:7});
       puff(ep.x,ep.y-ep.s*40,'rgba(255,240,200,.9)',18,160,0.5,{s0:2,s1:4});}
     await wait(0.15);
-    await spellResult(bt.foe,d,mul);
+    await spellResult(bt.foe,d,rawMul,'fire',mul);
   }else if(act.kind==='begirama'){
     p.mp-=12;updateBars();
     await say('ゆうしゃは ベギラマを となえた！');
@@ -9432,14 +10012,14 @@ async function playerAction(act){
     bt.spellFx={kind:'fire',t:0,pow:3};
     sfxGira();bt.flash=1;bt.hitStop=0.09;bt.recoil=1.1;bt.blink=1;shakeBattle(15,0.55);
     flash('#ffc066',0.5,0.7);
-    const mul=bt.foe.fireMul??1;
+    const rawMul=bt.foe.fireMul??1,mul=battleAffinityMul('fire',rawMul);
     const d=spellDmg(p.atk+40-bt.foe.def+ri(0,8),mul);
     bt.hp=Math.max(0,bt.hp-d);
     if(d>0){popup(ep.x,ep.y-ep.s*70,d,'sp');
       puff(ep.x,ep.y-ep.s*40,'rgba(255,200,120,.95)',58,340,0.9,{s0:3,s1:8});
       puff(ep.x,ep.y-ep.s*40,'rgba(255,245,210,.9)',26,190,0.55,{s0:2,s1:5});}
     await wait(0.15);
-    await spellResult(bt.foe,d,mul);
+    await spellResult(bt.foe,d,rawMul,'fire',mul);
   }else if(act.kind==='begiragon'){
     p.mp-=20;updateBars();
     await say('ゆうしゃは ベギラゴンを となえた！');
@@ -9449,14 +10029,14 @@ async function playerAction(act){
     bt.spellFx={kind:'fire',t:0,pow:3};
     sfxGira();bt.flash=1;bt.hitStop=0.11;bt.recoil=1.2;bt.blink=1;shakeBattle(18,0.65);
     flash('#ffd066',0.55,0.8);
-    const mul=bt.foe.fireMul??1;
+    const rawMul=bt.foe.fireMul??1,mul=battleAffinityMul('fire',rawMul);
     const d=spellDmg(p.atk+100-bt.foe.def+ri(0,10),mul);
     bt.hp=Math.max(0,bt.hp-d);
     if(d>0){popup(ep.x,ep.y-ep.s*70,d,'sp');
       puff(ep.x,ep.y-ep.s*40,'rgba(255,210,130,.95)',60,340,0.9,{s0:3,s1:8});
       puff(ep.x,ep.y-ep.s*40,'rgba(255,245,210,.9)',24,190,0.6,{s0:2,s1:5});}
     await wait(0.16);
-    await spellResult(bt.foe,d,mul);
+    await spellResult(bt.foe,d,rawMul,'fire',mul);
   }else if(act.kind==='hyado'){
     p.mp-=5;updateBars();
     await say('ゆうしゃは ヒャドを となえた！');
@@ -9466,13 +10046,13 @@ async function playerAction(act){
     bt.spellFx={kind:'ice',t:0,pow:1};
     sfxFire();bt.flash=1;bt.hitStop=0.07;bt.recoil=0.9;bt.blink=1;shakeBattle(9,0.4);
     flash('#7bc8ff',0.34,0.55);
-    const mul=bt.foe.iceMul??1;
+    const rawMul=bt.foe.iceMul??1,mul=battleAffinityMul('ice',rawMul);
     const d=spellDmg(p.atk+18-bt.foe.def+ri(0,4),mul);
     bt.hp=Math.max(0,bt.hp-d);
     if(d>0){popup(ep.x,ep.y-ep.s*70,d,'sp');
       puff(ep.x,ep.y-ep.s*40,'rgba(150,205,255,.95)',30,240,0.7,{s0:2,s1:6});}
     await wait(0.12);
-    await spellResult(bt.foe,d,mul);
+    await spellResult(bt.foe,d,rawMul,'ice',mul);
   }else if(act.kind==='hyadaruko'){
     p.mp-=12;updateBars();
     await say('ゆうしゃは ヒャダルコを となえた！');
@@ -9482,14 +10062,14 @@ async function playerAction(act){
     bt.spellFx={kind:'ice',t:0,pow:3};
     sfxGira();bt.flash=1;bt.hitStop=0.09;bt.recoil=1.1;bt.blink=1;shakeBattle(14,0.5);
     flash('#9ad8ff',0.46,0.65);
-    const mul=bt.foe.iceMul??1;
+    const rawMul=bt.foe.iceMul??1,mul=battleAffinityMul('ice',rawMul);
     const d=spellDmg(p.atk+40-bt.foe.def+ri(0,8),mul);
     bt.hp=Math.max(0,bt.hp-d);
     if(d>0){popup(ep.x,ep.y-ep.s*70,d,'sp');
       puff(ep.x,ep.y-ep.s*40,'rgba(170,215,255,.95)',52,320,0.85,{s0:3,s1:7});
       puff(ep.x,ep.y-ep.s*40,'rgba(225,245,255,.9)',22,170,0.5,{s0:2,s1:5});}
     await wait(0.15);
-    await spellResult(bt.foe,d,mul);
+    await spellResult(bt.foe,d,rawMul,'ice',mul);
   }else if(act.kind==='mahyado'){
     p.mp-=20;updateBars();
     await say('ゆうしゃは マヒャドを となえた！');
@@ -9499,14 +10079,14 @@ async function playerAction(act){
     bt.spellFx={kind:'ice',t:0,pow:3};
     sfxGira();bt.flash=1;bt.hitStop=0.11;bt.recoil=1.2;bt.blink=1;shakeBattle(17,0.6);
     flash('#a8e0ff',0.55,0.8);
-    const mul=bt.foe.iceMul??1;
+    const rawMul=bt.foe.iceMul??1,mul=battleAffinityMul('ice',rawMul);
     const d=spellDmg(p.atk+100-bt.foe.def+ri(0,10),mul);
     bt.hp=Math.max(0,bt.hp-d);
     if(d>0){popup(ep.x,ep.y-ep.s*70,d,'sp');
       puff(ep.x,ep.y-ep.s*40,'rgba(170,225,255,.95)',60,340,0.9,{s0:3,s1:8});
       puff(ep.x,ep.y-ep.s*40,'rgba(235,250,255,.9)',24,190,0.6,{s0:2,s1:5});}
     await wait(0.16);
-    await spellResult(bt.foe,d,mul);
+    await spellResult(bt.foe,d,rawMul,'ice',mul);
   }else if(act.kind==='item'){
     Game.items[act.item]--;
     await say('ゆうしゃは '+ITEMS[act.item].name+'を つかった！');
@@ -9607,6 +10187,45 @@ async function playerAction(act){
     popup(c.x,c.y,'どく かいふく','heal');
     await wait(0.12);
     await say('どくが きれいに けされた！');
+  }else if(act.kind==='satori'){
+    p.mp-=4;bt.satoriUsed=true;updateBars();
+    await say('ゆうしゃは ひかりのさとりを となえた！');
+    sfxHeal();flash('#d9ecff',0.28,0.65);
+    const cand=[['phys',rawAffinity(bt.foe,'phys')],['fire',rawAffinity(bt.foe,'fire')],['ice',rawAffinity(bt.foe,'ice')]];
+    const mx=Math.max(...cand.map(x=>x[1])),top=cand.filter(x=>x[1]===mx);
+    if(top.length<3){bt.weakGuess=top.map(x=>x[0]);renderBattleWeakness();const marks=top.map(x=>WEAK_ICON[x[0]]).join('と');
+      await say('ひかりの ゆらぎが ささやく——'+marks+(top.length===1?'が いちばん':'が おなじくらい いちばん')+' とどきそうだ。（まだ よそう）');}
+    else{bt.weakGuess=[];renderBattleWeakness();await say('三つの こうげきに、おおきな ちがいは なさそうだ。（まだ よそう）');}
+  }else if(act.kind==='kageharai'){
+    p.mp-=6;Game.p.poison=false;bt.abreak=0;bt.ailGuard=3;updateBars();updateBadge();
+    await say('ゆうしゃは かげはらいを となえた！');sfxHeal();flash('#d9d2ff',0.3,0.7);
+    await say('どくと まもりの くもりが はらわれた！ つぎの わざわいを 3回 ふせぐ。');
+  }else if(act.kind==='uketome'){
+    p.mp-=8;bt.uketome=3;bt.uketomeUsed=true;updateBars();
+    await say('ゆうしゃは うけとめるひかりを となえた！');sfxHeal();flash('#c9dcff',0.3,0.7);
+    await say('つぎの いたみを 3回、うけとめて ちからに かえる！');
+  }else if(act.kind==='watashi'){
+    p.mp-=9;bt.watashiEcho=1;updateBars();
+    await say('ゆうしゃは わたすひかりを となえた！');sfxHeal();flash('#fff0c8',0.32,0.75);
+    await say('つぎの 火か 氷の じゅもんに、もうひとつの ひかりを わたした！');
+  }else if(act.kind==='tomoshibimichi'){
+    p.mp-=18;bt.tomoshibi=3;updateBars();
+    await say('ゆうしゃは ともしびのみちを となえた！');sfxGira();flash('#ffd27a',0.34,0.75);
+    await say('つぎの こうげき3回は かわされず、たいせいさえ「みち」に なる！');
+  }else if(act.kind==='futarigatari'){
+    p.mp-=16;updateBars();
+    await say('ゆうしゃと こどもは ふたりがたりを はじめた！');sfxLevel();flash('#ffe9b0',0.3,0.7);
+    await nkTurn();if(bt.hp>0)await nkTurn();return 'nkDone';
+  }else if(act.kind==='hitotsunoumi'){
+    p.mp-=24;bt.umiPath={mask:0};updateBars();
+    await say('ゆうしゃは ひとつのうみを となえた！');sfxHeal();flash('#bfe8ff',0.35,0.8);
+    await say('⚔・🔥・❄。ちがう こうげきを つなぐたび、ちからが めぐる！');
+  }else if(act.kind==='minnanokoe'){
+    p.mp-=18;bt.minnaUsed=true;bt.minnaBoost=1;updateBars();
+    await say('ゆうしゃは みんなのこえを となえた！');sfxLevel();flash('#ffe4a8',0.38,0.8);
+    const id=foeId(bt.foe);if(id)weakStore()[id]=(weakStore()[id]||0)|7;renderBattleWeakness();
+    await say('ソラ、ナギ、ほりびとの こえが ひびき、\n⚔・🔥・❄の ほんとうが すべて きろくされた！');
+    await say('つぎに よわいところを つけば、みんなの こえが もういちど とどく！');
   }else if(act.kind==='mamori'){
     p.mp-=10;updateBars();
     await say('ゆうしゃは とわのまもりを となえた！');
@@ -9853,8 +10472,10 @@ async function enemyAction(){
   let kabau=false;
   if(bt.guard)d=Math.max(1,Math.ceil(d*0.45)); // ぼうぎょで 55%カット
   else if(mateOn()&&mateKind()==='kagekishi'&&Math.random()<mateGuardP()){kabau=true;d=Math.max(1,Math.ceil(d*0.55));} // かげのきしが かばう
+  let ukMp=0;
   p.hp=Math.max(0,p.hp-d);
   Game.dmgTaken+=d;
+  if(bt.uketome>0){bt.uketome--;const old=p.mp;p.mp=Math.min(p.mmp,p.mp+Math.min(6,Math.ceil(d*0.25)));ukMp=p.mp-old;}
   updateBars();
   const c=playerChipPos();
   popup(c.x,c.y,d,'player');
@@ -9864,11 +10485,54 @@ async function enemyAction(){
   if(kabau){flash('#9fb6ff',0.2,0.45);await say('かげのきしが たてと なって かばった！\nうけた ダメージは '+d+'！');}
   else if(bt.guard)await say('みを まもって しのいだ！ うけた ダメージは '+d+'！');
   else await say('ゆうしゃは '+d+'の ダメージを うけた！');
+  if(ukMp>0)await say('うけとめた いたみが ひかりに かわり、MPが '+ukMp+' もどった！');
   if(bt.abreak>0){bt.abreak--;if(!bt.abreak){updateBadge();await say('よろいの まもりが もとに もどった！');}}
   if(p.hp>0)await tryInflict(foe);
 }
+function restoreStageSnapshot(bt){
+  const s=bt&&bt.stageSnap;if(!s)return;
+  Game.p.hp=s.hp;Game.p.mp=s.mp;Game.p.poison=s.poison;
+  Game.nkHp=s.nkHp;Game.nkMp=s.nkMp;
+  Game.items=Object.assign({},s.items);
+  Game.dmgTaken=s.dmgTaken;
+  Game.stats=Object.assign({},s.stats);
+  updateBars();updateBadge();
+}
+async function leaveStageBattleUnfinished(){
+  const bt=Game.bt;
+  restoreStageSnapshot(bt);
+  await leaveBattle(false);
+  startTalk();
+  await say('あかい まくの そとへ ぬけた。\nぶたいの にせもの勇者は、もういちど まくの うしろで まっている。');
+  endTalk();saveGame();
+}
+async function finishStageBattle(won){
+  const bt=Game.bt,ep=enemyPos();
+  stopSong();
+  if(won){
+    bt.dying={t:0,dur:0.48};sfxWin();
+    puff(ep.x,ep.y-ep.s*35,'rgba(255,225,150,.9)',30,190,0.8,{s0:2,s1:6});
+    await wait(0.48);
+    await say('にせもの勇者は おおげさに くるりと まわり、\nあかい まくの うしろへ ころがりこんだ！');
+  }else{
+    sfxOver();flash('#5a1830',0.38,0.7);
+    await say('ゆうしゃは ぶたいの うえに ひざを ついた……');
+    await say('そのとき、きゃくせきから「まだ おはなしは おわってない！」と\nいくつもの こえが とんだ。あかい まくが ひらきなおす。');
+  }
+  restoreStageSnapshot(bt);
+  Game.hidden.ch12d=true;
+  await leaveBattle(false);
+  startTalk();
+  if(won)await say('きゃくせきが わいた。けれど、こどもは ぶたいの まんなかで\nけされた ひとたちの ことを おもって、だいほんを ぎゅっと にぎっている。');
+  else await say('勝ちまけだけでは、おはなしから けされた こえは もどらない。\nこどもは ぶたいの まんなかで、もういちど こえを あげた。');
+  await say('こども「つよい ひとが ほんものを きめるんじゃ ない。\nそこに いた ひとの こえを、ちゃんと きかなくちゃ。」');
+  await say('だんちょう「……たしかに。わしらが きいたのは、勇者の うわさだけだ。\nソラ、ナギ、ほりびとのまご——三人の こえを つれてきてくれ。」');
+  await say('もくてき：三人の「ほんとうの こえ」を あつめる（0 / 3）');
+  endTalk();saveGame();
+}
 async function victory(){
   const bt=Game.bt,p=Game.p,foe=bt.foe;
+  if(foe.stage){await finishStageBattle(true);return;}
   stopSong();
   if(foe.boss){await bossDefeat();return;}
   bt.dying={t:0,dur:0.5};
@@ -10138,6 +10802,7 @@ async function transformPhase2(){
   {const b2hp=Math.round(FOES.boss2.hp*diffEnemyHP(FOES.boss2));bt.hp=b2hp;bt.mhp=b2hp;} // なんいど：第2形態HP係数（参照は生で保持）
   bt.half=false;bt.hintP=false;bt.hintF=false;bt.flash=0;bt.t=0;bt.transformed=true;bt.awakenT=0;bt.ghosts=null;
   enameEl.textContent=FOES.boss2.name;
+  renderBattleWeakness();
   playSong('boss2');
   await wait(0.3);
   await say('ひかりを すてた けいしょうしゃ……\nヴォルガが しんのすがたを あらわした！');
@@ -10176,6 +10841,7 @@ async function bossDefeat(){
   if(Game.hidden.ch9c||Game.hidden.ch9cEver)await say('あしもとの ふかくで、ちいさな ともしびが またたく——\n『とどかない ところは、とどける ものが いる かぎり、ない』');
   if(Game.hidden.ch10c||Game.hidden.ch10cEver)await say('ゆうやけの おかで、ちいさな かたりべが あなたの ものがたりを かたる——\n『ものがたりは、となりを あるいた ものが つむぐ』');
   if(Game.hidden.ch11c||Game.hidden.ch11cEver)await say('しまじまの あかりを むすんで、しろい ほが ゆく——\n『うみは、わたる ものが いて はじめて みちに なる』');
+  if(Game.hidden.ch12c)await say('あかい まくの むこうから、まくあいの ひとことが とどく——\n『この おはなしには、もとに なった ほんとうの ひとたちが いる』');
   await say('うばわれていた ひかりのたまが ゆうしゃの てのなかに もどってきた…！');
   flash('#ffffff',0.98,1.1);
   shakeBattle(28,1.0);
@@ -10233,6 +10899,7 @@ function edStatsText(sec){
 }
 // ぜんめつ：ゴールドはんぶんを うしない おうのやかたの まえで いきかえる
 async function defeat(){
+  if(Game.bt&&Game.bt.foe&&Game.bt.foe.stage){await finishStageBattle(false);return;}
   Game.stats.deaths++;
   stopSong();
   await say('ゆうしゃは ちからつきた…');
@@ -10437,7 +11104,11 @@ const BT_KOKORO={sky:[[0,'#0c0a1c'],[0.30,'#1e1838'],[0.46,'#342a52'],[0.54,'#4a
 const BT_EDGE={sky:[[0,'#080a1a'],[0.30,'#181c3a'],[0.46,'#343056'],[0.54,'#6a5878'],[0.62,'#242244'],[1,'#0c0e22']],
   mtn:['#262a4a','#1a1d38','#121428'],ground:['#1e2140','#171a34','#0e1024'],stars:0.9,
   pg:'190,200,255',fog:'140,150,200',bokeh:'190,205,255'};
+const BT_STAGE={sky:[[0,'#210714'],[0.34,'#431024'],[0.58,'#6f2430'],[0.76,'#2e0b1c'],[1,'#160611']],
+  mtn:['#5a1a2a','#3c1020','#260916'],ground:['#8a5734','#5b351f','#2d180f'],stars:0,
+  pg:'255,210,130',fog:'210,120,105',bokeh:'255,205,150'};
 function battleTheme(bt){
+  if(bt&&bt.foe&&bt.foe.stage)return BT_STAGE;
   if(Game.mapId==='cave'||Game.mapId==='cave2')return BT_CAVE;
   if(Game.mapId==='castle')return BT_CASTLE;
   if(Game.mapId==='forest')return BT_FOREST;
@@ -10529,6 +11200,46 @@ function drawBattleFore(col){
     ctx.fillStyle=g3;ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();
   }
 }
+function drawStageBattleSet(gt){
+  ctx.save();
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#210712');bg.addColorStop(0.64,'#6a2030');bg.addColorStop(0.65,'#3b171b');bg.addColorStop(1,'#8a5630');
+  ctx.fillStyle=bg;ctx.fillRect(-14,-14,W+28,H+28);
+  // おくまくと 金の ふち
+  ctx.fillStyle='#7d2031';ctx.fillRect(W*0.12,H*0.05,W*0.76,gt-H*0.02);
+  ctx.strokeStyle='#d8aa55';ctx.lineWidth=Math.max(2,W*0.004);ctx.strokeRect(W*0.12,H*0.05,W*0.76,gt-H*0.02);
+  for(let i=0;i<9;i++){
+    const x=W*(0.14+i*0.09);
+    ctx.fillStyle=i%2?'rgba(50,8,20,.22)':'rgba(255,100,110,.08)';
+    ctx.fillRect(x,H*0.06,W*0.045,gt-H*0.08);
+  }
+  // ぶたいの いた
+  for(let i=0;i<10;i++){
+    const y=gt+(H-gt)*i/10;
+    ctx.fillStyle=i%2?'#704124':'#80502d';ctx.fillRect(-14,y,W+28,(H-gt)/10+1);
+    ctx.strokeStyle='rgba(35,16,10,.35)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-14,y);ctx.lineTo(W+14,y);ctx.stroke();
+  }
+  // そでまく
+  for(const side of [-1,1]){
+    ctx.fillStyle='#5d1326';
+    ctx.beginPath();
+    if(side<0){ctx.moveTo(-10,-10);ctx.lineTo(W*0.22,-10);ctx.quadraticCurveTo(W*0.16,H*0.30,W*0.20,H*0.72);ctx.lineTo(-10,H*0.82);}
+    else{ctx.moveTo(W+10,-10);ctx.lineTo(W*0.78,-10);ctx.quadraticCurveTo(W*0.84,H*0.30,W*0.80,H*0.72);ctx.lineTo(W+10,H*0.82);}
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#c69343';ctx.lineWidth=Math.max(2,W*0.003);ctx.stroke();
+  }
+  ctx.fillStyle='#6c1729';ctx.fillRect(-10,-10,W+20,H*0.13);
+  ctx.fillStyle='#d4a64e';ctx.fillRect(-10,H*0.115,W+20,Math.max(3,H*0.009));
+  // あしもとの まるい しょうめい
+  for(let i=0;i<7;i++){
+    const x=W*(0.17+i*0.11),y=H*0.94;
+    const g=ctx.createRadialGradient(x,y,1,x,y,W*0.06);
+    g.addColorStop(0,'rgba(255,232,160,.75)');g.addColorStop(1,'rgba(255,210,100,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,W*0.06,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffe49a';ctx.beginPath();ctx.arc(x,y,W*0.008,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
 function drawBattleScene(){
   const bt=Game.bt;if(!bt)return;
   let shx=0,shy=0;
@@ -10560,6 +11271,7 @@ function drawBattleScene(){
   gg.addColorStop(0,th.ground[0]);gg.addColorStop(0.4,th.ground[1]);gg.addColorStop(1,th.ground[2]);
   ctx.fillStyle=gg;ctx.fillRect(-14,gt,W+28,H-gt+14);
   fogBand(gt+H*0.05,H*0.06,0.05,0.03,0.71,th.fog);
+  if(bt.foe.stage)drawStageBattleSet(gt);
   const py=ep.y+ep.s*108;
   const pg=ctx.createRadialGradient(ep.x,py,10,ep.x,py,W*0.24);
   pg.addColorStop(0,'rgba('+th.pg+',.28)');pg.addColorStop(1,'rgba('+th.pg+',0)');
@@ -10624,6 +11336,7 @@ function drawFoe(bt,ep){
   else if(bt.foe.draw==='crow')drawCrow(s,t,bt.foe.v);
   else if(bt.foe.draw==='golem')drawGolem(s,t,bt.foe.v);
   else if(bt.foe.draw==='boss2')drawBoss2(s,t,bt,bt.foe);
+  else if(bt.foe.draw==='stagehero')drawStageHero(s,t,bt);
   else drawBoss(s,t,bt);
   if(bt.flash>0){
     ctx.globalCompositeOperation='lighter';
@@ -10644,6 +11357,41 @@ function drawFoe(bt,ep){
     ctx.beginPath();ctx.arc(0,-s*20,s*(120+glow*120),0,Math.PI*2);ctx.fill();
     ctx.globalCompositeOperation='source-over';
   }
+  ctx.restore();
+}
+function drawStageHero(s,t,bt){
+  const bob=Math.sin(t*2.6)*s*3,OL='rgba(35,18,18,.72)';
+  ctx.save();ctx.translate(0,bob);
+  // かみの マント
+  ctx.fillStyle='#315f9f';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.5,s*3);
+  ctx.beginPath();ctx.moveTo(-s*36,-s*40);ctx.quadraticCurveTo(-s*68,s*18,-s*52,s*78);ctx.lineTo(s*30,s*70);ctx.quadraticCurveTo(s*40,s*10,s*27,-s*40);ctx.closePath();ctx.fill();ctx.stroke();
+  // ながぐつ
+  ctx.fillStyle='#55321d';
+  ctx.beginPath();ctx.roundRect(-s*35,s*55,s*25,s*42,s*7);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.roundRect(s*10,s*55,s*25,s*42,s*7);ctx.fill();ctx.stroke();
+  // ぬのと かみの よろい
+  const ar=ctx.createLinearGradient(0,-s*55,0,s*66);ar.addColorStop(0,'#f3d88c');ar.addColorStop(1,'#c68b3c');
+  ctx.fillStyle=ar;
+  ctx.beginPath();ctx.moveTo(-s*35,-s*47);ctx.lineTo(-s*45,s*50);ctx.quadraticCurveTo(0,s*72,s*45,s*50);ctx.lineTo(s*35,-s*47);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#f5eee0';
+  for(let y=-28;y<=40;y+=22){ctx.fillRect(-s*30,s*y,s*60,s*9);ctx.strokeRect(-s*30,s*y,s*60,s*9);}
+  // あおい たまを まねた えんしょう
+  ctx.fillStyle='#55b9dc';ctx.beginPath();ctx.arc(0,s*15,s*17,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#c8f3ff';ctx.beginPath();ctx.arc(-s*5,s*9,s*5,0,Math.PI*2);ctx.fill();
+  // きの つるぎ
+  ctx.save();ctx.translate(s*40,-s*24);ctx.rotate(-0.55+Math.sin(t*1.8)*0.05);
+  ctx.fillStyle='#b6783e';ctx.fillRect(-s*7,-s*78,s*14,s*92);ctx.strokeRect(-s*7,-s*78,s*14,s*92);
+  ctx.beginPath();ctx.moveTo(-s*7,-s*78);ctx.lineTo(0,-s*96);ctx.lineTo(s*7,-s*78);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#e0b86a';ctx.fillRect(-s*24,s*6,s*48,s*10);ctx.strokeRect(-s*24,s*6,s*48,s*10);ctx.restore();
+  // かおと おおげさな おめん
+  ctx.fillStyle='#efc59b';ctx.beginPath();ctx.arc(0,-s*66,s*29,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#f6e3ae';
+  ctx.beginPath();ctx.moveTo(-s*28,-s*73);ctx.quadraticCurveTo(0,-s*102,s*28,-s*73);ctx.lineTo(s*20,-s*56);ctx.quadraticCurveTo(0,-s*70,-s*20,-s*56);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#203756';ctx.beginPath();ctx.arc(-s*10,-s*67,s*5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(s*10,-s*67,s*5,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#7a3026';ctx.lineWidth=Math.max(1,s*3);ctx.beginPath();ctx.arc(0,-s*56,s*11,0.12*Math.PI,0.88*Math.PI);ctx.stroke();
+  // はねつき ぼうし
+  ctx.fillStyle='#bb334b';ctx.beginPath();ctx.ellipse(0,-s*94,s*37,s*12,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#e8bd55';ctx.beginPath();ctx.moveTo(s*14,-s*98);ctx.quadraticCurveTo(s*48,-s*138,s*58,-s*112);ctx.quadraticCurveTo(s*40,-s*113,s*21,-s*92);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.restore();
 }
 // せんとうの みちづれ（こどものかげ）：ゆうしゃの ひだりで いのる
