@@ -4633,8 +4633,10 @@ async function talkKing(){
       continue;
     }
     if(c==='ngp'){
-      const ok=await ask([{id:'yes',label:'はじめる'},{id:'no',label:'やめておく'}],'ものがたりは さいしょに もどる（つよさ・そうび・ずかん・しょうごうは のこる）。よいか？');
+      const ok=await ask([{id:'no',label:'やめておく'},{id:'yes',label:'はじめる'}],'ものがたりの すすみ（しょうや クエスト）は ぜんぶ さいしょに もどる。つよさ・そうび・ずかん・しょうごうは のこる。よいか？');
       if(ok!=='yes')continue;
+      const ok2=await ask([{id:'no',label:'やっぱり やめる'},{id:'yes',label:'ほんとうに はじめる'}],'ほんとうに いいか？ いまの ぼうけんの つづきには もどれないぞ。');
+      if(ok2!=='yes')continue;
       await say('おうさま「うむ。なんども めぐる ものがたりにこそ、\nあたらしい こたえは やどるのじゃ。いって まいれ！」');
       endTalk();
       ngNewGame(true);
@@ -12122,6 +12124,7 @@ async function openingSequence(){
 async function ngNewGame(fromKing){
   if(Game.started)return;
   if(Game.scene!=='ending'&&!fromKing)return;
+  try{const bk=localStorage.getItem(saveKey());if(bk)localStorage.setItem('aoYushaNgBk'+curSlot,bk);}catch(e){} // 直前の冒険を控えに退避(誤操作の救出用・2026-07-15実機事故)
   Game.started=true;
   sfxOk();
   const p0=Game.p;
