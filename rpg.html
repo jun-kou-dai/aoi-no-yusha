@@ -1651,7 +1651,7 @@ const npcAt=(x,y)=>{const w=WORLDS[Game.mapId];return w.npcs&&w.npcs.find(n=>n.x
 // ============================================================
 // レベル・敵データ
 // ============================================================
-const MAXLV=16;
+const MAXLV=18;
 const LEVELS=[null,
   {exp:0,  hp:26, mp:8,  atk:7,  def:4},
   {exp:18, hp:34, mp:12, atk:10, def:6},
@@ -1668,7 +1668,9 @@ const LEVELS=[null,
   {exp:1770,hp:216,mp:117,atk:63, def:46},
   {exp:2490,hp:240,mp:128,atk:69, def:51},
   {exp:3510,hp:265,mp:139,atk:76, def:56},
-  {exp:4960,hp:291,mp:150,atk:83, def:62}];
+  {exp:4960,hp:291,mp:150,atk:83, def:62},
+  {exp:7020,hp:318,mp:161,atk:91, def:68},
+  {exp:9960,hp:346,mp:172,atk:99, def:75}];
 // ============================================================
 // なんいど Lv1〜7（Lv2=げんこうバランス=1.0）。敵HP/攻撃・経験値・ゴールド・被ダメ上限・痛恨/特殊頻度を一括制御
 // ============================================================
@@ -1967,7 +1969,8 @@ function renderInventory(){
   if(Game.shield2)h+=card('🛡','ひかりのたて','● そうび中','しゅび +12','equipped');h+='</div>';
   const keys=[['🚪','どこでもドア',Game.door],['👻','とうめいマント',Game.cloak],['📕','冒険の書',Game.book],['🔑','まほうのかぎ',Game.mkey],['🗺','うみのちず',Game.hidden&&Game.hidden.umichizu],['🎵','ふなうたのふえ',Game.hidden&&Game.hidden.funautaOwn],['🎟','一座の はんけん',Game.hidden&&Game.hidden.troupeTicket],['🎭','にせもの勇者の おめん',Game.hidden&&Game.hidden.troupeMask],['📜','ほんとうのこえの だいほん',Game.hidden&&Game.hidden.troupeScript],
    ['🔑','こえの はこの かぎ',Game.hidden&&Game.hidden.ch17Key],['🪨','こだまの いしへん',Game.hidden&&Game.hidden.ch17Stone],
-   ['📄','はがされた しろい ふだ',Game.hidden&&Game.hidden.ch17Fuda],['🎼','サヨの がくふ',Game.hidden&&Game.hidden.ch17Score]];
+   ['📄','はがされた しろい ふだ',Game.hidden&&Game.hidden.ch17Fuda],['🎼','サヨの がくふ',Game.hidden&&Game.hidden.ch17Score],
+   ['🕯','ふなさきの あかり',Game.hidden&&Game.hidden.shipLamp],['⛵','きんいろの ほ',Game.hidden&&Game.hidden.shipSail]];
   h+='<h3 class="bisle">だいじなもの</h3><div class="inventory-grid">';const ownedKeys=keys.filter(x=>x[2]);if(!ownedKeys.length)h+='<div class="inv-empty">なし</div>';for(const k of ownedKeys)h+=card(k[0],k[1],'●','なくならない');h+='</div>';
   h+='<div class="inv-summary">所持 '+positive+'しゅ　／　武器 '+ow.length+'　／　防具 '+oa.length+'</div>';
   return h;
@@ -3407,6 +3410,7 @@ function renderStatus(){
   {const dj=[];if(Game.door)dj.push('どこでもドア');if(Game.cloak)dj.push('とうめいマント');if(Game.book)dj.push('冒険の書');if(Game.mkey)dj.push('まほうのかぎ');if(Game.hidden&&Game.hidden.troupeTicket)dj.push('一座の はんけん');if(Game.hidden&&Game.hidden.troupeMask)dj.push('にせもの勇者の おめん');if(Game.hidden&&Game.hidden.troupeScript)dj.push('ほんとうのこえの だいほん');
    if(Game.hidden&&Game.hidden.ch17Key)dj.push('こえの はこの かぎ');if(Game.hidden&&Game.hidden.ch17Stone)dj.push('こだまの いしへん');
    if(Game.hidden&&Game.hidden.ch17Fuda)dj.push('はがされた しろい ふだ');if(Game.hidden&&Game.hidden.ch17Score)dj.push('サヨの がくふ');
+   if(Game.hidden&&Game.hidden.shipLamp)dj.push('ふなさきの あかり');if(Game.hidden&&Game.hidden.shipSail)dj.push('きんいろの ほ');
    h+='<h3 class="bisle">だいじなもの</h3>'+row('',dj.length?dj.join('　'):'なし');}
   {const sp=[['メラ',1],['キアリー',2],['ギラ',3],['ヒャド',4],['ベホイミ',5],['バイキルト',6],['ベギラマ',7],['ヒャダルコ',8],['ベホマ',11],['ベギラゴン',12],['マヒャド',13]];
    const learned=['ホイミ'].concat(sp.filter(s=>lv>=s[1]).map(s=>s[0]));
@@ -4625,7 +4629,9 @@ async function talkNpc(n){
       saveGame();return;
     }
     if(Game.hidden.ch13a&&!Game.hidden.ch13c){
-      const gm=await ask([{id:'go',label:'くらのしまへ わたる'},{id:'no',label:'やめておく'}],'だんちょう「ふねを だすかい？」');
+      const gm=await ask([{id:'go',label:'くらのしまへ わたる'},{id:'rec',label:'📖 ふねの きろくちょう'},{id:'gear',label:'⚒ ふなそうびを みる'},{id:'no',label:'やめておく'}],'だんちょう「ふねを だすかい？」');
+      if(gm==='rec'){await shipRecord();endTalk();return;}
+      if(gm==='gear'){await shipGearShop();endTalk();return;}
       endTalk();
       if(gm==='go'){await transitMap({to:'kura',tx:10,ty:11,msg:'一座の ふねは しろい なみを ひいて、こえの きえた しまへ——'});saveGame();}
       return;
@@ -4696,9 +4702,13 @@ async function talkNpc(n){
       if(Game.hidden.ch15a)opts.push({id:'hora',label:'ほらふきじまへ'});
       if(Game.hidden.ch16a)opts.push({id:'uta',label:'わすれうたのしまへ'});
       if(Game.hidden.ch17w)opts.push({id:'yakata',label:'あつめのやかたへ'});
+      opts.push({id:'rec',label:'📖 ふねの きろくちょう'});
+      opts.push({id:'gear',label:'⚒ ふなそうびを みる'});
       opts.push({id:'no',label:'やめておく'});
       const gm=await ask(opts,
         Game.hidden.ch15c?'だんちょう「ほらふきじまの おおぼら、一座の えんもくに ほしいねえ。ふねを だすかい？」':(Game.hidden.ch14c?'だんちょう「たにの こだまも、いまじゃ すっかり うたいずきだ。ふねを だすかい？」':'だんちょう「ふねを だすかい？」'));
+      if(gm==='rec'){await shipRecord();endTalk();return;}
+      if(gm==='gear'){await shipGearShop();endTalk();return;}
       endTalk();
       if(gm==='tani'){await transitMap({to:'tani',tx:10,ty:11,msg:Game.hidden.ch14c?'一座の ふねは、こだまの うたう たにへ——':'一座の ふねは たにあいの さんばしへ——こだまが、じっと みている。'});saveGame();}
       else if(gm==='kura'){await transitMap({to:'kura',tx:10,ty:11,msg:'一座の ふねは、うたの きこえる しまへ——'});saveGame();}
@@ -4707,8 +4717,11 @@ async function talkNpc(n){
       else if(gm==='yakata'){await transitMap({to:'yakata1',tx:10,ty:11,msg:Game.hidden.ch17c?'一座の ふねは、ひかりの もどった やかたへ——':'一座の ふねは くろい いわかげを ぬけ、はこと くさりの やかたへ——'});saveGame();}
       return;
     }
-    await say('一座の ふね。いろとりどりの はたが かぜに はためいている。\nまだ どこへも でない——いまは ぶたいの まくが あがる ときだ。');
-    endTalk();return;
+    {const gm=await ask([{id:'rec',label:'📖 ふねの きろくちょう'},{id:'gear',label:'⚒ ふなそうびを みる'},{id:'no',label:'たちさる'}],
+      '一座の ふね。いろとりどりの はたが かぜに はためく。\nまだ どこへも でない——いまは ぶたいの まくが あがる ときだ。');
+     if(gm==='rec')await shipRecord();
+     else if(gm==='gear')await shipGearShop();
+     endTalk();return;}
   }
   if(n.troupeLeader&&Game.hidden.ch17c){ // 章17後: ざちょうの けいこあいてを なんどでも よべる
     await say('だんちょう「ざちょうは あれから、まいばん じぶんの はなしを しとるよ。\n……ようやく、じぶんの ものがたりを いきはじめた。」');
@@ -6154,6 +6167,28 @@ async function runSell(){
     Game.gold+=eq.price;
     sfxChest();updateBars();
     await say('しょうにん「'+eq.lab+'、たしかに うけとった！\n'+eq.price+'ゴールドだ。」');
+  }
+}
+// 一座の ふね: きろくちょう(記録庫)+ふなそうび(2026-07-17修復②③)
+async function shipRecord(){
+  saveGame();sfxOk();
+  await say('ふねの きろくちょうに、たびの あしあとを かきとめた。\nだんちょう「うみの うえでも、ものがたりは のこして いく もんだ。」');
+}
+async function shipGearShop(){
+  await say('だんちょう「ふねの そうびかい？ いい めを してるね。\nはでな ふねには、いい ものがたりが あつまって くるんだ。」');
+  while(true){
+    const list=[];
+    if(Game.hidden.shipLamp)list.push({id:'x1',label:'🕯 ふなさきの あかり（そうびちゅう）',dis:true});
+    else list.push({id:'lamp',label:'🕯 ふなさきの あかり  1500G',dis:Game.gold<1500});
+    if(Game.hidden.shipSail)list.push({id:'x2',label:'⛵ きんいろの ほ（そうびちゅう）',dis:true});
+    else list.push({id:'sail',label:'⛵ きんいろの ほ  2400G',dis:Game.gold<2400});
+    list.push({id:'back',label:'もどる'});
+    const c=await ask(list,'ふなそうび（'+Game.gold+'G）');
+    if(c==='lamp'&&Game.gold>=1500){Game.gold-=1500;Game.hidden.shipLamp=true;sfxLevel();updateBars();
+      await say('ふなさきの あかりを とりつけた！\nへさきに、あたたかい ひが ともった。');saveGame();continue;}
+    if(c==='sail'&&Game.gold>=2400){Game.gold-=2400;Game.hidden.shipSail=true;sfxLevel();updateBars();
+      await say('きんいろの ほを はりあげた！\nゆうひを あびたように、ほが きんいろに かがやく。');saveGame();continue;}
+    break;
   }
 }
 async function runShop(){
@@ -8999,11 +9034,30 @@ function drawTroupeShip(ts){
   ctx.fillStyle='#efd07b';ctx.fillRect(-ts*0.92,-ts*0.15,ts*1.82,ts*0.12);ctx.strokeRect(-ts*0.92,-ts*0.15,ts*1.82,ts*0.12);
   // ほばしらと しまもようの ほ
   ctx.fillStyle='#5d351f';ctx.fillRect(-ts*0.04,-ts*1.48,ts*0.08,ts*1.55);ctx.strokeRect(-ts*0.04,-ts*1.48,ts*0.08,ts*1.55);
-  ctx.fillStyle='#f4e5bd';ctx.beginPath();ctx.moveTo(ts*0.07,-ts*1.40);ctx.lineTo(ts*0.07,-ts*0.30);ctx.lineTo(ts*0.78,-ts*0.44);ctx.closePath();ctx.fill();ctx.stroke();
+  if(Game.hidden&&Game.hidden.shipSail){const sg=ctx.createLinearGradient(0,-ts*1.40,0,-ts*0.30);sg.addColorStop(0,'#ffe08a');sg.addColorStop(1,'#e0a13e');ctx.fillStyle=sg;}
+  else ctx.fillStyle='#f4e5bd';
+  ctx.beginPath();ctx.moveTo(ts*0.07,-ts*1.40);ctx.lineTo(ts*0.07,-ts*0.30);ctx.lineTo(ts*0.78,-ts*0.44);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.fillStyle='#c93c51';ctx.beginPath();ctx.moveTo(ts*0.10,-ts*1.30);ctx.lineTo(ts*0.10,-ts*1.08);ctx.lineTo(ts*0.62,-ts*1.18);ctx.closePath();ctx.fill();
   ctx.beginPath();ctx.moveTo(ts*0.10,-ts*0.90);ctx.lineTo(ts*0.10,-ts*0.68);ctx.lineTo(ts*0.72,-ts*0.76);ctx.closePath();ctx.fill();
   // いちざの はた
   ctx.fillStyle='#4da4c8';ctx.beginPath();ctx.moveTo(0,-ts*1.48);ctx.quadraticCurveTo(ts*0.38,-ts*1.44,ts*0.55,-ts*1.28);ctx.lineTo(0,-ts*1.24);ctx.closePath();ctx.fill();ctx.stroke();
+  if(Game.hidden&&Game.hidden.shipSail){ // きんいろの ほ: 日輪の紋
+    ctx.fillStyle='#fff4c8';ctx.beginPath();ctx.arc(ts*0.36,-ts*0.99,ts*0.085,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(200,120,30,0.8)';ctx.lineWidth=Math.max(1,ts*0.02);
+    for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(ts*0.36+Math.cos(a)*ts*0.105,-ts*0.99+Math.sin(a)*ts*0.105);ctx.lineTo(ts*0.36+Math.cos(a)*ts*0.15,-ts*0.99+Math.sin(a)*ts*0.15);ctx.stroke();}
+    ctx.strokeStyle='rgba(28,20,18,.72)';ctx.lineWidth=Math.max(1.5,ts*0.025);
+  }
+  if(Game.hidden&&Game.hidden.shipLamp){ // ふなさきの あかり: ランタン+暖色グロー
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    const lg=ctx.createRadialGradient(-ts*0.93,-ts*0.52,ts*0.03,-ts*0.93,-ts*0.52,ts*0.60);
+    lg.addColorStop(0,'rgba(255,200,110,0.55)');lg.addColorStop(1,'rgba(255,200,110,0)');
+    ctx.fillStyle=lg;ctx.beginPath();ctx.arc(-ts*0.93,-ts*0.52,ts*0.60,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    ctx.fillStyle='#5d351f';ctx.fillRect(-ts*0.955,-ts*0.42,ts*0.05,ts*0.24);ctx.strokeRect(-ts*0.955,-ts*0.42,ts*0.05,ts*0.24);
+    ctx.fillStyle='#3a2a1a';ctx.fillRect(-ts*1.005,-ts*0.62,ts*0.15,ts*0.20);
+    ctx.fillStyle='#ffd98a';ctx.fillRect(-ts*0.985,-ts*0.60,ts*0.11,ts*0.16);
+    ctx.strokeRect(-ts*1.005,-ts*0.62,ts*0.15,ts*0.20);
+  }
   // まるい まど
   for(const x of [-0.58,-0.22,0.20]){ctx.fillStyle='#67b9d1';ctx.beginPath();ctx.arc(ts*x,0,ts*0.09,0,Math.PI*2);ctx.fill();ctx.stroke();}
   ctx.restore();
