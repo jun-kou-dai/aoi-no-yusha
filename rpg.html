@@ -1862,7 +1862,7 @@ function normalizeStoryProgress(h){
   do{
   storySig=JSON.stringify(h);
   // 次章の正式な開始(a)は直前章の結び(c)を通らないと立たない。入口記録だけを根拠に降順で戻す。
-  if(h.ch20a)h.ch19c=true;if(h.ch19a)h.ch18c=true;if(h.ch18a)h.ch17c=true;if(h.ch17a)h.ch16c=true;
+  if(h.ch19a)h.ch18c=true;if(h.ch18a)h.ch17c=true;if(h.ch17a)h.ch16c=true;
   if(h.ch16a)h.ch15c=true;if(h.ch15a)h.ch14c=true;if(h.ch14a)h.ch13c=true;if(h.ch13a)h.ch12c=true;
   if(h.ch12a)h.ch11c=true;if(h.ch11a)h.ch10c=true;if(h.ch10a)h.ch9c=true;if(h.ch9a)h.ch8c=true;
   if(h.ch8a)h.ch7c=true;if(h.ch7a)h.ch6c=true;if(h.ch6a)h.ch5c=true;if(h.ch5a)h.ch4c=true;if(h.ch4a)h.ch3d=true;
@@ -2933,7 +2933,6 @@ function loadGame(){
   Game.qChild=d.qChild||0;Game.bonusDef=d.bonusDef||0;Game.bonusHp=d.bonusHp||0;Game.bonusMp=d.bonusMp||0;Game.gheart=d.gheart||0;Game.ng=d.ng||0;
   Game.nkOn=!!d.nkOn;Game.nkRest=!!d.nkRest;Game.nkTac=(d.nkTac==='gangan'||d.nkTac==='inochi')?d.nkTac:'omakase';Game.nkW=d.nkW||0;Game.nkA=d.nkA||0;Game.kakage=(typeof d.kakage==='string')?d.kakage:'';
   Game.hidden=d.hidden||{};
-  normalizeStoryProgress(Game.hidden);
   {const h=Game.hidden; // 章19: 不正な結論文字列と途中状態を、安全な因果関係へ正規化
    if(h.ch19Pick!=='rescue')delete h.ch19Pick;
    if(h.ch19c)h.ch19d=true;
@@ -2951,6 +2950,9 @@ function loadGame(){
      if(!h.ch20Ready){delete h.ch20Spell;delete h.ch20SpellNew;if(h.ch20Nav&&h.ch20Nav.y===0)h.ch20Nav=ch20InitialNav();}
      if(h.ch20Ready){h.ch20a=true;h.ch20Spell=true;h.ch20Nav={x:3,y:0,form:'line',trail:[]};}
    }}
+  // 章19/20の不正入口を先に除いてから、残った確定済み事実だけを旧章へ戻す。
+  // これにより孤立したch20aがch19cへ昇格せず、章19の時相記録も同じロードで章18以前へ反映される。
+  normalizeStoryProgress(Game.hidden);
   Game.door=!!d.door; // どこでもドア 所持
   Game.purified=d.purified||0; // じょうか数（かげ解放）
   Game.mkey=!!d.mkey; // まほうのかぎ 所持
