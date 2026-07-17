@@ -69,6 +69,11 @@ body{
 #sub-title{ letter-spacing:.5em; padding-left:.5em; font-size:clamp(11px,1.8vmin,14px); color:#b9c2e4; opacity:.85; }
 #ui-title .btn.main{ animation:btnpulse 2.6s ease-in-out infinite; }
 #title-ver{ position:absolute; top:max(10px, env(safe-area-inset-top)); left:12px; font-size:11px; letter-spacing:.05em; color:rgba(231,224,200,.55); pointer-events:none; }
+#title-release{ position:absolute; top:calc(max(10px, env(safe-area-inset-top)) + 25px); left:12px; z-index:2;
+  max-width:min(360px,calc(100vw - 76px)); padding:7px 10px; pointer-events:none; line-height:1.35;
+  background:rgba(12,23,53,.76); border-color:rgba(255,220,135,.42); }
+#title-release b{ display:block; color:#ffe2a0; font-size:clamp(10px,1.7vmin,13px); letter-spacing:.08em; }
+#title-release span{ display:block; margin-top:2px; color:#cbd7f3; font-size:clamp(9px,1.45vmin,11px); letter-spacing:.02em; }
 #title-hint{ position:absolute; bottom:max(18px, env(safe-area-inset-bottom)); width:100%; text-align:center;
   font-size:clamp(10px,1.7vmin,13px); color:#9aa4cc; letter-spacing:.12em; }
 @keyframes lfloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-9px) } }
@@ -533,6 +538,7 @@ body{
   <div id="flashfx"></div>
 
   <div id="ui-title" class="ui">
+    <div id="title-release" class="glass"><b>新章　第20章 配信中</b><span>第19章を終えたら → むらのきしの「一座のふね」</span></div>
     <div id="logo-wrap">
       <svg id="emblem" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -1824,6 +1830,12 @@ icetown:{
 // 章17: まだ あしあとが のこる しま(バー・みちびき・ビーコンで 共用=バーと こえの ふいっち防止)
 function ch17NextIsle(){
   const h=(Game&&Game.hidden)||{};
+  // いま いる島に未取得の足あとがあるなら、画面の金柱と「みちびき」を同じ場所へ向ける
+  const here={kura:['ch17Key','くらのしまの「ねむりの ほんだな」'],
+              tani:['ch17Stone','やまびこのたにの「こだまの いしぶみ」'],
+              hora:['ch17Fuda','ほらふきじまの「ほらふきの いえ」'],
+              uta:['ch17Score','わすれうたのしまの「うたひ」']}[Game.mapId];
+  if(here&&!h[here[0]])return [Game.mapId,here[1]];
   if(!h.ch17Key)return ['kura','くらのしまの「ねむりの ほんだな」'];
   if(!h.ch17Stone)return ['tani','やまびこのたにの「こだまの いしぶみ」'];
   if(!h.ch17Fuda)return ['hora','ほらふきじまの「ほらふきの いえ」'];
@@ -1840,6 +1852,84 @@ function ch17IsleBar(myKey,myPlace){
            :'もくてき：一座の ふねへ——4つ そろった。やかたの ばしょが わかる';}
 function ch17KeyCount(){const h=(Game&&Game.hidden)||{};return ['ch17Key','ch17Stone','ch17Fuda','ch17Score'].filter(k=>h[k]).length;}
 function chain17Count(){const h=(Game&&Game.hidden)||{};return ['cn1','cn2','cn3','cn4'].filter(k=>h[k]).length;}
+// 復元じゅもん・旧セーブで「取得済みなのに次の門だけ欠けた」状態を、確定済みの事実から一方向に補う。
+// trueを補うだけで、所持品・報酬・選択内容は作らず、何度呼んでも同じ結果になる。
+function normalizeStoryProgress(h){
+  if(!h||typeof h!=='object'||Array.isArray(h))return false;
+  const any=ks=>ks.some(k=>!!h[k]),all=ks=>ks.every(k=>!!h[k]);
+  const set=ks=>{for(const k of ks)h[k]=true;};
+  let storySig;
+  do{
+  storySig=JSON.stringify(h);
+  // 次章の正式な開始(a)は直前章の結び(c)を通らないと立たない。入口記録だけを根拠に降順で戻す。
+  if(h.ch20a)h.ch19c=true;if(h.ch19a)h.ch18c=true;if(h.ch18a)h.ch17c=true;if(h.ch17a)h.ch16c=true;
+  if(h.ch16a)h.ch15c=true;if(h.ch15a)h.ch14c=true;if(h.ch14a)h.ch13c=true;if(h.ch13a)h.ch12c=true;
+  if(h.ch12a)h.ch11c=true;if(h.ch11a)h.ch10c=true;if(h.ch10a)h.ch9c=true;if(h.ch9a)h.ch8c=true;
+  if(h.ch8a)h.ch7c=true;if(h.ch7a)h.ch6c=true;if(h.ch6a)h.ch5c=true;if(h.ch5a)h.ch4c=true;if(h.ch4a)h.ch3d=true;
+  // 章3、6〜12: 収集済み数と、その章の確定済み下流から欠けた門だけを補う。
+  if(any(['mem1','mem2','mem3']))set(['ch3m','ch3a']);
+  if(all(['mem1','mem2','mem3']))h.ch3b=true;
+  if(h.ch3b)set(['ch3m','ch3a','mem1','mem2','mem3']);
+  if(h.ch3c)h.ch3b=true;if(h.ch3t)h.ch3c=true;if(h.ch3d)h.ch3t=true;
+  if(h.ch3b)set(['ch3m','ch3a','mem1','mem2','mem3']);
+  if(any(['nv1','nv2','nv3']))set(['ch6a','ch6b']);
+  if(all(['nv1','nv2','nv3']))h.ch6w=true;
+  if(h.ch6c)h.ch6d=true;if(h.ch6d)h.ch6w=true;if(h.ch6w)set(['ch6a','ch6b','nv1','nv2','nv3']);if(h.ch6b)h.ch6a=true;
+  if(any(['omo1','omo2','omo3']))h.ch7a=true;
+  if(all(['omo1','omo2','omo3']))h.ch7w=true;
+  if(h.ch7c)h.ch7d=true;if(h.ch7d)h.ch7w=true;if(h.ch7w)set(['ch7a','omo1','omo2','omo3']);
+  if(any(['nag1','nag2','nag3']))set(['ch8a','ch8b']);
+  if(all(['nag1','nag2','nag3']))h.ch8w=true;
+  if(h.ch8c)h.ch8d=true;if(h.ch8d)h.ch8w=true;if(h.ch8w)set(['ch8a','ch8b','nag1','nag2','nag3']);if(h.ch8b)h.ch8a=true;
+  if(any(['to1','to2','to3','to4','to5']))h.ch9a=true;
+  if(all(['to1','to2','to3','to4','to5']))h.ch9w=true;
+  if(h.ch9c)h.ch9d=true;if(h.ch9d)h.ch9w=true;if(h.ch9w)set(['ch9a','to1','to2','to3','to4','to5']);
+  if((h.ch10bt||0)>=3)h.ch10w=true;
+  if(h.ch10c)h.ch10d=true;if(h.ch10d)h.ch10w=true;if(h.ch10w)h.ch10a=true;
+  if(h.ch11c)h.ch11d=true;if(h.ch11d)h.ch11a=true;
+  if(any(['ch12Sora','ch12Nagi','ch12Mago']))set(['ch12a','ch12d']);
+  if(all(['ch12Sora','ch12Nagi','ch12Mago']))h.ch12w=true;
+  if(h.ch12c){h.ch12w=true;set(['ch12Sora','ch12Nagi','ch12Mago']);}
+  if(h.ch12w)set(['ch12a','ch12d','ch12Sora','ch12Nagi','ch12Mago']);if(h.ch12d)h.ch12a=true;
+
+  // 章13〜16: 三つの取得物、ぬし、結びの因果を同じ形でそろえる。
+  if(any(['ka1','ka2','ka3']))h.ch13a=true;
+  if(all(['ka1','ka2','ka3']))h.ch13w=true;
+  if(h.ch13c)h.ch13d=true;if(h.ch13d)h.ch13w=true;if(h.ch13w)set(['ch13a','ka1','ka2','ka3']);
+  if(any(['km1','km2','km3']))h.ch14a=true;
+  if(all(['km1','km2','km3']))h.ch14w=true;
+  if(h.ch14c)h.ch14d=true;if(h.ch14d)h.ch14w=true;if(h.ch14w)set(['ch14a','km1','km2','km3']);
+  if(any(['hr1','hr2','hr3']))h.ch15a=true;
+  if(all(['hr1','hr2','hr3']))h.ch15w=true;
+  if(h.ch15c)h.ch15d=true;if(h.ch15d)h.ch15w=true;if(h.ch15w)set(['ch15a','hr1','hr2','hr3']);
+  if(any(['ut1','ut2','ut3']))h.ch16a=true;
+  if(all(['ut1','ut2','ut3']))h.ch16w=true;
+  if(h.ch16c)h.ch16d=true;if(h.ch16d)h.ch16w=true;if(h.ch16w)set(['ch16a','ut1','ut2','ut3']);
+
+  // 章17: 章開始は章16結びを保証。4品だけでは船上の館発見場面を飛ばさない。
+  if(any(['ch17Key','ch17Stone','ch17Fuda','ch17Score','ch17w','cn1','cn2','cn3','cn4','ch17w2','ch17d','ch17c']))h.ch17a=true;
+  if(h.ch17a){h.ch16c=true;h.ch16d=true;h.ch16w=true;set(['ch16a','ut1','ut2','ut3']);}
+  if(h.ch17c)h.ch17d=true;
+  if(h.ch17d)h.ch17w2=true;
+  if(all(['cn1','cn2','cn3','cn4']))h.ch17w2=true;
+  if(h.cn1)set(['ch17w','ch17Key']);
+  if(h.cn2)set(['ch17w','cn1','ch17Stone']);
+  if(h.cn3)set(['ch17w','cn1','cn2','ch17Fuda']);
+  if(h.cn4)set(['ch17w','cn1','cn2','ch17Score']);
+  if(h.ch17w2)set(['ch17w','cn1','cn2','cn3','cn4']);
+  if(h.ch17w)set(['ch17a','ch17Key','ch17Stone','ch17Fuda','ch17Score']);
+
+  // 章18: 二つの建築済みなら夜へ進める。どの二つかは既存の選択だけを使う。
+  const built18=['ch18BuiltPier','ch18BuiltShelter','ch18BuiltBeacon'].filter(k=>h[k]).length;
+  if(built18)h.ch18Told=true;
+  if(built18>=2){h.ch18Ready=true;h.ch18Spell=true;}
+  if(h.ch18c)h.ch18d=true;if(h.ch18d)h.ch18Ready=true;if(h.ch18Ready){h.ch18a=true;h.ch18Spell=true;}
+  }while(JSON.stringify(h)!==storySig);
+
+  const late=any(['ch12a','ch12d','ch12w','ch12c','ch13a','ch14a','ch15a','ch16a','ch17a','ch18a','ch19a','ch20a']);
+  if(late)set(['cleared','k2','k3']); // 後半章の記録があるのに旧版の土台だけ欠けた場合、後半UIを隠さない
+  return late;
+}
 function yakataDarkA(){return Math.max(0.24,0.72-chain17Count()*0.12);}
 const CH18_SITES={
  Pier:{name:'ふなつきば',icon:'⚓',flag:'ch18BuiltPier',saw:'ch18SawPier'},
@@ -2105,6 +2195,16 @@ const CH20_BOARD=[
   '.......',
   '.......',
   '.......'];
+const CH20_BOARD_RETURN=[
+  '#....#.',
+  '..#.#..',
+  '.......',
+  '...#.#.',
+  '##....#',
+  '#......',
+  '..#.##.',
+  '.......',
+  '.......'];
 const CH20_FORMS={
   line:{name:'たて隊列',icon:'↕',offsets:[[0,0],[0,1],[0,2]]},
   abreast:{name:'よこ隊列',icon:'↔',offsets:[[-1,0],[0,0],[1,0]]},
@@ -2114,83 +2214,93 @@ const CH20_HAZARDS=[
   {name:'せまい岩間',fake:'横波',form:'line',kind:'phys',ask:'↕ たて隊列で、岩間を 一列にぬける'},
   {name:'左右からの横波',fake:'うしろの渦',form:'abreast',kind:'fire',ask:'↔ よこ隊列で、三艘を 波へむける'},
   {name:'最後尾をさらう渦',fake:'せまい岩間',form:'wedge',kind:'ice',ask:'△ くさび隊列で、最後尾を はさみこむ'}];
-let CH20_NOTE='',CH20_PREVIEW=null,CH20_HITS=[];
+let CH20_NOTE='',CH20_PREVIEW=null,CH20_HITS=[],CH20_RUN=null;
 const ch20FormOk=form=>typeof form==='string'&&Object.prototype.hasOwnProperty.call(CH20_FORMS,form);
 function ch20InitialNav(){return{x:3,y:6,form:'line',trail:[]};}
 function ch20PlainState(v){v=v&&typeof v==='object'?v:{};return{x:v.x|0,y:v.y|0,form:ch20FormOk(v.form)?v.form:'line'};}
 function ch20Cells(v){return CH20_FORMS[v.form].offsets.map((o,i)=>({x:v.x+o[0],y:v.y+o[1],role:CH20_ROLES[i]}));}
-function ch20StateOk(v){return !!(v&&Number.isInteger(v.x)&&Number.isInteger(v.y)&&v.y>=0&&v.y<=6&&ch20FormOk(v.form))&&ch20Cells(v).every(c=>c.x>=0&&c.x<7&&c.y>=0&&c.y<9&&CH20_BOARD[c.y][c.x]!== '#');}
-function ch20SanitizeNav(raw){
+function ch20StateOk(v,board=CH20_BOARD){return !!(v&&Number.isInteger(v.x)&&Number.isInteger(v.y)&&v.y>=0&&v.y<=6&&ch20FormOk(v.form))&&ch20Cells(v).every(c=>c.x>=0&&c.x<7&&c.y>=0&&c.y<9&&board[c.y][c.x]!== '#');}
+function ch20SanitizeNav(raw,board=CH20_BOARD){
   const base=ch20InitialNav();
   if(!raw||typeof raw!=='object')return base;
   if(!Number.isInteger(raw.x)||!Number.isInteger(raw.y)||!ch20FormOk(raw.form)||!Array.isArray(raw.trail)||raw.trail.length>40)return base;
   const v={x:raw.x,y:raw.y,form:raw.form,trail:[]};
-  if(!ch20StateOk(v))return base;
+  if(!ch20StateOk(v,board))return base;
   const tr=[];
   for(const x of raw.trail){
     if(!x||typeof x!=='object'||!Number.isInteger(x.x)||!Number.isInteger(x.y)||!ch20FormOk(x.form))return base;
-    const s={x:x.x,y:x.y,form:x.form};if(!ch20StateOk(s))return base;tr.push(s);
+    const s={x:x.x,y:x.y,form:x.form};if(!ch20StateOk(s,board))return base;tr.push(s);
   }
-  const step=(a,b)=>ch20StateOk(a)&&ch20StateOk(b)&&((a.form===b.form&&a.y===b.y&&Math.abs(a.x-b.x)===1)||(a.form===b.form&&a.x===b.x&&b.y===a.y-1)||(a.x===b.x&&a.y===b.y&&a.form!==b.form));
+  const step=(a,b)=>ch20StateOk(a,board)&&ch20StateOk(b,board)&&((a.form===b.form&&a.y===b.y&&Math.abs(a.x-b.x)===1)||(a.form===b.form&&a.x===b.x&&b.y===a.y-1)||(a.x===b.x&&a.y===b.y&&a.form!==b.form));
   let good=[];
   if(tr.length){
-    let prev=tr[0],ok=ch20StateOk(prev);if(ok)good.push(prev);
-    for(let i=1;i<tr.length;i++){const s=tr[i];if(!ok||!ch20StateOk(s)||!step(prev,s)){ok=false;break;}good.push(s);prev=s;}
+    let prev=tr[0],ok=ch20StateOk(prev,board);if(ok)good.push(prev);
+    for(let i=1;i<tr.length;i++){const s=tr[i];if(!ok||!ch20StateOk(s,board)||!step(prev,s)){ok=false;break;}good.push(s);prev=s;}
     if(!ok||!step(prev,v))return base;
   }
   v.trail=good;
   return v;
 }
 function ch20Nav(){
+  if(CH20_RUN){CH20_RUN.nav=ch20SanitizeNav(CH20_RUN.nav,CH20_RUN.board);return CH20_RUN.nav;}
   if(!Game.hidden.ch20Nav)Game.hidden.ch20Nav=ch20InitialNav();
   Game.hidden.ch20Nav=ch20SanitizeNav(Game.hidden.ch20Nav);
   return Game.hidden.ch20Nav;
 }
-function ch20BadCells(v){return ch20Cells(v).filter(c=>c.x<0||c.x>=7||c.y<0||c.y>=9||(CH20_BOARD[c.y]&&CH20_BOARD[c.y][c.x]==='#'));}
+function ch20WriteNav(v){if(CH20_RUN)CH20_RUN.nav=v;else Game.hidden.ch20Nav=v;}
+function ch20Board(){return CH20_RUN?CH20_RUN.board:CH20_BOARD;}
+function ch20BadCells(v,board=ch20Board()){return ch20Cells(v).filter(c=>c.x<0||c.x>=7||c.y<0||c.y>=9||(board[c.y]&&board[c.y][c.x]==='#'));}
 function ch20Render(){
-  const nav=ch20Nav(),grid=document.getElementById('convoygrid'),board=document.getElementById('convoyboard');
-  if(!grid||!board)return;
+  const nav=ch20Nav(),route=ch20Board(),grid=document.getElementById('convoygrid'),boardEl=document.getElementById('convoyboard');
+  if(!grid||!boardEl)return;
   grid.innerHTML='';
   for(let y=0;y<9;y++)for(let x=0;x<7;x++){
-    const c=document.createElement('div');c.className='convoy-cell'+(CH20_BOARD[y][x]==='#'?' rock':'')+(CH20_HITS.some(h=>h.x===x&&h.y===y)?' hit':'');
+    const c=document.createElement('div');c.className='convoy-cell'+(route[y][x]==='#'?' rock':'')+(CH20_HITS.some(h=>h.x===x&&h.y===y)?' hit':'');
     grid.appendChild(c);
   }
-  board.querySelectorAll('.convoy-boat').forEach(e=>e.remove());
+  boardEl.querySelectorAll('.convoy-boat').forEach(e=>e.remove());
   const states=[{v:nav,ghost:false}];if(CH20_PREVIEW)states.unshift({v:CH20_PREVIEW,ghost:true});
   for(const st of states)for(const c of ch20Cells(st.v)){
     if(c.x<0||c.x>=7||c.y<0||c.y>=9)continue;
     const b=document.createElement('div');b.className='convoy-boat '+c.role+(st.ghost?' ghost':'');
-    b.style.left=((c.x+.5)/7*100)+'%';b.style.top=((c.y+.5)/9*100)+'%';board.appendChild(b);
+    b.style.left=((c.x+.5)/7*100)+'%';b.style.top=((c.y+.5)/9*100)+'%';boardEl.appendChild(b);
   }
   const cells=ch20Cells(nav),rope=document.getElementById('convoyropes');
   rope.innerHTML=cells.slice(0,2).map((c,i)=>'<line x1="'+((c.x+.5)*100)+'" y1="'+((c.y+.5)*100)+'" x2="'+((cells[i+1].x+.5)*100)+'" y2="'+((cells[i+1].y+.5)*100)+'"/>').join('');
   const status=document.getElementById('convoystatus'),left=nav.y;
-  status.innerHTML='<b>'+CH20_FORMS[nav.form].icon+' '+CH20_FORMS[nav.form].name+'</b>　港まで '+Math.max(0,left)+' 列<br>'+(CH20_NOTE||'三艘すべてが 通れる形を、海の幅にあわせて選ぼう。');
+  const run=CH20_RUN?('　帰り潮 '+CH20_RUN.moves+'手 / 最短15手'):'';
+  status.innerHTML='<b>'+CH20_FORMS[nav.form].icon+' '+CH20_FORMS[nav.form].name+'</b>　港まで '+Math.max(0,left)+' 列'+run+'<br>'+(CH20_NOTE||'三艘すべてが 通れる形を、海の幅にあわせて選ぼう。');
   document.querySelectorAll('[data-convoy-form]').forEach(e=>e.classList.toggle('sel',e.dataset.convoyForm===nav.form));
   document.getElementById('convoyundo').classList.toggle('dis',!nav.trail.length);
 }
 function openCh20Board(){
-  if(Game.scene!=='field'||Game.battling||Game.transiting||Game.minigame||!Game.hidden.ch20a)return;
-  CH20_NOTE='三艘の 位置は、隊列を変えても 中心の舵から ずれない。';CH20_PREVIEW=null;CH20_HITS=[];
+  if(Game.scene!=='field'||Game.battling||Game.transiting||Game.minigame||!Game.hidden.ch20a)return false;
+  CH20_NOTE=CH20_RUN?'朝の帰り潮は、夜とはちがう暗礁を つくる。三艘を もう一度つなごう。':'三艘の 位置は、隊列を変えても 中心の舵から ずれない。';CH20_PREVIEW=null;CH20_HITS=[];
   Game.minigame={kind:'ch20'};Game.autoPath=null;held.length=0;swipeVec=null;ptr=null;
   if(Game.p){Game.p.moving=null;Game.p.px=Game.p.tx;Game.p.py=Game.p.ty;}
-  document.getElementById('convoywin').classList.add('show');ch20Render();Game._qt=null;
+  document.getElementById('convoywin').classList.add('show');ch20Render();Game._qt=null;return true;
 }
 function closeCh20Board(silent=false){
+  const wasRun=!!CH20_RUN;
   document.getElementById('convoywin').classList.remove('show');
   if(Game.minigame&&Game.minigame.kind==='ch20')Game.minigame=null;
-  CH20_PREVIEW=null;CH20_HITS=[];Game._qt=null;saveGame();
+  CH20_PREVIEW=null;CH20_HITS=[];CH20_RUN=null;Game._qt=null;if(!wasRun)saveGame();
   if(!silent)toast('海峡の 航路を とじた。');
 }
+function openCh20ReturnBoard(){
+  CH20_RUN={board:CH20_BOARD_RETURN,nav:ch20InitialNav(),moves:0};
+  CH20_NOTE='朝の帰り潮は、夜とはちがう暗礁を つくる。三艘を もう一度つなごう。';
+  if(!openCh20Board())CH20_RUN=null;
+}
 async function ch20Try(next,label){
-  const nav=ch20Nav(),trial={x:next.x,y:next.y,form:next.form,trail:nav.trail};
-  if(!ch20StateOk(trial)){
-    CH20_PREVIEW=ch20PlainState(trial);CH20_HITS=ch20BadCells(trial);
+  const nav=ch20Nav(),route=ch20Board(),trial={x:next.x,y:next.y,form:next.form,trail:nav.trail};
+  if(!ch20StateOk(trial,route)){
+    CH20_PREVIEW=ch20PlainState(trial);CH20_HITS=ch20BadCells(trial,route);
     CH20_NOTE='暗礁か 海峡の外へ ふれる。三艘とも 無事な手だけを すすめられる。';sfxSel();ch20Render();return false;
   }
   const trail=nav.trail.concat([ch20PlainState(nav)]).slice(-40);
-  Game.hidden.ch20Nav={x:trial.x,y:trial.y,form:trial.form,trail};
-  CH20_PREVIEW=null;CH20_HITS=[];CH20_NOTE=label;sfxSel();saveGame();ch20Render();
+  ch20WriteNav({x:trial.x,y:trial.y,form:trial.form,trail});if(CH20_RUN)CH20_RUN.moves++;
+  CH20_PREVIEW=null;CH20_HITS=[];CH20_NOTE=label;sfxSel();if(!CH20_RUN)saveGame();ch20Render();
   if(trial.y===0)await ch20ReachPort();
   return true;
 }
@@ -2199,13 +2309,19 @@ function ch20Advance(){const n=ch20Nav();return ch20Try({x:n.x,y:n.y-1,form:n.fo
 function ch20SetForm(form){const n=ch20Nav();if(!CH20_FORMS[form]||n.form===form)return;return ch20Try({x:n.x,y:n.y,form},CH20_FORMS[form].name+'へ 組みなおした。');}
 function ch20Undo(){
   const n=ch20Nav();if(!n.trail.length)return;
-  const trail=n.trail.slice(),prev=trail.pop();Game.hidden.ch20Nav={...prev,trail};
-  CH20_PREVIEW=null;CH20_HITS=[];CH20_NOTE='ひとつ前の 航路へ もどした。';sfxSel();saveGame();ch20Render();
+  const trail=n.trail.slice(),prev=trail.pop();ch20WriteNav({...prev,trail});if(CH20_RUN)CH20_RUN.moves=Math.max(0,CH20_RUN.moves-1);
+  CH20_PREVIEW=null;CH20_HITS=[];CH20_NOTE='ひとつ前の 航路へ もどした。';sfxSel();if(!CH20_RUN)saveGame();ch20Render();
 }
 function ch20Reset(){
-  Game.hidden.ch20Nav=ch20InitialNav();CH20_PREVIEW=null;CH20_HITS=[];CH20_NOTE='出発港の たて隊列へ もどした。';sfxSel();saveGame();ch20Render();
+  ch20WriteNav(ch20InitialNav());if(CH20_RUN)CH20_RUN.moves=0;
+  CH20_PREVIEW=null;CH20_HITS=[];CH20_NOTE='出発港の たて隊列へ もどした。';sfxSel();if(!CH20_RUN)saveGame();ch20Render();
 }
 async function ch20ReachPort(){
+  if(CH20_RUN){
+    const moves=CH20_RUN.moves;closeCh20Board(true);startTalk();sfxLevel();flash('#d9f1ff',0.38,0.75);
+    await say('朝の帰り潮を、三艘すべてが '+moves+'手で わたりきった。\n'+(moves===15?'ひとつも遠まわりしない、十五手の航路だ。':'暗礁の形が変わっても、さいごの舟まで声は とどいた。'));
+    endTalk();toast(moves===15?'帰り潮　最短15手':'帰り潮　'+moves+'手');return;
+  }
   const h=Game.hidden;if(h.ch20Ready)return;
   h.ch20a=true;h.ch20Ready=true;h.ch20Spell=true;h.ch20SpellNew=true;
   Game.p.hp=Game.p.mhp;Game.p.mp=Game.p.mmp;Game.p.poison=false;
@@ -2232,6 +2348,12 @@ async function ch20TalkGuide(){
   }else await say('ナギ「金の舵輪を しらべて。\nひとつ前へ もどすことも、出発港から やりなおすことも できる。」');
 }
 async function ch20TalkHelm(){
+  if(Game.hidden.ch20c){
+    await say('金の舵輪に、夜とはちがう「帰り潮」の暗礁が 浮かびあがった。\n報酬も戦いもない。三艘の声だけで、もう一つの航路を たどれる。');
+    const go=await ask([{id:'run',label:'帰り潮を わたる'},{id:'back',label:'いまは やめる'}],'金の舵輪');
+    if(go==='run'){endTalk();openCh20ReturnBoard();}
+    return;
+  }
   if(Game.hidden.ch20d){await say('金の舵輪は、三艘を おなじ港へ むけたまま 静かに 光っている。');return;}
   if(Game.hidden.ch20Ready){await say('黒い影が 舵輪へ からみついている。\n三艘から まわってくる声を、たたかいの隊列へ つなごう。');return;}
   if(!Game.hidden.ch20Intro){await say('ナギ「先に 三艘のこえを きいて。\n先頭だけでなく、さいごの舟まで ぬける航路を いっしょに見つけよう。」');return;}
@@ -2687,6 +2809,7 @@ function resetGame(){
   Game.items={yakuso:0,seisui:0,dokukesi:0};Game.chestsOpen=[];Game.spotsRead=[];Game.springUsed={};Game.dmgTaken=0;Game.t0=0;
   Game.goldT=35;Game.saidYes=false;Game.dayT=DAY_START;Game.metalT=20;Game.stats={battles:0,crits:0,deaths:0};
   Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.purified=0;Game.hidden={weakV:1,weakKnown:{}};Game.popo=null;Game.popoT=null;Game.mate=null;Game.mateT=null;Game.minigame=null;Game.nkOn=false;Game.nkRest=false;Game.nkHp=0;Game.nkMp=0;Game.nkTac='omakase';Game.nkW=0;Game.nkA=0;Game.nkm=null;Game.nkmT=null;Game.kakage='';
+  CH20_RUN=null;CH20_PREVIEW=null;CH20_HITS=[];{const cw=document.getElementById('convoywin');if(cw)cw.classList.remove('show');}
   Game.door=false;Game.mkey=false;Game.chCard=null;Game.visited={};Game.cloak=false;Game.invisible=false;Game.cloakSteps=0;Game.book=false;Game.talkOff=false;Game.seen={};
   Game.proofOpen=false;Game.inventoryOpen=false;Game._proofMask=0;Game._proofGainOn=false;Game._proofGainQueue=[];
   {const pw=document.getElementById('proofwin'),iw=document.getElementById('inventorywin'),pg=document.getElementById('proofgain');if(pw)pw.classList.remove('show');if(iw)iw.classList.remove('show');if(pg)pg.classList.remove('show');}
@@ -2810,6 +2933,7 @@ function loadGame(){
   Game.qChild=d.qChild||0;Game.bonusDef=d.bonusDef||0;Game.bonusHp=d.bonusHp||0;Game.bonusMp=d.bonusMp||0;Game.gheart=d.gheart||0;Game.ng=d.ng||0;
   Game.nkOn=!!d.nkOn;Game.nkRest=!!d.nkRest;Game.nkTac=(d.nkTac==='gangan'||d.nkTac==='inochi')?d.nkTac:'omakase';Game.nkW=d.nkW||0;Game.nkA=d.nkA||0;Game.kakage=(typeof d.kakage==='string')?d.kakage:'';
   Game.hidden=d.hidden||{};
+  normalizeStoryProgress(Game.hidden);
   {const h=Game.hidden; // 章19: 不正な結論文字列と途中状態を、安全な因果関係へ正規化
    if(h.ch19Pick!=='rescue')delete h.ch19Pick;
    if(h.ch19c)h.ch19d=true;
@@ -3811,7 +3935,9 @@ function weakBadgeHTML(id,foe,kind,book){
 function weakClueText(foe){
   if(foe===FOES.kiritoru&&Game.bt){const f=CH19_FORMS[Game.bt.ch19Form||0];return f.icon+' '+f.name+'の影。'+f.tip+(Game.bt.tokiLinked?'　→ つぎは '+CH19_FORMS[(Game.bt.ch19Form+1)%3].icon:'　→ つぎの姿は 切り取られている');}
   if(foe===FOES.kajiu&&Game.bt){
-    const bt=Game.bt,h=CH20_HAZARDS[(bt.ch20Hazard||0)%CH20_HAZARDS.length];
+    const bt=Game.bt,pre=Number.isInteger(bt.ch20Prelude)?bt.ch20Prelude:null;
+    const h=CH20_HAZARDS[((pre===null?bt.ch20Hazard:pre)||0)%CH20_HAZARDS.length];
+    if(pre!==null)return '黒い舵輪の一回転：'+h.name+' —— '+CH20_FORMS[h.form].icon+' '+CH20_FORMS[h.form].name;
     const open=bt.ch20Opening?('声がひらいた弱点：'+(bt.ch20Opening==='phys'?'⚔ つるぎ':(bt.ch20Opening==='fire'?'🔥 ほのお':'❄ こおり'))+'。 '):'';
     if(bt.ch20Signal)return open+'三艘の声：つぎは「'+h.name+'」——'+CH20_FORMS[h.form].name;
     return open+'黒い舵が「'+(bt.ch20Fake?h.fake:h.name)+'」と告げる。三艘の本当の声は まだ まわっていない';
@@ -5287,7 +5413,7 @@ async function talkNpc(n){
   if(Game.talking||Game.minigame)return;
   startTalk();sfxSel();
   if(n.ch20Guide){await ch20TalkGuide();if(Game.talking)endTalk();saveGame();return;}
-  if(n.ch20Helm){await ch20TalkHelm();if(Game.talking)endTalk();saveGame();return;}
+  if(n.ch20Helm){await ch20TalkHelm();if(Game.talking)endTalk();if(!CH20_RUN)saveGame();return;}
   if(n.ch20Voice){await ch20TalkVoice();if(Game.talking)endTalk();saveGame();return;}
   if(n.ch20Boat){await ch20TalkBoat(n);if(Game.talking)endTalk();saveGame();return;}
   if(n.ch19Clock){await ch19TalkClock();if(Game.talking)endTalk();saveGame();return;}
@@ -7145,7 +7271,7 @@ function questText(){
       if(!ch19AllSeen())return 'もくてき：大時計で 三つの時を いききし、同じ人・舟・灯の まえとあとを 見よう　'+ch19SeenSummary();
       return 'もくてき：大時計で 三つの時を かさね、あの夜の 行動の意味を つなごう';
     }
-    if(Game.hidden.ch19c&&!Game.hidden.ch20a)return 'もくてき：むらの きしの 一座のふねへ——三艘の舟から、助けをよぶ信号が とどいた';
+    if(Game.hidden.ch19c&&!Game.hidden.ch20a)return '新章・第20章：むらの きしの「一座のふね」へ——助けをよぶ信号が とどいた';
     if(Game.hidden.ch20a&&!Game.hidden.ch20c){
       if(Game.mapId!=='shiowakare')return 'もくてき：一座のふねで しおわかれの海峡へ——さいごの舟まで通れる道をつくろう';
       if(!Game.hidden.ch20Intro)return 'もくてき：海峡の南で ナギに、三艘が動けない理由をきこう';
@@ -7472,6 +7598,30 @@ function stepFx(){
   }
   if(actx){const tn=actx.currentTime;if(tn-stepSndT>=0.12){stepSndT=tn;stepPar^=1;noiseHit(tn,0.05,0.10,stepPar?820:640,1.1);}}
 }
+// 金柱の描画・タップ・必須会話判定で、同じ画面座標と同じ目的一覧を使う。
+function questBeaconScreenPoint(x,y,cam){
+  const q=isoCtr(x,y),c=cam||Game.cam;
+  if(c)q.y-=Math.max(0,hv(x,y))*c.lift;
+  return q;
+}
+function isQuestBeaconTarget(x,y){
+  return questBeaconTargets().some(t=>Math.round(t.x)===x&&Math.round(t.y)===y);
+}
+function questBeaconTapTarget(lx,ly,cam){
+  let best=null,bd=Infinity;
+  for(const t of questBeaconTargets()){
+    const q=questBeaconScreenPoint(t.x,t.y,cam),dx=lx-q.x;
+    const labelY=q.y-cam.TH*3.4,beamTop=q.y-cam.TH*7;
+    const onLabel=Math.abs(dx)<=Math.max(34,cam.TW*0.72)&&Math.abs(ly-labelY)<=Math.max(18,cam.TH*0.78);
+    const onBeam=Math.abs(dx)<=cam.TW*0.34&&ly>=beamTop&&ly<=q.y+cam.TH*0.45;
+    const onBody=Math.hypot(dx,ly-(q.y-cam.TH*0.45))<=cam.TW*0.58;
+    if(onLabel||onBeam||onBody){
+      const d=Math.abs(dx)+Math.abs(ly-labelY)*0.15;
+      if(d<bd){bd=d;best=t;}
+    }
+  }
+  return best;
+}
 function tapMove(cx,cy){
   const cam=Game.cam,p=Game.p;if(!cam||!p)return;
   const r=cv.getBoundingClientRect();if(!r.width)return;
@@ -7479,8 +7629,10 @@ function tapMove(cx,cy){
   const u=(lx-cam.ox)/(cam.TW/2),v=(ly-cam.oy-cam.TH/2)/(cam.TH/2);
   let tx=Math.round((u+v)/2),ty=Math.round((v-u)/2);
   const w=WORLDS[Game.mapId];
+  const questHit=questBeaconTapTarget(lx,ly,cam);
+  if(questHit){tx=Math.round(questHit.x);ty=Math.round(questHit.y);}
   // からだの どこを おしても その人: NPC/王/宿の スプライト中心(足元より上)との画面距離で吸着
-  {const ents=[];
+  if(!questHit){const ents=[];
    if(w.npcs)for(const n of w.npcs)if(!npcGone(n)){const p=ch19NpcPos(n);ents.push({x:p.x,y:p.y});}
    if(w.king)ents.push({x:w.king.x,y:w.king.y});
    if(w.inn)ents.push({x:w.inn.x,y:w.inn.y});
@@ -7595,7 +7747,7 @@ function updateField(dt){
       {
         const nx=p.tx+d[0],ny=p.ty+d[1];
         const npc=npcAt(nx,ny);
-        const hush=manual&&Game.talkOff; // はなしかけOFF: キー/スワイプの正面では話さない。タップで狙った会話(autoStep)は通す
+        const hush=manual&&Game.talkOff&&!isQuestBeaconTarget(nx,ny); // 一般会話だけOFF。金柱の主線相手は無言で止めない
         if(npc){if(!hush){talkNpc(npc);acted=true;}}
         else if(w.king&&w.king.x===nx&&w.king.y===ny){if(!hush){talkKing();acted=true;}}
         else if(w.inn&&w.inn.x===nx&&w.inn.y===ny){if(!hush){runInn();acted=true;}}
@@ -11183,6 +11335,7 @@ function drawTimeFracture(s,t,bt){
 }
 function drawBlackHelm(s,t,bt){
   const opening=bt&&bt.ch20Opening,signal=bt&&bt.ch20Signal;
+  const pre=bt&&Number.isInteger(bt.ch20Prelude)?bt.ch20Prelude:null;
   const openCol=opening==='phys'?'#f0d06f':(opening==='fire'?'#ff8768':(opening==='ice'?'#91ddff':null));
   ctx.save();ctx.translate(0,Math.sin(t*1.45)*5*s);
   ctx.save();ctx.globalCompositeOperation='lighter';const aura=ctx.createRadialGradient(0,-30*s,3*s,0,-30*s,120*s);aura.addColorStop(0,openCol?openCol+'88':'rgba(82,79,145,.34)');aura.addColorStop(1,'rgba(28,18,66,0)');ctx.fillStyle=aura;ctx.beginPath();ctx.arc(0,-30*s,120*s,0,Math.PI*2);ctx.fill();ctx.restore();
@@ -11196,8 +11349,9 @@ function drawBlackHelm(s,t,bt){
   ctx.strokeStyle=openCol||'#625b86';ctx.lineWidth=Math.max(1.5,3*s);ctx.beginPath();ctx.arc(0,-19*s,12*s,0.12*Math.PI,0.88*Math.PI);ctx.stroke();
   // 三つの危険灯。開いた弱点と、選んだ隊列を戦闘画面そのものに残す。
   const lamps=[['phys','#f0d06f','↕'],['fire','#ff8768','↔'],['ice','#91ddff','△']];
-  lamps.forEach((d,i)=>{const x=(i-1)*38*s,y=69*s,on=opening===d[0]||(signal&&bt&&CH20_HAZARDS[bt.ch20Hazard||0].kind===d[0]);ctx.save();if(on){ctx.globalCompositeOperation='lighter';ctx.fillStyle=d[1]+'66';ctx.beginPath();ctx.arc(x,y,22*s,0,Math.PI*2);ctx.fill();}ctx.globalCompositeOperation='source-over';ctx.fillStyle=on?d[1]:'#343149';ctx.strokeStyle='#171725';ctx.lineWidth=Math.max(1,2*s);ctx.beginPath();ctx.arc(x,y,12*s,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=on?'#17202c':'#938da8';ctx.font='bold '+Math.max(8,16*s)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d[2],x,y);ctx.restore();});
-  if(bt&&bt.ch20Formation){ctx.fillStyle='rgba(10,13,27,.78)';ctx.strokeStyle=openCol||'#8a83aa';ctx.lineWidth=Math.max(1,2*s);ctx.beginPath();ctx.roundRect(-47*s,88*s,94*s,25*s,8*s);ctx.fill();ctx.stroke();ctx.fillStyle='#f2edf9';ctx.font='bold '+Math.max(8,13*s)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(CH20_FORMS[bt.ch20Formation].icon+' '+CH20_FORMS[bt.ch20Formation].name,0,100*s);}
+  lamps.forEach((d,i)=>{const x=(i-1)*38*s,y=69*s,on=pre===i||opening===d[0]||(signal&&bt&&CH20_HAZARDS[bt.ch20Hazard||0].kind===d[0]);ctx.save();if(on){ctx.globalCompositeOperation='lighter';ctx.fillStyle=d[1]+'66';ctx.beginPath();ctx.arc(x,y,22*s,0,Math.PI*2);ctx.fill();}ctx.globalCompositeOperation='source-over';ctx.fillStyle=on?d[1]:'#343149';ctx.strokeStyle='#171725';ctx.lineWidth=Math.max(1,2*s);ctx.beginPath();ctx.arc(x,y,12*s,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=on?'#17202c':'#938da8';ctx.font='bold '+Math.max(8,16*s)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d[2],x,y);ctx.restore();});
+  const form=pre===null?(bt&&bt.ch20Formation):CH20_HAZARDS[pre].form;
+  if(form){ctx.fillStyle='rgba(10,13,27,.78)';ctx.strokeStyle=openCol||'#8a83aa';ctx.lineWidth=Math.max(1,2*s);ctx.beginPath();ctx.roundRect(-47*s,88*s,94*s,25*s,8*s);ctx.fill();ctx.stroke();ctx.fillStyle='#f2edf9';ctx.font='bold '+Math.max(8,13*s)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(CH20_FORMS[form].icon+' '+CH20_FORMS[form].name,0,100*s);}
   ctx.restore();
 }
 const miniCv=document.createElement('canvas'),miniCtx=miniCv.getContext('2d');
@@ -11369,6 +11523,52 @@ function powerAdvice(recLv){
   else L.push('おかねが たまったら みせで つよい ぶきと よろいを かならず かおう。それが いちばん きく。');
   return L;
 }
+// 章12〜17の記録がある旧セーブでは、古い章の欠落より「いま遊んでいる章」を先に案内する。
+// 章の中での順序は従来のquestDestと同じ。進行フラグはここでは変更しない。
+function questDestLateStory(){
+  const h=Game.hidden,has=ks=>ks.some(k=>!!h[k]);
+  if(has(['ch17a','ch17Key','ch17Stone','ch17Fuda','ch17Score','ch17w','cn1','cn2','cn3','cn4','ch17w2','ch17d'])){
+    if(!h.ch17w&&ch17KeyCount()<4){const nx=ch17NextIsle();return {map:nx[0],exp:nx[1]+'に ざちょうの あしあとが のこっている（いま '+ch17KeyCount()+' / 4）。一座の ふねで まわろう。'};}
+    if(!h.ch17w)return {map:'grass',exp:'4つ そろった。一座の ふねへ——だんちょうが「あつめのやかた」の ばしょを おもいだす。'};
+    if(!h.ch17d)return {map:'yakata1',exp:'あつめのやかたで、4しまの しなを つかって くさりを ほどこう（いま '+chain17Count()+' / 4）。おくに ざちょうの おそれが いる。'};
+    return {map:'grass',exp:'むらの あかい テントへ。ざちょうの はじめての「じぶんの ものがたり」が はじまる。'};
+  }
+  if(has(['ch16a','ut1','ut2','ut3','ch16w','ch16d','ch16c'])){
+    if(!h.ch16w)return {map:'uta',exp:'わすれうたのしまで「うたのかけら」を 三つ ひろおう（いま '+['ut1','ut2','ut3'].filter(k=>h[k]).length+' / 3）。一座の ふねで わたれる。'};
+    if(!h.ch16d)return {map:'uta',exp:'しまの おくで「わすれられしもの」が うたを すいこんでいる。'};
+    if(!h.ch16c)return {map:'uta',exp:'きたの おかの「うたひ」へ。はじまりの ひとの なまえを うたに かえそう。'};
+    return {map:'grass',exp:'むらの きしの 一座の ふねへ。だんちょうが あわてて よんでいる——ざちょうが きえたのだ。'};
+  }
+  if(has(['ch15a','hr1','hr2','hr3','ch15w','ch15d','ch15c'])){
+    if(!h.ch15w)return {map:'hora',exp:'ほらふきじまで「ほらがい」を 三つ ふきならそう（いま '+['hr1','hr2','hr3'].filter(k=>h[k]).length+' / 3）。一座の ふねで わたれる。'};
+    if(!h.ch15d)return {map:'hora',exp:'ほらふきの いえの まえで ぬし「まことをせまるもの」が かたりを しばっている。'};
+    if(!h.ch15c)return {map:'hora',exp:'ふだの きえた「ほらふきの いえ」へ。とびらを たたこう。'};
+    return {map:'grass',exp:'むらの きしの 一座の ふねへ。だんちょうが「うたいだしを わすれる しま」の はなしを もっている。'};
+  }
+  if(has(['ch14a','km1','km2','km3','ch14w','ch14d','ch14c'])){
+    if(!h.ch14w)return {map:'tani',exp:'やまびこのたにで「こだまのいし」を 三つ ならそう（いま '+['km1','km2','km3'].filter(k=>h[k]).length+' / 3）。一座の ふねで わたれる。'};
+    if(!h.ch14d)return {map:'tani',exp:'たにの がけで ぬし「もとをただすもの」が すべての かたりを おさえつけている。'};
+    if(!h.ch14c)return {map:'tani',exp:'ぬしの おくの「こだまの いしぶみ」へ。じぶんの ことばで、はじまりの はなしを かたろう。'};
+    return {map:'grass',exp:'むらの きしの 一座の ふねへ。だんちょうが「ふだに とざされた ほらふきじま」の うわさを ひろった。'};
+  }
+  if(has(['ch13a','ka1','ka2','ka3','ch13w','ch13d','ch13c'])){
+    if(!h.ch13w)return {map:'kura',exp:'くらのしまで「しまわれたこえ」の はこを 三つ ひらこう（いま '+['ka1','ka2','ka3'].filter(k=>h[k]).length+' / 3）。一座の ふねで わたれる。'};
+    if(!h.ch13d)return {map:'kura',exp:'くらの おくで ぬし「しまいこむもの」が こえたちを かかえこんでいる。ひらくのだ。'};
+    if(!h.ch13c)return {map:'kura',exp:'ぬしの おくの「ねむりの ほんだな」へ。こえたちを しまへ かえそう。'};
+    return {map:'grass',exp:'むらの きしの 一座の ふねへ。だんちょうが「こだまに しかられる たに」の はなしを もっている。'};
+  }
+  if(has(['ch12a','ch12d','ch12w','ch12c','ch12Sora','ch12Nagi','ch12Mago'])){
+    if(!h.ch12d)return {map:'theater',exp:'あかいテントの ぶたいへ。まちがって かたられた「蒼の勇者」と、ことばを ぶつけよう。'};
+    if(!h.ch12w){
+      if(!h.ch12Sora)return {map:'grass',exp:'むらはずれの ソラに、だいほんから けされた なまえの こえを きこう。'};
+      if(!h.ch12Nagi)return {map:'mistsea',exp:'わすれのうみの ナギに、だいほんから けされた わたりびとの こえを きこう。'};
+      return {map:'cave2',exp:'ちそこの ほりびとのまごに、だいほんから けされた ほりびとの こえを きこう。'};
+    }
+    if(!h.ch12c)return {map:'theater',exp:'三つの「ほんとうのこえ」が そろった。旅芸人の ぶたいへ もどり、まくあいの ひとことへ とどけよう。'};
+    return {map:'grass',exp:'むらの きしの 一座の ふねへ。だんちょうが「こえの きえた しま」の はなしを もっている。'};
+  }
+  return null;
+}
 // 主線の「いま めざす しま」と ことばの せつめい（みちびき）
 function questDest(){
   const h=Game.hidden,p=Game.purified||0;
@@ -11412,6 +11612,7 @@ function questDest(){
   if(h.ch20c)return {map:null,exp:'しおわかれの海峡では、先舟・暮らし舟・一座の船の三艘が、さいごの綱まで同じ港へつないでいる。'};
   if(h.ch19c)return {map:null,exp:'ときかさねじまの大時計は朝へ進み、灯台・救助舟・三人の声を 一つの時間へつないでいる。'};
   if(h.ch18c)return {map:null,exp:'かぜまちじまに、じぶんたちで えらんだ朝が はじまっている。島へ いくときは、一座の ふねが いつでも でる。'};
+  {const late=questDestLateStory();if(late)return late;}
   const stoneMap={t1:'grass',t2:'forest',t3:'cave',t4:'ice',t5:'volcano'};
   if(!h.elderTold){
     const miss=Object.keys(stoneMap).filter(k=>!h[k]);
@@ -11523,7 +11724,7 @@ async function questGuide(){
     if(ts.length){
       const pp=Game.p; let best=ts[0],bd=1e9;
       for(const t of ts){const dd=Math.hypot(t.x-pp.tx,t.y-pp.ty);if(dd<bd){bd=dd;best=t;}}
-      const q=isoCtr(best.x,best.y); const rc=cv.getBoundingClientRect();
+      const q=questBeaconScreenPoint(best.x,best.y,Game.cam); const rc=cv.getBoundingClientRect();
       tapMove(rc.left+q.x*rc.width/W, rc.top+q.y*rc.height/H);
       if(Game.autoPath&&Game.autoPath.length)toast('きんいろの はしらへ あんないちゅう…（がめんタップで ちゅうだん）');
     }
@@ -11544,6 +11745,9 @@ function questBeaconTargets(){
   if(!w)return out;
   const push=(x,y)=>out.push({x,y});
   const foeB=(pred)=>{for(const e of Game.enemies)if(e.def&&pred(e))push(Math.round(e.px),Math.round(e.py));};
+  // まいごの主線も会話OFFで止めず、目的ボタン・金柱・接触を同じ相手へそろえる
+  if(Game.qChild===1&&Game.mapId==='cave'&&w.npcs)for(const n of w.npcs)if(n.child)push(n.x,n.y);
+  if(Game.qChild===2&&Game.mapId==='grass'&&w.npcs)for(const n of w.npcs)if(n.role==='haha')push(n.x,n.y);
   // 章12: あかいテント → ぶたい → 三つの ほんとうのこえ → ぶたい
   if(Game.mapId==='grass'&&w.npcs){
     if(h.ch11c&&!h.ch12a)for(const n of w.npcs)if(n.troupeTent)push(n.x,n.y);
@@ -11690,8 +11894,7 @@ function drawQuestBeacons(){
   const ts=questBeaconTargets();if(!ts.length)return;
   const TWc=Game.cam.TW,THc=Game.cam.TH;
   for(const ex of ts){
-    const q=isoCtr(ex.x,ex.y);
-    q.y-=Math.max(0,hv(ex.x,ex.y))*Game.cam.lift;
+    const q=questBeaconScreenPoint(ex.x,ex.y,Game.cam);
     if(q.x<-TWc*2||q.x>W+TWc*2||q.y<-THc*2||q.y>H+THc*9)continue;
     ctx.save();ctx.globalCompositeOperation='lighter';
     const ba=0.26+0.10*Math.sin(TM*2.4+ex.x);
@@ -11756,6 +11959,19 @@ const calcDmg=(atk,def)=>Math.max(1,atk-def+ri(0,3));
 const enemyPos=()=>{const k=(Game.bt&&Game.bt.sizeK)||1;return{x:W/2,y:H*0.40,s:Math.min(W,H)/560*k};}; // sizeK=なかまをよぶ の 拡大
 function shakeBattle(p,dur){const bt=Game.bt;if(bt){bt.shakeP=p;bt.shakeT=dur;}}
 
+// 章20決戦の冒頭で、三つの危険を一体の攻撃語彙として見せる。
+// 選択や資源消費は挟まず、演出後は既存の初期戦闘状態へそのまま戻す。
+async function ch20BattlePrelude(){
+  const bt=Game.bt;if(!bt||bt.foe!==FOES.kajiu)return;
+  const cols=['#f0d06f','#ff8768','#91ddff'];
+  for(let i=0;i<CH20_HAZARDS.length;i++){
+    bt.ch20Prelude=i;renderBattleWeakness();flash(cols[i],0.22,0.30);sfxSel();
+    await new Promise(r=>setTimeout(r,320)); // はやさ設定でも三つの危険を読み取れる長さに固定
+  }
+  bt.ch20Prelude=null;renderBattleWeakness();
+  await say('黒い舵輪が 一回転した。\nせまい岩間 ↕、左右からの横波 ↔、最後尾をさらう渦 △——三つの危険が、順に三艘へ 押し寄せる。');
+}
+
 async function runBattle(ref){
   const foe=ref.def;
   markSeen(foeId(foe));
@@ -11785,7 +12001,7 @@ async function runBattle(ref){
   }
   if(foe===FOES.kajiu){
     Game.bt.ch20Hazard=0;Game.bt.ch20Signal=false;Game.bt.ch20Echo=0;Game.bt.ch20Used=false;
-    Game.bt.ch20Formation='line';Game.bt.ch20Opening=null;Game.bt.ch20Fake=true;Game.bt.ch20DmgMul=1;Game.bt.ch20LastReaction=null;
+    Game.bt.ch20Formation='line';Game.bt.ch20Opening=null;Game.bt.ch20Fake=true;Game.bt.ch20DmgMul=1;Game.bt.ch20LastReaction=null;Game.bt.ch20Prelude=null;
   }
   if(!foe.stage)Game.stats.battles++;
   updateBadge();
@@ -11801,7 +12017,7 @@ async function runBattle(ref){
   await wait(0.03);
   if(foe.boss)await bossEntrance();
   await say(foe.name+'が あらわれた！');
-  if(foe===FOES.kajiu)await say('黒い舵輪が「つぎは 横波だ」と きしんだ。\nけれど三艘からは、ちがう波音が かすかに返ってくる——。');
+  if(foe===FOES.kajiu)await ch20BattlePrelude();
   if(Game.bt.night&&!Game.nightHintB){
     Game.nightHintB=true;
     await say('よるの まものは ひるまより きょうぼうだ…！\nそのぶん けいけんちと ゴールドも おおいぞ！');
@@ -15846,8 +16062,9 @@ async function continueGame(){
 // タイトルのボタン：ぼうけんのしょの うむで きりかえ（冊えらびは とじる）
 function updateTitleButtons(){
   {const v=new URLSearchParams(location.search).get('v');
-   $('#title-ver').textContent=v?('はん: '+v):'はん: ふめい（ふるい いりぐち。トップの みじかいURLから ひらくと つねに さいしん）';}
+   $('#title-ver').textContent=v?('はん: '+v):(location.protocol==='file:'?'はん: ローカル・第20章版':'はん: ふめい（ふるい いりぐち。トップの みじかいURLから ひらくと つねに さいしん）');}
   $('#slotwin').style.display='none';
+  $('#title-release').style.display='';
   $('#title-hint').style.display='';
   const has=hasAnySave();
   {let cl=false;for(let n=1;n<=3;n++){try{const d=JSON.parse(localStorage.getItem('aoYushaSave'+n));if(d&&d.hidden&&d.hidden.cleared)cl=true;}catch(e){}}
@@ -15882,6 +16099,7 @@ function showSlots(mode){
   renderSlots();
   $('#slot-head').textContent=mode==='load'?'どの ぼうけんのしょで つづける？':(mode==='jumon'?'どの ぼうけんのしょに かきこむ？':'どの ぼうけんのしょに きろくする？');
   $('#slotwin').style.display='flex';
+  $('#title-release').style.display='none'; // 320px帯では冊一覧へ譲り、ロゴとの重なりを防ぐ
   $('#btn-continue').style.display='none';
   $('#btn-start').style.display='none';
   $('#btn-jumon').style.display='none';
