@@ -514,8 +514,20 @@ body{
   .mi .mcost{ display:none; }
   #msgwin{ min-height:84px; }
   #mface{ width:52px; height:52px; border-radius:11px; }
-  .b-top{ flex-direction:column; align-items:stretch; gap:6px; padding-right:46px; }
+  /* 戦闘の上段は縦積みにしない。敵名→操作→2人の状態を3段へ圧縮し、敵の顔と剣先を隠さない。 */
+  .b-top{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:4px; padding-right:42px; }
+  #enamewrap{ grid-column:1/-1; max-width:none; min-width:0; gap:3px; padding:6px 9px; }
   #ename{ align-self:flex-start; white-space:nowrap; }
+  #fastbtn,#autobtn{ align-self:stretch; justify-content:center; min-width:0; padding:5px 6px; white-space:nowrap; }
+  #bstat,#nkstat{ min-width:0; flex-direction:column; align-items:stretch; gap:2px; padding:5px 7px; }
+  #bstat .lv,#nkstat .lv{ line-height:1.15; white-space:nowrap; }
+  #bstat .bgrp,#nkstat .bgrp{ min-width:0; gap:3px; }
+  #bstat .bar,#nkstat .bar{ width:clamp(34px,12vw,52px); flex:1 1 auto; min-width:28px; }
+  #bstat .num,#nkstat .num{ min-width:0; font-size:.72em; white-space:nowrap; }
+  #bproofhud{ gap:2px; overflow:hidden; }
+  #bproofhud .proof-label{ display:none; }
+  #bproofhud .proof-orbs{ flex-wrap:nowrap; gap:1px; }
+  #bproofhud .proof-orb{ width:9px; height:9px; flex:0 0 9px; font-size:5px; }
   #fstat{ max-width:calc(100vw - 190px); }
   .bar{ width:clamp(46px,11vw,110px); }
   .num{ min-width:3.6em; }
@@ -11987,7 +11999,7 @@ async function runBattle(ref){
   const night=!foe.stage&&isNightNow()&&!foe.boss;
   const nhp=Math.round(foe.hp*(night?1.35:1)*diffEnemyHP(foe)); // なんいど：敵HP係数
   Game.bt={foe,ref,night,hp:nhp,mhp:nhp,t:0,flash:0,lunge:0,shakeT:0,shakeP:0,hitStop:0,recoil:0,blink:0,slash:null,cast:null,dying:null,half:false,
-    turn:0,soar:false,soarK:0,charge:false,guard:false,sleep:0,para:0,pflash:0,boltT:0,bolt:null,shock:null,awakenT:0,ghosts:null,stageSnap};
+    turn:0,soar:false,soarK:0,charge:false,guard:false,sleep:0,para:0,pflash:0,boltT:0,bolt:null,critShock:null,bossShock:null,awakenT:0,ghosts:null,stageSnap};
   if(foe===FOES.shioarashi){
     Game.bt.ch18Pier=!!Game.hidden.ch18BuiltPier;
     Game.bt.ch18Shelter=!!Game.hidden.ch18BuiltShelter;
@@ -12653,12 +12665,28 @@ async function spellResult(foe,d,rawMul,kind,effectiveMul){
   if(Game.bt&&(Game.bt.foe===FOES.kiritoru||Game.bt.foe===FOES.kajiu))rawMul=battleAffinityMul(kind,rawMul);
   const dynamic=Game.bt&&(Game.bt.foe===FOES.kiritoru||Game.bt.foe===FOES.kajiu);
   const mul=dynamic?rawMul:(effectiveMul==null?rawMul:effectiveMul);
-  if(d>0&&BOSO){const bt=Game.bt;if(bt){bt.shock={t:0};}sfxCrit();flash('#ffe9b0',0.35,0.5);await say('まほうが ぼうそうした！');}
+  if(d>0&&BOSO){const bt=Game.bt;if(bt){bt.critShock={t:0};}sfxCrit();flash('#ffe9b0',0.35,0.5);await say('まほうが ぼうそうした！');}
   if(d>0) await say(foe.name+'に '+d+'の ダメージ！');
   if(rawMul>1) await say('こうかは ばつぐん！');
   else if(rawMul<=0) await say(foe.name+'には きかない！');
   else if(rawMul<1&&mul===rawMul) await say('こうかは いまひとつの ようだ…');
   await storyAffinityAfter(kind,d,rawMul);
+}
+// 通常攻撃の「振る→接触」を一か所で同期する。
+// はやさ設定は台詞の待ち時間だけを変えるため、接触フレームはここで同じ姿勢へ揃える。
+function beginHeroStrike(bt,extra){
+  bt.heroAtk=1;
+  bt.slash=Object.assign({t:0,result:'pending'},extra||{});
+}
+function markHeroStrikeImpact(bt,result){
+  bt.heroAtk=Math.min(bt.heroAtk==null?1:bt.heroAtk,0.744);
+  if(bt.slash){bt.slash.t=Math.max(bt.slash.t||0,0.272);bt.slash.result=result;}
+  // 回避は「直撃したのに数値だけミス」にしない。剣風は元の位置を通り、敵だけが横へ逃げる。
+  if(result==='miss'){
+    const strikeSide=battleStrikeSide();
+    bt.foeDodge={t:0.055,dir:strikeSide>=0?-1:1};
+    if(bt.slash)bt.slash.missDir=-bt.foeDodge.dir;
+  }
 }
 async function playerAction(act){
   const p=Game.p,bt=Game.bt,ep=enemyPos();
@@ -12672,13 +12700,14 @@ async function playerAction(act){
   }
   if(act.kind==='fight'){
     await say('ゆうしゃの こうげき！');
-    bt.slash={t:0};bt.heroAtk=1;sfxSlash();
+    beginHeroStrike(bt);sfxSlash();
     await wait(0.08);
     const wfx=WEAPONFX[Game.weaponAtk]||{};
     const crit=Math.random()<((curDiff().pcrit||0.1)+(wfx.critUp||0)+(kkOn('tsugu')?0.04:0));
     const physRaw=foePhys(bt),physMul=battleAffinityMul('phys',physRaw);
     const dodgeP=(bt.tomoshibi>0||bt.ch18NoDodge||bt.tokiNoDodge)?0:(bt.soar?0.5:(bt.foe.dodge||0));
     if(!crit&&dodgeP&&Math.random()<dodgeP){
+      markHeroStrikeImpact(bt,'miss');
       sfxRun();
       popup(ep.x,ep.y-ep.s*70,'ミス','sp');
       await wait(0.12);
@@ -12694,31 +12723,36 @@ async function playerAction(act){
       if(bt.foe===FOES.kajiu&&bt.ch20Opening==='phys')d=Math.max(1,Math.round(d*physMul));
       if(wfx.vsKage&&bt.foe.kage)d=Math.round(d*wfx.vsKage);
       if(bt.horaHit){d=Math.round(d*2);bt.horaHit=0;bt.horaBig=1;}
-      sfxCrit();bt.flash=1;bt.hitStop=0.16;bt.recoil=1.35;bt.blink=1;shakeBattle(18,0.5);bt.shock={t:0};
+      markHeroStrikeImpact(bt,'crit');
+      bt.hp=Math.max(0,bt.hp-d);
+      sfxCrit();bt.flash=1;bt.hitStop=0.16;bt.recoil=1.35;bt.blink=1;shakeBattle(18,0.5);bt.critShock={t:0};
       flash('#fff3c4',0.45,0.55);
       popup(ep.x,ep.y-ep.s*70,d,'crit');
       puff(ep.x,ep.y-ep.s*40,'rgba(255,225,140,.95)',34,300,0.8,{s0:2,s1:6});
       await wait(0.24);
       await say('かいしんの いちげき！！');
     }else{
-      sfxHit();bt.flash=1;bt.hitStop=0.08;bt.recoil=1;bt.blink=1;shakeBattle(10,0.3);
       d=calcDmg(Math.round(p.atk*(bt.atkUp||1)*(bt.jimeAtkDown||1)),foeDefNow(bt));
       d=Math.max(1,Math.round(d*physMul));
       if(wfx.vsKage&&bt.foe.kage){d=Math.round(d*wfx.vsKage);}
       if(bt.horaHit){d=Math.round(d*2);bt.horaHit=0;bt.horaBig=1;}
+      markHeroStrikeImpact(bt,'hit');
+      bt.hp=Math.max(0,bt.hp-d);
+      sfxHit();bt.flash=1;bt.hitStop=0.08;bt.recoil=1;bt.blink=1;shakeBattle(10,0.3);
       popup(ep.x,ep.y-ep.s*70,d);
       puff(ep.x,ep.y-ep.s*40,'rgba(255,245,220,.9)',18,220,0.6,{s0:2,s1:5});
     }
-    bt.hp=Math.max(0,bt.hp-d);
     await wait(crit?0.08:0.12);
     await say(bt.foe.name+'に '+d+'の ダメージ！');
     if(bt.horaBig){bt.horaBig=0;await say('おおぼらの いきおいが せなかを おした！ いちげきが 2ばい！');}
     if(wfx.twice&&bt.hp>0){
-      bt.slash={t:0};sfxSlash();bt.flash=1;bt.hitStop=0.06;bt.recoil=0.9;bt.blink=1;shakeBattle(8,0.25);
+      beginHeroStrike(bt,{second:true});sfxSlash();
       await wait(0.10);
       let d2=calcDmg(Math.round(p.atk*0.75*(bt.atkUp||1)*(bt.jimeAtkDown||1)),foeDefNow(bt));
       d2=Math.max(1,Math.round(d2*physMul));
       if(wfx.vsKage&&bt.foe.kage)d2=Math.round(d2*wfx.vsKage);
+      markHeroStrikeImpact(bt,'hit');
+      bt.flash=1;bt.hitStop=0.06;bt.recoil=0.9;bt.blink=1;shakeBattle(8,0.25);
       bt.hp=Math.max(0,bt.hp-d2);
       popup(ep.x,ep.y-ep.s*58,d2);
       puff(ep.x,ep.y-ep.s*40,'rgba(200,235,255,.9)',14,200,0.5,{s0:2,s1:4});
@@ -13116,7 +13150,7 @@ async function playerAction(act){
     await wait(0.3);
     bt.cast=null;
     bt.spellFx={kind:'fire',t:0,pow:3};
-    sfxCrit();bt.flash=1;bt.hitStop=0.12;bt.recoil=1.2;bt.blink=1;shakeBattle(16,0.6);bt.shock={t:0};
+    sfxCrit();bt.flash=1;bt.hitStop=0.12;bt.recoil=1.2;bt.blink=1;shakeBattle(16,0.6);bt.critShock={t:0};
     flash('#ffd9a0',0.5,0.8);
     {const epq=enemyPos();
      const d=Math.max(1,Math.round(p.atk*2.2*(bt.atkUp||1))-bt.foe.def+ri(0,6));
@@ -14019,16 +14053,19 @@ function updateBattle(dt){
   if(bt.flash>0)bt.flash=Math.max(0,bt.flash-dt*3);
   if(bt.recoil>0)bt.recoil=Math.max(0,bt.recoil-dt*3.8);
   if(bt.blink>0)bt.blink=Math.max(0,bt.blink-dt*6.5);
-  if(bt.heroAtk>0)bt.heroAtk=Math.max(0,bt.heroAtk-dt*3.2);
+  const strikeDt=Game.fastBattle?dt*2:dt; // はやさ設定でも剣の接触時刻を台詞待ちと同期
+  if(bt.heroAtk>0)bt.heroAtk=Math.max(0,bt.heroAtk-strikeDt*3.2);
   if(bt.heroHit>0)bt.heroHit=Math.max(0,bt.heroHit-dt*3.4);
   if(bt.lunge>0)bt.lunge=Math.max(0,bt.lunge-dt*2.4);
+  if(bt.foeDodge){bt.foeDodge.t+=dt;if(bt.foeDodge.t>=0.64)bt.foeDodge=null;}
   if(bt.shakeT>0)bt.shakeT-=dt;
-  if(bt.slash){bt.slash.t+=dt*3.4;if(bt.slash.t>=1)bt.slash=null;}
+  if(bt.slash){bt.slash.t+=strikeDt*3.4;if(bt.slash.t>=1)bt.slash=null;}
   if(bt.spellFx){bt.spellFx.t+=dt*2.2;if(bt.spellFx.t>=1)bt.spellFx=null;} // じゅもんの ほのお/こおり
   if(bt.pray){bt.pray.t+=dt*1.1;if(bt.pray.t>=1)bt.pray=null;} // みちづれの いのりの ひかり
   if(bt.nkPray){bt.nkPray.t+=dt*1.1;if(bt.nkPray.t>=1)bt.nkPray=null;} // こどもの いやしの おはなし
   if(bt.nkAtk){bt.nkAtk.t+=dt*2.6;if(bt.nkAtk.t>=1)bt.nkAtk=null;} // こどもの つえの いちげき
-  if(bt.shock){bt.shock.t+=dt*2.6;if(bt.shock.t>=1)bt.shock=null;} // かいしんの しょうげきは
+  if(bt.critShock){bt.critShock.t+=dt*2.6;if(bt.critShock.t>=1)bt.critShock=null;} // かいしんの 金白リング
+  if(bt.bossShock){bt.bossShock.t+=dt*2.0;if(bt.bossShock.t>=1)bt.bossShock=null;} // ボス登場の 地面波
   if(bt.cast){
     bt.cast.t+=dt;
     const ep=enemyPos();
@@ -14332,10 +14369,10 @@ function drawBattleScene(){
   if(bt.foe.boss)bossBack(bt,ep);
   if(bt.foe.tint||bt.blink>0)drawFoeTinted(bt,ep);
   else drawFoe(bt,ep);
-  drawMateBattle(bt);drawNkBattle(bt);drawHeroBack(bt);
-  if(bt.slash)drawSlash(bt.slash.t,ep);
+  if(bt.critShock)drawCritShock(bt.critShock.t,ep); // 大リングは勇者の後ろ、剣先の衝突光は前へ
+  drawMateBattle(bt);drawNkBattle(bt);drawHeroBack(bt,ep);
+  if(bt.slash)drawSlash(bt.slash,ep,bt.heroBlade);
   if(bt.spellFx)drawSpellFx(bt.spellFx,ep);
-  if(bt.shock)drawShock(bt.shock.t,ep);
   drawP();
   drawBattleFore(th.bokeh);
   ctx.restore();
@@ -14372,6 +14409,12 @@ function drawFoe(bt,ep){
   }
   ctx.save();
   ctx.translate(ep.x,ep.y);
+  if(bt.foeDodge){
+    const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
+    const dk=smooth(bt.foeDodge.t/0.10)*(1-smooth((bt.foeDodge.t-0.30)/0.30));
+    const dx=Math.min(96*s,W*0.16)*(bt.foeDodge.dir||1)*dk;
+    ctx.translate(dx,-16*s*dk);
+  }
   const ly=bt.lunge>0?Math.sin((1-bt.lunge)*Math.PI)*s*26:0;
   ctx.translate(0,ly);
   if(bt.recoil>0){ // ひげき：ノックバック＋ふるえ＋つぶれ（おおきい てきは はんぶん）
@@ -14586,33 +14629,86 @@ function drawNkBattle(bt){
   }
   ctx.restore();
 }
+function battleStrikeSide(){return clamp(70-(W-390)*0.16,-22,70);}
 // せんとうの ゆうしゃ：敵を見すえる 3/4うしろ姿。
 // フィールドと同じ髪・鉢巻・装備色を使い、姿勢だけで行動が読めるようにする。
-function drawHeroBack(bt){
-  let uiTop=H*0.75;
-  {const mr=msgwinEl.getBoundingClientRect(),cr=cv.getBoundingClientRect();
-   if(mr.height>0&&cr.height>0)uiTop=(mr.top-cr.top)*(H/cr.height);} // メッセージ窓の直上に立つ
+function drawHeroBack(bt,ep){
+  let uiTop=H*0.75,hudBottom=0;
+  {const mr=msgwinEl.getBoundingClientRect(),cr=cv.getBoundingClientRect(),ht=battleUiEl.querySelector('.b-top');
+   if(mr.height>0&&cr.height>0)uiTop=(mr.top-cr.top)*(H/cr.height);
+   // offset座標は親のuiShake transformに動かされない。実viewportと論理Canvasが同寸の時だけ読む。
+   if(ht&&ht.offsetHeight>0&&cr.height>0&&Math.abs(cr.width-W)<3)hudBottom=(ht.offsetTop+ht.offsetHeight)*(H/cr.height);} // メッセージ窓の直上に立つ
   const hyT=Math.min(H*0.80,uiTop-H*0.010);
   if(bt.heroY==null)bt.heroY=hyT;
   bt.heroY+=(hyT-bt.heroY)*0.10; // 既存仕様：窓の開閉で足元を跳ねさせない
 
-  // スマホでも「頭・剣・両脚・マント」が消えない戦闘専用サイズ。
-  const heroWidthK=W<360?0.37:0.42; // 320px帯は二段HP欄と頭が重ならない寸法へ一段だけ縮める
+  const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
+  // スマホでも「頭・剣・両脚・マント」が消えない戦闘専用サイズ。320→390pxを連続補間する。
+  const heroWidthK=0.37+0.05*smooth((W-320)/70);
   const heroH=clamp(Math.min(H*0.29,W*heroWidthK),110,190),u=heroH/172;
-  const atk=bt.heroAtk>0?Math.sin(clamp(1-bt.heroAtk,0,1)*Math.PI):0;
+  const attackPhase=bt.heroAtk>0?clamp(1-bt.heroAtk,0,1):0;
+  // ため(0-.08)→接触(.256)→振り抜き(.56)→復帰。接触中は踏み込み量を保つ。
+  const attackIn=bt.heroAtk>0?smooth((attackPhase-0.03)/0.226):0;
+  const attackOut=bt.heroAtk>0?smooth((attackPhase-0.56)/0.44):1;
+  const atk=attackIn*(1-attackOut);
   const hit=bt.heroHit>0?Math.sin(clamp(bt.heroHit,0,1)*Math.PI/2):0;
   const guard=bt.guard?1:0,cast=bt.cast?1:0;
   const breathe=Math.sin(bt.t*2.15),wind=Math.sin(bt.t*1.55+0.5);
-  let hx=W*(W<520?0.36:0.285),hy=bt.heroY;
+  const wideK=smooth((W-390)/260);
+  let hx=W*(0.36-0.075*wideK),hy=bt.heroY;
   if(bt.intro)hx-=bt.intro*bt.intro*W*0.28;
-  hx+=atk*W*0.050-hit*W*0.020;
+  hx+=atk*W*(0.012+0.038*wideK)-hit*W*0.020;
   hy-=atk*H*0.018;hy+=hit*H*0.010;
   const crouch=guard*8*u,lean=atk*0.10-hit*0.15;
+  const handX=(48+atk*11-guard*10)*u,handY=(-83+atk*13+guard*2)*u;
+  const strikeSide=battleStrikeSide();
+  const strikeTarget=ep?{
+    x:ep.x+ep.s*strikeSide,
+    y:ep.y+ep.s*(-22-(bt.soarK||0)*56)
+  }:{x:hx+110*u,y:hy-105*u};
+
+  // 手から命中点までの残りを全身の踏み込みで詰める。剣先と敵の間には短い剣風だけを残す。
+  if(bt.heroAtk>0&&ep){
+    const cy=hy+breathe*u*0.7+crouch,cs=Math.cos(lean),sn=Math.sin(lean);
+    const handWX=hx+cs*handX-sn*handY,handWY=cy+sn*handX+cs*handY;
+    const dx=strikeTarget.x-handWX,dy=strikeTarget.y-handWY,dist=Math.hypot(dx,dy)||1;
+    const need=Math.max(0,dist-105*u*0.90);
+    const cap=Math.min(155*u,H*0.20,W*0.36);
+    const lunge=Math.min(need,cap)*atk;
+    hx+=dx/dist*lunge*(0.28+0.48*wideK);hy+=dy/dist*lunge;
+  }
+  // 実DOMのHP欄が折り返した時は、頭頂をその下へ押し戻す。幅の閾値ではなく実配置を基準にする。
+  if(hudBottom>0){
+    const headTop=hy+breathe*u*0.7+crouch-178*u;
+    if(headTop<hudBottom+5)hy+=hudBottom+5-headTop;
+  }
+  const bodyY=hy+breathe*u*0.7+crouch,cs=Math.cos(lean),sn=Math.sin(lean);
+  const handWX=hx+cs*handX-sn*handY,handWY=bodyY+sn*handX+cs*handY;
+  const contactRot=clamp(Math.atan2(strikeTarget.y-handWY,strikeTarget.x-handWX)+Math.PI/2-lean,-0.25,1.05);
+  const mix=(a,b,k)=>a+(b-a)*k;
+  let swordRot;
+  if(guard)swordRot=0.12;
+  else if(cast)swordRot=0.34;
+  else if(bt.heroAtk>0){
+    if(attackPhase<0.08)swordRot=mix(0.56,-0.42,smooth(attackPhase/0.08));
+    else if(attackPhase<0.256)swordRot=mix(-0.42,contactRot,smooth((attackPhase-0.08)/0.176));
+    else if(attackPhase<0.56)swordRot=mix(contactRot,1.42,smooth((attackPhase-0.256)/0.304));
+    else swordRot=mix(1.42,0.56,smooth((attackPhase-0.56)/0.44));
+  }else swordRot=0.56-hit*0.18;
+  const bladeAngle=lean+swordRot;
+  bt.heroBlade={
+    handX:handWX,handY:handWY,
+    tipX:handWX+Math.sin(bladeAngle)*105*u,
+    tipY:handWY-Math.cos(bladeAngle)*105*u,
+    targetX:strikeTarget.x,targetY:strikeTarget.y,
+    headX:hx+cs*16*u-sn*(-153*u),headY:bodyY+sn*16*u+cs*(-153*u),
+    angle:bladeAngle,length:105*u,u,phase:attackPhase
+  };
   const OL='rgba(9,14,34,0.78)',RIM='rgba(213,239,255,0.68)';
   const ar=armorCol(),sw=swordCol();
 
   ctx.save();
-  ctx.translate(hx,hy+breathe*u*0.7+crouch);
+  ctx.translate(hx,bodyY);
   ctx.rotate(lean);
 
   // 地面へ食い込む横長の影。踏み込みで敵側へ伸びる。
@@ -14724,7 +14820,6 @@ function drawHeroBack(bt){
   ctx.strokeStyle='rgba(150,84,55,0.70)';ctx.lineWidth=Math.max(1,u*1.2);ctx.beginPath();ctx.moveTo(36*u,-148*u);ctx.lineTo(31*u,-147*u);ctx.stroke();
 
   // 剣腕。肩・肘・手をつなぎ、剣だけが浮かないようにする。
-  const handX=(48+atk*11-guard*10)*u,handY=(-83+atk*13+guard*2)*u;
   ctx.strokeStyle='#263665';ctx.lineWidth=Math.max(8,u*13);ctx.lineCap='round';
   ctx.beginPath();ctx.moveTo(30*u,-110*u);ctx.quadraticCurveTo((45+atk*7)*u,(-101+atk*10)*u,handX,handY);ctx.stroke();
   ctx.strokeStyle=ar[0];ctx.lineWidth=Math.max(4,u*7);ctx.beginPath();ctx.moveTo(31*u,-109*u);ctx.lineTo(handX,handY);ctx.stroke();
@@ -14732,7 +14827,6 @@ function drawHeroBack(bt){
 
   // 幅広い剣。上位武器は刃の縁が蒼白く発光する。
   ctx.save();ctx.translate(handX,handY);
-  const swordRot=guard?0.12:(cast?0.34:0.56+atk*1.43-hit*0.18);
   ctx.rotate(swordRot);
   if(Game.weaponAtk>=44){
     ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(135,223,255,0.32)';ctx.lineWidth=Math.max(5,u*12);ctx.lineCap='round';
@@ -14827,40 +14921,78 @@ function drawSpellFx(fx,ep){
   }
   ctx.restore();
 }
-// かいしんの しょうげきは（きんの 太リング+白リング+ほのかな 円盤。おおきな てきでも りんかくの そとへ ぬける）
-function drawShock(t,ep){
-  const s=ep.s,r=s*(40+t*220),a=Math.min(1,(1-t)*1.4);
-  ctx.save();ctx.globalCompositeOperation='lighter';
-  const fg=ctx.createRadialGradient(ep.x,ep.y-s*20,r*0.35,ep.x,ep.y-s*20,r);
+// かいしんの しょうげきは：敵の胸で割れる、傾いた金の破断リング。
+function drawCritShock(t,ep){
+  const s=ep.s,r=s*(28+t*150),a=Math.min(1,(1-t)*1.4),cx=ep.x+s*battleStrikeSide(),cy=ep.y-s*22;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.translate(cx,cy);ctx.rotate(-0.48);ctx.scale(1,0.68);
+  const fg=ctx.createRadialGradient(0,0,r*0.28,0,0,r);
   fg.addColorStop(0,'rgba(255,240,190,0)');
-  fg.addColorStop(0.82,'rgba(255,236,170,'+(a*0.30).toFixed(3)+')');
+  fg.addColorStop(0.78,'rgba(255,218,116,'+(a*0.22).toFixed(3)+')');
   fg.addColorStop(1,'rgba(255,240,190,0)');
-  ctx.fillStyle=fg;ctx.beginPath();ctx.arc(ep.x,ep.y-s*20,r,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='rgba(255,232,150,'+(a*0.95).toFixed(3)+')';ctx.lineWidth=Math.max(1.5,s*11*(1-t*0.5));
-  ctx.beginPath();ctx.arc(ep.x,ep.y-s*20,r,0,Math.PI*2);ctx.stroke();
-  ctx.strokeStyle='rgba(255,255,255,'+(a*0.8).toFixed(3)+')';ctx.lineWidth=Math.max(1,s*3.5);
-  ctx.beginPath();ctx.arc(ep.x,ep.y-s*20,r*0.86,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle=fg;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
+  const seg=[[-2.88,-1.58],[-1.15,0.38],[0.82,2.18],[2.54,2.82]];
+  ctx.lineCap='round';ctx.strokeStyle='rgba(255,211,105,'+(a*0.94).toFixed(3)+')';ctx.lineWidth=Math.max(1.5,s*8*(1-t*0.45));
+  for(const q of seg){ctx.beginPath();ctx.arc(0,0,r,q[0],q[1]);ctx.stroke();}
+  ctx.strokeStyle='rgba(255,255,238,'+(a*0.82).toFixed(3)+')';ctx.lineWidth=Math.max(1,s*2.5);
+  for(const q of seg.slice(0,3)){ctx.beginPath();ctx.arc(0,0,r*0.86,q[0]+0.12,q[1]-0.10);ctx.stroke();}
+  ctx.strokeStyle='rgba(255,191,72,'+(a*0.88).toFixed(3)+')';ctx.lineWidth=Math.max(1,s*2.2);
+  for(let i=0;i<6;i++){const an=-2.65+i*1.05,ri=r*1.03,ro=ri+s*(10+(i%2)*8);ctx.beginPath();ctx.moveTo(Math.cos(an)*ri,Math.sin(an)*ri);ctx.lineTo(Math.cos(an)*ro,Math.sin(an)*ro);ctx.stroke();}
   ctx.restore();
 }
-function drawSlash(t,ep){
-  // おおぶりの こうせん（3そうの ざんぞう＋せんたんの ひかり）＝「じぶんが きった」てごたえ
-  const k=Math.min(1,t),s=ep.s;
-  const cx=ep.x+120*s,cy=ep.y+160*s,R=260*s;   // えんの ちゅうしん＝てきの みぎした とおく
-  const a0=-1.72,a1=-2.92;                      // みぎうえ→ひだりした へ ふりぬく
-  const sw=Math.min(1,k*1.3);
-  const tail=a0+(a1-a0)*Math.max(0,sw-0.46), head=a0+(a1-a0)*sw;
-  const fade=1-k*k;
-  ctx.save();ctx.globalCompositeOperation='lighter';
-  ctx.lineCap='round';
-  for(const[wd,al]of[[34,0.16],[15,0.45],[5,0.95]]){
-    ctx.strokeStyle='rgba(215,232,255,'+(al*fade).toFixed(3)+')';
-    ctx.lineWidth=wd*s;
-    ctx.beginPath();ctx.arc(cx,cy,R,tail,head,true);ctx.stroke();
+function drawSlash(fx,ep,blade){
+  if(!blade)return;
+  const t=clamp(fx.t,0,1),s=ep.s;
+  const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
+  const result=fx.result||'pending',crit=result==='crit',miss=result==='miss';
+  const alpha=smooth(t/0.08)*Math.pow(1-t,0.72);
+  if(alpha<=0.001)return; // 振り始めに敵のそばへ光点だけを先出ししない
+
+  const sx=blade.tipX,sy=blade.tipY,hitTX=blade.targetX,hitTY=blade.targetY;
+  // 回避確定時も勇者の姿勢は飛ばさず、剣風の終端だけを接触後に敵の外へ流す。
+  const missK=miss?smooth((t-0.272)/0.25):0;
+  const tx=hitTX+ep.s*86*(fx.missDir||1)*missK,ty=hitTY-ep.s*54*missK;
+  const reach=smooth(t/0.272),ex=sx+(tx-sx)*reach,ey=sy+(ty-sy)*reach;
+  const wake=0.92*(1-smooth(t/0.78));
+  const tailA=blade.angle-wake;
+  const tailX=blade.handX+Math.sin(tailA)*blade.length*0.96;
+  const tailY=blade.handY-Math.cos(tailA)*blade.length*0.96;
+  const after=smooth((t-0.30)/0.25);
+  const startX=tailX+(hitTX-tailX)*after,startY=tailY+(hitTY-tailY)*after;
+  const vx=sx-startX,vy=sy-startY,vl=Math.hypot(vx,vy)||1;
+  const bend=(1-after)*0.18+after*0.12;
+  const mx=(startX+sx)*0.5-vy/vl*vl*bend,my=(startY+sy)*0.5+vx/vl*vl*bend;
+  const leadX=(sx+ex)*0.5+(ey-sy)*0.15,leadY=(sy+ey)*0.5-(ex-sx)*0.15;
+  const outer=crit?'255,205,92':(fx.second?'105,218,255':'105,194,255');
+  const inner=crit?'255,240,184':'215,242,255';
+
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.lineJoin='round';
+  // 接触前は過去の刃先→現在の剣先、接触後は命中点→現在の剣先。折り返す矢印形を作らない。
+  for(const[wd,a,col]of[[28,0.12,outer],[13,0.34,outer],[4.2,0.92,inner]]){
+    ctx.strokeStyle='rgba('+col+','+(a*alpha).toFixed(3)+')';ctx.lineWidth=Math.max(1,wd*s);
+    ctx.beginPath();ctx.moveTo(startX,startY);ctx.quadraticCurveTo(mx,my,sx,sy);ctx.stroke();
+    if(t<=0.34){ctx.beginPath();ctx.moveTo(sx,sy);ctx.quadraticCurveTo(leadX,leadY,ex,ey);ctx.stroke();}
   }
-  const hx=cx+Math.cos(head)*R,hy=cy+Math.sin(head)*R;
-  const hg=ctx.createRadialGradient(hx,hy,1,hx,hy,30*s);
-  hg.addColorStop(0,'rgba(255,255,255,'+(0.95*fade).toFixed(3)+')');hg.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=hg;ctx.beginPath();ctx.arc(hx,hy,30*s,0,Math.PI*2);ctx.fill();
+  // 白芯は剣先の直前で細く消し、先端を丸い矢印に見せない。
+  const coreX=startX+(sx-startX)*0.96,coreY=startY+(sy-startY)*0.96;
+  ctx.strokeStyle='rgba(255,255,255,'+(0.86*alpha).toFixed(3)+')';ctx.lineWidth=Math.max(1,2.2*s);
+  ctx.beginPath();ctx.moveTo(startX,startY);ctx.quadraticCurveTo(mx,my,coreX,coreY);ctx.stroke();
+  if(t<=0.34){ctx.beginPath();ctx.moveTo(sx,sy);ctx.quadraticCurveTo(leadX,leadY,ex,ey);ctx.stroke();}
+
+  // 命中した時だけ敵側に衝突光を出す。回避は敵の外へ振り抜き、接触記号を出さない。
+  if(!miss&&result!=='pending'&&t>=0.20){
+    const impact=smooth((t-0.20)/0.15)*Math.pow(1-t,0.45),r=(10+(crit?30:22)*impact)*s;
+    ctx.strokeStyle='rgba('+inner+','+(0.88*impact).toFixed(3)+')';ctx.lineWidth=Math.max(1.2,(crit?6:3.4)*s);
+    ctx.beginPath();ctx.arc(hitTX,hitTY,r,-2.48,-0.44);ctx.stroke();
+    ctx.beginPath();ctx.arc(hitTX,hitTY,r,0.12,0.82);ctx.stroke();
+    ctx.strokeStyle='rgba('+outer+','+(0.82*impact).toFixed(3)+')';ctx.lineWidth=Math.max(1,(crit?4:2.2)*s);
+    for(let i=0;i<5;i++){
+      const a=-2.45+i*0.58,ri=r*(0.35+(i%2)*0.16),ro=ri+(crit?34:22)*s;
+      ctx.beginPath();ctx.moveTo(hitTX+Math.cos(a)*ri,hitTY+Math.sin(a)*ri);ctx.lineTo(hitTX+Math.cos(a)*ro,hitTY+Math.sin(a)*ro);ctx.stroke();
+    }
+    const glow=ctx.createRadialGradient(hitTX,hitTY,1,hitTX,hitTY,(crit?28:20)*s);
+    glow.addColorStop(0,'rgba(255,255,255,'+(0.74*impact).toFixed(3)+')');glow.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=glow;ctx.beginPath();ctx.arc(hitTX,hitTY,(crit?28:20)*s,0,Math.PI*2);ctx.fill();
+  }
   ctx.restore();
 }
 // ---- スライム（みどり・きん・やみ・メタル） ----
@@ -15346,11 +15478,8 @@ function bossGhosts(bt){
   }
   ctx.globalAlpha=1;ctx.restore();
 }
-function drawShock(bt,ep){
-  if(!bt.shock)return;
-  bt.shock.t+=1/60;
-  const k=bt.shock.t/0.8;
-  if(k>=1){bt.shock=null;return;}
+function drawBossShock(t,ep){
+  const k=clamp(t,0,1);
   const gy=ep.y+ep.s*104;
   ctx.save();ctx.globalCompositeOperation='lighter';
   for(let r=0;r<2;r++){
@@ -15368,7 +15497,7 @@ function bossBack(bt,ep){
   ctx.beginPath();ctx.ellipse(ep.x,ep.y+ep.s*104,W*0.34,ep.s*46,0,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=1;ctx.restore();
   bossGhosts(bt);
-  drawShock(bt,ep);
+  if(bt.bossShock)drawBossShock(bt.bossShock.t,ep);
   if(bt.boltT>0)drawBolt(bt);
 }
 function bossFront(bt){
@@ -15421,7 +15550,7 @@ async function bossEntrance(){
     await wait(0.2);
   }
   const ep=enemyPos();
-  bt.shock={t:0};
+  bt.bossShock={t:0};
   shakeBattle(26,0.9);
   sfxBossDown();
   flash('#3a0030',0.55,0.7);
