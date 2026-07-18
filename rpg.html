@@ -541,6 +541,34 @@ body{
   #quest:active{ transform:scale(.97); }
   #itembtn{ bottom:max(190px, calc(env(safe-area-inset-bottom) + 190px)); gap:5px; padding:5px 7px; }
 }
+/* iPad/スマホ横持ち：上段とメッセージ窓で戦場を挟み潰さず、勇者の全身と剣先を残す。 */
+@media (min-width:641px) and (max-height:520px){
+  #ui-battle{ padding:max(5px,env(safe-area-inset-top)) 10px calc(7px + env(safe-area-inset-bottom)); }
+  .b-top{ display:grid; grid-template-columns:minmax(0,1fr) 104px 116px; align-items:start; gap:4px 6px; padding-right:40px; box-sizing:border-box; }
+  #enamewrap{ grid-column:1; min-width:0; max-width:none; gap:2px; padding:5px 10px; }
+  #ename{ line-height:1.15; }
+  #ehpbar{ height:4px; }
+  #weakclue{ line-height:1.25; }
+  #fastbtn,#autobtn{ align-self:stretch; justify-content:center; min-width:0; padding:5px 6px; white-space:nowrap; font-size:11px; }
+  #bstat,#nkstat{ min-width:0; padding:5px 8px; gap:6px; }
+  #bstat{ grid-column:1; }
+  #bstat .lv{ white-space:nowrap; }
+  #nkstat{ grid-column:2/4; flex-direction:column; align-items:stretch; gap:2px; }
+  #nkstat .lv{ white-space:nowrap; line-height:1.15; }
+  #nkstat .bgrp{ min-width:0; gap:3px; }
+  #bstat .bar,#nkstat .bar{ width:clamp(46px,8.5vw,82px); height:7px; }
+  #nkstat .bar{ flex:1 1 auto; min-width:34px; }
+  #bstat .num,#nkstat .num{ min-width:3.7em; font-size:.74em; white-space:nowrap; }
+  #bproofhud{ gap:2px; overflow:hidden; }
+  #bproofhud .proof-label{ display:none; }
+  #bproofhud .proof-orbs{ flex-wrap:nowrap; gap:1px; }
+  #bproofhud .proof-orb{ width:8px; height:8px; flex:0 0 8px; font-size:4px; }
+  .b-bottom{ gap:8px; }
+  #msgwin{ min-height:50px; padding:8px 12px; gap:8px; font-size:clamp(12px,2.2vmin,15px); line-height:1.45; }
+  #mface{ width:40px; height:40px; border-radius:9px; }
+  #cmdwin{ width:min(260px,46vw); max-height:68vh; max-height:68dvh; padding:6px 7px 8px; }
+  .mi{ padding:5px 9px; }
+}
 </style>
 </head>
 <body>
@@ -14820,6 +14848,45 @@ function drawNkBattle(bt){
 function battleStrikeSide(){return clamp(70-(W-390)*0.16,-22,70);}
 // せんとうの ゆうしゃ：敵を見すえる 3/4うしろ姿。
 // フィールドと同じ髪・鉢巻・装備色を使い、姿勢だけで行動が読めるようにする。
+function drawBattleHeroLimb(x1,y1,x2,y2,w1,w2,fill,outline,shine){
+  const dx=x2-x1,dy=y2-y1,d=Math.hypot(dx,dy)||1,nx=-dy/d,ny=dx/d;
+  ctx.fillStyle=fill;ctx.strokeStyle=outline;ctx.lineWidth=Math.max(1,Math.min(w1,w2)*0.28);ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(x1+nx*w1,y1+ny*w1);ctx.lineTo(x2+nx*w2,y2+ny*w2);
+  ctx.lineTo(x2-nx*w2,y2-ny*w2);ctx.lineTo(x1-nx*w1,y1-ny*w1);ctx.closePath();ctx.fill();ctx.stroke();
+  if(shine){
+    ctx.strokeStyle=shine;ctx.lineWidth=Math.max(1,Math.min(w1,w2)*0.24);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(x1+nx*w1*0.48,y1+ny*w1*0.48);ctx.lineTo(x2+nx*w2*0.50,y2+ny*w2*0.50);ctx.stroke();
+  }
+}
+function drawBattleHeroSword(u,sw){
+  const high=Game.weaponAtk>=44,magic=Game.weaponAtk>=12;
+  const accent=Game.weaponAtk>=20?'#e6b955':(magic?'#75b9e6':(Game.weaponAtk>=5?'#b67b48':'#8f99a6'));
+  ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
+  const bladePath=()=>{ctx.beginPath();ctx.moveTo(-7*u,-8*u);ctx.lineTo(-8*u,-88*u);ctx.lineTo(0,-105*u);ctx.lineTo(8*u,-88*u);ctx.lineTo(7*u,-8*u);ctx.closePath();};
+  if(high){
+    ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(127,220,255,0.28)';ctx.lineWidth=Math.max(3,u*6);ctx.shadowColor='rgba(105,205,255,.40)';ctx.shadowBlur=Math.max(4,u*8);bladePath();ctx.stroke();ctx.restore();
+  }
+  // 濃い外形の内側を左右の金属面へ分ける。装備色は細い樋だけに残す。
+  ctx.fillStyle='#15213a';bladePath();ctx.fill();
+  const lg=ctx.createLinearGradient(-8*u,0,2*u,0);lg.addColorStop(0,'#65768b');lg.addColorStop(0.60,'#b9cad8');lg.addColorStop(1,'#edf6fb');
+  ctx.fillStyle=lg;ctx.beginPath();ctx.moveTo(-5.8*u,-10*u);ctx.lineTo(-6.6*u,-86*u);ctx.lineTo(0,-102.5*u);ctx.lineTo(0,-10*u);ctx.closePath();ctx.fill();
+  const rg=ctx.createLinearGradient(-1*u,0,8*u,0);rg.addColorStop(0,'#f8fcff');rg.addColorStop(0.48,'#d4e2ec');rg.addColorStop(1,'#71869d');
+  ctx.fillStyle=rg;ctx.beginPath();ctx.moveTo(0,-102.5*u);ctx.lineTo(6.6*u,-86*u);ctx.lineTo(5.8*u,-10*u);ctx.lineTo(0,-10*u);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(244,251,255,.88)';ctx.lineWidth=Math.max(1,u*1.15);ctx.beginPath();ctx.moveTo(0,-100*u);ctx.lineTo(0,-13*u);ctx.stroke();
+  ctx.strokeStyle=accent;ctx.globalAlpha=high?0.90:0.62;ctx.lineWidth=Math.max(1,u*1.55);ctx.beginPath();ctx.moveTo(-3.3*u,-82*u);ctx.lineTo(-3*u,-19*u);ctx.stroke();ctx.globalAlpha=1;
+  if(high){ctx.strokeStyle='rgba(164,234,255,.86)';ctx.lineWidth=Math.max(1,u*1.7);ctx.beginPath();ctx.moveTo(6.1*u,-84*u);ctx.lineTo(5.5*u,-15*u);ctx.stroke();}
+  ctx.strokeStyle='rgba(8,14,30,.86)';ctx.lineWidth=Math.max(1.2,u*1.9);bladePath();ctx.stroke();
+  // 端が反った翼形の鍔。
+  const gg=ctx.createLinearGradient(-24*u,-12*u,24*u,-5*u);gg.addColorStop(0,'#75552d');gg.addColorStop(0.48,accent);gg.addColorStop(1,'#e2c36b');
+  ctx.fillStyle=gg;ctx.strokeStyle='rgba(20,18,30,.86)';ctx.lineWidth=Math.max(1,u*1.55);
+  ctx.beginPath();ctx.moveTo(-5*u,-10*u);ctx.lineTo(-16*u,-12*u);ctx.quadraticCurveTo(-24*u,-18*u,-22*u,-8*u);ctx.quadraticCurveTo(-18*u,-3*u,-6*u,-4*u);ctx.lineTo(0,-2*u);ctx.lineTo(6*u,-4*u);ctx.quadraticCurveTo(18*u,-3*u,22*u,-8*u);ctx.quadraticCurveTo(24*u,-18*u,16*u,-12*u);ctx.lineTo(5*u,-10*u);ctx.closePath();ctx.fill();ctx.stroke();
+  // 革柄・三本の巻き・菱形の柄頭。
+  const hg=ctx.createLinearGradient(-4*u,0,4*u,0);hg.addColorStop(0,'#382318');hg.addColorStop(0.5,'#7a4b2d');hg.addColorStop(1,'#2c1a13');
+  ctx.fillStyle=hg;ctx.beginPath();ctx.roundRect(-4*u,-1*u,8*u,24*u,2*u);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='#d3a663';ctx.lineWidth=Math.max(1,u*1.05);for(let y=3;y<=17;y+=7){ctx.beginPath();ctx.moveTo(-3.5*u,y*u);ctx.lineTo(3.5*u,(y+3)*u);ctx.stroke();}
+  ctx.fillStyle=accent;ctx.beginPath();ctx.moveTo(0,20*u);ctx.lineTo(6*u,26*u);ctx.lineTo(0,32*u);ctx.lineTo(-6*u,26*u);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.restore();
+}
 function drawHeroBack(bt,ep){
   let uiTop=H*0.75,hudBottom=0;
   {const mr=msgwinEl.getBoundingClientRect(),cr=cv.getBoundingClientRect(),ht=battleUiEl.querySelector('.b-top');
@@ -14896,6 +14963,10 @@ function drawHeroBack(bt,ep){
   };
   const OL='rgba(9,14,34,0.78)',RIM='rgba(213,239,255,0.68)';
   const ar=armorCol(),sw=swordCol();
+  // 肩と既存の手座標を変えず、中点の法線側へ肘を置いて二節の腕にする。
+  const armSX=30*u,armSY=-110*u,armDX=handX-armSX,armDY=handY-armSY,armRaw=Math.hypot(armDX,armDY)||1;
+  const armUX=armDX/armRaw,armUY=armDY/armRaw,armBend=(5.2+atk*1.2-guard*0.8-hit*1.4)*u;
+  const elbowX=armSX+armDX*0.48+armUY*armBend,elbowY=armSY+armDY*0.48-armUX*armBend;
 
   ctx.save();
   ctx.translate(hx,bodyY);
@@ -14982,6 +15053,15 @@ function drawHeroBack(bt,ep){
     ctx.strokeStyle='#d6e9ff';ctx.lineWidth=Math.max(2,u*4);ctx.beginPath();ctx.moveTo(-3*u,-107*u);ctx.lineTo(30*u,-78*u);ctx.stroke();
   }
 
+  // 剣腕を上腕・肘・前腕へ分ける。肩当てはこの上から重なり、腕の付け根を隠す。
+  drawBattleHeroLimb(armSX,armSY,elbowX,elbowY,5.8*u,5.1*u,ar[0],OL,'rgba(226,241,255,.28)');
+  drawBattleHeroLimb(elbowX,elbowY,handX,handY,5.0*u,4.3*u,ar[2]||ar[0],OL,'rgba(237,247,255,.34)');
+  ctx.save();ctx.translate(elbowX,elbowY);ctx.rotate(Math.atan2(handY-elbowY,handX-elbowX));
+  const eg=ctx.createLinearGradient(-8*u,-6*u,8*u,6*u);eg.addColorStop(0,ar[1]);eg.addColorStop(1,ar[0]);
+  ctx.fillStyle=eg;ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.5);
+  ctx.beginPath();ctx.moveTo(-5.5*u,-3.8*u);ctx.lineTo(3.5*u,-4.8*u);ctx.lineTo(6*u,0);ctx.lineTo(3.5*u,4.8*u);ctx.lineTo(-5.5*u,3.8*u);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.restore();
+
   // 左右非対称の肩当て。敵側を大きくして方向を作る。
   ctx.fillStyle=ar[1];ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.3,u*2);
   ctx.beginPath();ctx.ellipse(-19*u,-112*u,15*u,9*u,-0.35,0,Math.PI*2);ctx.fill();ctx.stroke();
@@ -14989,46 +15069,55 @@ function drawHeroBack(bt,ep){
   ctx.fillStyle=pg;ctx.beginPath();ctx.moveTo(13*u,-119*u);ctx.quadraticCurveTo(32*u,-132*u,41*u,-109*u);ctx.lineTo(31*u,-99*u);ctx.quadraticCurveTo(24*u,-112*u,13*u,-119*u);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.strokeStyle=RIM;ctx.lineWidth=Math.max(1,u*1.3);ctx.beginPath();ctx.moveTo(23*u,-124*u);ctx.quadraticCurveTo(36*u,-122*u,38*u,-110*u);ctx.stroke();
 
-  // 首と、敵へ振り向いた横顔。
-  ctx.fillStyle='#e8bb8f';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.2,u*1.8);
-  ctx.beginPath();ctx.moveTo(2*u,-124*u);ctx.lineTo(20*u,-123*u);ctx.lineTo(19*u,-137*u);ctx.lineTo(5*u,-139*u);ctx.closePath();ctx.fill();ctx.stroke();
-  ctx.fillStyle='#f0c79b';
-  ctx.beginPath();ctx.moveTo(-4*u,-151*u);ctx.quadraticCurveTo(-2*u,-170*u,15*u,-173*u);ctx.quadraticCurveTo(32*u,-169*u,33*u,-153*u);ctx.lineTo(39*u,-148*u);ctx.lineTo(32*u,-143*u);ctx.quadraticCurveTo(26*u,-132*u,12*u,-134*u);ctx.quadraticCurveTo(-1*u,-136*u,-4*u,-151*u);ctx.closePath();ctx.fill();ctx.stroke();
-  // 金髪の束。円ではなく、後頭部から風向きへ尖らせる。
-  ctx.fillStyle='#e6cc88';ctx.strokeStyle=OL;ctx.lineJoin='round';
-  ctx.beginPath();ctx.moveTo(-5*u,-151*u);ctx.quadraticCurveTo(-7*u,-170*u,12*u,-177*u);ctx.lineTo(7*u,-168*u);ctx.lineTo(20*u,-178*u);ctx.lineTo(21*u,-166*u);ctx.lineTo(34*u,-172*u);ctx.lineTo(30*u,-158*u);ctx.quadraticCurveTo(17*u,-166*u,7*u,-155*u);ctx.lineTo(-1*u,-139*u);ctx.lineTo(-13*u,-145*u);ctx.closePath();ctx.fill();ctx.stroke();
-  ctx.strokeStyle='rgba(255,246,196,0.58)';ctx.lineWidth=Math.max(1,u*1.3);ctx.beginPath();ctx.moveTo(2*u,-164*u);ctx.quadraticCurveTo(12*u,-173*u,23*u,-168*u);ctx.stroke();
-  // 橙の鉢巻と、左へ流れる二本の尾。
-  ctx.strokeStyle='#d88955';ctx.lineWidth=Math.max(2,u*4);ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(-5*u,-158*u);ctx.quadraticCurveTo(13*u,-162*u,31*u,-157*u);ctx.stroke();
-  ctx.lineWidth=Math.max(1.4,u*2.4);
-  ctx.beginPath();ctx.moveTo(-4*u,-158*u);ctx.quadraticCurveTo((-19+wind*3-atk*5)*u,-157*u,(-25+wind*5-atk*8)*u,-145*u);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-4*u,-158*u);ctx.quadraticCurveTo((-16+wind*2-atk*4)*u,-166*u,(-29+wind*4-atk*7)*u,-161*u);ctx.stroke();
-  // 片目と眉、鼻先で「敵を見ている」向きを固定。
-  ctx.strokeStyle='#303754';ctx.lineWidth=Math.max(1.2,u*1.7);ctx.beginPath();ctx.moveTo(24*u,-155*u);ctx.lineTo(31*u,-157*u);ctx.stroke();
-  ctx.fillStyle='#182746';ctx.beginPath();ctx.arc(29*u,-153*u,2.1*u,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='rgba(150,84,55,0.70)';ctx.lineWidth=Math.max(1,u*1.2);ctx.beginPath();ctx.moveTo(36*u,-148*u);ctx.lineTo(31*u,-147*u);ctx.stroke();
+  // 首と横顔。三角鼻をやめ、額→鼻梁→口元→顎を曲線でつなぐ。
+  ctx.fillStyle='#e5b488';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.2,u*1.8);
+  ctx.beginPath();ctx.moveTo(3*u,-124*u);ctx.lineTo(20*u,-123*u);ctx.lineTo(19*u,-139*u);ctx.lineTo(6*u,-141*u);ctx.closePath();ctx.fill();ctx.stroke();
+  // 鉢巻の二本の尾は髪と頭より後ろへ流す。
+  ctx.strokeStyle='#d47a43';ctx.lineWidth=Math.max(1.4,u*2.5);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-3*u,-164*u);ctx.quadraticCurveTo((-18+wind*3-atk*5)*u,-162*u,(-29+wind*5-atk*8)*u,-149*u);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-3*u,-165*u);ctx.quadraticCurveTo((-17+wind*2-atk*4)*u,-173*u,(-31+wind*4-atk*7)*u,-166*u);ctx.stroke();
+  // 耳を顔の後ろへ。小画面でも輪郭だけは残る。
+  ctx.fillStyle='#e8b98e';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.35);
+  ctx.beginPath();ctx.ellipse(1*u,-151*u,4.5*u,6*u,-0.12,0,Math.PI*2);ctx.fill();ctx.stroke();
+  if(u>=0.9){ctx.strokeStyle='rgba(132,77,59,.48)';ctx.beginPath();ctx.arc(1*u,-151*u,2.2*u,-1.2,1.25);ctx.stroke();}
+  const skin=ctx.createLinearGradient(-5*u,-172*u,35*u,-135*u);skin.addColorStop(0,'#f5d4aa');skin.addColorStop(0.62,'#efc397');skin.addColorStop(1,'#dca67e');
+  ctx.fillStyle=skin;ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.2,u*1.8);
+  ctx.beginPath();ctx.moveTo(-4*u,-151*u);ctx.bezierCurveTo(-4*u,-169*u,7*u,-176*u,18*u,-174*u);
+  ctx.quadraticCurveTo(30*u,-171*u,32*u,-161*u);ctx.quadraticCurveTo(33*u,-156*u,35*u,-153*u);
+  ctx.quadraticCurveTo(38*u,-151*u,35*u,-148*u);ctx.quadraticCurveTo(37*u,-145*u,33*u,-143*u);
+  ctx.quadraticCurveTo(30*u,-134*u,18*u,-133*u);ctx.quadraticCurveTo(4*u,-133*u,-3*u,-143*u);ctx.closePath();ctx.fill();ctx.stroke();
+  // 顎下だけを一段暗くし、首との境を作る。
+  ctx.fillStyle='rgba(143,79,60,.18)';ctx.beginPath();ctx.moveTo(14*u,-134*u);ctx.quadraticCurveTo(24*u,-133*u,30*u,-141*u);ctx.quadraticCurveTo(25*u,-136*u,17*u,-139*u);ctx.closePath();ctx.fill();
+  // 後頭部、上の三房、前髪を別々に重ねる。
+  ctx.fillStyle='#d9bc72';ctx.strokeStyle=OL;ctx.lineJoin='round';ctx.lineWidth=Math.max(1.2,u*1.8);
+  ctx.beginPath();ctx.moveTo(-5*u,-152*u);ctx.quadraticCurveTo(-8*u,-169*u,7*u,-177*u);ctx.quadraticCurveTo(17*u,-181*u,26*u,-172*u);ctx.lineTo(25*u,-160*u);ctx.quadraticCurveTo(12*u,-166*u,5*u,-154*u);ctx.lineTo(-1*u,-139*u);ctx.lineTo(-13*u,-145*u);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#ecd58e';
+  ctx.beginPath();ctx.moveTo(3*u,-168*u);ctx.quadraticCurveTo(7*u,-179*u,12*u,-176*u);ctx.quadraticCurveTo(18*u,-181*u,22*u,-175*u);ctx.quadraticCurveTo(29*u,-178*u,30*u,-169*u);ctx.quadraticCurveTo(34*u,-167*u,31*u,-160*u);ctx.quadraticCurveTo(18*u,-165*u,3*u,-158*u);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#f0d996';ctx.beginPath();ctx.moveTo(18*u,-168*u);ctx.quadraticCurveTo(28*u,-169*u,34*u,-161*u);ctx.lineTo(27*u,-154*u);ctx.lineTo(20*u,-158*u);ctx.lineTo(14*u,-151*u);ctx.lineTo(10*u,-163*u);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.strokeStyle='rgba(255,247,202,.58)';ctx.lineWidth=Math.max(1,u*1.2);ctx.beginPath();ctx.moveTo(5*u,-171*u);ctx.quadraticCurveTo(14*u,-177*u,22*u,-171*u);ctx.stroke();
+  // 額を横切る鉢巻は髪の前へ。尾と一本線に見えないよう結び目を置く。
+  ctx.strokeStyle='#d47a43';ctx.lineWidth=Math.max(2,u*4);ctx.beginPath();ctx.moveTo(-3*u,-164*u);ctx.quadraticCurveTo(13*u,-168*u,29*u,-163*u);ctx.stroke();
+  ctx.fillStyle='#e79a5d';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.0);ctx.beginPath();ctx.moveTo(-5.8*u,-164*u);ctx.lineTo(-3*u,-166.8*u);ctx.lineTo(-0.2*u,-164*u);ctx.lineTo(-3*u,-161.2*u);ctx.closePath();ctx.fill();ctx.stroke();
+  // 表情。攻撃は眉を落とし、被弾では目を閉じる。
+  const browDrop=atk*2.2*u;
+  ctx.strokeStyle='#34384e';ctx.lineWidth=Math.max(1,u*1.2);ctx.beginPath();ctx.moveTo(23*u,-157*u+browDrop);ctx.lineTo(31*u,-159*u+browDrop);ctx.stroke();
+  if(hit>0.20){ctx.beginPath();ctx.moveTo(24*u,-152*u);ctx.quadraticCurveTo(28*u,-149*u,32*u,-152*u);ctx.stroke();}
+  else{ctx.beginPath();ctx.moveTo(24*u,-153*u);ctx.quadraticCurveTo(28*u,-155*u,32*u,-153*u);ctx.stroke();ctx.fillStyle='#15233f';ctx.beginPath();ctx.arc(29*u,-153.5*u,1.7*u,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,255,255,.88)';ctx.beginPath();ctx.arc(29.5*u,-154*u,0.55*u,0,Math.PI*2);ctx.fill();}
+  ctx.strokeStyle='rgba(139,75,55,.66)';ctx.lineWidth=Math.max(1,u*1.1);ctx.beginPath();ctx.moveTo(35*u,-147*u);ctx.quadraticCurveTo(32*u,-146*u,30*u,-147*u);ctx.stroke();
 
-  // 剣腕。肩・肘・手をつなぎ、剣だけが浮かないようにする。
-  ctx.strokeStyle='#263665';ctx.lineWidth=Math.max(8,u*13);ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(30*u,-110*u);ctx.quadraticCurveTo((45+atk*7)*u,(-101+atk*10)*u,handX,handY);ctx.stroke();
-  ctx.strokeStyle=ar[0];ctx.lineWidth=Math.max(4,u*7);ctx.beginPath();ctx.moveTo(31*u,-109*u);ctx.lineTo(handX,handY);ctx.stroke();
-  ctx.fillStyle='#efc79c';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.5);ctx.beginPath();ctx.arc(handX,handY,5.7*u,0,Math.PI*2);ctx.fill();ctx.stroke();
-
-  // 幅広い剣。上位武器は刃の縁が蒼白く発光する。
-  ctx.save();ctx.translate(handX,handY);
-  ctx.rotate(swordRot);
-  if(Game.weaponAtk>=44){
-    ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(135,223,255,0.32)';ctx.lineWidth=Math.max(5,u*12);ctx.lineCap='round';
-    ctx.beginPath();ctx.moveTo(0,-9*u);ctx.lineTo(0,-96*u);ctx.stroke();ctx.restore();
-  }
-  const bg=ctx.createLinearGradient(-7*u,0,8*u,0);bg.addColorStop(0,sw[1]);bg.addColorStop(0.46,sw[0]);bg.addColorStop(0.72,'#f7fbff');bg.addColorStop(1,sw[1]);
-  ctx.fillStyle=bg;ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.2,u*1.8);ctx.lineJoin='round';
-  ctx.beginPath();ctx.moveTo(-6.5*u,-8*u);ctx.lineTo(-7.5*u,-88*u);ctx.lineTo(0,-105*u);ctx.lineTo(8*u,-88*u);ctx.lineTo(6.5*u,-8*u);ctx.closePath();ctx.fill();ctx.stroke();
-  ctx.strokeStyle='rgba(255,255,255,0.72)';ctx.lineWidth=Math.max(1,u*1.35);ctx.beginPath();ctx.moveTo(2.2*u,-15*u);ctx.lineTo(2.2*u,-91*u);ctx.stroke();
-  ctx.fillStyle='#e5bd55';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.6);rr(ctx,-15*u,-10*u,30*u,7*u,2*u);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#68452a';rr(ctx,-4*u,-2*u,8*u,22*u,2*u);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#6fd5ef';ctx.beginPath();ctx.arc(0,-6.5*u,2.8*u,0,Math.PI*2);ctx.fill();
+  // 手首の手甲は剣の下、掌と指は剣の上。柄を実際につかむ重なり順にする。
+  ctx.save();ctx.translate(handX,handY);ctx.rotate(Math.atan2(handY-elbowY,handX-elbowX));
+  const wg=ctx.createLinearGradient(-9*u,-6*u,8*u,6*u);wg.addColorStop(0,ar[1]);wg.addColorStop(1,ar[0]);
+  ctx.fillStyle=wg;ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.45);
+  ctx.beginPath();ctx.moveTo(-7*u,-4*u);ctx.lineTo(2.5*u,-5*u);ctx.lineTo(6*u,0);ctx.lineTo(2.5*u,5*u);ctx.lineTo(-7*u,4*u);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+  ctx.save();ctx.translate(handX,handY);ctx.rotate(swordRot);
+  drawBattleHeroSword(u,sw);
+  const glove=ctx.createLinearGradient(-5*u,0,5*u,11*u);glove.addColorStop(0,'#d9ae82');glove.addColorStop(1,'#8d593b');
+  ctx.fillStyle=glove;ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.35);
+  ctx.beginPath();ctx.roundRect(-4.4*u,-0.2*u,8.8*u,9*u,3*u);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='rgba(91,53,40,.76)';ctx.lineWidth=Math.max(1,u*1.0);
+  for(let y=2;y<=5;y+=3){ctx.beginPath();ctx.moveTo(-3.8*u,y*u);ctx.lineTo(3.8*u,(y+0.8)*u);ctx.stroke();}
+  ctx.fillStyle='#c99268';ctx.beginPath();ctx.ellipse(3.8*u,1.2*u,1.6*u,2.7*u,-0.52,0,Math.PI*2);ctx.fill();ctx.stroke();
   ctx.restore();
 
   // 防御は盾の外周に沿う光。浮いた半円記号にはしない。
