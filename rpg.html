@@ -7085,6 +7085,23 @@ async function endMiniGame(win){
   endTalk();
   saveGame();
 }
+// 既存のぼうけんのしょへ 一回きりの「めざめ」告知: 新呪文はレベル連動のため、配信前にLv到達済みのセーブでは
+// 習得告知が一度も出ない。武器の売り場も含め、フクロウの声で在り処を知らせる(SPEC_gunshi_catchup_20260719)
+async function wazaCatchupScene(){
+  Game.hidden.wazaCatchup=true;
+  startTalk();
+  const NEW5=['ルカニ','スカラ','ラリホー','ギガデイン','ミナデイン'];
+  const names=SPELL_LEARN.filter(sl=>sl[1]<=Game.p.lv&&NEW5.includes(sl[0])).map(sl=>sl[0]);
+  await say('ひろばの フクロウが はねを ひとふり、こえを とどけてきた——');
+  if(names.length){
+    await say('フクロ「そなたの なかに あたらしい じゅもんが めざめておるぞ——\n『'+names.join('』『')+'』じゃ。」');
+    await say('フクロ「たたかいで「じゅもん」を ひらけば、⚔こうげきと ✚かいふく・ほじょに\nくわわっておる。ためすが よい。」');
+  }
+  await say('フクロ「あたらしい ぶきと よろいも、そうげん・ゆきのまち・ちそこの\nみせに ✦じるしで ならんでおる。」');
+  await say('フクロ「なにを かうべきかは、ひろばの わしが みたてて やろう。」');
+  endTalk();
+  saveGame();
+}
 // クリアの がいせん: 村に もどった しゅんかん、ものがたりの ほうから むかえに くる（さがさせない）
 async function clearedWelcomeScene(){
   Game.hidden.cwelc=true;
@@ -7372,6 +7389,14 @@ async function gunshiGear(){
     await say('フクロ「よろいの つぎの いっては『'+n.label+'』（しゅび+'+n.armor+'）。\n'+(MAPNAME[n.town]||'まち')+'の みせで '+n.cost+'G。'+(Game.gold>=n.cost?'いま かえるぞ。':'あと '+(n.cost-Game.gold)+'G ためよ。')+'」');
     if(AFXDESC[n.armor])await say('フクロ「こせいは——'+AFXDESC[n.armor]+'。」');
   }else await say('フクロ「よろいも、いま みせに ならぶ なかでは さいきょう じゃ。」');
+  {const pw=SHOP.filter(it=>it.atk&&WEAPONFX[it.atk]&&it.atk!==w&&!(Game.ownW||[]).includes(it.atk)&&canBuy(it)).sort((x,y)=>x.cost-y.cost).slice(0,2);
+   const pa=SHOP.filter(it=>it.armor&&ARMORFX[it.armor]&&it.armor!==a&&!(Game.ownA||[]).includes(it.armor)&&canBuy(it)).sort((x,y)=>x.cost-y.cost).slice(0,2);
+   if(pw.length||pa.length){
+     await say('フクロ「つよさ だけでなく、こせいで えらぶ そうびも あるぞ。」');
+     for(const it of pw)await say('フクロ「⚔『'+it.label+'』——'+(WFXDESC[it.atk]||'')+'。\n'+(MAPNAME[it.town]||'まち')+'の みせで '+it.cost+'G じゃ。」');
+     for(const it of pa)await say('フクロ「🛡『'+it.label+'』——'+(AFXDESC[it.armor]||'')+'。\n'+(MAPNAME[it.town]||'まち')+'の みせで '+it.cost+'G じゃ。」');
+     await say('フクロ「✦じるしの そうびが それじゃ。ほかにも あるゆえ、\nそうげん・ゆきのまち・ちそこの みせを のぞくが よい。」');
+   }}
   {const sh=SHOP.find(it=>it.def&&!Game.shield)||(!Game.shield2&&SHOP.find(it=>it.def2&&!Game.shield2));
    if(sh&&sh.def)await say('フクロ「たてを もっておらんな。'+(MAPNAME[sh.town]||'みせ')+'で『'+sh.label+'』（'+sh.cost+'G）じゃ。」');}
   const oldW=(Game.ownW||[]).filter(v=>v!==Game.weaponAtk&&v<Game.weaponAtk&&!WEAPONFX[v]).length+(Game.ownA||[]).filter(v=>v!==Game.armorDef&&v<(Game.armorDef||0)&&!ARMORFX[v]).length;
@@ -8167,6 +8192,7 @@ function updateField(dt){
     else if(Game.mapId==='kokoro'&&Game.hidden.ch5c&&!Game.hidden.ch5card){Game.hidden.ch5card=true;showChapter('だい 5 しょう','とざされた ひかり');saveGame();}
     else if(Game.mapId==='towa'&&!Game.hidden.towaCard){Game.hidden.towaCard=true;showChapter('とわの ふち','といの ねむる ばしょ');saveGame();}
     else if(Game.hidden.ch2&&!Game.hidden.mate1&&(Game.purified||0)>=5)mateJoinScene();
+    else if(Game.mapId==='grass'&&Game.p.lv>=9&&!Game.hidden.wazaCatchup)wazaCatchupScene();
   }
   if(p.bump){
     p.bump.t+=dt;
