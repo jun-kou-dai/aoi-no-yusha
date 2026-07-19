@@ -585,7 +585,7 @@ body{
   <div id="flashfx"></div>
 
   <div id="ui-title" class="ui">
-    <div id="title-release" class="glass"><b>新章　第20章 配信中</b><span>第19章を終えたら → むらのきしの「一座のふね」</span></div>
+    <div id="title-release" class="glass"><b>最終章＋作戦の相談屋フクロ 配信中</b><span>最終章は むらの こどもから。そうだんは ひろばの フクロへ</span></div>
     <div id="logo-wrap">
       <svg id="emblem" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -17162,7 +17162,7 @@ async function continueGame(){
 // タイトルのボタン：ぼうけんのしょの うむで きりかえ（冊えらびは とじる）
 function updateTitleButtons(){
   {const v=new URLSearchParams(location.search).get('v');
-   $('#title-ver').textContent=v?('はん: '+v):(location.protocol==='file:'?'はん: ローカル・第20章版':'はん: ふめい（ふるい いりぐち。トップの みじかいURLから ひらくと つねに さいしん）');}
+   $('#title-ver').textContent=v?('はん: '+v):(location.protocol==='file:'?'はん: ローカル・最終章版':'はん: ふめい（ふるい いりぐち。トップの みじかいURLから ひらくと つねに さいしん）');}
   $('#slotwin').style.display='none';
   $('#title-release').style.display='';
   $('#title-hint').style.display='';
