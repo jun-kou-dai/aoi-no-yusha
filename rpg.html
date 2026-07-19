@@ -428,6 +428,12 @@ body{
   .convoy-btn{ min-height:40px; padding:4px 3px; }
   #convoylegend{ display:none; }
 }
+@media (max-height:420px){
+  #convoystatus{ min-height:40px; padding:5px 8px; line-height:1.4; }
+  .convoy-btn{ min-height:36px; padding:4px 4px; }
+  #convoyside{ gap:6px; }
+  #convoylegend{ display:none; }
+}
 /* ---------- ふっかつのじゅもん ---------- */
 #jumonwin{ position:fixed; inset:0; z-index:210; display:none; justify-content:center; align-items:flex-start;
   background:rgba(6,10,28,.82); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); overflow:auto; padding:20px 10px; }
@@ -707,6 +713,7 @@ body{
         <div id="convoymoves" class="convoy-row">
           <div class="convoy-btn" id="convoyleft">← ひだり</div><div class="convoy-btn primary" id="convoyadvance">▲ 北へ すすむ</div><div class="convoy-btn" id="convoyright">みぎ →</div>
         </div>
+        <div class="convoy-row" style="grid-template-columns:1fr"><div class="convoy-btn" id="convoynagi">🧭 ナギに きく — つぎの一手</div></div>
         <div class="convoy-row" style="grid-template-columns:1fr 1fr"><div class="convoy-btn" id="convoyundo">↶ 一手もどす</div><div class="convoy-btn" id="convoyreset">出発港へもどす</div></div>
         <div id="convoylegend">黄=先舟　赤=暮らし舟　青=一座の船。<br>形を変え、三艘すべてが岩へ触れない道をつくる。</div>
       </div>
@@ -2462,6 +2469,45 @@ async function ch20TalkBoat(n){
   const before={scout:'先舟の船頭「この舟だけなら、細い岩間を ぬけられる。だが、それでは 航路を見つけたことに ならない。」',home:'暮らし舟の母「子どもと 荷をのせた舟は、すぐに形を かえられない。声がとどけば、いっしょに舵を切れる。」',troupe:'だんちょう「一座の船を 真ん中に置こう。先の合図を後ろへ、後ろの返事を先へ とどける。」'};
   await say(before[n.ch20Boat]||'舟は、暗礁を前に 帆をたたんでいる。');
 }
+// 章20: ナギの助け舟——現在地から北の港への最短路をBFSし、最初の一手だけを教えて実行する(判定は既存 ch20StateOk のみ・盤やセーブ形式は不変)
+function ch20NagiNext(){
+  const route=ch20Board(),start=ch20PlainState(ch20Nav());
+  if(start.y===0)return null;
+  const forms=Object.keys(CH20_FORMS),key=s=>s.x+','+s.y+','+s.form;
+  const q=[{s:start,first:null}],seen=new Set([key(start)]);
+  while(q.length){
+    const cur=q.shift();
+    if(cur.s.y===0)return cur.first;
+    const s=cur.s,cand=[
+      {v:{x:s.x,y:s.y-1,form:s.form},m:{kind:'adv'}},
+      {v:{x:s.x-1,y:s.y,form:s.form},m:{kind:'move',dx:-1}},
+      {v:{x:s.x+1,y:s.y,form:s.form},m:{kind:'move',dx:1}}];
+    for(const f of forms)if(f!==s.form)cand.push({v:{x:s.x,y:s.y,form:f},m:{kind:'form',form:f}});
+    for(const c of cand){
+      if(!ch20StateOk(c.v,route))continue;
+      const k=key(c.v);if(seen.has(k))continue;seen.add(k);
+      q.push({s:{x:c.v.x,y:c.v.y,form:c.v.form},first:cur.first||c.m});
+    }
+  }
+  return {kind:'stuck'};
+}
+async function ch20Nagi(){
+  const nx=ch20NagiNext();
+  if(nx===null){CH20_NOTE='ナギ「もう 北の港に ついている。」';sfxSel();ch20Render();return;}
+  if(nx.kind==='stuck'){
+    if(ch20Nav().trail.length){ch20Undo();CH20_NOTE='ナギ「そこからは すすめない。ひとつ もどした。」';}
+    else{ch20Reset();CH20_NOTE='ナギ「そこからは すすめない。出発港から やりなおそう。」';}
+    ch20Render();return;
+  }
+  if(nx.kind==='adv')await ch20Advance();
+  else if(nx.kind==='move')await ch20Move(nx.dx);
+  else await ch20SetForm(nx.form);
+  const win=document.getElementById('convoywin');
+  if(win&&win.classList.contains('show')&&ch20Nav().y>0){
+    CH20_NOTE='ナギ「'+(nx.kind==='adv'?'北へ ひとつ。':nx.kind==='move'?(nx.dx<0?'ひだりの潮へ。':'みぎの潮へ。'):CH20_FORMS[nx.form].name+'へ 組みなおして。')+'この一手なら 三艘とも 岩に ふれない。」';
+    ch20Render();
+  }
+}
 const ch20Tap=(el,fn)=>el.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();firstGesture();fn();});
 document.getElementById('convoywin').addEventListener('pointerdown',e=>e.stopPropagation());
 ch20Tap(document.getElementById('convoyclose'),()=>closeCh20Board());
@@ -2470,6 +2516,7 @@ ch20Tap(document.getElementById('convoyright'),()=>ch20Move(1));
 ch20Tap(document.getElementById('convoyadvance'),()=>ch20Advance());
 ch20Tap(document.getElementById('convoyundo'),()=>ch20Undo());
 ch20Tap(document.getElementById('convoyreset'),()=>ch20Reset());
+ch20Tap(document.getElementById('convoynagi'),()=>{ch20Nagi();});
 document.querySelectorAll('[data-convoy-form]').forEach(e=>ch20Tap(e,()=>ch20SetForm(e.dataset.convoyForm)));
 let MAP=WORLDS.grass.map,SPAWNS=WORLDS.grass.spawns,CHESTS=WORLDS.grass.chests,
     SPRING=WORLDS.grass.spring,BZONE=WORLDS.grass.bzone,SPOTS=WORLDS.grass.spots||[];
