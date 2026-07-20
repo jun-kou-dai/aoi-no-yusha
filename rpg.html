@@ -674,7 +674,7 @@ body{
   <div id="flashfx"></div>
 
   <div id="ui-title" class="ui">
-    <div id="title-release" class="glass"><b>最終章＋作戦の相談屋フクロ 配信中</b><span>最終章は むらの こどもから。そうだんは きたの おかの フクロへ</span></div>
+    <div id="title-release" class="glass"><b>さいしゅうしょう『ほしのもんどう』配信中</b><span>クリアごは むらの ✨ほしのはしの たもとから なんどでも</span></div>
     <div id="logo-wrap">
       <svg id="emblem" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -7433,6 +7433,16 @@ async function endMiniGame(win){
 }
 // 既存のぼうけんのしょへ 一回きりの「めざめ」告知: 新呪文はレベル連動のため、配信前にLv到達済みのセーブでは
 // 習得告知が一度も出ない。武器の売り場も含め、フクロウの声で在り処を知らせる(SPEC_gunshi_catchup_20260719)
+// かんけつ後、むらに入った一回だけ: たもとの案内(2026-07-20「先に進めない・最終章完結と出ている」への正面対応)
+async function tamotoScene(){
+  Game.hidden.tamotoTold=true;
+  startTalk();
+  await say('よぞらから、ちいさな ほしの こえが ふってきた——');
+  await say('こえ『ほしのはしの たもとは、むらの おかに のこっている。\nもういちど あいたく なったら、ひかりの わへ おいで。』');
+  await say('（したの「もくてき」の おびを タップすると、きんいろの ひかりが みちを てらす）');
+  endTalk();
+  saveGame();
+}
 async function wazaCatchupScene(){
   Game.hidden.wazaCatchup=true;
   startTalk();
@@ -7986,7 +7996,7 @@ function questText(){
       if(!ch19AllSeen())return 'もくてき：大時計で 三つの時を いききし、同じ人・舟・灯の まえとあとを 見よう　'+ch19SeenSummary();
       return 'もくてき：大時計で 三つの時を かさね、あの夜の 行動の意味を つなごう';
     }
-    if(Game.hidden.ch21c)return 'ものがたりは かたりつがれる——さいしゅうしょう、かんけつ。たびは じゆうに つづく';
+    if(Game.hidden.ch21c)return 'さいしゅうしょう、かんけつ——✨ほしのはしの たもとから ほしのうみへ もういちど のぼれる';
     if(Game.hidden.ch21d&&!Game.hidden.ch21c)return 'もくてき：むらへ かえろう——ひろばで みんなが まっている';
     if(Game.hidden.ch21a&&!Game.hidden.ch21d)return Game.mapId==='hoshiumi'?'もくてき：ほしのうみの おくへ——すくわれなかったものの といに こたえよ':'もくてき：むらの こどもと ほしのはしで ほしのうみへ';
     if(Game.hidden.ch20c&&!Game.hidden.ch21a)return 'さいしゅうしょう：むらの こどもへ——よぞらの ほしが きえていく';
@@ -8545,6 +8555,7 @@ function updateField(dt){
     else if(Game.mapId==='kokoro'&&Game.hidden.ch5c&&!Game.hidden.ch5card){Game.hidden.ch5card=true;showChapter('だい 5 しょう','とざされた ひかり');saveGame();}
     else if(Game.mapId==='towa'&&!Game.hidden.towaCard){Game.hidden.towaCard=true;showChapter('とわの ふち','といの ねむる ばしょ');saveGame();}
     else if(Game.hidden.ch2&&!Game.hidden.mate1&&(Game.purified||0)>=5)mateJoinScene();
+    else if(Game.mapId==='grass'&&Game.hidden.ch21c&&!Game.hidden.tamotoTold)tamotoScene();
     else if(Game.mapId==='grass'&&Game.p.lv>=9&&!Game.hidden.wazaCatchup)wazaCatchupScene();
   }
   if(p.bump){
@@ -12415,7 +12426,7 @@ function questDest(){
     if(!ch19AllSeen())return {map:Game.mapId,exp:'大時計で ゆうぐれ・かねの時・雨あがりを 自由に切り替え、同じ人・舟・灯の変化を 見くらべよう。'+ch19SeenSummary()};
     return {map:Game.mapId,exp:'三つの時は見えた。大時計の「三つの時をかさねる」で、三人の行動が 何へつながったかを 選ぼう。'};
   }
-  if(h.ch21c)return {map:null,exp:'ものがたりは かたりつがれていく。よぞらの ほしは ぜんぶ もどり、蒼珠は きんいろに かがやいている。'};
+  if(h.ch21c)return {map:'grass',exp:'むらの おかの ✨ほしのはしの たもと(ひかりの わ)から、\nほしのうみへ もういちど のぼれる。ものがたりは なんどでも あえる。'};
   if(h.ch21d&&!h.ch21c)return {map:'grass',exp:'むらの ひろばへ。こどもと みんなが、さいごの ものがたりを まっている。'};
   if(h.ch21a&&!h.ch21d)return {map:'hoshiumi',exp:Game.mapId==='hoshiumi'?'ほしのみちの おくで すくわれなかったものが まつ。こうげきは とどかない——7つの といに 章じゅもんで こたえよ。':'むらの こどもに はなすと、ほしのはしで ほしのうみへ わたれる。'};
   if(h.ch20c&&!h.ch21a)return {map:'grass',exp:'むらの こどもへ。よぞらの ほしが きえはじめている——さいごの ものがたりの きざし。'};
@@ -12657,6 +12668,7 @@ function questBeaconTargets(){
     else for(const n of w.npcs)if(n.ch20Final)push(n.x,n.y);
   }
   if(Game.mapId==='hoshiumi'&&h.ch21a&&!h.ch21d)foeB(e=>e.def===FOES.sukuwarenu);
+  if(Game.mapId==='grass'&&h.ch21c&&w.npcs)for(const n of w.npcs)if(n.hoshibashi)push(n.x,n.y); // かんけつ後の めあて=たもと(2026-07-20「先に進めない」)
   if(Game.mapId==='hoshiumi'&&h.ch21d&&w.exits)for(const ex of w.exits)push(ex.x,ex.y);
   // 村: じいさん・こども(はなす用事が あるとき)
   if(Game.mapId==='grass'&&w.npcs)for(const n of w.npcs)if((n.msgElder||n.heir||n.hood)&&npcStoryPending(n))push(n.x,n.y);
