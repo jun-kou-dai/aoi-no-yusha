@@ -6899,9 +6899,10 @@ async function talkNpc(n){
       if(gm==='go'){await transitMap({to:'hoshiumi',tx:8,ty:11,msg:'ほしのはしを のぼる——よぞらの うみへ。'});saveGame();}
       return;
     }
-    if(n.heir&&Game.hidden.ch21d&&!Game.hidden.ch21c){ // 最終回: むらの ひろばの 大団円
+    if(n.heir&&Game.hidden.ch21d&&!Game.hidden.ch21c){ // 最終回: むらの ひろばの 大団円→最終章の締めED(endTalkの後=endTalkはui-fieldへ戻すためED前に済ませる)
       await ch21Finale(false);
-      endTalk();saveGame();return;
+      endTalk();saveGame();
+      await startFinaleEnding();return;
     }
     if(n.heir&&Game.hidden.ch9c&&!Game.hidden.ch10a){
       await say('こども「あ、ゆうしゃさま！ ……あのね。 きいて ほしいの。」');
@@ -14630,6 +14631,38 @@ function mondouHide(){
   mondouUI.cards.style.display='none';mondouUI.kid.style.display='none';
   mondouMsgVis(true);window.removeEventListener('resize',mondouPlace);
 }
+// 最終章の締め=エンディング(魔王EDと同じ機構の ほしのうみ版。2026-07-20「最終章の締めがあるんじゃないの」)
+function edStatsFinale(){
+  const zAll=[].concat.apply([],BOOK_ISLES.map(pr=>pr[1])).concat(BOOK_SPECIAL);
+  const zk=zAll.filter(id=>Game.seen&&Game.seen[id]).length;
+  return [(Game.ng?String(Game.ng+1)+'しゅうめ　／　':'')+'なんいど '+curDiff().name+'　／　レベル '+Game.p.lv+'　／　まもの '+Game.kills+'たい　／　うけたダメージ '+Game.dmgTaken,
+    'たたかい '+Game.stats.battles+'かい　／　かいしん '+Game.stats.crits+'かい　／　たから '+Game.chestsOpen.length+'こ　／　ずかん '+zk+'/'+zAll.length+'　／　蒼珠 20/20 きんいろ'];
+}
+async function startFinaleEnding(){
+  stopSong();
+  fadeColor('#f6f1e2');
+  await fadeTo(1,1.6);
+  Game.scene='ending';Game.endMode='finale';Game.endT=0;Game.endRankFx=false;
+  Game.bt=null;P.length=0;
+  MSG=null;msgtextEl.textContent='';
+  showUI('ui-ending');
+  $('#el1').textContent='すくわれなかったものは ほどけ、よぞらいっぱいに ほしが もどった。';
+  $('#el2').textContent='うけとめる こころ。なまえを よぶ こえ。となりに いる ひと。わけあう ものがたり。';
+  $('#elans').textContent='——ひかりは、みんなの なかに あった。';
+  $('#el3').textContent='あおの勇者と 20の ものがたりは、こうして かたりつがれて いく。';
+  $('#erank').textContent='かんけつ';$('#erank').className='eline rank-s';
+  const _ef=edStatsFinale();
+  $('#estats').textContent=_ef[0];
+  $('#estats2').textContent=_ef[1];
+  $('#eend').textContent='− ものがたりは つづく −';
+  for(const id of['el1','el2','el3','elans','erank','estats','estats2','eend'])$('#'+id).classList.remove('show');
+  $('#btn-title2').classList.remove('shown');
+  $('#btn-ng').classList.remove('shown');
+  $('#btn-cont').classList.remove('shown');
+  playSong('ending');
+  await fadeTo(0,1.8);
+  fadeColor('#070b1e');
+}
 // 大団円(むらの ひろば)。replay=true は たもと再演の結び=同じ終わりを最後まで見せる(2026-07-20「倒したけど、終わりにならない」修理)
 async function ch21Finale(replay){
   await say('こども「おかえりなさい、ゆうしゃさま！ ……みて、そら！」');
@@ -14648,7 +14681,6 @@ async function ch21Finale(replay){
   sfxLevel();flash('#ffe9b0',0.6,1.4);
   updateProofHud();
   await say(replay?'きんいろの 蒼珠が、こたえるように いっせいに かがやいた——！':'20この 蒼珠が、いっせいに きんいろに かがやいた——！\n（蒼珠のきろくが きんの ひかりに かわった）');
-  showChapter('ものがたりは つづく','さいしゅうしょう・かんけつ');
   if(!replay)toast('むらの みせに さいごの そうびが ならんだ！');
 }
 async function ch21Mondou(){
@@ -14694,7 +14726,7 @@ async function ch21Mondou(){
     await wait(0.2);
     await transitMap({to:'grass',tx:8,ty:11,msg:'ほしのはしが むかえに きた——ひかりに つつまれ、むらの おかへ もどった。'});
     saveGame();
-    if(replay){startTalk();try{await ch21Finale(true);}finally{endTalk();}}
+    if(replay){startTalk();try{await ch21Finale(true);}finally{endTalk();}await startFinaleEnding();}
   }finally{mondouHide();}
 }
 async function finaleLastQuestion(){
@@ -15200,10 +15232,14 @@ async function bossDefeat(){
   Game.hidden.cleared=true;saveGame(); // クリアの きろく（scene='ending'になる まえ・いこう しろの ボスは gone:'cleared'で わかない）
   fadeColor('#f6f1e2');
   await fadeTo(1,1.6);
-  Game.scene='ending';Game.endT=0;Game.endRankFx=false;
+  Game.scene='ending';Game.endMode='maou';Game.endT=0;Game.endRankFx=false;
   Game.bt=null;P.length=0;
   MSG=null;msgtextEl.textContent='';
   showUI('ui-ending');
+  $('#el1').textContent='やみのおうは ほろび、だいちに ひかりが もどった。';
+  $('#el2').textContent='くさはらは ふたたび いのちの いろを とりもどすだろう。';
+  $('#el3').textContent='ゆうしゃの たびは、ここで おわる。';
+  $('#eend').textContent='− THE END −';
   const sec=Math.max(1,Math.round((performance.now()-Game.t0)/1000));
   let rank='B';
   if(sec<=480&&Game.dmgTaken<=80)rank='S';
@@ -17488,19 +17524,37 @@ function updateEnding(dt){
   if(t>9.0+ad)$('#estats').classList.add('show');
   if(t>9.8+ad)$('#estats2').classList.add('show');
   if(t>11.2+ad)$('#eend').classList.add('show');
-  if(t>12.4+ad){$('#btn-title2').classList.add('shown');$('#btn-ng').classList.add('shown');$('#btn-cont').classList.add('shown');}
+  if(t>12.4+ad){$('#btn-title2').classList.add('shown');if(Game.endMode!=='finale')$('#btn-ng').classList.add('shown');$('#btn-cont').classList.add('shown');}
   if(Math.random()<dt*(ans?20:14))
     puff(rnd(0,W),H+10,ans?'rgba(255,228,150,.8)':'rgba(255,240,200,.65)',1,rnd(18,42),rnd(3,6),{up:true,s0:1.2,s1:3,drag:1});
 }
 function drawEndingScene(){
   const k=Math.min(1,Game.endT/16);
+  const fin=Game.endMode==='finale'; // 最終章の締めは よぞら(ほしのうみ)版
   const g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,mix('#11173b','#3f4f8f',k));
-  g.addColorStop(0.55,mix('#2a3366','#9a7fa0',k));
-  g.addColorStop(0.8,mix('#5e4663','#e8a06c',k));
-  g.addColorStop(1,mix('#1c2550','#c9805e',k));
+  if(fin){
+    g.addColorStop(0,mix('#070b1e','#111c48',k));
+    g.addColorStop(0.55,mix('#0d1430','#26346a',k));
+    g.addColorStop(0.8,mix('#101736','#3a3670',k));
+    g.addColorStop(1,mix('#0a0f26','#2b2a58',k));
+  }else{
+    g.addColorStop(0,mix('#11173b','#3f4f8f',k));
+    g.addColorStop(0.55,mix('#2a3366','#9a7fa0',k));
+    g.addColorStop(0.8,mix('#5e4663','#e8a06c',k));
+    g.addColorStop(1,mix('#1c2550','#c9805e',k));
+  }
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  const sy=H*0.86-k*H*0.08;
+  if(fin){ // もどった ほしぼしが またたく
+    for(let i=0;i<72;i++){
+      const sx=((i*127.3)%97)/97*W, syy=((i*311.7)%89)/89*H*0.66;
+      const tw=0.35+0.65*Math.abs(Math.sin(Game.endT*1.25+i*1.9));
+      const a=0.8*tw*Math.min(1,Game.endT/3);
+      ctx.fillStyle='rgba(235,240,255,'+a.toFixed(3)+')';
+      const sz=(i%7===0)?2.6:1.6;
+      ctx.fillRect(sx,syy,sz,sz);
+    }
+  }
+  const sy=fin?H*0.30:H*0.86-k*H*0.08;
   ctx.save();ctx.globalCompositeOperation='lighter';
   const sg=ctx.createRadialGradient(W/2,sy,4,W/2,sy,H*0.24);
   sg.addColorStop(0,'rgba(255,245,220,0.95)');
@@ -17511,8 +17565,8 @@ function drawEndingScene(){
   ctx.fillStyle='#fff6e2';
   ctx.beginPath();ctx.arc(W/2,sy,H*0.045,0,Math.PI*2);ctx.fill();
   ctx.restore();
-  // よあけの とり：ひかりが もどった そらに いのちが かえる
-  if(k>0.45){
+  // よあけの とり：ひかりが もどった そらに いのちが かえる(最終章の よぞら版では ほしに ゆずる)
+  if(k>0.45&&!fin){
     ctx.save();
     const ba=Math.min(1,(k-0.45)/0.2)*0.55;
     ctx.strokeStyle='rgba(40,40,72,'+ba.toFixed(3)+')';
