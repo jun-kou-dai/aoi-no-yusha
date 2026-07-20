@@ -5128,10 +5128,15 @@ function ask(items,title){
     cmdwinEl.classList.add('on');
     mlistEl.scrollTop=0;cmdwinEl.scrollTop=0;
     {const ms=document.getElementById('mscroll'),mu=document.getElementById('mup'),md=document.getElementById('mdown');
-     if(ms){const upd=()=>{const over=mlistEl.scrollHeight-mlistEl.clientHeight>14;ms.classList.toggle('on',over);
+     if(ms){const fitList=()=>{ // リスト高を実測でクランプ=窓が画面から下へはみ出さない(iPad Safariでリストが画面外へ・▲▼も出ない実機バグ 2026-07-20)
+        mlistEl.style.maxHeight='';
+        const lt=mlistEl.getBoundingClientRect().top;
+        const reserve=48+(mexitEl.offsetHeight||44)+20; // ▲▼ボタン+もどる+余白
+        mlistEl.style.maxHeight=Math.max(96,Math.floor(innerHeight-lt-reserve))+'px';};
+      const upd=()=>{const over=mlistEl.scrollHeight-mlistEl.clientHeight>14;ms.classList.toggle('on',over);
         mu.classList.toggle('dim',mlistEl.scrollTop<=4);
         md.classList.toggle('dim',mlistEl.scrollHeight-mlistEl.clientHeight-mlistEl.scrollTop<=4);};
-      mlistEl.onscroll=upd;upd();ms.__upd=upd; // 回転(resize)後にも判定し直せるよう保持
+      fitList();mlistEl.onscroll=upd;upd();ms.__fit=fitList;ms.__upd=upd; // 回転(resize)後にも測り直せるよう保持
       const step=dir=>{sfxSel();mlistEl.scrollTop+=dir*Math.max(80,Math.round(mlistEl.clientHeight*0.8));upd();}; // 即時スクロール+即時減光(smooth/scrollイベント頼みは不確実 2026-07-20)
       mu.onpointerdown=e=>{e.stopPropagation();e.preventDefault();step(-1);};
       md.onpointerdown=e=>{e.stopPropagation();e.preventDefault();step(1);};}}
@@ -5259,7 +5264,7 @@ window.addEventListener('pointerup',e=>{
   ptr=null;swipeVec=null;PTAP=null;
 });
 window.addEventListener('pointercancel',()=>{ptr=null;swipeVec=null;PTAP=null;});
-window.addEventListener('resize',()=>{const ms=document.getElementById('mscroll');if(ms&&ms.__upd){ms.__upd();setTimeout(()=>{try{ms.__upd();}catch(e){}},120);}}); // メニューを開いたまま回転→あふれ判定をやり直す(2026-07-20)
+window.addEventListener('resize',()=>{const ms=document.getElementById('mscroll');if(ms&&ms.__upd){if(ms.__fit)ms.__fit();ms.__upd();setTimeout(()=>{try{if(ms.__fit)ms.__fit();ms.__upd();}catch(e){}},120);}}); // メニューを開いたまま回転→高さとあふれ判定をやり直す(2026-07-20)
 // おしている ほうこうキーを ぜんぶ あわせた タイルベクトル
 // （1キー＝がめんの みため4ほうこう／2キーどうじ＝タイルじくの ななめ＝みちなり）
 function getDirVec(){
