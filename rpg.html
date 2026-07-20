@@ -2428,8 +2428,8 @@ async function ch20TalkGuide(){
     await say('ナギ「先の舟だけなら、ぬけられる。でも後ろの二艘を おいていく道は、航路とは よべない。」');
     if(nkFollowing())await say('こども「先頭の舟が こえたら、みんなを みちびいたことに なるの？」');
     else await say('岸で見ていた こども「先頭の舟が こえたら、みんなを みちびいたことに なるの？」');
-    await say('ナギ「舵輪で たて・よこ・くさびへ 組みなおせる。\n三艘ぜんぶが 岩にふれない一手だけを、北へ つないで。」');
-  }else await say('ナギ「金の舵輪を しらべて。\nひとつ前へ もどすことも、出発港から やりなおすことも できる。」');
+    await say('ナギ「金の舵輪に あいずを おくって。\nかじは わたしが とる。三艘まとめて 北へ ぬけるよ。」');
+  }else await say('ナギ「金の舵輪に ふれて。\n三艘は わたしが みちびく。」');
 }
 async function ch20TalkHelm(){
   if(Game.hidden.ch20c){
@@ -2442,7 +2442,8 @@ async function ch20TalkHelm(){
   if(Game.hidden.ch20Ready){await say('黒い影が 舵輪へ からみついている。\n三艘から まわってくる声を、たたかいの隊列へ つなごう。');return;}
   if(!Game.hidden.ch20Intro){await say('ナギ「先に 三艘のこえを きいて。\n先頭だけでなく、さいごの舟まで ぬける航路を いっしょに見つけよう。」');return;}
   await say('金の舵輪に、三艘の位置と 暗礁のならびが 浮かびあがった。');
-  endTalk();openCh20Board();
+  await say('ナギ「かじは わたしが とる。\nあなたは 三艘の こえを きいていて。」');
+  endTalk();await ch20AutoSail();
 }
 async function ch20TalkVoice(){
   if(Game.hidden.ch20d)await say('ソラ「さいごの舟の声まで、港へ とどいた。\n聞こえない声を さがすのも、みちびく人の役目なんだね。」');
@@ -2506,6 +2507,18 @@ async function ch20Nagi(){
   if(win&&win.classList.contains('show')&&ch20Nav().y>0){
     CH20_NOTE='ナギ「'+(nx.kind==='adv'?'北へ ひとつ。':nx.kind==='move'?(nx.dx<0?'ひだりの潮へ。':'みぎの潮へ。'):CH20_FORMS[nx.form].name+'へ 組みなおして。')+'この一手なら 三艘とも 岩に ふれない。」';
     ch20Render();
+  }
+}
+// 章20: ナギが舵を取り、三艘が暗礁をぬけるのを見守る(操作は不要。盤を自分で動かす遊びは帰り潮に残す)
+async function ch20AutoSail(){
+  if(!openCh20Board())return;
+  CH20_NOTE='ナギ「みんな、ついて きて。」';ch20Render();
+  for(let i=0;i<80;i++){
+    if(!(Game.minigame&&Game.minigame.kind==='ch20'))return;
+    if(ch20Nav().y===0)break;
+    await new Promise(r=>setTimeout(r,300));
+    if(!(Game.minigame&&Game.minigame.kind==='ch20'))return;
+    await ch20Nagi();
   }
 }
 const ch20Tap=(el,fn)=>el.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();firstGesture();fn();});
@@ -7696,7 +7709,7 @@ function questText(){
     if(Game.hidden.ch20a&&!Game.hidden.ch20c){
       if(Game.mapId!=='shiowakare')return 'もくてき：一座のふねで しおわかれの海峡へ——さいごの舟まで通れる道をつくろう';
       if(!Game.hidden.ch20Intro)return 'もくてき：海峡の南で ナギに、三艘が動けない理由をきこう';
-      if(!Game.hidden.ch20Ready)return 'もくてき：金の舵輪をしらべ、たて・よこ・くさびの隊列で 三艘すべてを北の港へ';
+      if(!Game.hidden.ch20Ready)return 'もくてき：金の舵輪に ふれよう——ナギが 三艘を 北の港へ みちびく';
       if(!Game.hidden.ch20d)return 'もくてき：港をふさぐ「かじをうばうもの」へ——危険のこえを正しい隊列へまわせ';
       return 'もくてき：夜明けの港で、いちばん後ろの赤い舟の綱を うけとろう';
     }
@@ -12090,7 +12103,7 @@ function questDest(){
   if(h.ch20a&&!h.ch20c){
     if(Game.mapId!=='shiowakare')return {map:'grass',exp:'むらのきしの一座のふねで、しおわかれの海峡へわたろう。どこでもドアは船の外から海峡へは送らない。'};
     if(!h.ch20Intro)return {map:'shiowakare',exp:'海峡の南でナギに、三艘が暗礁をこえられない理由をきこう。'};
-    if(!h.ch20Ready)return {map:'shiowakare',exp:'金の舵輪の航海盤で、三艘すべてが岩にふれない隊列を北の港までつなごう。'};
+    if(!h.ch20Ready)return {map:'shiowakare',exp:'海峡の金の舵輪にふれよう。ナギが舵を取り、三艘を北の港までみちびいてくれる。'};
     if(!h.ch20d)return {map:'shiowakare',exp:'港の「かじをうばうもの」へ。こえをまわし、告げられた危険に合う隊列をえらぶと弱点がひらく。'};
     return {map:'shiowakare',exp:'夜明けの港に並んだ三艘のうち、いちばん後ろの赤い暮らし舟へ。最後の綱を岸でうけとろう。'};
   }
