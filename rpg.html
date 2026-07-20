@@ -2217,6 +2217,7 @@ async function ch18Dawn(){
   h.ch18c=true;showChapter('だい 18 しょう','はじめる しま');
   sfxLevel();flash('#cfe8ff',0.62,1.2);
   await say('十八ばんめの 蒼珠が ともった！\n先に おぼえた「あしたをえらぶ」が、あたらしい あさの かぜに なった！');
+  await hoshiChainSay();
   saveGame();toast('蒼珠 18 / 18　かぜまちじまの あさが はじまった');
 }
 const CH19_TIME={
@@ -2288,6 +2289,7 @@ async function ch19Finish(){
   h.ch19c=true;showChapter('だい 19 しょう','つなげて みえる もの');
   sfxLevel();flash('#cfe8ff',0.64,1.25);
   await say('十九ばんめの 蒼珠が ともった！\n先に おぼえた「ときをつなぐ」が、朝の時計の音に なった！');
+  await hoshiChainSay();
   saveGame();toast('蒼珠 19 / 19　ときかさねじまの 朝が うごきだした');
 }
 async function ch19TalkClock(){
@@ -2552,6 +2554,7 @@ async function ch20Finish(){
   Game.hidden.ch20c=true;saveGame();sfxLevel();flash('#d9f1ff',0.55,1.2);
   showChapter('だい 20 しょう','さいごの ふねまで');
   await say('二十ばんめの 蒼珠が ともった！');
+  await hoshiChainSay();
   toast('蒼珠 20 / 20　さいごの ふねまで');saveGame();
 }
 async function ch20TalkBoat(n){
@@ -5947,6 +5950,7 @@ async function talkNpc(n){
       Game.hidden.ch17c=true;
       showChapter('だい 17 しょう','わけあう ものがたり');
       await say('十七ばんめの 蒼珠が ともった！　——だい2ぶ、かんけつ。\nあたらしい 章じゅもん『みんなのものがたり』を おぼえた！');
+      await hoshiChainSay();
       saveGame();
       // おぼえた しゅんかんに つかわせる: ぶたいの けいこあいて
       await say('ざちょう「……その ひかり。ためして みんか？\nぶたいに、こだまを ひとつ たてて やろう。」');
@@ -5978,6 +5982,12 @@ async function talkNpc(n){
       await say('だんちょう「しまの ひとは くちを うごかすのに、おとが でない。\nものがたりが——ぜんぶ、どこかに しまわれちまってる んだ。」');
       const gm=await ask([{id:'go',label:'ふねに のる'},{id:'no',label:'また こんど'}],'だんちょう「みに いって くれないか。ふねなら すぐだ。」');
       if(gm!=='go'){await say('だんちょう「きが むいたら こえを かけてくれ。ふねは いつでも でられる。」');endTalk();return;}
+      await say('だんちょう「——のりこむ まえに、ひとつだけ。\nよぞらの はてを ごらん。」');
+      sfxLevel();flash('#cfe0ff',0.45,1.1);
+      {const q=isoCtr(Game.p.tx,Game.p.ty);for(let i=0;i<26&&P.length<420;i++)puff(rnd(0,W),rnd(0,H*0.4),'rgba(200,220,255,.9)',1,rnd(20,60),rnd(1.2,2.4),{up:true,s0:1.2,s1:3});}
+      await say('とおい そらの おくで、あわい ひかりの うみが またたいている——\n『ほしのうみ』。しまじまの うえに かかる、ものがたりの うみ。');
+      await say('だんちょう「しまじまの ものがたりを あつめた ものだけが、\nいつか あの うみへ のぼれる…… そう つたわってる。」');
+      await say('だんちょう「この たびの おわりは、あの ひかりだ。\nさあ、まずは こえの きえた しまから！」');
       Game.hidden.ch13a=true;
       showChapter('だい 13 しょう','しまいこまれた ものがたり');
       endTalk();
@@ -6353,6 +6363,7 @@ async function talkNpc(n){
       showChapter('だい 16 しょう','はじまりを わすれた ものがたり');
       toast('十六ばんめの 蒼珠が ともった！');
       await say('あたらしい 章じゅもん『はじまりのうた』を おぼえた！\n（つかいおえた 章じゅもんが もういちど めを さます——たたかいの「じゅもん」から）');
+      await hoshiChainSay();
       saveGame();endTalk();return;
     }
     if(Game.hidden.ch17a&&!Game.hidden.ch17Score){ // 章17・場面2: わすれうたのしま=きえた うたいだしを 3つの おとで もどす
@@ -6430,6 +6441,7 @@ async function talkNpc(n){
       showChapter('だい 15 しょう','うそと よばれた ものがたり');
       toast('十五ばんめの 蒼珠が ともった！');
       await say('あたらしい 章じゅもん『ほらがいのこえ』を おぼえた！\n（おおぼらで つぎの いちげきが 2ばい——たたかいの「じゅもん」から）');
+      await hoshiChainSay();
       saveGame();endTalk();return;
     }
     if(Game.hidden.ch17a&&!Game.hidden.ch17Fuda){ // 章17・場面2: ほらふきじま=「とじる うそ」と「ひらく つくりばなし」を みわける
@@ -6502,6 +6514,7 @@ async function talkNpc(n){
       showChapter('だい 14 しょう','かたちを かえる ものがたり');
       toast('十四ばんめの 蒼珠が ともった！');
       await say('あたらしい 章じゅもん『こだまがえし』を おぼえた！\n（うけた いちげきを こだまにして うちかえす——たたかいの「じゅもん」から）');
+      await hoshiChainSay();
       saveGame();endTalk();return;
     }
     if(Game.hidden.ch17a&&!Game.hidden.ch17Stone){ // 章17・場面2: やまびこのたに=3つの こだまを じゅんに ひびかせる
@@ -6613,6 +6626,7 @@ async function talkNpc(n){
       showChapter('だい 13 しょう','しまいこまれた ものがたり');
       toast('十三ばんめの 蒼珠が ともった！');
       await say('あたらしい 章じゅもん『ひらくことば』を おぼえた！\n（かたい まもりと ぶつりたいせいを ひらく——たたかいの「じゅもん」から）');
+      await hoshiChainSay();
       saveGame();endTalk();return;
     }
     if(Game.hidden.ch17a&&!Game.hidden.ch17Key){ // 章17・場面2: くらのしま=ひらくことばで げんぽんこを ひらく
@@ -7946,7 +7960,21 @@ function chapterOneStep(){
   return {key:'caveBoss',map:'cave',bar:'もくてき：どうくつの おくの くろがねゴーレムへ',exp:'どうくつの おくへ。くろがねの ゴーレムが、こおりと ほのおへ つづく みちを ふさいでいる。'};
 }
 // いまの もくてきを みじかく しめす（こどもクエストが さいゆうせん）
+// 第3部(島巡り)の背骨: ほしのうみまでの残り島数(案1・ANALYSIS_midgame_20260720)
+function hoshiUmiRemain(){
+  return ['ch13c','ch14c','ch15c','ch16c','ch17c','ch18c','ch19c','ch20c'].filter(k=>!Game.hidden[k]).length;
+}
+async function hoshiChainSay(){
+  const n=hoshiUmiRemain();
+  if(n>0)await say('この しまの ものがたりは、いつか ほしのうみで ひかる——\n（ほしのうみまで あと '+n+'つ）');
+  else await say('しまじまの ものがたりが そろった——\nよぞらの はてで、ほしのうみが ひときわ つよく またたいた！');
+}
 function questText(){
+  const t=questTextCore();
+  if(Game.hidden.ch13a&&!Game.hidden.ch20c){const n=hoshiUmiRemain();if(n>0)return t+'　✦ほしのうみまで あと '+n+'つ';}
+  return t;
+}
+function questTextCore(){
   if(Game.minigame&&Game.minigame.kind==='ch20')return '三艘の航海盤：さいごの舟まで 岩にふれない隊列を つなごう';
   if(Game.minigame)return 'スライムつかまえ！ のこり '+Math.max(0,Math.ceil(Game.minigame.t))+'びょう　つかまえた '+Game.minigame.got+'/3';
   if(Game.qChild===1)return Game.mapId==='cave'?'もくてき：どうくつの ひだりおくで ポポを さがせ':'もくてき：どうくつで まいごの ポポを さがせ';
