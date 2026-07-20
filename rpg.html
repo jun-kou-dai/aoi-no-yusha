@@ -342,6 +342,35 @@ body{
   border:1px solid rgba(176,196,238,.28); color:#68718f; background:rgba(25,31,64,.72); font-size:clamp(7px,1.15vmin,9px); font-weight:800; box-shadow:inset 0 0 6px rgba(10,14,34,.8); }
 .proof-orb.got{ color:#eef7ff; border-color:rgba(184,222,255,.88); background:radial-gradient(circle at 35% 30%,#e9fbff 0 9%,#68b9ed 24%,#345fb5 58%,#151f55 100%); box-shadow:0 0 8px rgba(91,175,255,.72),inset 0 0 4px rgba(255,255,255,.5); }
 .proof-orb.finale{ color:#5a3a10; border-color:rgba(255,223,138,.92); background:radial-gradient(circle at 35% 30%,#fff8dc 0 9%,#ffd35e 26%,#e8a63c 60%,#7a4a10 100%); box-shadow:0 0 9px rgba(255,214,110,.85),inset 0 0 4px rgba(255,255,255,.6); }
+/* 最終章『ほしのもんどう』(2026-07-20): とい常時バナー+星メーター+カード3枚。cmdwin不使用 */
+#mondou{ position:absolute; inset:0; z-index:6; pointer-events:none; display:none; }
+#mondou.show{ display:block; }
+#mq{ position:absolute; z-index:3; top:118px; left:50%; transform:translateX(-50%); width:min(92%,720px); background:rgba(10,12,34,.93); border:2px solid rgba(255,217,122,.85); border-radius:14px; padding:8px 14px 10px; text-align:center; box-shadow:0 0 16px rgba(255,214,110,.22); }
+#mqno{ font-size:13px; color:#ffd97a; letter-spacing:.12em; margin-bottom:4px; }
+#mqno .ms{ font-size:15px; margin:0 1px; }
+#mqno .ms.off{ color:rgba(160,170,220,.55); }
+#mqno .ms.on{ color:#ffd97a; text-shadow:0 0 8px rgba(255,214,110,.9); }
+#mqtext{ font-size:19px; line-height:1.45; color:#fff6dc; font-weight:600; }
+#mkage{ position:absolute; pointer-events:none; z-index:1; }
+#mkage .mkb{ fill:rgba(16,18,38,.97); stroke:rgba(140,150,210,.5); stroke-width:2; }
+#mkage .mk-wander{ animation:mkw 2.4s ease-in-out infinite alternate; }
+@keyframes mkw{ from{ transform:translateX(-14px);} to{ transform:translateX(14px);} }
+#mkage .mk-fade{ opacity:.38; }
+#mkage .mkm{ fill:rgba(60,64,110,.55); animation:mkmist 1.8s ease-in-out infinite alternate; }
+@keyframes mkmist{ from{ opacity:.25;} to{ opacity:.75;} }
+#mkid{ position:absolute; left:6%; bottom:190px; background:rgba(255,244,214,.95); color:#4a3a18; border-radius:12px; padding:7px 12px; font-size:14px; font-weight:600; box-shadow:0 3px 8px rgba(0,0,0,.4); max-width:52vw; display:none; }
+#mkid:after{ content:""; position:absolute; left:22px; bottom:-8px; border:8px solid transparent; border-top-color:rgba(255,244,214,.95); border-bottom:none; }
+#mcards{ position:absolute; left:50%; transform:translateX(-50%); bottom:10px; width:min(96%,880px); display:none; gap:10px; justify-content:center; pointer-events:auto; }
+#mcards.stack{ flex-direction:column; align-items:center; bottom:16%; }
+.mcard{ flex:1; max-width:300px; background:linear-gradient(180deg,rgba(22,26,58,.97),rgba(14,16,40,.97)); border:2px solid rgba(214,196,150,.8); border-radius:14px; padding:10px 8px; text-align:center; color:#fff2d0; box-shadow:0 3px 10px rgba(0,0,0,.5); pointer-events:auto; cursor:pointer; }
+#mcards.stack .mcard{ max-width:560px; width:100%; flex:none; }
+.mcard .mc1{ font-size:12px; color:#c8b98a; margin-bottom:3px; letter-spacing:.08em; }
+.mcard .mc2{ font-size:18px; font-weight:700; line-height:1.25; }
+.mcard .mc3{ font-size:12px; color:#b8c4e8; margin-top:4px; line-height:1.35; }
+.mcard.gold{ border-color:#ffd97a; animation:mgold 1s ease-in-out infinite alternate; }
+@keyframes mgold{ from{ box-shadow:0 0 10px rgba(255,214,110,.4);} to{ box-shadow:0 0 26px rgba(255,224,140,.85);} }
+.mcard.dim{ opacity:.32; border-style:dashed; pointer-events:none; }
+@media (max-height:480px){ #mq{ top:52px; padding:5px 10px 7px; } #mqtext{ font-size:15px; } #mkid{ bottom:120px; font-size:12px; } #mcards{ bottom:6px; gap:6px; } .mcard{ padding:7px 6px; } .mcard .mc2{ font-size:14px; } .mcard .mc3{ display:none; } }
 .proof-orb.next{ border-color:rgba(120,168,235,.55); color:#a8b8dc; animation:proofpulse 1.8s ease-in-out infinite; }
 @keyframes proofpulse{ 0%,100%{box-shadow:0 0 3px rgba(90,150,230,.18)} 50%{box-shadow:0 0 10px rgba(90,170,255,.62)} }
 #bproofhud{ display:flex; align-items:center; gap:6px; margin-top:1px; opacity:.94; }
@@ -4305,6 +4334,7 @@ function weakBadgeHTML(id,foe,kind,book){
   return '<span class="'+cls+' '+(known?r.cls:(guess?'guess':'unk'))+'" data-foe="'+id+'" data-affinity="'+kind+'" data-knowledge="'+state+'" data-result="'+(known?r.cls:'unknown')+'">'+WEAK_ICON[kind]+' '+(known?(r.mark+' '+r.word):(guess?'? よそう':'?'))+'</span>';
 }
 function weakClueText(foe){
+  if(foe===FOES.sukuwarenu)return 'こうげきは とどかない。7つの といに ものがたりで こたえよう';
   if(foe===FOES.kiritoru&&Game.bt){const f=CH19_FORMS[Game.bt.ch19Form||0];return f.icon+' '+f.name+'の影。'+f.tip+(Game.bt.tokiLinked?'　→ つぎは '+CH19_FORMS[(Game.bt.ch19Form+1)%3].icon:'　→ つぎの姿は 切り取られている');}
   if(foe===FOES.kajiu&&Game.bt){
     const bt=Game.bt,pre=Number.isInteger(bt.ch20Prelude)?bt.ch20Prelude:null;
@@ -12201,6 +12231,7 @@ function drawExitBeacons(){
   }
   if(!wx.exits)return;
   const TWc=Game.cam.TW,THc=Game.cam.TH;
+  const exLbld=[]; // となりあう同名でぐちのラベルは1本(ほしのうみ「そうげんへ」二重 2026-07-20)
   for(const ex of wx.exits){
     if(ex.need&&!Game.hidden[ex.need])continue; // 物語で ひらく でいりぐち(章9たてあな)
     const q=isoCtr(ex.x,ex.y);
@@ -12234,9 +12265,12 @@ function drawExitBeacons(){
     ctx.textAlign='center';ctx.textBaseline='alphabetic';
     const ly=q.y-THc*3.4+Math.sin(TM*1.8+ex.x)*2.5;
     const lbl=MAPNAME[ex.to]?(MAPNAME[ex.to].split('・')[0]+' へ'):'でぐち'; // 行き先名を出す(でぐち3本の見分けがつかない 2026-07-20)
-    ctx.lineWidth=3;ctx.strokeStyle='rgba(8,16,38,0.85)';ctx.strokeText(lbl,q.x,ly);
-    ctx.fillStyle='rgba(240,248,255,'+(0.75+0.20*Math.sin(TM*2.6+ex.x)).toFixed(2)+')';
-    ctx.fillText(lbl,q.x,ly);
+    if(!exLbld.some(pv=>pv.to===ex.to&&Math.abs(pv.x-ex.x)+Math.abs(pv.y-ex.y)<=2)){
+      ctx.lineWidth=3;ctx.strokeStyle='rgba(8,16,38,0.85)';ctx.strokeText(lbl,q.x,ly);
+      ctx.fillStyle='rgba(240,248,255,'+(0.75+0.20*Math.sin(TM*2.6+ex.x)).toFixed(2)+')';
+      ctx.fillText(lbl,q.x,ly);
+    }
+    exLbld.push({to:ex.to,x:ex.x,y:ex.y});
     ctx.restore();
   }
 }
@@ -12887,7 +12921,6 @@ async function runBattle(ref){
     await say('ほしの きえた やみが、ゆっくりと ひとの かたちを とった——');
     await say('すくわれなかったもの『……きたのか、ひかりの がわの ものよ。\nわたしは、たまが えらばなかった はんぶん。すくわれなかった、すべて。』');
     await say('すくわれなかったもの『たたかいに きたのなら、むだな こと。\nこたえに きたのなら——20の ものがたりで、といに こたえて みせよ。』');
-    await say('（こうげきは とどかない——「じゅもん→📖ものがたり」で といに こたえよう）');
   }
   else if(foe===FOES.monoecho){
     await say('ぶたいの ちゅうおうに、あおい ひかりの こだまが すっと たちのぼった。');
@@ -12991,6 +13024,7 @@ async function runBattle(ref){
     await say(f.icon+' '+f.name+'の影。'+f.tip+'\n姿は てきの手番ごとに 切りかわる。');
   }
   else if(foe.mboss)await say('くろがねの きょたいが ゆくてを ふさいでいる…！');
+  if(foe===FOES.sukuwarenu){await ch21Mondou();return;} // 最終章はコマンド窓を開かない(ほしのもんどう 2026-07-20)
   while(true){
     const skip=await playerStatusTick();
     if(Game.p.hp<=0){await defeat();return;}
@@ -14462,15 +14496,166 @@ const FINALE_QS=[
  {spell:'yobigoe',no:6,q:'『わたしの なまえを、だれが よぶ。』',a:'ソラのよびごえが といに こたえた——\nなまえは、よぶ こえが あって はじめて なまえに なる。'},
  {spell:'monogatari',no:7,q:'『おわった ものは、すくえるのか。』',a:'つぐものがたりが といに こたえた——\nおわりは、うけつがれた ものの なかで つづいていく。'},
  {spell:'minmono',no:17,q:'『ものがたりは、だれの ものか。』',a:'みんなのものがたりが といに こたえた——\nはじまりの なを のこしたまま、わけあうほど ふえていく。'}];
+// ---- 最終章『ほしのもんどう』(2026-07-20): クイズ廃止→かげのふるまいを見て こたえの物語を選ぶ ----
+// 正解ごとにボスの影が明るくほどけ(finTint)、★が灯る。被弾・MP消費・メニューなし。
+const CH21_TINTS=['rgba(40,44,80,0.92)','rgba(52,54,96,0.88)','rgba(66,64,112,0.84)','rgba(82,76,128,0.80)','rgba(100,90,144,0.75)','rgba(120,106,160,0.70)','rgba(142,124,176,0.63)','rgba(168,146,194,0.55)'];
+const CH21_THEME={satori:'しる ことから はじめる',kageharai:'かげを ほどいて かえす',uketome:'うけとめる こころ',watashi:'てから てへ わたす',mamori:'となりに いる',yobigoe:'なまえを よぶ',monogatari:'おわりを うけつぐ',nagiuta:'みおくりの うた',tomoshibimichi:'みちを てらす',futarigatari:'となりを あるく',hitotsunoumi:'うみを ひとつに つなぐ',minnanokoe:'ほんとうの こえ',hiraku:'とじた ものを ひらく',kodama:'うけて かえす こだま',horagai:'おおきな こえ',hajimari:'はじまりを おもいだす',minmono:'わけあう ものがたり',ashita:'あしたを えらぶ',toki:'ときを つなぐ',koemawasu:'こえを まわす'};
+const CH21_KAGE={
+ yami:'<svg width="120" height="112" viewBox="0 0 120 112" style="overflow:visible"><circle cx="60" cy="60" r="50" fill="rgba(8,10,26,.5)"/><circle cx="60" cy="74" r="27" class="mkb"/><circle cx="60" cy="42" r="18" class="mkb"/><path d="M51 42 q4 3 8 0 M62 42 q4 3 8 0" stroke="rgba(150,160,220,.6)" fill="none" stroke-width="2"/></svg>',
+ moya:'<svg width="120" height="112" viewBox="0 0 120 112" style="overflow:visible"><ellipse cx="38" cy="46" rx="26" ry="12" class="mkm"/><ellipse cx="84" cy="66" rx="24" ry="11" class="mkm" style="animation-delay:.6s"/><circle cx="60" cy="74" r="27" class="mkb"/><circle cx="60" cy="42" r="18" class="mkb"/><circle cx="54" cy="40" r="2.6" fill="#c8d0f0"/><circle cx="67" cy="40" r="2.6" fill="#c8d0f0"/></svg>',
+ hajiki:'<svg width="120" height="112" viewBox="0 0 120 112" style="overflow:visible"><circle cx="60" cy="74" r="27" class="mkb"/><circle cx="60" cy="42" r="18" class="mkb"/><circle cx="54" cy="40" r="2.6" fill="#c8d0f0"/><circle cx="67" cy="40" r="2.6" fill="#c8d0f0"/><circle cx="22" cy="34" r="4" fill="#ffe9a8"/><path d="M30 40 L14 26" stroke="rgba(255,233,168,.8)" stroke-width="2"/><circle cx="100" cy="52" r="4" fill="#ffe9a8"/><path d="M92 58 L108 46" stroke="rgba(255,233,168,.8)" stroke-width="2"/></svg>',
+ senaka:'<svg width="120" height="112" viewBox="0 0 120 112" style="overflow:visible"><ellipse cx="60" cy="80" rx="30" ry="24" class="mkb"/><circle cx="48" cy="52" r="17" class="mkb"/></svg>',
+ samayoi:'<svg width="120" height="112" viewBox="0 0 120 112" style="overflow:visible"><g class="mk-wander"><circle cx="60" cy="74" r="27" class="mkb"/><circle cx="60" cy="42" r="18" class="mkb"/><circle cx="54" cy="40" r="2.6" fill="#c8d0f0"/><circle cx="67" cy="40" r="2.6" fill="#c8d0f0"/></g></svg>',
+ kie:'<svg width="120" height="112" viewBox="0 0 120 112" style="overflow:visible"><g class="mk-fade"><circle cx="60" cy="74" r="27" class="mkb"/><circle cx="60" cy="42" r="18" class="mkb"/></g><circle cx="60" cy="60" r="46" fill="none" stroke="rgba(150,160,220,.4)" stroke-dasharray="5 7" stroke-width="2"/></svg>',
+ fueru:'<svg width="150" height="112" viewBox="0 0 150 112" style="overflow:visible"><circle cx="50" cy="72" r="26" class="mkb"/><circle cx="50" cy="42" r="17" class="mkb"/><circle cx="100" cy="80" r="18" class="mkb"/><circle cx="100" cy="58" r="12" class="mkb"/><circle cx="132" cy="86" r="12" class="mkb"/><circle cx="132" cy="72" r="8" class="mkb"/></svg>'};
+const CH21_ROUNDS=[
+ {kage:'yami',kid:'まっくらで なにも みえないんだ…… まずは しって あげようよ',
+  cards:[{id:'satori',ok:1},{id:'tomoshibimichi',miss:'『あたたかい。だが みちを てらす まえに——\nわたしは まだ、だれにも しられて いない。』'},{id:'watashi',miss:'『わたされても、うけとれない。\nわたしを しる ものが いないのだから。』'}]},
+ {kage:'moya',kid:'かげは けすんじゃ なくて、ほどいて かえすんだよね',
+  cards:[{id:'hiraku',miss:'『とびらは ない。わたしは しまわれたのでは なく——\nおきざりに されたのだ。』'},{id:'kageharai',ok:1},{id:'nagiuta',miss:'『うたは とどいた。だが この もやは、\nみおくりを まって いるのでは ない。』'}]},
+ {kage:'hajiki',kid:'はじかれても、うけとめれば いいんだよね',
+  cards:[{id:'hitotsunoumi',miss:'『つながっても、うけとめる こころが なければ、\nひかりは こぼれて いく。』'},{id:'ashita',miss:'『あしたを えらぶ まえに——\nきょうの ひかりを、だれが うけとめる。』'},{id:'uketome',ok:1}]},
+ {kage:'senaka',kid:'せなかを むけてる…… となりに いて あげようよ',
+  cards:[{id:'mamori',ok:1},{id:'yobigoe',miss:'『なまえを よばれても、いまは ふりむけない。\nそっとして おいて ほしい ときも ある。』'},{id:'hajimari',miss:'『うたは まだ とおい。\nせなかを むけた ままでは、きこえない。』'}]},
+ {kage:'samayoi',kid:'なまえを よんで もらえたら、もう ひとりじゃ ないよね',
+  cards:[{id:'minnanokoe',miss:'『たくさんの こえは にぎやかだ。\nだが その なかに、わたしの なまえは ない。』'},{id:'yobigoe',ok:1},{id:'futarigatari',miss:'『となりで かたる まえに——\nまず、なまえを よんで ほしいのだ。』'}]},
+ {kage:'kie',kid:'おわっても、おはなしの なかで つづくんだよね',
+  cards:[{id:'kodama',miss:'『きえた こえは、こだまに ならない——\nつぐ ものが いなければ。』'},{id:'toki',miss:'『ときを つないでも、おわりは くる。\nおわりの さきを つなぐ ものは、なにか。』'},{id:'monogatari',ok:1}]},
+ {kage:'fueru',kid:'ものがたりは、わけあうほど ふえるんだよね',
+  cards:[{id:'horagai',miss:'『おおきな こえは とどく。\nだが ひとりの こえは、まだ ひとりの ものだ。』'},{id:'minmono',ok:1},{id:'koemawasu',miss:'『こえは まわる。では、まわりおえた ものがたりは——\nだれの ものに なる。』'}]}];
+let mondouUI=null;
+function mondouEnsure(){
+  if(mondouUI)return mondouUI;
+  const root=document.createElement('div');root.id='mondou';
+  root.innerHTML='<div id="mq"><div id="mqno"></div><div id="mqtext"></div></div><div id="mkage"></div><div id="mkid"></div><div id="mcards"></div>';
+  document.getElementById('ui-battle').appendChild(root);
+  mondouUI={root,no:root.querySelector('#mqno'),q:root.querySelector('#mqtext'),kage:root.querySelector('#mkage'),kid:root.querySelector('#mkid'),cards:root.querySelector('#mcards'),resolve:null};
+  return mondouUI;
+}
+function mondouMsgVis(v){const m=document.getElementById('msgwin');if(m)m.style.visibility=v?'':'hidden';}
+function mondouBanner(no,stars,text){
+  const u=mondouEnsure();
+  let h='';for(let k=0;k<7;k++)h+='<span class="ms '+(k<stars?'on':'off')+'">'+(k<stars?'★':'○')+'</span>';
+  u.no.innerHTML=(no==null?'さいごの とい':'とい '+no+' / 7')+'　'+h;
+  u.q.textContent=text;
+}
+function mondouKage(pose){const u=mondouEnsure();u.kage.innerHTML=pose?(CH21_KAGE[pose]||''):'';mondouPlace();}
+function mondouKid(t){const u=mondouEnsure();u.kid.textContent=t||'';u.kid.__t=t||'';}
+function mondouPlace(){
+  const u=mondouUI;if(!u||!u.root.classList.contains('show'))return;
+  const land=innerHeight<=480; // 横持ち: バーが縦に長く、下は カードで埋まる
+  try{
+    const ep=enemyPos();
+    const kx=Math.min(W-160,Math.max(8,ep.x+ep.s*150)),ky=Math.min(H-150,Math.max(H*0.22,ep.y-ep.s*20-40));
+    u.kage.style.left=kx+'px';u.kage.style.top=ky+'px';
+  }catch(e){}
+  // といバナー: 固定vh/px任せで重なった前科への実測配置(2026-07-20)。縦=バー下端+10px、横持ち=右上へ退避
+  try{
+    const mq=u.root.querySelector('#mq');
+    if(mq){
+      if(land){
+        mq.style.left='auto';mq.style.right='10px';mq.style.transform='none';mq.style.width='min(46vw,430px)';mq.style.top='58px';
+        u.kid.style.left='auto';u.kid.style.right='14px';u.kid.style.bottom='auto';
+        u.kid.style.top=Math.round(mq.getBoundingClientRect().bottom+8)+'px';u.kid.style.maxWidth='44vw';
+      }else{
+        let by=0;
+        for(const id of ['enamewrap','bstat','nkstat']){
+          const el=document.getElementById(id);
+          if(el&&el.offsetHeight>0){const r=el.getBoundingClientRect();if(r.bottom>by)by=r.bottom;}
+        }
+        mq.style.left='50%';mq.style.right='auto';mq.style.transform='translateX(-50%)';mq.style.width='';
+        mq.style.top=(by>0?Math.round(Math.min(innerHeight*0.55,by+10)):118)+'px';
+        u.kid.style.left='6%';u.kid.style.right='auto';u.kid.style.top='auto';u.kid.style.bottom='190px';u.kid.style.maxWidth='52vw';
+      }
+    }
+  }catch(e){}
+}
+function mondouSetCards(list,stack){
+  const u=mondouEnsure();
+  u.cards.className=stack?'stack':'';u.cards.innerHTML='';
+  list.forEach((c,idx)=>{
+    const d=document.createElement('div');d.className='mcard';d.dataset.idx=idx;
+    if(c.raw)d.innerHTML='<div class="mc2">'+c.label+'</div>';
+    else{
+      const cp=CHAPTER_PROOF.find(x=>x.id===c.id);d.dataset.spell=c.id;
+      d.innerHTML='<div class="mc1">章'+cp.no+' '+cp.icon+'</div><div class="mc2">'+cp.spell+'</div><div class="mc3">'+(CH21_THEME[c.id]||'')+'</div>';
+    }
+    d.addEventListener('pointerup',ev=>{ev.preventDefault();if(d.classList.contains('dim'))return;if(mondouUI.resolve)mondouUI.resolve(idx);});
+    u.cards.appendChild(d);
+  });
+}
+function mondouAwaitPick(){
+  const u=mondouEnsure();
+  mondouMsgVis(false);
+  u.cards.style.display='flex';
+  u.kid.style.display=u.kid.__t?'block':'none';
+  return new Promise(res=>{
+    u.resolve=(i)=>{u.resolve=null;u.cards.style.display='none';u.kid.style.display='none';mondouMsgVis(true);res(i);};
+  });
+}
+function mondouShow(){mondouEnsure().root.classList.add('show');mondouPlace();window.addEventListener('resize',mondouPlace);}
+function mondouHide(){
+  if(!mondouUI)return;
+  mondouUI.resolve=null;mondouUI.root.classList.remove('show');
+  mondouUI.cards.style.display='none';mondouUI.kid.style.display='none';
+  mondouMsgVis(true);window.removeEventListener('resize',mondouPlace);
+}
+async function ch21Mondou(){
+  const bt=Game.bt;
+  try{
+    // 儀式: つるぎは とどかない(操作不要・以後こうげき/メニューは出ない)
+    await say('ゆうしゃの こうげき！');
+    beginHeroStrike(bt);sfxSlash();await wait(0.3);markHeroStrikeImpact(bt,'miss');await wait(0.12);
+    await say('こうげきは、ほしの やみに すいこまれて きえた——\nつるぎでは とどかない あいてだ。');
+    await say('（かげの こまりごとを 見て、こたえの ものがたりを えらぼう）');
+    mondouShow();
+    for(let i=0;i<CH21_ROUNDS.length;i++){
+      const R=CH21_ROUNDS[i],FQ=FINALE_QS[i];
+      mondouBanner(i+1,i,FQ.q.replace(/\n/g,' '));
+      mondouKage(R.kage);mondouKid(R.kid);
+      mondouSetCards(R.cards,false);
+      await say('すくわれなかったもの'+FQ.q);
+      let wrongs=0,done=false;
+      while(!done){
+        const idx=await mondouAwaitPick();
+        const c=R.cards[idx];
+        if(c.ok){
+          sfxLevel();flash('#cfe0ff',0.4,0.9);
+          {const ep=enemyPos();if(P.length<420)puff(ep.x,ep.y-ep.s*40,'rgba(200,220,255,.95)',26,180,0.9,{s0:2,s1:6});}
+          bt.finQ=i+1;bt.finTint=CH21_TINTS[i+1];bt.sizeTarget=1-0.025*(i+1);
+          mondouBanner(i+1,i+1,FQ.q.replace(/\n/g,' '));
+          await say(FQ.a);
+          await say('やみが ひとまわり ほどけ、ほしが ひとつ もどった！（'+(i+1)+' / 7）');
+          done=true;
+        }else{
+          wrongs++;
+          const u=mondouEnsure();const el=u.cards.children[idx];if(el)el.classList.add('dim');
+          sfxSel();
+          await say('すくわれなかったもの'+c.miss);
+          if(wrongs>=1){const ci=R.cards.findIndex(x=>x.ok);const ce=u.cards.children[ci];if(ce)ce.classList.add('gold');}
+        }
+      }
+    }
+    await finaleLastQuestion();
+    mondouHide();
+    await finishFinaleBattle();
+    await wait(0.2);
+    await transitMap({to:'grass',tx:8,ty:11,msg:'ほしのはしが むかえに きた——ひかりに つつまれ、むらの おかへ もどった。'});
+    saveGame();
+  }finally{mondouHide();}
+}
 async function finaleLastQuestion(){
   const bt=Game.bt;
   await say('7つの ほしが もどった。すくわれなかったものの やみが、\nあさもやの ように うすれていく——');
   await say('すくわれなかったもの『……さいごの といだ。\nこれだけは じゅもんでは なく、おまえ じしんの ことばで こたえよ。』');
   await say('すくわれなかったもの『——ひかりは すべてを すくえるのか。』');
-  const c=await ask([
-    {id:'a',label:'すくえる。ぜんぶ すくって みせる'},
-    {id:'b',label:'すくえない ものも ある と おもう'},
-    {id:'c',label:'ひとりでは すくえない。だから みんなで'}],'こたえは——');
+  mondouBanner(null,7,'『——ひかりは すべてを すくえるのか。』');
+  mondouKage(null);mondouKid('');
+  mondouSetCards([
+    {raw:1,label:'すくえる。ぜんぶ すくって みせる'},
+    {raw:1,label:'すくえない ものも ある と おもう'},
+    {raw:1,label:'ひとりでは すくえない。だから みんなで'}],true);
+  const c=['a','b','c'][await mondouAwaitPick()];
   if(c==='a'){
     await say('すくわれなかったもの『……その いきおいに、なんど すくわれた ことか。\nだが おまえは もう しっている はずだ。ひとりの ちからの さきに ある ものを。』');
     await say('すくわれなかったもの『それでも まっすぐな その こころざし——\nうけとって おこう。』');
@@ -15543,7 +15728,7 @@ function drawFoeTinted(bt,ep){
   ctx=foeCtx;
   try{drawFoe(bt,{x:pad,y:pad,s:ep.s},strikeMotion);}finally{ctx=keep;}
   foeCtx.globalCompositeOperation='source-atop';
-  if(bt.foe.tint){foeCtx.fillStyle=bt.foe.tint;foeCtx.fillRect(0,0,pad*2,pad*2);}
+  {const ftint=bt.finTint||bt.foe.tint;if(ftint){foeCtx.fillStyle=ftint;foeCtx.fillRect(0,0,pad*2,pad*2);}} // 最終章: 正解ごとに影が明るくほどける
   if(bt.blink>0){foeCtx.fillStyle='rgba(255,255,255,'+(0.8*Math.min(1,bt.blink)).toFixed(3)+')';foeCtx.fillRect(0,0,pad*2,pad*2);} // ひげきの しろい てんめつ
   foeCtx.globalCompositeOperation='source-over';
   ctx.drawImage(foeCv,0,0,w,h,ep.x-pad,ep.y-pad,pad*2,pad*2);
