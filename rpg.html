@@ -910,7 +910,8 @@ grass:{
   {x:14,y:9,kind:'stone',col:'#9aa4b8',stoneKey:'t1',msg:['せきひ「ひかりのたまは よを てらす。\nこれを まもる ものを ── けいしょうしゃ と よぶ。」']},
   {x:15,y:11,kind:'musume',col:'#5f5a78',needKey:'ch4c',hood:1,msg:['フードの ひとかげは、こたえない。\nかぜの おとだけが、ふたりの あいだを すぎていく。']},
   {x:17,y:12,kind:'tent',troupeTent:1,needKey:'ch11c',col:'#d94b5b',msg:[]}, // 村の中心(12,10)から南東の隅へ(四方八方にバラす 2026-07-20)
-  {x:1,y:6,kind:'ship',troupeShip:1,needKey:'ch11c',col:'#d8bd78',msg:[]}], // 南中央(8,12)から西の岸へ(四方八方にバラす 2026-07-20)
+  {x:1,y:6,kind:'ship',troupeShip:1,needKey:'ch11c',col:'#d8bd78',msg:[]}, // 南中央(8,12)から西の岸へ(四方八方にバラす 2026-07-20)
+  {x:8,y:10,kind:'hoshibashi',hoshibashi:1,needKey:'ch21c',col:'#cfe0ff',msg:[]}], // ほしのはしの たもと=クリア済みセーブの再訪口(2026-07-20 実機「最終章完結で入れない」への修理)
  king:{x:3,y:10}},
 forest:{
  song:'forest', bg:['#0a1f12','#13301d'],
@@ -3180,7 +3181,8 @@ function loadMap(id){
   MAP=w.map;SPAWNS=w.spawns;CHESTS=w.chests;SPRING=w.spring||null;BZONE=w.bzone||null;SPOTS=w.spots||[];Game._spotLast=null;
   if(id==='cave2'&&Game.hidden.gate1)MAP=MAP.map((row,i)=>i===8?row.slice(0,16)+'F'+row.slice(17):row); // ひらいた とびらは ひらいたまま
   if(id==='umi'&&Game.hidden.ch11d)MAP=MAP.map(row=>row.replace(/X/g,'W')); // あらなみは ほどけたまま(みなと開通)
-  Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!Game.hidden[s.need])&&!(s.gone&&Game.hidden[s.gone])&&!(s.shinpan&&Game.diff!==7)&&!(id==='grass'&&Game.hidden.ch21c)).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
+  if(id!=='hoshiumi')CH21_REPLAY=false; // 再訪はほしのうみ滞在中だけ有効(2026-07-20)
+  Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!(Game.hidden[s.need]||(s.id==='sukuwarenu'&&CH21_REPLAY)))&&!(s.gone&&Game.hidden[s.gone]&&!(s.id==='sukuwarenu'&&CH21_REPLAY))&&!(s.shinpan&&Game.diff!==7)&&!(id==='grass'&&Game.hidden.ch21c)).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
     seed:rnd(9),timer:rnd(0.5,1.5),moving:null}));
   Game.respawnQ=[];
   Game.birds=null; // とりの むれは マップを またがない
@@ -5875,6 +5877,15 @@ async function talkTroupeLeader(){
   await say('だんちょう「おくの みせも のぞいて いってくれ。ぶたいだけの おみやげだ！」');
   endTalk();
 }
+// クリア後の再訪: ほしのはしの たもと → ほしのうみ(もんどう再演。フラグ/セーブは不変)
+async function hoshibashiTalk(){
+  await say('ほしのはしの たもと——よぞらへ のぼった ひかりの あとが、\nいまも ほんのり あたたかい。');
+  const gm=await ask([{id:'go',label:'ほしのうみへ のぼる'},{id:'no',label:'やめておく'}],'ほしの こえ『……もういちど、といに あいに くるか。』');
+  if(gm!=='go'){await say('ほしあかりは、いつでも ここで まっている。');return;}
+  CH21_REPLAY=true;
+  endTalk();
+  await transitMap({to:'hoshiumi',tx:8,ty:11,msg:'ほしのはしを のぼる——よぞらの うみへ。'});
+}
 async function talkNpc(n){
   if(Game.talking||Game.minigame)return;
   startTalk();sfxSel();
@@ -5889,6 +5900,7 @@ async function talkNpc(n){
   if(n.ch19Scene){await ch19TalkScene(n.ch19Scene);endTalk();saveGame();return;}
   if(n.ch18Chief){await ch18TalkChief();if(Game.talking)endTalk();saveGame();return;}
   if(n.ch18Site){await ch18BuildSite(n.ch18Site);endTalk();saveGame();return;}
+  if(n.hoshibashi){await hoshibashiTalk();if(Game.talking)endTalk();saveGame();return;}
   if(n.troupeTent){
     if(Game.hidden.ch17d&&!Game.hidden.ch17c){ // 章17・場面5: ざちょうの はじめての「じぶんの ものがたり」
       await say('あかい テントの まえに、ひとだかりが できている。\nしまじまから、ふねを ついで あつまって きたのだ。');
@@ -7776,6 +7788,7 @@ async function gunshiNavi(){
   }else if(d.map===Game.mapId){
     await say('フクロ「めあては この しまの なかに ある。\nしたの「もくてき」の おびを タップすれば、きんいろの ひかりが みちを てらす。」');
   }
+  if(Game.hidden.ch21c)await say('フクロ「ほしのうみを もういちど あるくなら、\nむらの おかの ひかり——『ほしのはしの たもと』じゃ。」');
 }
 async function gunshiTalk(){
   const h=Game.hidden;
@@ -10994,6 +11007,24 @@ function drawCh20Helm(ts){
   if(dark){ctx.strokeStyle='rgba(28,23,48,.92)';ctx.lineWidth=Math.max(3,ts*0.06);for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo((i-1.5)*ts*0.18,-ts*0.52);ctx.bezierCurveTo((i-2)*ts*0.38,-ts*0.15,(i%2?1:-1)*ts*0.70,ts*0.05,(i-1.5)*ts*0.42,ts*0.28);ctx.stroke();}}
   ctx.restore();
 }
+// ほしのはしの たもと: ひかりの わ+のぼる ほし(クリア後の再訪口)
+function drawHoshibashiFoot(ts){
+  ctx.save();
+  ctx.globalCompositeOperation='lighter';
+  const g=ctx.createLinearGradient(0,-ts*2.4,0,0);
+  g.addColorStop(0,'rgba(200,220,255,0)');g.addColorStop(1,'rgba(200,220,255,'+(0.30+0.10*Math.sin(TM*2.1)).toFixed(3)+')');
+  ctx.fillStyle=g;ctx.fillRect(-ts*0.22,-ts*2.4,ts*0.44,ts*2.4);
+  ctx.scale(1,0.5);
+  ctx.strokeStyle='rgba(220,236,255,'+(0.6+0.25*Math.sin(TM*3)).toFixed(2)+')';ctx.lineWidth=Math.max(2,ts*0.05);
+  ctx.beginPath();ctx.arc(0,0,ts*0.42,0,6.29);ctx.stroke();
+  ctx.restore();ctx.save();ctx.globalCompositeOperation='lighter';
+  for(let i=0;i<3;i++){
+    const ph=(TM*0.7+i/3)%1,sy=-ph*ts*1.9,al=(1-ph)*0.9;
+    ctx.fillStyle='rgba(255,240,200,'+al.toFixed(2)+')';
+    ctx.beginPath();ctx.arc(Math.sin(TM*2+i*2.1)*ts*0.16,sy,ts*(0.05+0.03*(i%2)),0,6.29);ctx.fill();
+  }
+  ctx.restore();
+}
 function drawNpc(n){
   const cam=Game.cam,ts=cam.TW*0.66;
   const pos=ch19NpcPos(n),c=isoCtr(pos.x,pos.y);
@@ -11009,6 +11040,9 @@ function drawNpc(n){
   }
   if(n.kind==='tent'){
     drawTroupeTent(ts*1.35);ctx.restore();drawNpcStoryMark(n,c,fy-ts*1.10,ts);return;
+  }
+  if(n.kind==='hoshibashi'){
+    drawHoshibashiFoot(ts);ctx.restore();drawNpcStoryMark(n,c,fy-ts*1.35,ts);return;
   }
   if(n.kind==='ship'){
     drawTroupeShip(ts*1.25);ctx.restore();drawNpcStoryMark(n,c,fy-ts*0.75,ts);return;
@@ -14498,6 +14532,7 @@ const FINALE_QS=[
  {spell:'minmono',no:17,q:'『ものがたりは、だれの ものか。』',a:'みんなのものがたりが といに こたえた——\nはじまりの なを のこしたまま、わけあうほど ふえていく。'}];
 // ---- 最終章『ほしのもんどう』(2026-07-20): クイズ廃止→かげのふるまいを見て こたえの物語を選ぶ ----
 // 正解ごとにボスの影が明るくほどけ(finTint)、★が灯る。被弾・MP消費・メニューなし。
+let CH21_REPLAY=false; // クリア後の再訪(セーブに書かない・ほしのうみ滞在中のみtrue)
 const CH21_TINTS=['rgba(40,44,80,0.92)','rgba(52,54,96,0.88)','rgba(66,64,112,0.84)','rgba(82,76,128,0.80)','rgba(100,90,144,0.75)','rgba(120,106,160,0.70)','rgba(142,124,176,0.63)','rgba(168,146,194,0.55)'];
 const CH21_THEME={satori:'しる ことから はじめる',kageharai:'かげを ほどいて かえす',uketome:'うけとめる こころ',watashi:'てから てへ わたす',mamori:'となりに いる',yobigoe:'なまえを よぶ',monogatari:'おわりを うけつぐ',nagiuta:'みおくりの うた',tomoshibimichi:'みちを てらす',futarigatari:'となりを あるく',hitotsunoumi:'うみを ひとつに つなぐ',minnanokoe:'ほんとうの こえ',hiraku:'とじた ものを ひらく',kodama:'うけて かえす こだま',horagai:'おおきな こえ',hajimari:'はじまりを おもいだす',minmono:'わけあう ものがたり',ashita:'あしたを えらぶ',toki:'ときを つなぐ',koemawasu:'こえを まわす'};
 const CH21_KAGE={
@@ -14680,7 +14715,7 @@ async function finishFinaleBattle(){
   await say(FOES.sukuwarenu.winMsg);
   Game.hidden.ch21d=true;
   await say('よぞらに、ほしが ひとつ、また ひとつ ともって いく——\nかぞえきれない ひかりが、うみの うえに ふりそそぐ。');
-  await say('こえ『……ありがとう。むらで、みんなが まっている。』');
+  await say(CH21_REPLAY?'こえ『……なんども ありがとう。\nものがたりは、いつでも ここに ある。』':'こえ『……ありがとう。むらで、みんなが まっている。』');
   {const i=Game.enemies.indexOf(bt.ref);if(i>=0)Game.enemies.splice(i,1);} // ほどけた ぬしは その場で きえる(goneはloadMap時のみ評価のため)
   await leaveBattle(false);
   saveGame();
