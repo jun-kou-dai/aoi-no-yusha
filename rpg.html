@@ -3035,6 +3035,12 @@ function proofOrbsHTML(compact){
     const fin=(state==='got'&&Game.hidden&&Game.hidden.ch21c)?' finale':'';
     return '<span class="proof-orb '+state+fin+'" data-chapter-token="'+c.no+'" data-state="'+state+'">'+(state==='got'?c.no:'?')+'</span>';
   }).join('');
+  if(!compact){ // フィールドは珠1個+数のチップに畳む(20個の帯が「ごちゃごちゃ」の主因 2026-07-20)。全珠はタップで開く蒼珠のきろくに
+    const last=[...CHAPTER_PROOF].reverse().find(c=>hasChapterProof(c.no));
+    const one=last?('<span class="proof-orb got'+((Game.hidden&&Game.hidden.ch21c)?' finale':'')+'" data-chapter-token="'+last.no+'" data-state="got">'+last.no+'</span>')
+                  :'<span class="proof-orb next" data-state="next">?</span>';
+    return '<span class="proof-orbs">'+one+'</span><span class="proof-label">蒼珠 <b>'+got+'/'+CHAPTER_PROOF.length+'</b></span>';
+  }
   return '<span class="proof-label">蒼珠 <b>'+got+'/'+CHAPTER_PROOF.length+'</b></span><span class="proof-orbs">'+orbs+'</span>';
 }
 function updateProofHud(){
@@ -3072,7 +3078,12 @@ function updateInventoryBelt(){
   const b=document.getElementById('itembtn');if(!b)return;
   const heal=(Game.items.yakuso||0)+(Game.items.iyakuso||0)+(Game.items.tokusen||0)+(Game.items.inochi||0);
   const mp=(Game.items.seisui||0)+(Game.items.hoshikake||0),iron=Game.items.hoshitetsu||0,flute=Game.hidden&&Game.hidden.funautaOwn?1:0;
-  b.innerHTML='<span class="belt-item">🌿<b>'+heal+'</b></span><span class="belt-item">💧<b>'+mp+'</b></span><span class="belt-item">⭐<b>'+iron+'</b></span><span class="belt-item">🎵<b>'+flute+'</b></span><span class="belt-bag">🎒</span>';
+  const parts=[]; // 0個の袋は見せない(2026-07-20 草原ごちゃごちゃ整理)
+  if(heal)parts.push('<span class="belt-item">🌿<b>'+heal+'</b></span>');
+  if(mp)parts.push('<span class="belt-item">💧<b>'+mp+'</b></span>');
+  if(iron)parts.push('<span class="belt-item">⭐<b>'+iron+'</b></span>');
+  if(flute)parts.push('<span class="belt-item">🎵<b>'+flute+'</b></span>');
+  b.innerHTML=parts.join('')+'<span class="belt-bag">🎒</span>';
 }
 function renderInventory(){
   const meta={
@@ -5402,7 +5413,7 @@ $('#mute').addEventListener('pointerdown',e=>{
 // いまの ばしょに あった フィールドきょく（むらに いれば むらのうた）
 function fieldSong(){
   const p=Game.p;
-  const inV=Game.mapId==='grass'&&p.tx>=1&&p.tx<=6&&p.ty>=8&&p.ty<=12;
+  const inV=Game.mapId==='grass'&&p.tx>=1&&p.tx<=15&&p.ty>=8&&p.ty<=12; // 村域=広場・街道・港まで(実際の村の広さに一致 2026-07-20)
   Game.inVillage=inV;
   return inV?'village':WORLDS[Game.mapId].song;
 }
@@ -7634,19 +7645,8 @@ function gunshiFoes(ids){
   return out;
 }
 async function gunshiPay(kind,freeKey){
-  const fee=GUNSHI_FEE[kind];
-  if(!Game.hidden[freeKey]){
-    Game.hidden[freeKey]=true;
-    await say('フクロ「はじめての そうだんは ただで よい。\nわしの ちえの あじみ じゃ。」');
-    return true;
-  }
-  if(Game.gold<fee){
-    await say('フクロ「そうだんりょうは '+fee+'G。……たりんのう。」');
-    await say('フクロ「しかたない、ひとつだけ ただで おしえてやる。\nおかねは まものが おとす。とくに きんいろのスライムは たからの かたまり じゃ。」');
-    return false;
-  }
-  Game.gold-=fee;updateBars();
-  await say('フクロ「たしかに '+fee+'G。では、みたてよう。」');
+  // 相談は すべて ただ(「情報を買うだけ無駄」2026-07-20)。freeKeyは過去セーブ互換のため立て続ける
+  Game.hidden[freeKey]=true;
   return true;
 }
 async function gunshiGear(){
@@ -7723,6 +7723,17 @@ async function gunshiMemory(){
   if(Game.hidden.ch21c)await say('フクロ「ものがたりの むすび、みごとじゃった。\n先代も、ほしの どこかで みておったろうよ。」');
   if(n<3)await say('フクロ「わしの むかしばなしの つづきは、\nもそっと そうだんを かさねてから じゃ。」');
 }
+// つぎの一手の道しるべ: めあての場所と行き方を無料で断言する(フクロを実用の入口に 2026-07-20)
+async function gunshiNavi(){
+  const d=questDest();
+  await say('フクロ「いま なすべきは——\n'+d.exp+'」');
+  if(d.map&&d.map!==Game.mapId){
+    const nm=(ISLE.find(([id])=>id===d.map)||[])[1]||MAPNAME[d.map]||'';
+    if(nm)await say('フクロ「いくさきは『'+nm+'』じゃ。'+(Game.door?'\n☰メニューの「どこでもドア」なら ひとっとび じゃぞ。':'\nひかる でぐちには いきさきの なが でておる。')+'」');
+  }else if(d.map===Game.mapId){
+    await say('フクロ「めあては この しまの なかに ある。\nしたの「もくてき」の おびを タップすれば、きんいろの ひかりが みちを てらす。」');
+  }
+}
 async function gunshiTalk(){
   const h=Game.hidden;
   if(!h.gunshiMet){
@@ -7730,18 +7741,20 @@ async function gunshiTalk(){
     await say('とまりぎの おおきな フクロウが、きんいろの めで\nそなたの あしどりを じっと みていた。');
     await say('フクロ「ほう。その あるきかた、たたかいを かさねた あし じゃな。\nわしは フクロ。むかし、ぐんしを しておった。」');
     await say('フクロ「ちからだけでは かてん。そうび、じゅもん、かせぎば——\nみたてが あれば、たたかいは さくせんに かわる。」');
-    await say('フクロ「ちえは ただでは くばらん。ただの ちえは かるく あつかわれる からの。\n……じゃが、はじめての そうだんは あじみ じゃ。ただで よい。」');
+    await say('フクロ「たまを めぐる たたかいを つづける そなたに、\nわしの ちえは いつでも ただで かす。えんりょは いらん。」');
     saveGame();
   }
   while(true){
     const c=await ask([
-      {id:'gear',label:'⚔ そうびの みたて（'+(h.gunshiFG?GUNSHI_FEE.gear+'G':'ただ')+'）'},
-      {id:'spell',label:'🔮 じゅもんと てきの みたて（'+(h.gunshiFS?GUNSHI_FEE.spell+'G':'ただ')+'）'},
-      {id:'money',label:'💰 かせぎばの みたて（'+(h.gunshiFM?GUNSHI_FEE.money+'G':'ただ')+'）'},
-      {id:'omoi',label:'🦉 フクロの おもいで（ただ）'},
+      {id:'navi',label:'🧭 つぎは どこへ いけばいい？'},
+      {id:'gear',label:'⚔ そうびの みたて'},
+      {id:'spell',label:'🔮 じゅもんと てきの みたて'},
+      {id:'money',label:'💰 かせぎばの みたて'},
+      {id:'omoi',label:'🦉 フクロの おもいで'},
       {id:'no',label:'たちさる'}
-    ],'フクロ「なにを みたてる？」（'+Game.gold+'G）');
+    ],'フクロ「なにを みたてる？ ぜんぶ ただ じゃ」');
     if(!c||c==='no'){await say('フクロ「ちえは つかってこそ。いっての ぶじを いのる。」');break;}
+    if(c==='navi'){await gunshiNavi();continue;}
     if(c==='omoi'){await gunshiMemory();continue;}
     if(c==='gear'){if(await gunshiPay('gear','gunshiFG')){h.gunshiN=(h.gunshiN||0)+1;await gunshiGear();saveGame();}continue;}
     if(c==='spell'){if(await gunshiPay('spell','gunshiFS')){h.gunshiN=(h.gunshiN||0)+1;await gunshiSpell();saveGame();}continue;}
@@ -8267,7 +8280,7 @@ function questBeaconTapTarget(lx,ly,cam){
     const onBody=Math.hypot(dx,ly-(q.y-cam.TH*0.45))<=cam.TW*0.58;
     if(onLabel||onBeam||onBody){
       const d=Math.abs(dx)+Math.abs(ly-labelY)*0.15;
-      if(d<bd){bd=d;best=t;}
+      if(d<bd){bd=d;best={x:t.x,y:t.y,via:onLabel?'label':(onBeam?'beam':'body')};} // via=どこを押したか(隣人タップ優先の判定に使う 2026-07-20)
     }
   }
   return best;
@@ -8282,7 +8295,7 @@ function tapMove(cx,cy){
   const questHit=questBeaconTapTarget(lx,ly,cam);
   if(questHit){tx=Math.round(questHit.x);ty=Math.round(questHit.y);}
   // からだの どこを おしても その人: NPC/王/宿の スプライト中心(足元より上)との画面距離で吸着
-  if(!questHit){const ents=[];
+  {const ents=[];
    if(w.npcs)for(const n of w.npcs)if(!npcGone(n)){const p=ch19NpcPos(n);ents.push({x:p.x,y:p.y});}
    if(w.king)ents.push({x:w.king.x,y:w.king.y});
    if(w.inn)ents.push({x:w.inn.x,y:w.inn.y});
@@ -8293,7 +8306,14 @@ function tapMove(cx,cy){
      const dx=lx-q.x, dy=ly-(q.y-cam.TH*0.45); // 体の中心は足元タイルより上
      const dd=Math.hypot(dx,dy);
      if(dd<cam.TW*0.55&&dd<bd){bd=dd;best=e;}}
-   if(best){tx=best.x;ty=best.y;}}
+   if(best){
+     if(questHit){ // めあて光柱が となりに立つ人へのタップを奪わない(フクロが押せない 2026-07-20)
+       // ラベル・柱への明示タップは光柱優先のまま。体どうしの競合だけ、近いほうを勝たせる
+       const qb=questBeaconScreenPoint(questHit.x,questHit.y,cam);
+       const dq=Math.hypot(lx-qb.x,ly-(qb.y-cam.TH*0.45));
+       if(questHit.via==='body'&&bd<dq){tx=best.x;ty=best.y;}
+     }else{tx=best.x;ty=best.y;}
+   }}
   if(tx<0||ty<0||tx>=MW||ty>=MH)return;
   const stillFoeAt=(x,y)=>!!(Game.enemies&&Game.enemies.find(e=>e.def&&e.def.still&&e.tx===x&&e.ty===y));
   const isTalkT=(x,y)=>!!(npcAt(x,y)||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y)||spotAt(x,y)||stillFoeAt(x,y));
@@ -8447,7 +8467,7 @@ function updateField(dt){
   }
   // むらの でいりで おんがくを きりかえ
   if(Game.mapId==='grass'&&!Game.battling&&!Game.transiting){
-    const inV=p.tx>=1&&p.tx<=6&&p.ty>=8&&p.ty<=12;
+    const inV=p.tx>=1&&p.tx<=15&&p.ty>=8&&p.ty<=12;
     if(inV!==Game.inVillage){Game.inVillage=inV;playSong(inV?'village':'field');}
   }
   // みちづれ解禁の しらせ（戦闘後に フィールドで）
@@ -8595,7 +8615,8 @@ function updateField(dt){
         e.timer=rnd(0.9,2.0);
         const d=[[1,0],[-1,0],[0,1],[0,-1]][ri(0,3)];
         const nx=e.tx+d[0],ny=e.ty+d[1];
-        if(walkable(nx,ny)&&tileAt(nx,ny)!=='R'&&Math.abs(nx-e.hx)<=2&&Math.abs(ny-e.hy)<=2){
+        if(walkable(nx,ny)&&tileAt(nx,ny)!=='R'&&Math.abs(nx-e.hx)<=2&&Math.abs(ny-e.hy)<=2
+           &&!(Game.mapId==='grass'&&ny>=9)){ // むらは あんぜんち(村中を敵がうろつき移動を塞ぐ 2026-07-20)
           e.moving={fx:e.tx,fy:e.ty,t:0,dur:0.38};
           e.tx=nx;e.ty=ny;
         }
@@ -12199,9 +12220,10 @@ function drawExitBeacons(){
     ctx.font='bold '+Math.max(11,Math.round(TWc*0.28))+'px sans-serif';
     ctx.textAlign='center';ctx.textBaseline='alphabetic';
     const ly=q.y-THc*3.4+Math.sin(TM*1.8+ex.x)*2.5;
-    ctx.lineWidth=3;ctx.strokeStyle='rgba(8,16,38,0.85)';ctx.strokeText('でぐち',q.x,ly);
+    const lbl=MAPNAME[ex.to]?(MAPNAME[ex.to].split('・')[0]+' へ'):'でぐち'; // 行き先名を出す(でぐち3本の見分けがつかない 2026-07-20)
+    ctx.lineWidth=3;ctx.strokeStyle='rgba(8,16,38,0.85)';ctx.strokeText(lbl,q.x,ly);
     ctx.fillStyle='rgba(240,248,255,'+(0.75+0.20*Math.sin(TM*2.6+ex.x)).toFixed(2)+')';
-    ctx.fillText('でぐち',q.x,ly);
+    ctx.fillText(lbl,q.x,ly);
     ctx.restore();
   }
 }
