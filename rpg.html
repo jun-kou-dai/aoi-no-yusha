@@ -380,7 +380,7 @@ body{
 #convoywin{ position:fixed; inset:0; z-index:230; display:none; align-items:center; justify-content:center;
   background:radial-gradient(circle at 50% 18%,rgba(38,76,118,.9),rgba(3,10,28,.98) 72%); padding:10px; pointer-events:auto; }
 #convoywin.show{ display:flex; }
-#convoypanel{ width:min(980px,100%); height:min(740px,100%); padding:10px; overflow:hidden; display:flex; flex-direction:column; }
+#convoypanel{ width:min(980px,100%); height:min(740px,100%); padding:10px; overflow:hidden; display:flex; flex-direction:column; position:relative; }
 #convoyhead{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 9px 10px; }
 #convoyhead b{ color:#ffe4a3; letter-spacing:.09em; font-size:clamp(14px,2.2vmin,19px); }
 .convoy-title-short{ display:none; }
@@ -421,6 +421,28 @@ body{
 .convoy-btn.dis{ opacity:.36; pointer-events:none; }
 .convoy-btn:active{ transform:scale(.96); }
 #convoylegend{ color:#9fb1d4; font-size:clamp(9px,1.5vmin,12px); line-height:1.55; text-align:center; }
+/* ---------- こえのわたり(2026-07-20 プロ3人設計): 盤を出さず、夜の海峡を三艘が渡る一枚のシーン ---------- */
+#seawrap{ position:absolute; inset:0; z-index:2; display:none; border-radius:12px; overflow:hidden; }
+#convoywin.sea #seawrap{ display:block; }
+#seacv{ position:absolute; inset:0; width:100%; height:100%; }
+#convoywin.sea #convoyhead,#convoywin.sea #convoymain{ display:none; }
+#convoywin.sea.run #convoyhead{ display:flex; position:relative; z-index:3; }
+#convoywin.sea.run #convoymain{ display:flex; position:absolute; left:0; right:0; bottom:10px; z-index:3; pointer-events:none; }
+#convoywin.sea.run #convoyboard{ display:none; }
+#convoywin.sea.run #convoyside{ width:min(520px,94%); min-width:0; background:rgba(4,9,22,.62); border:1px solid rgba(190,210,240,.18); border-radius:14px; padding:9px; pointer-events:auto; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+#convoywin.sea #convoylegend{ display:none; }
+#seanote{ position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:4; max-width:88%;
+  background:rgba(5,8,18,.88); border:2px solid #ece5cf; border-radius:8px; box-shadow:0 0 0 3px rgba(5,8,18,.9),0 0 0 4.5px #ece5cf;
+  color:#f2ecd8; font-size:clamp(13px,2.1vmin,17px); letter-spacing:.08em; line-height:1.7; padding:9px 18px; text-align:center; pointer-events:none; white-space:pre-wrap; }
+#convoywin.sea.run #seanote{ display:none; }
+#seaskip{ position:absolute; top:12px; right:12px; z-index:4; color:#ffe9b0; font-size:clamp(11px,1.8vmin,14px); letter-spacing:.16em;
+  border:1.5px solid rgba(255,217,122,.65); border-radius:16px; padding:7px 15px; background:rgba(5,8,18,.72); cursor:pointer; pointer-events:auto; }
+#seaskip:active{ transform:scale(.95); }
+#convoywin.sea.run #seaskip{ display:none; }
+#seahint{ position:absolute; left:50%; top:14px; transform:translateX(-50%); z-index:4; color:rgba(255,233,176,.95); white-space:nowrap;
+  font-size:clamp(10px,1.7vmin,13px); letter-spacing:.2em; text-shadow:0 0 12px rgba(255,217,122,.8); pointer-events:none; animation:seahint 2.4s ease-in-out infinite; }
+@keyframes seahint{ 0%,100%{opacity:.45} 50%{opacity:1} }
+#convoywin.sea.run #seahint{ display:none; }
 @media (max-width:640px){
   #convoywin{ padding:4px; }
   #convoypanel{ padding:5px; height:100%; border-radius:0; }
@@ -743,6 +765,7 @@ body{
         <div id="convoylegend">黄=先舟　赤=暮らし舟　青=一座の船。<br>形を変え、三艘すべてが岩へ触れない道をつくる。</div>
       </div>
     </div>
+    <div id="seawrap"><canvas id="seacv"></canvas><div id="seahint">✨ タップで こえを おくる</div><div id="seanote"></div><div id="seaskip">⏩ とばす</div></div>
   </div></div>
   <div id="menuwin"><div id="menupanel" class="glass"><div id="menuhead"><span>☰ メニュー</span><span id="menuclose">✕ とじる</span></div><div id="menugrid">
     <div id="menustatus" class="glass">💪 つよさ</div>
@@ -2398,11 +2421,14 @@ function openCh20Board(){
   CH20_NOTE=CH20_RUN?'朝の帰り潮は、夜とはちがう暗礁を つくる。三艘を もう一度つなごう。':'三艘の 位置は、隊列を変えても 中心の舵から ずれない。';CH20_PREVIEW=null;CH20_HITS=[];
   Game.minigame={kind:'ch20'};Game.autoPath=null;held.length=0;swipeVec=null;ptr=null;
   if(Game.p){Game.p.moving=null;Game.p.px=Game.p.tx;Game.p.py=Game.p.ty;}
-  document.getElementById('convoywin').classList.add('show');ch20Render();Game._qt=null;return true;
+  const cw=document.getElementById('convoywin');
+  cw.classList.add('show','sea');cw.classList.toggle('run',!!CH20_RUN);
+  CH20_SEA.ships=null;CH20_SEA.voices=[];CH20_SEA.ripples=[];CH20_SKIP=false;CH20_TAPBOOST=0;
+  ch20Render();Game._qt=null;return true;
 }
 function closeCh20Board(silent=false){
   const wasRun=!!CH20_RUN;
-  document.getElementById('convoywin').classList.remove('show');
+  document.getElementById('convoywin').classList.remove('show','sea','run');
   if(Game.minigame&&Game.minigame.kind==='ch20')Game.minigame=null;
   CH20_PREVIEW=null;CH20_HITS=[];CH20_RUN=null;Game._qt=null;if(!wasRun)saveGame();
   if(!silent)toast('海峡の 航路を とじた。');
@@ -2552,11 +2578,142 @@ async function ch20AutoSail(){
   for(let i=0;i<80;i++){
     if(!(Game.minigame&&Game.minigame.kind==='ch20'))return;
     if(ch20Nav().y===0)break;
-    await new Promise(r=>setTimeout(r,300));
+    if(!CH20_SKIP){const iv=CH20_TAPBOOST>0?260:620;CH20_TAPBOOST=Math.max(0,CH20_TAPBOOST-1);await new Promise(r=>setTimeout(r,iv));} // こえを送ると帆がふくらみ進みが速まる。⏩は待ちゼロ
     if(!(Game.minigame&&Game.minigame.kind==='ch20'))return;
     await ch20Nagi();
   }
 }
+// ============================================================
+// こえのわたり(2026-07-20): 盤を出さず、夜の海峡を三艘が渡る一枚のシーン。
+// 進行判定・BFS・セーブ形式は不変。この層は「見た目と手ざわり」だけを持つ。
+// タップ=こえを おくる(先舟→一座→暮らし舟へ光がリレーし、帆がふくらんで少し速まる)
+// ============================================================
+const CH20_SEA={ships:null,voices:[],ripples:[],t:0,note:''};
+let CH20_TAPBOOST=0,CH20_SKIP=false;
+const CH20_HULL={scout:'#d9a63a',troupe:'#3d6fb0',home:'#b8503c'};
+function ch20SeaXY(gx,gy,w,h){ // 盤(7×9)を海峡へ写す。y=0が港のきわ。帰り潮は下の操作パネルに隠れない高さへ詰める
+  const top=h*0.26,bot=CH20_RUN?h*0.64:h*0.93;
+  return{x:w*0.10+((gx+0.5)/7)*w*0.80, y:top+((gy+0.5)/9)*(bot-top)};
+}
+function ch20SendVoice(px,py){
+  CH20_SEA.voices.push({p:0,h1:false,h2:false});
+  if(px!==undefined)CH20_SEA.ripples.push({x:px,y:py,t:0});
+  CH20_TAPBOOST=Math.min(4,CH20_TAPBOOST+2);
+  sfxSel();
+}
+function drawCh20Sea(dt){
+  const wrap=document.getElementById('seawrap'),c=document.getElementById('seacv'),win=document.getElementById('convoywin');
+  if(!wrap||!c||!win.classList.contains('show')||!win.classList.contains('sea'))return;
+  const rc=wrap.getBoundingClientRect();if(!rc.width)return;
+  const dpr=Math.min(2,window.devicePixelRatio||1),w=Math.round(rc.width*dpr),h=Math.round(rc.height*dpr);
+  if(c.width!==w||c.height!==h){c.width=w;c.height=h;}
+  const g=c.getContext('2d'),S=CH20_SEA;S.t+=dt;const t=S.t;
+  const nav=ch20Nav(),route=ch20Board(),near=1-nav.y/6;
+  // 三艘を目標へ寄せる(急がず、波に乗るように)
+  const cells=ch20Cells(nav);
+  if(!S.ships)S.ships=cells.map(cc=>{const q=ch20SeaXY(cc.x,cc.y,w,h);return{x:q.x,y:q.y,glow:0};});
+  cells.forEach((cc,i)=>{const q=ch20SeaXY(cc.x,cc.y,w,h),sp=S.ships[i];
+    const k=Math.min(1,dt*4.2);sp.x+=(q.x-sp.x)*k;sp.y+=(q.y-sp.y)*k;sp.glow=Math.max(0,sp.glow-dt*1.4);});
+  // 空
+  let sky=g.createLinearGradient(0,0,0,h*0.4);
+  sky.addColorStop(0,'#060a1e');sky.addColorStop(0.7,'#0d1533');sky.addColorStop(1,'#1b2648');
+  g.fillStyle=sky;g.fillRect(0,0,w,h*0.42);
+  for(let i=0;i<90;i++){const hx=tileHash(i,7),hy=tileHash(i,11);
+    g.globalAlpha=(0.2+0.6*tileHash(i,3))*(0.6+0.4*Math.sin(t*1.3+i));
+    g.fillStyle='#cfd8ff';g.beginPath();g.arc(hx*w,hy*h*0.3,(0.4+tileHash(i,5)*1.4)*dpr,0,7);g.fill();}
+  g.globalAlpha=1;
+  g.save();g.shadowColor='rgba(240,240,255,.9)';g.shadowBlur=46;g.fillStyle='#e8ecff';
+  g.beginPath();g.arc(w*0.8,h*0.085,w*0.036,0,7);g.fill();g.restore();
+  // 港: 建物と灯(近づくほど強く)
+  const py2=h*0.185;
+  g.fillStyle='#0d1330';
+  for(const[bx,bw,bh]of[[0.10,0.09,0.045],[0.27,0.12,0.06],[0.48,0.08,0.04],[0.62,0.13,0.055],[0.82,0.08,0.045]])
+    g.fillRect(w*bx,py2-h*bh-h*0.022,w*bw,h*bh);
+  g.fillStyle='#0a0f26';g.fillRect(0,py2-h*0.024,w,h*0.024);
+  for(let i=0;i<7;i++){const x=w*0.14+i*w*0.12;
+    g.strokeStyle='rgba(120,90,50,.9)';g.lineWidth=2.4*dpr;g.beginPath();g.moveTo(x,py2-h*0.02);g.lineTo(x,py2-h*0.052);g.stroke();
+    g.save();g.shadowColor='rgba(255,190,90,.95)';g.shadowBlur=(14+near*26)*dpr*(0.85+0.15*Math.sin(t*2.4+i));
+    g.fillStyle='#ffd98a';g.beginPath();g.arc(x,py2-h*0.056,(3.4+near*1.8)*dpr,0,7);g.fill();g.restore();}
+  g.save();g.fillStyle='rgba(255,229,167,'+(0.75+near*0.25)+')';g.font=(11*dpr)+'px sans-serif';g.textAlign='center';
+  g.shadowColor='rgba(255,200,90,.8)';g.shadowBlur=10;g.fillText('☀ かぜまちじま',w*0.5,py2-h*0.065);g.restore();
+  // 海
+  let sea=g.createLinearGradient(0,py2,0,h);
+  sea.addColorStop(0,'#0d1a3e');sea.addColorStop(0.5,'#0a1330');sea.addColorStop(1,'#050a1c');
+  g.fillStyle=sea;g.fillRect(0,py2,w,h-py2);
+  let refl=g.createLinearGradient(0,py2,0,py2+h*0.12);
+  refl.addColorStop(0,'rgba(255,200,110,'+(0.18+near*0.22)+')');refl.addColorStop(1,'rgba(255,200,110,0)');
+  g.fillStyle=refl;g.fillRect(0,py2,w,h*0.12);
+  let mp=g.createLinearGradient(0,py2,0,h*0.85);
+  mp.addColorStop(0,'rgba(200,215,255,.16)');mp.addColorStop(1,'rgba(200,215,255,0)');
+  g.fillStyle=mp;g.beginPath();g.moveTo(w*0.73,py2);g.lineTo(w*0.87,py2);g.lineTo(w*1.0,h*0.85);g.lineTo(w*0.60,h*0.85);g.closePath();g.fill();
+  for(let i=0;i<20;i++){const y=py2+((i+1)/21)*(h-py2),amp=(2+i*0.5)*dpr;
+    g.strokeStyle='rgba(150,180,235,'+(0.05+0.06*tileHash(i,9))+')';g.lineWidth=1.3*dpr;
+    g.beginPath();for(let x=0;x<=w;x+=16)g.lineTo(x,y+Math.sin(x/95+i*1.7+t*1.1)*amp);g.stroke();}
+  // 暗礁(盤の#をそのまま海へ置く=三艘は本当に岩の間を縫う)
+  for(let gy=0;gy<9;gy++)for(let gx=0;gx<7;gx++){
+    if(route[gy][gx]!=='#')continue;
+    const q=ch20SeaXY(gx,gy,w,h),rs=(0.75+tileHash(gx,gy)*0.6)*dpr,fl=tileHash(gx,gy*3)>0.5?-1:1;
+    g.save();g.translate(q.x,q.y);g.scale(fl*rs,rs);
+    g.fillStyle='#04070e';g.beginPath();g.moveTo(-34,10);g.lineTo(-16,-24);g.lineTo(-5,-7);g.lineTo(7,-34);g.lineTo(17,-5);g.lineTo(32,-16);g.lineTo(42,12);g.closePath();g.fill();
+    g.strokeStyle='rgba(225,240,255,'+(0.35+0.2*Math.sin(t*2+gx*3+gy))+')';g.lineWidth=2.6;
+    g.beginPath();g.ellipse(3,12,50,9,0,0,7);g.stroke();
+    g.restore();}
+  // 金の綱
+  const P=S.ships;
+  g.save();g.strokeStyle='rgba(255,215,116,.85)';g.lineWidth=2.2*dpr;g.shadowColor='rgba(255,210,90,.9)';g.shadowBlur=9;
+  for(let i=0;i<2;i++){g.beginPath();g.moveTo(P[i].x,P[i].y);
+    g.quadraticCurveTo((P[i].x+P[i+1].x)/2,(P[i].y+P[i+1].y)/2+10*dpr,P[i+1].x,P[i+1].y);g.stroke();}
+  g.restore();
+  // 舟
+  cells.forEach((cc,i)=>{const sp=P[i],hull=CH20_HULL[cc.role]||'#888',bob=Math.sin(t*1.7+i*2.1)*2.4*dpr;
+    const sc=(0.78+(cc.role==='troupe'?0.1:0))*dpr; // たて隊列でも帆が重なりすぎない大きさ
+    g.save();g.translate(sp.x,sp.y+bob);g.rotate(Math.sin(t*1.2+i)*0.04);
+    let wk=g.createLinearGradient(0,20*sc,0,110*sc);wk.addColorStop(0,'rgba(190,215,255,.26)');wk.addColorStop(1,'rgba(190,215,255,0)');
+    g.strokeStyle=wk;g.lineWidth=2.6*sc;
+    for(const d of[-1,1]){g.beginPath();g.moveTo(d*9*sc,24*sc);g.quadraticCurveTo(d*17*sc,58*sc,d*28*sc,96*sc);g.stroke();}
+    g.fillStyle=hull;g.beginPath();g.moveTo(0,-6*sc);g.quadraticCurveTo(24*sc,2*sc,16*sc,24*sc);g.lineTo(-16*sc,24*sc);g.quadraticCurveTo(-24*sc,2*sc,0,-6*sc);g.closePath();g.fill();
+    g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=1.6;g.stroke();
+    g.strokeStyle='#3b2c18';g.lineWidth=3*sc;g.beginPath();g.moveTo(0,18*sc);g.lineTo(0,-42*sc);g.stroke();
+    const puff=1+Math.min(0.22,CH20_TAPBOOST*0.05)+sp.glow*0.1; // こえが届くと帆がふくらむ
+    g.save();g.shadowColor='rgba(255,220,130,'+(0.45+sp.glow*0.5)+')';g.shadowBlur=(14+sp.glow*26)*sc;
+    g.fillStyle='#f5ecd4';g.beginPath();g.moveTo(2*sc,-40*sc);g.quadraticCurveTo(27*puff*sc,-24*sc,3*sc,-8*sc);g.closePath();g.fill();
+    g.fillStyle='rgba(245,236,212,.85)';g.beginPath();g.moveTo(-2*sc,-37*sc);g.quadraticCurveTo(-20*puff*sc,-22*sc,-2*sc,-9*sc);g.closePath();g.fill();
+    g.restore();
+    g.save();g.shadowColor='rgba(255,200,90,1)';g.shadowBlur=(16+sp.glow*22)*sc;
+    g.fillStyle='#ffd98a';g.beginPath();g.arc(0,-44*sc,(4+sp.glow*2)*sc,0,7);g.fill();g.restore();
+    g.restore();});
+  // こえ(光の輪のリレー: 先舟→一座→暮らし舟)
+  for(const v of S.voices){
+    v.p+=dt*2.1;
+    if(v.p>=1&&!v.h1){v.h1=true;P[1].glow=1;sfxHeal();}
+    if(v.p>=2&&!v.h2){v.h2=true;P[2].glow=1;sfxHeal();}
+    if(v.p>=2.15)continue;
+    const seg=v.p<1?0:1,f=v.p-seg,a=P[seg],b=P[seg+1];
+    const vx=a.x+(b.x-a.x)*f,vy=a.y+(b.y-a.y)*f+Math.sin(f*Math.PI)*(-14*dpr);
+    g.save();g.strokeStyle='rgba(255,230,150,.95)';g.lineWidth=2.4;g.shadowColor='rgba(255,220,120,1)';g.shadowBlur=15;
+    g.beginPath();g.arc(vx,vy,(9+4*Math.sin(t*9))*dpr,0,7);g.stroke();
+    g.fillStyle='#ffe9b0';g.font=(12*dpr)+'px sans-serif';g.fillText('♪',vx+8*dpr,vy-8*dpr);g.restore();
+  }
+  S.voices=S.voices.filter(v=>v.p<2.15);
+  // タップ波紋
+  for(const rp of S.ripples){rp.t+=dt;
+    g.save();g.globalAlpha=Math.max(0,0.8-rp.t*1.4);g.strokeStyle='#ffffff';g.lineWidth=2;
+    g.beginPath();g.arc(rp.x,rp.y,(10+rp.t*80)*dpr,0,7);g.stroke();g.restore();}
+  S.ripples=S.ripples.filter(rp=>rp.t<0.6);
+  // 雪
+  for(let i=0;i<60;i++){const sx=(tileHash(i,13)*w+t*18*dpr*(0.4+tileHash(i,17)))%w,sy=(tileHash(i,19)*h+t*34*dpr*(0.5+tileHash(i,23)))%h;
+    g.globalAlpha=0.18+0.5*tileHash(i,29);g.fillStyle='#fff';g.beginPath();g.arc(sx,sy,(0.6+tileHash(i,31)*1.5)*dpr,0,7);g.fill();}
+  g.globalAlpha=1;
+  // 字幕(ナギの言葉=既存CH20_NOTEをそのまま話者に)
+  const note=document.getElementById('seanote');
+  if(note&&S.note!==CH20_NOTE){S.note=CH20_NOTE;note.textContent=CH20_NOTE;}
+}
+document.getElementById('seawrap').addEventListener('pointerdown',e=>{
+  e.stopPropagation();e.preventDefault();firstGesture();
+  if(e.target&&e.target.id==='seaskip'){CH20_SKIP=true;sfxOk();return;} // ⏩とばす=待ちゼロで着港へ
+  const rc=document.getElementById('seawrap').getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);
+  ch20SendVoice((e.clientX-rc.left)*dpr,(e.clientY-rc.top)*dpr);
+});
 const ch20Tap=(el,fn)=>el.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();firstGesture();fn();});
 document.getElementById('convoywin').addEventListener('pointerdown',e=>e.stopPropagation());
 ch20Tap(document.getElementById('convoyclose'),()=>closeCh20Board());
@@ -17520,6 +17677,7 @@ function loop(ts){
   else if(Game.scene==='battle')drawBattleScene();
   else if(Game.scene==='ending')drawEndingScene();
   else if(Game.scene==='prologue')drawPrologueScene();
+  if(Game.minigame&&Game.minigame.kind==='ch20')drawCh20Sea(dt); // こえのわたり(海峡シーン)
   drawGrade();
   requestAnimationFrame(loop);
 }
