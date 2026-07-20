@@ -83,7 +83,7 @@ body{
 /* ---------- ステータスチップ ---------- */
 .chip{ display:flex; align-items:center; gap:12px; padding:9px 16px;
   font-size:clamp(12px,2vmin,15px); pointer-events:none; }
-.chip .lv b{ font-size:1.25em; color:#fbf3da; }
+.chip .lv b{ font-size:1.25em; color:#ffe9b0; font-variant-numeric:tabular-nums; }
 .bgrp{ display:flex; align-items:center; gap:6px; }
 .blabel{ font-size:.82em; letter-spacing:.1em; color:#aebadf; }
 .bar{ width:clamp(64px,13vw,128px); height:9px; border-radius:6px;
@@ -164,18 +164,18 @@ body{
   animation:advblink 1s ease-in-out infinite; }
 #msgwin.done .adv{ opacity:1; }
 @keyframes advblink{ 0%,100%{ transform:translateY(0); opacity:.9 } 50%{ transform:translateY(3px); opacity:.4 } }
-#cmdwin{ width:min(300px,54vw); max-height:80vh; max-height:80dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; pointer-events:auto; padding:10px 10px 12px; display:none; flex-direction:column; align-self:flex-start; }
+#cmdwin{ width:min(300px,54vw); max-height:80vh; max-height:80dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; pointer-events:auto; padding:10px 10px 12px; display:none; flex-direction:column; align-self:flex-start; }
 #cmdwin.on{ display:flex; }
-.mtitle{ font-size:clamp(11px,1.8vmin,13px); letter-spacing:.28em; color:#aeb8de; text-align:center;
+.mtitle{ font-size:clamp(11px,1.8vmin,13px); letter-spacing:.3em; color:#efe6c8; text-align:center;
   padding:2px 0 8px; border-bottom:1px solid rgba(236,229,207,.14); margin-bottom:6px; }
-#mlist{ display:flex; flex-direction:column; gap:2px; flex:0 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+#mlist{ display:flex; flex-direction:column; gap:2px; flex:0 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; }
 #mexit{ flex:none; display:flex; flex-direction:column; }
 .mi{ padding:8px 12px; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;
-  font-size:clamp(14px,2.3vmin,18px); letter-spacing:.1em; transition:background .12s; }
-.mi::before{ content:'▶'; color:#f3ecd6; font-size:.72em; opacity:0; margin-right:10px; transition:opacity .1s; }
+  font-size:clamp(14px,2.3vmin,18px); letter-spacing:.1em; transition:background .12s; font-variant-numeric:tabular-nums; }
+.mi::before{ content:'▶'; color:#ffd97a; font-size:.72em; opacity:0; margin-right:10px; transition:opacity .1s; }
 .mi .mlabel{ flex:1; }
 .mi .mcost{ font-size:.72em; color:#9fb0dd; letter-spacing:.04em; }
-.mi.cur{ background:rgba(236,229,207,.12); box-shadow:inset 0 0 14px rgba(180,200,255,.10); }
+.mi.cur{ background:rgba(255,217,122,.10); box-shadow:inset 0 0 0 1px rgba(255,217,122,.26), inset 0 0 14px rgba(255,217,122,.08); }
 .mi.cur::before{ opacity:1; }
 .mi.dis .mlabel,.mi.dis .mcost{ opacity:.42; }
 #ui-battle.shake{ animation:uishake .32s linear; }
@@ -239,6 +239,12 @@ body{
 #ui-battle.talk.menu-only #msgwin{ display:none; }
 #ui-battle.talk.menu-only #cmdwin{ margin-left:auto; margin-right:auto; }
 #ui-battle #mexit .mi{ margin-top:4px; } /* shop等の長メニュー：stretchを切りcmdwinのmax-height/overflowを効かせる(Safari対策) */
+/* 会話リストの見通し(2026-07-20 UI設計やり直し): 幅ひろげ(行折返し解消)+「▼つづく」ピル */
+@media (min-width:641px){ #ui-battle.talk #cmdwin{ width:min(440px,62vw); } }
+#mmore{ flex:none; height:0; overflow:visible; text-align:center; pointer-events:none; opacity:0; transition:opacity .18s; }
+#mmore.on span{ pointer-events:auto; cursor:pointer; }
+#mmore span{ position:relative; top:-26px; display:inline-block; padding:2px 12px; border-radius:10px; font-size:11px; letter-spacing:.18em; color:#ffe9b0; background:rgba(7,9,19,.92); border:1px solid rgba(255,217,122,.5); }
+#mmore.on{ opacity:1; }
 
 /* ---------- ミュート ---------- */
 #savebtn{ position:absolute; top:max(12px, env(safe-area-inset-top)); right:62px; z-index:70;
@@ -507,6 +513,31 @@ body{
 #mute .x{ opacity:0; transition:opacity .2s; }
 #mute.off .x{ opacity:1; }
 
+/* ---------- ☰ メニュー(フィールド集約 2026-07-20 UI設計やり直し) ---------- */
+#menubtn{ position:absolute; top:max(12px, env(safe-area-inset-top)); right:62px; z-index:70;
+  height:42px; padding:0 16px; border-radius:21px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; pointer-events:auto; opacity:.92; transition:opacity .2s, transform .12s;
+  font-size:clamp(12px,1.9vmin,14px); letter-spacing:.1em; color:#f0e9d2; gap:6px; }
+#menubtn:hover{ opacity:1; }
+#menubtn:active{ transform:scale(.94); }
+#menubtn.quest{ color:#ffd9a0; box-shadow:0 0 0 2px rgba(255,205,110,.65), 0 0 18px rgba(255,190,90,.5); animation:doorpulse 1.6s ease-in-out infinite; }
+#menuwin{ position:fixed; inset:0; z-index:200; display:none; justify-content:center; align-items:flex-start;
+  background:rgba(4,6,14,.55); padding:calc(max(12px, env(safe-area-inset-top)) + 58px) 12px 24px; }
+#menuwin.show{ display:flex; }
+#menupanel{ width:min(560px,94vw); max-height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; }
+#menuhead{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px 10px;
+  border-bottom:1px solid rgba(236,229,207,.18); font-size:15px; letter-spacing:.16em; color:#f0e9d2; }
+#menuhead span{ pointer-events:auto; }
+#menuclose{ cursor:pointer; opacity:.85; font-size:13px; }
+#menugrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px; }
+#menugrid>div{ position:static !important; top:auto !important; right:auto !important; left:auto !important; bottom:auto !important;
+  width:auto; min-height:56px; height:auto; margin:0; padding:12px 10px; border-radius:12px;
+  display:none; align-items:center; justify-content:center; gap:8px;
+  font-size:clamp(13px,2.1vmin,16px); letter-spacing:.08em; color:#eee8d2; cursor:pointer; pointer-events:auto; opacity:.96; }
+#menugrid>#menustatus,#menugrid>#menubag,#menugrid>#spellbtn,#menugrid>#questbtn,#menugrid>#savebtn,#menugrid>#talkbtn{ display:flex; }
+#menugrid>#doorbtn.show,#menugrid>#cloakbtn.show,#menugrid>#bookbtn.show{ display:flex; }
+@media (max-width:400px){ #menugrid{ grid-template-columns:1fr; } }
+
 /* ---------- スマホ縦持ち ---------- */
 @media (min-width:641px) and (max-width:820px){ /* iPad縦(768)など: 2人パーティのHP/MPが横並びだと溢れるため縦積みに(2026-07-15 実機の声) */
   .b-top{ flex-direction:column; align-items:stretch; gap:6px; padding-right:46px; }
@@ -650,14 +681,8 @@ body{
     <div class="ailbadge" id="failbadge"></div>
     <div id="toast" class="glass"></div>
     <div id="quest"></div>
-    <div id="savebtn" class="glass">📖 きろく</div>
     <div id="itembtn" class="glass" aria-label="旅支度をひらく"></div>
-    <div id="spellbtn" class="glass">🔮 じゅもん</div>
-    <div id="doorbtn" class="glass">🚪 どこでもドア</div>
-    <div id="cloakbtn" class="glass">👻 とうめい</div>
-    <div id="bookbtn" class="glass">📕 ずかん</div>
-    <div id="questbtn" class="glass">🗺 メモ</div>
-    <div id="talkbtn" class="glass">💬 はなしかけ</div>
+    <div id="menubtn" class="glass">☰ メニュー</div>
   </div>
 
   <div id="ui-battle" class="ui">
@@ -679,7 +704,7 @@ body{
     </div>
     <div class="b-bottom">
       <div id="msgwin" class="glass"><canvas id="mface" width="120" height="120"></canvas><div id="msgtext"></div><div class="adv">▼</div></div>
-      <div id="cmdwin" class="glass"><div class="mtitle" id="mtitle">コマンド</div><div id="mlist"></div><div id="mexit"></div></div>
+      <div id="cmdwin" class="glass"><div class="mtitle" id="mtitle">コマンド</div><div id="mlist"></div><div id="mmore"><span>▼ したに つづく</span></div><div id="mexit"></div></div>
     </div>
   </div>
 
@@ -719,6 +744,17 @@ body{
       </div>
     </div>
   </div></div>
+  <div id="menuwin"><div id="menupanel" class="glass"><div id="menuhead"><span>☰ メニュー</span><span id="menuclose">✕ とじる</span></div><div id="menugrid">
+    <div id="menustatus" class="glass">💪 つよさ</div>
+    <div id="menubag" class="glass">🎒 たびじたく</div>
+    <div id="spellbtn" class="glass">🔮 じゅもん</div>
+    <div id="questbtn" class="glass">🗺 たびのメモ</div>
+    <div id="bookbtn" class="glass">📕 ずかん</div>
+    <div id="savebtn" class="glass">📖 きろく</div>
+    <div id="doorbtn" class="glass">🚪 どこでもドア</div>
+    <div id="cloakbtn" class="glass">👻 とうめい</div>
+    <div id="talkbtn" class="glass">💬 はなしかけ</div>
+  </div></div></div>
   <div id="questwin"><div id="questpanel" class="glass"><div id="questhead"><span>🗺 たびのメモ</span><span id="questclose">✕ とじる</span></div><div id="questbody"></div></div></div>
   <div id="jumonwin"><div id="jumonpanel" class="glass"><div id="jumonhead"><span>🔮 ふっかつの じゅもん</span><span id="jumonclose">✕ とじる</span></div><div id="jumonbody"><textarea id="jumontext" spellcheck="false" autocomplete="off" autocorrect="off"></textarea><div id="jumonbtns"><div class="btn" id="jumoncopy">コピー</div><div class="btn" id="jumoncast">となえる</div></div><div class="jumon-note" id="jumonnote"></div></div></div></div>
   <div id="mute" class="glass" title="サウンド">
@@ -4062,8 +4098,8 @@ function relayoutSideBtns(){
     if(dyn[id]&&!el.classList.contains('show'))continue;
     el.style.top='calc(max(12px, env(safe-area-inset-top)) + '+(i*50)+'px)';i++;
   }
-  // 320px帯は所持品の組合せにかかわらず短縮し、左上ステータスとの誤タップ領域を作らない。広幅でも6ボタン時は短縮
-  const compact=innerWidth<=360||i===7;
+  // ☰メニュー集約後(2026-07-20)はパネル幅が広く、短縮は320px帯だけでよい(i===7条件は列積み時代のfstat重なり対策)
+  const compact=innerWidth<=360;
   const db=document.getElementById('doorbtn');if(db)db.textContent=compact?'🚪 ドア':'🚪 どこでもドア';
   const tb=document.getElementById('talkbtn');if(tb)tb.textContent=(Game.talkOff?'🤫':'💬')+(compact?' はなし':' はなしかけ')+(Game.talkOff?' OFF':' ON');
   const cb=document.getElementById('cloakbtn');if(cb)cb.textContent='👻 とうめい'+(Game.invisible?(compact?' ':' のこり')+Math.max(0,Game.cloakSteps)+'歩':'');
@@ -4741,7 +4777,7 @@ function drawP(){
 // ============================================================
 // メッセージ（タイプライター）＆コマンドメニュー
 // ============================================================
-let MSG=null,MENU=null;
+let MSG=null,MENU=null,PTAP=null;
 // はなしての かおグラ（ホワイトリスト＝ちゅうかんの「」や システムぶんには でない）
 const FACES={
   'おうさま':{hair:'side',hcol:'#b9bec9',beard:'short',bcol:'#c9ced8',crown:1},
@@ -4914,10 +4950,17 @@ function ask(items,title){
       d.innerHTML='<span class="mlabel"></span>'+(it.cost?'<span class="mcost">MP '+it.cost+'</span>':'');
       d.querySelector('.mlabel').textContent=it.label;
       d.addEventListener('pointerenter',()=>{if(MENU&&!it.dis){MENU.idx=i;renderCursor();}});
-      d.addEventListener('pointerdown',e=>{e.stopPropagation();if(MENU&&!it.dis){MENU.idx=i;renderCursor();chooseMenu();}else if(MENU)sfxSel();});
+      d.addEventListener('pointerdown',e=>{e.stopPropagation();if(!MENU)return;PTAP={x:e.clientX,y:e.clientY,st:mlistEl.scrollTop,sc:cmdwinEl.scrollTop,i};if(!it.dis){MENU.idx=i;renderCursor();}});
+      d.addEventListener('pointerup',e=>{e.stopPropagation();const t=PTAP;PTAP=null;if(!MENU||!t||t.i!==i)return;
+        if(Math.hypot(e.clientX-t.x,e.clientY-t.y)>12||Math.abs(mlistEl.scrollTop-t.st)>4||Math.abs(cmdwinEl.scrollTop-t.sc)>4)return; // ドラッグ＝スクロール。けっていしない(スクロール即売却バグ 2026-07-20)
+        if(!it.dis)chooseMenu();else sfxSel();});
       (i===items.length-1?mexitEl:mlistEl).appendChild(d);
     });
     cmdwinEl.classList.add('on');
+    mlistEl.scrollTop=0;cmdwinEl.scrollTop=0;
+    {const mm=document.getElementById('mmore');
+     if(mm){const upd=()=>mm.classList.toggle('on',mlistEl.scrollHeight-mlistEl.clientHeight-mlistEl.scrollTop>14);mlistEl.onscroll=upd;upd();
+       mm.onpointerdown=e=>{e.stopPropagation();mlistEl.scrollTop+=Math.max(80,mlistEl.clientHeight*0.8);upd();};}}
     renderCursor();
   });
 }
@@ -4972,6 +5015,7 @@ window.addEventListener('keydown',e=>{
   if(Game.statusOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeStatus(); return; }
   if(Game.bookOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeBook(); return; }
   if(Game.questOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeQuest(); return; }
+  if(Game.menuOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeFieldMenu(); return; }
   firstGesture();
   const k=e.key.length===1?e.key.toLowerCase():e.key;
   if(Game.minigame&&Game.minigame.kind==='ch20'){
@@ -5038,9 +5082,9 @@ window.addEventListener('pointerup',e=>{
     const dx=e.clientX-ptr.x,dy=e.clientY-ptr.y;
     if(Math.hypot(dx,dy)<16)tapMove(e.clientX,e.clientY); // うごかさず はなした=タップ→そこへ あるく
   }
-  ptr=null;swipeVec=null;
+  ptr=null;swipeVec=null;PTAP=null;
 });
-window.addEventListener('pointercancel',()=>{ptr=null;swipeVec=null;});
+window.addEventListener('pointercancel',()=>{ptr=null;swipeVec=null;PTAP=null;});
 // おしている ほうこうキーを ぜんぶ あわせた タイルベクトル
 // （1キー＝がめんの みため4ほうこう／2キーどうじ＝タイルじくの ななめ＝みちなり）
 function getDirVec(){
@@ -5084,6 +5128,25 @@ $('#btn-jumon').addEventListener('pointerdown',e=>{
 $('#itembtn').addEventListener('pointerdown',e=>{
   e.stopPropagation();firstGesture();openInventory();
 });
+// ☰ メニュー(フィールド集約 2026-07-20): 個々のボタンの機能は不変。置き場所だけパネルへ
+function openFieldMenu(){
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
+  const w=document.getElementById('menuwin');if(!w)return;
+  w.classList.add('show');Game.menuOpen=true;Game._menuT=performance.now();
+  if(w.firstElementChild)w.firstElementChild.scrollTop=0;Game.autoPath=null;held.length=0;swipeVec=null;ptr=null;if(typeof sfxSel==='function')sfxSel();
+}
+function closeFieldMenu(){const w=document.getElementById('menuwin');if(w)w.classList.remove('show');Game.menuOpen=false;}
+$('#menubtn').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openFieldMenu();});
+$('#menuclose').addEventListener('pointerdown',e=>{e.stopPropagation();closeFieldMenu();});
+$('#menuwin').addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.id==='menuwin'&&performance.now()-(Game._menuT||0)>450)closeFieldMenu();});
+// タイルを押したらパネルを先に閉じてから各機能へ(トグル2種は開いたままラベル更新を見せる)
+$('#menugrid').addEventListener('pointerdown',e=>{
+  const b=e.target.closest('#menugrid>div');if(!b)return;
+  if(b.id==='talkbtn'||b.id==='cloakbtn')return;
+  closeFieldMenu();
+},true);
+$('#menustatus').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openStatus();});
+$('#menubag').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openInventory();});
 $('#proofhud').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openProof();});
 $('#proofclose').addEventListener('pointerdown',e=>{e.stopPropagation();closeProof();});
 $('#proofwin').addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.id==='proofwin'&&performance.now()-(Game._proofT||0)>450)closeProof();});
@@ -7551,18 +7614,14 @@ async function runShop(){
       if(Game.mapId==='theater'&&it.town!=='theater')continue; // 一座の店は おみやげだけ
       if(it.town&&Game.mapId!==it.town)continue; // 町かぎり品（まほうのかぎ＝ゆきのまち）
       if(it.need&&!(Game.hidden&&Game.hidden[it.need]))continue; // 物語で ならぶ品（こども用そうび）
-      if(it.nk==='w'&&Game.nkW)continue;
-      if(it.nk==='a'&&Game.nkA)continue;
-      if(it.uitem&&Game.hidden[it.uitem])continue; // うきみせの かいきり品
+      const owned=(it.nk==='w'&&Game.nkW)||(it.nk==='a'&&Game.nkA)||(it.uitem&&Game.hidden[it.uitem])
+        ||(it.atk&&(Game.ownW||[]).includes(it.atk))||(it.armor&&(Game.ownA||[]).includes(it.armor))
+        ||(it.def&&Game.shield)||(it.def2&&Game.shield2)||(it.key&&Game[it.key]);
       if(it.atk)soldW=true;
       if(it.armor)soldA=true;
-      if(it.atk&&(Game.ownW||[]).includes(it.atk))continue;
-      if(it.armor&&(Game.ownA||[]).includes(it.armor))continue;
+      if(owned){list.push({id:'ownx_'+it.id,label:'✓ '+it.label+'　もっている',dis:true});continue;} // 所持品を隠さない(なにを持っているか店頭で見える 2026-07-20)
       if(it.atk)hadW=true;
       if(it.armor)hadA=true;
-      if(it.def&&Game.shield)continue;
-      if(it.def2&&Game.shield2)continue;
-      if(it.key&&Game[it.key])continue; // 買い切り品（どこでもドア など）所持済みは ならべない
       const sp=it.atk?' ⚔+'+it.atk:(it.armor?' 🛡+'+it.armor:(it.def?' 🛡+'+it.def:(it.def2?' 🛡+'+it.def2:(it.nk==='w'?' ⚔+12(こども)':(it.nk==='a'?' 🛡+14(こども)':''))))); // 性能を そのばで くらべられるように
       const fx=((it.atk&&WEAPONFX[it.atk])||(it.armor&&ARMORFX[it.armor]))?'✦':''; // 効果持ちの しるし（かうと 効果文が でる）
       list.push({id:it.id,label:it.label+fx+sp+'  '+it.cost+'G',dis:Game.gold<it.cost});
@@ -8125,13 +8184,14 @@ function autoStep(){
 }
 function updateField(dt){
   const p=Game.p;
-  if(Game.inventoryOpen||Game.proofOpen){held.length=0;Game.autoPath=null;return;}
+  if(Game.inventoryOpen||Game.proofOpen||Game.menuOpen){held.length=0;Game.autoPath=null;return;}
   if(!Game.talking&&!Game.battling&&!Game.transiting)checkChapterProof();
   if(!Game.talking)Game.dayT+=dt; // かいわちゅうは ときが とまる
   if(Game.grace>0)Game.grace-=dt;
   const qt=questText();
   const qloc='【'+(MAPNAME[Game.mapId]||'')+'】';if(qloc+qt!==Game._qt){Game._qt=qloc+qt;questEl.textContent=qloc+qt+'　▶';
-    const db=document.getElementById('doorbtn');if(db)db.classList.toggle('quest',qt.indexOf('どこでもドア')>=0);}
+    const db=document.getElementById('doorbtn');if(db)db.classList.toggle('quest',qt.indexOf('どこでもドア')>=0);
+    const mb=document.getElementById('menubtn');if(mb)mb.classList.toggle('quest',qt.indexOf('どこでもドア')>=0);}
   if(Game.minigame&&Game.minigame.kind==='ch20')return; // 航海盤のうしろで歩行・出口・敵接触を進めない
   if(!Game._gTip&&TM>3&&!Game.talking&&!Game.battling&&introVillageDone()){Game._gTip=true;toast('こまったら したの「もくてき」を タップ！ こえが みちびいて くれる');}
   if(!Game.hidden.spTold&&!Game.talking&&!Game.battling&&(Game.hidden.ch5c||Game.hidden.ch5cEver||Game.hidden.ch6c||Game.hidden.ch6cEver||Game.hidden.ch7c||Game.hidden.ch7cEver)){
