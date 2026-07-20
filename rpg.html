@@ -6900,24 +6900,7 @@ async function talkNpc(n){
       return;
     }
     if(n.heir&&Game.hidden.ch21d&&!Game.hidden.ch21c){ // 最終回: むらの ひろばの 大団円
-      await say('こども「おかえりなさい、ゆうしゃさま！ ……みて、そら！」');
-      await say('よぞらいっぱいに、ほしが もどっている。\nしらせを きいた みんなが、ひろばに あつまって きた。');
-      await say('王さま「よくぞ もどった、あおの勇者よ。\nそなたの たびが、この ほしぞらを まもったのじゃ。」');
-      await say('ソラ「わたしの なまえも、あの ほしの どれかに\nともって いるのかな。」');
-      await say('ナギ「ふねを だした かいが あったな。\nさいごの ほしまで、ちゃんと とどいた。」');
-      await say('だんちょう「よし、こんやは 一座の そうしあげだ！\nえんもくは——きまってるだろう？」');
-      await say('ざちょう「『あおの勇者の ものがたり』。\nはじまりの なは——ここに いる、みんなだ。」');
-      await say('こどもが まえに でて、かたりべちょうを ひらいた。');
-      await say('こども「——むかしむかし、あおい ふくの 勇者さまが いました。\nひかりは すべてを すくえるのか、しりたくて——」');
-      await say('こども「勇者さまは きづきました。ひかりは、ひとりでは すくえない。\nうけとめて、なまえを よんで、となりに いて、わけあって——」');
-      await say('こども「すくいは おわらない。ものがたりが かたられる かぎり。\nだから この おはなしは、ここで おしまいじゃ ないの。」');
-      Game.hidden.ch21c=true;
-      Game.enemies=Game.enemies.filter(e=>e.def&&(e.def.boss||e.def.mboss||e.def.still)); // 星が戻った島から まものが しずかに 引いていく(2026-07-20)
-      sfxLevel();flash('#ffe9b0',0.6,1.4);
-      updateProofHud();
-      await say('20この 蒼珠が、いっせいに きんいろに かがやいた——！\n（蒼珠のきろくが きんの ひかりに かわった）');
-      showChapter('ものがたりは つづく','さいしゅうしょう・かんけつ');
-      toast('むらの みせに さいごの そうびが ならんだ！');
+      await ch21Finale(false);
       endTalk();saveGame();return;
     }
     if(n.heir&&Game.hidden.ch9c&&!Game.hidden.ch10a){
@@ -14647,6 +14630,27 @@ function mondouHide(){
   mondouUI.cards.style.display='none';mondouUI.kid.style.display='none';
   mondouMsgVis(true);window.removeEventListener('resize',mondouPlace);
 }
+// 大団円(むらの ひろば)。replay=true は たもと再演の結び=同じ終わりを最後まで見せる(2026-07-20「倒したけど、終わりにならない」修理)
+async function ch21Finale(replay){
+  await say('こども「おかえりなさい、ゆうしゃさま！ ……みて、そら！」');
+  await say('よぞらいっぱいに、ほしが もどっている。\nしらせを きいた みんなが、ひろばに あつまって きた。');
+  await say('王さま「よくぞ もどった、あおの勇者よ。\nそなたの たびが、この ほしぞらを まもったのじゃ。」');
+  await say('ソラ「わたしの なまえも、あの ほしの どれかに\nともって いるのかな。」');
+  await say('ナギ「ふねを だした かいが あったな。\nさいごの ほしまで、ちゃんと とどいた。」');
+  await say('だんちょう「よし、こんやは 一座の そうしあげだ！\nえんもくは——きまってるだろう？」');
+  await say('ざちょう「『あおの勇者の ものがたり』。\nはじまりの なは——ここに いる、みんなだ。」');
+  await say('こどもが まえに でて、かたりべちょうを ひらいた。');
+  await say('こども「——むかしむかし、あおい ふくの 勇者さまが いました。\nひかりは すべてを すくえるのか、しりたくて——」');
+  await say('こども「勇者さまは きづきました。ひかりは、ひとりでは すくえない。\nうけとめて、なまえを よんで、となりに いて、わけあって——」');
+  await say('こども「すくいは おわらない。ものがたりが かたられる かぎり。\nだから この おはなしは、ここで おしまいじゃ ないの。」');
+  Game.hidden.ch21c=true;
+  Game.enemies=Game.enemies.filter(e=>e.def&&(e.def.boss||e.def.mboss||e.def.still)); // 星が戻った島から まものが しずかに 引いていく(2026-07-20)
+  sfxLevel();flash('#ffe9b0',0.6,1.4);
+  updateProofHud();
+  await say(replay?'きんいろの 蒼珠が、こたえるように いっせいに かがやいた——！':'20この 蒼珠が、いっせいに きんいろに かがやいた——！\n（蒼珠のきろくが きんの ひかりに かわった）');
+  showChapter('ものがたりは つづく','さいしゅうしょう・かんけつ');
+  if(!replay)toast('むらの みせに さいごの そうびが ならんだ！');
+}
 async function ch21Mondou(){
   const bt=Game.bt;
   try{
@@ -14685,10 +14689,12 @@ async function ch21Mondou(){
     }
     await finaleLastQuestion();
     mondouHide();
+    const replay=CH21_REPLAY; // loadMapで消える前に控える(帰還後の結び分岐用)
     await finishFinaleBattle();
     await wait(0.2);
     await transitMap({to:'grass',tx:8,ty:11,msg:'ほしのはしが むかえに きた——ひかりに つつまれ、むらの おかへ もどった。'});
     saveGame();
+    if(replay){startTalk();try{await ch21Finale(true);}finally{endTalk();}}
   }finally{mondouHide();}
 }
 async function finaleLastQuestion(){
@@ -14731,7 +14737,7 @@ async function finishFinaleBattle(){
   {const i=Game.enemies.indexOf(bt.ref);if(i>=0)Game.enemies.splice(i,1);} // ほどけた ぬしは その場で きえる(goneはloadMap時のみ評価のため)
   await leaveBattle(false);
   saveGame();
-  toast('むらへ かえろう——ほしのはしの でぐちへ');
+  if(!CH21_REPLAY)toast('むらの ひろばで みんなが まっている——');
 }
 async function finishEchoBattle(won){ // 章17: ぶたいの けいこあいて(かっても まけても なにも うしなわない)
   const bt=Game.bt,ep=enemyPos();
