@@ -241,10 +241,11 @@ body{
 #ui-battle #mexit .mi{ margin-top:4px; } /* shop等の長メニュー：stretchを切りcmdwinのmax-height/overflowを効かせる(Safari対策) */
 /* 会話リストの見通し(2026-07-20 UI設計やり直し): 幅ひろげ(行折返し解消)+「▼つづく」ピル */
 @media (min-width:641px){ #ui-battle.talk #cmdwin{ width:min(440px,62vw); } }
-#mmore{ flex:none; height:0; overflow:visible; text-align:center; pointer-events:none; opacity:0; transition:opacity .18s; }
-#mmore.on span{ pointer-events:auto; cursor:pointer; }
-#mmore span{ position:relative; top:-26px; display:inline-block; padding:2px 12px; border-radius:10px; font-size:11px; letter-spacing:.18em; color:#ffe9b0; background:rgba(7,9,19,.92); border:1px solid rgba(255,217,122,.5); }
-#mmore.on{ opacity:1; }
+#mscroll{ display:none; flex:none; gap:8px; padding:6px 2px 0; } /* ▲▼常設スクロールボタン(「スクロールボタンいるだろ」2026-07-20) */
+#mscroll.on{ display:flex; }
+#mscroll .msbtn{ flex:1; text-align:center; padding:10px 0; border-radius:10px; font-size:13px; letter-spacing:.14em; color:#ffe9b0; background:rgba(7,9,19,.92); border:1px solid rgba(255,217,122,.5); cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+#mscroll .msbtn.dim{ opacity:.35; }
+#mscroll .msbtn:active{ transform:scale(.96); }
 
 /* ---------- ミュート ---------- */
 #savebtn{ position:absolute; top:max(12px, env(safe-area-inset-top)); right:62px; z-index:70;
@@ -726,7 +727,7 @@ body{
     </div>
     <div class="b-bottom">
       <div id="msgwin" class="glass"><canvas id="mface" width="120" height="120"></canvas><div id="msgtext"></div><div class="adv">▼</div></div>
-      <div id="cmdwin" class="glass"><div class="mtitle" id="mtitle">コマンド</div><div id="mlist"></div><div id="mmore"><span>▼ したに つづく</span></div><div id="mexit"></div></div>
+      <div id="cmdwin" class="glass"><div class="mtitle" id="mtitle">コマンド</div><div id="mlist"></div><div id="mscroll"><div class="msbtn" id="mup">▲ うえへ</div><div class="msbtn" id="mdown">▼ したへ</div></div><div id="mexit"></div></div>
     </div>
   </div>
 
@@ -874,12 +875,12 @@ grass:{
   {x:5,y:9,shop:true,kind:'shop',col:'#e8c880',msg:[]},
   {x:1,y:11,kind:'musume',role:'haha',col:'#e8b0c0',msg:[]},
   {x:10,y:10,kind:'musume',small:true,col:'#90c8e8',heir:1,msgCh11:['こども「ふねに のったら、しまが ぜんぶ おともだちに みえたの！\nうみって、へだてる ものじゃ なかったんだね。」','こども「こんどは うみの おはなしを かたるんだ。\nなみの うえの、ゆれる ものがたり！」'],msgCh10:['こども「おかで かたった おはなし、むらの みんなが\nもっと きかせて って いうの。えへへ。」','こども「つぎは どこへ いく？ わたしの かたりべちょう、\nまだまだ まっしろの ページが あるんだから！」'],msgCh9:['こども「ちそこの したに、ほりびとさんの ともしびが あるんだって！\nどこでもドアって、まほうじゃ なかったんだね。」','こども「とどけるための はつめい かあ……。\nわたしの おはなしも、だれかに とどくかな！」'],msgCh8:['こども「うみの わたしもりさん、ナギさん って いうんだって！\nソラさんが おしえて くれたの。」','こども「なまえの おはなしが、また ひとつ ふえたね。\nわたしの かたりべちょうに、かいて おかなくちゃ！」'],msgCh7:['こども「じいちゃんの おはなし、わたし ぜんぶ おぼえてるよ。\nこんどはね、わたしが かたる ばん なの。」','こども「だから かなしくないよ。……ちょっとだけ、かなしいけど。\nものがたりの なかで、じいちゃんは ずっと げんき だもん。」'],msgCh6:['こども「ソラさんって いうんだって！ きょうね、なまえを よんだら、\nふりむいて わらって くれたの！」','こども「なまえを よぶとね、もっと なかよしに なれるんだよ。\nわたし、まいにち よぶんだ！」'],msgCh5:['こども「はずれの おひと、きょうね、ちょっとだけ\nかおを あげてたの！ わたし みたんだよ！」','こども「こんど、おはなを もって となりに すわるの。\nとなりに いるのって、わたしにも できるかなあ。」'],msgCh4:['こども「むねの ここ、まだ ぽかぽか してるの。\nゆうしゃさまの ひかり、だいじに そだてるね！」','こども「ねえ しってた？ ひかりはね、わたしても\nへらないんだよ。 ……ふふ、うけうり だけど！」'],msgCleared:['こども「ゆうしゃさま、かったんだね！ むらの みんな、\nきのうから ずーっと おまつりみたいだよ！」','こども「わたしも いつか、ゆうしゃさまみたいに\nつよくて やさしい ひとに なるんだ！」'],msg:['こども「おおきくなったら わたしが たまを まもるんだ！\nだから ゆうしゃさま、まけちゃ だめだよ！」'],msgNight:['こども「ほんとは もう ねる じかんなの。ないしょだよ？\nよるの ほしは ぜんぶ、まもられた ひとの ひかり なんだって！」'],msgHeir:['こども「むねの おくが、まだ ぽかぽか してるの。\nわたし、いつか ちゃんと うけとめて みせるよ！」'],msgAnswered:['こども「ひかりはね、えらばないんだって！\nうけとめれば、だれにでも やどるんだって！」','こども「だから わたし、おおきな うつわに なるの。\nゆうしゃさまみたいに！」']},
-  {x:7,y:10,kind:'stone',col:'#d8cba8',needKey:'ch7c',msgCh10:['ちいさな せきひ。つみたての はなの となりに、かたりべちょうの きれはしが\nそなえて ある。『じいちゃん。わたし、かたったよ』','ゆうやけの ひかりの なかで、せきひが しずかに あたたかい。\n——どこかで、じいさんが わらった きが した。'],msg:['ちいさな せきひ「かたりべ、ここに ねむる。\nものがたりは、つがれた。」','せきひの まえに、つみたての はなが そなえてある。\n……あの この てわざだ。']},
+  {x:7,y:8,kind:'stone',col:'#d8cba8',needKey:'ch7c',msgCh10:['ちいさな せきひ。つみたての はなの となりに、かたりべちょうの きれはしが\nそなえて ある。『じいちゃん。わたし、かたったよ』','ゆうやけの ひかりの なかで、せきひが しずかに あたたかい。\n——どこかで、じいさんが わらった きが した。'],msg:['ちいさな せきひ「かたりべ、ここに ねむる。\nものがたりは、つがれた。」','せきひの まえに、つみたての はなが そなえてある。\n……あの この てわざだ。']},
   {x:13,y:7,kind:'musume',small:true,needKey:'ch7a',goneKey:'omo3',omoKey:'omo3',col:'#ffdca0',msg:['おもいでの ひかり——えんがわで、じいさんが こどもらの こえを きいて わらっている。','「ながいきの やくめとは、これを みとどける ことじゃったのう」\nおだやかな ひるさがりの ひかりが、そこに あった。']},
   {x:9,y:10,kind:'ojii',gunshi:1,col:'#8fa2d4',msg:[]},
   {x:14,y:9,kind:'stone',col:'#9aa4b8',stoneKey:'t1',msg:['せきひ「ひかりのたまは よを てらす。\nこれを まもる ものを ── けいしょうしゃ と よぶ。」']},
   {x:15,y:11,kind:'musume',col:'#5f5a78',needKey:'ch4c',hood:1,msg:['フードの ひとかげは、こたえない。\nかぜの おとだけが、ふたりの あいだを すぎていく。']},
-  {x:12,y:10,kind:'tent',troupeTent:1,needKey:'ch11c',col:'#d94b5b',msg:[]},
+  {x:13,y:12,kind:'tent',troupeTent:1,needKey:'ch11c',col:'#d94b5b',msg:[]}, // 村の中心(12,10)から南の浜へ(こども・フクロの列を空ける 2026-07-20)
   {x:8,y:12,kind:'ship',troupeShip:1,needKey:'ch11c',col:'#d8bd78',msg:[]}],
  king:{x:3,y:10}},
 forest:{
@@ -3150,7 +3151,7 @@ function loadMap(id){
   MAP=w.map;SPAWNS=w.spawns;CHESTS=w.chests;SPRING=w.spring||null;BZONE=w.bzone||null;SPOTS=w.spots||[];Game._spotLast=null;
   if(id==='cave2'&&Game.hidden.gate1)MAP=MAP.map((row,i)=>i===8?row.slice(0,16)+'F'+row.slice(17):row); // ひらいた とびらは ひらいたまま
   if(id==='umi'&&Game.hidden.ch11d)MAP=MAP.map(row=>row.replace(/X/g,'W')); // あらなみは ほどけたまま(みなと開通)
-  Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!Game.hidden[s.need])&&!(s.gone&&Game.hidden[s.gone])&&!(s.shinpan&&Game.diff!==7)).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
+  Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!Game.hidden[s.need])&&!(s.gone&&Game.hidden[s.gone])&&!(s.shinpan&&Game.diff!==7)&&!(id==='grass'&&Game.hidden.ch21c)).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
     seed:rnd(9),timer:rnd(0.5,1.5),moving:null}));
   Game.respawnQ=[];
   Game.birds=null; // とりの むれは マップを またがない
@@ -5126,9 +5127,14 @@ function ask(items,title){
     });
     cmdwinEl.classList.add('on');
     mlistEl.scrollTop=0;cmdwinEl.scrollTop=0;
-    {const mm=document.getElementById('mmore');
-     if(mm){const upd=()=>mm.classList.toggle('on',mlistEl.scrollHeight-mlistEl.clientHeight-mlistEl.scrollTop>14);mlistEl.onscroll=upd;upd();
-       mm.onpointerdown=e=>{e.stopPropagation();mlistEl.scrollTop+=Math.max(80,mlistEl.clientHeight*0.8);upd();};}}
+    {const ms=document.getElementById('mscroll'),mu=document.getElementById('mup'),md=document.getElementById('mdown');
+     if(ms){const upd=()=>{const over=mlistEl.scrollHeight-mlistEl.clientHeight>14;ms.classList.toggle('on',over);
+        mu.classList.toggle('dim',mlistEl.scrollTop<=4);
+        md.classList.toggle('dim',mlistEl.scrollHeight-mlistEl.clientHeight-mlistEl.scrollTop<=4);};
+      mlistEl.onscroll=upd;upd();ms.__upd=upd; // 回転(resize)後にも判定し直せるよう保持
+      const step=dir=>{sfxSel();mlistEl.scrollTop+=dir*Math.max(80,Math.round(mlistEl.clientHeight*0.8));upd();}; // 即時スクロール+即時減光(smooth/scrollイベント頼みは不確実 2026-07-20)
+      mu.onpointerdown=e=>{e.stopPropagation();e.preventDefault();step(-1);};
+      md.onpointerdown=e=>{e.stopPropagation();e.preventDefault();step(1);};}}
     renderCursor();
   });
 }
@@ -5253,6 +5259,7 @@ window.addEventListener('pointerup',e=>{
   ptr=null;swipeVec=null;PTAP=null;
 });
 window.addEventListener('pointercancel',()=>{ptr=null;swipeVec=null;PTAP=null;});
+window.addEventListener('resize',()=>{const ms=document.getElementById('mscroll');if(ms&&ms.__upd){ms.__upd();setTimeout(()=>{try{ms.__upd();}catch(e){}},120);}}); // メニューを開いたまま回転→あふれ判定をやり直す(2026-07-20)
 // おしている ほうこうキーを ぜんぶ あわせた タイルベクトル
 // （1キー＝がめんの みため4ほうこう／2キーどうじ＝タイルじくの ななめ＝みちなり）
 function getDirVec(){
@@ -6858,6 +6865,7 @@ async function talkNpc(n){
       await say('こども「勇者さまは きづきました。ひかりは、ひとりでは すくえない。\nうけとめて、なまえを よんで、となりに いて、わけあって——」');
       await say('こども「すくいは おわらない。ものがたりが かたられる かぎり。\nだから この おはなしは、ここで おしまいじゃ ないの。」');
       Game.hidden.ch21c=true;
+      Game.enemies=Game.enemies.filter(e=>e.def&&(e.def.boss||e.def.mboss||e.def.still)); // 星が戻った島から まものが しずかに 引いていく(2026-07-20)
       sfxLevel();flash('#ffe9b0',0.6,1.4);
       updateProofHud();
       await say('20この 蒼珠が、いっせいに きんいろに かがやいた——！\n（蒼珠のきろくが きんの ひかりに かわった）');
@@ -8616,7 +8624,7 @@ function updateField(dt){
         const d=[[1,0],[-1,0],[0,1],[0,-1]][ri(0,3)];
         const nx=e.tx+d[0],ny=e.ty+d[1];
         if(walkable(nx,ny)&&tileAt(nx,ny)!=='R'&&Math.abs(nx-e.hx)<=2&&Math.abs(ny-e.hy)<=2
-           &&!(Game.mapId==='grass'&&ny>=9)){ // むらは あんぜんち(村中を敵がうろつき移動を塞ぐ 2026-07-20)
+           &&!(Game.mapId==='grass'&&ny>=8)){ // むらは あんぜんち(店の裏手y8まで。村中を敵がうろつき移動を塞ぐ 2026-07-20)
           e.moving={fx:e.tx,fy:e.ty,t:0,dur:0.38};
           e.tx=nx;e.ty=ny;
         }
@@ -8637,8 +8645,8 @@ function updateField(dt){
        if(Math.hypot(p.px-e.px,p.py-e.py)<rr2){startEncounter(e);break;}}
     }
   }
-  // きんのスライム：とつぜん あらわれ、しばらくすると きえる（ゆきのまちには わかない）
-  if(!Game.battling&&Game.mapId!=='icetown'){
+  // きんのスライム：とつぜん あらわれ、しばらくすると きえる（ゆきのまちには わかない。最終章クリア後のそうげんは 島が やすらぎ=わかない 2026-07-20）
+  if(!Game.battling&&Game.mapId!=='icetown'&&!(Game.mapId==='grass'&&Game.hidden.ch21c)){
     Game.goldT-=dt;
     if(Game.goldT<=0){
       Game.goldT=rnd(16,26);
