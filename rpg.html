@@ -7470,6 +7470,22 @@ const SHIMA_IHEN={
   'それでも、けむりが ひとすじ たっている。\n船大工カイが、ひとりで きを けずる おとだけが ひびく。',
   'なにも のこっていない ばしょから、なにを はじめられる だろう。\nこの しまの ものがたりは、まだ しろい ページだ。']}};
 function shimaIhenPending(){const d=SHIMA_IHEN[Game.mapId];return !!(d&&!Game.hidden[d.flag]&&d.on(Game.hidden));}
+// 案6軽量版6-3(2026-07-21): お使いが ちょうど2/3に達した直後、ぬしの気配が濃くなる予感1窓。
+// 3/3の覚醒演出・toast(N/3)・進行/乱数は不変。一回きり(yokan*旗)。章17はお使い廃止済み・章18〜20は構造が異なるため対象外。
+const SHIMA_YOKAN={
+ kura:{flag:'yokanKura',keys:['ka1','ka2','ka3'],on:h=>h.ch13a&&!h.ch13w,line:'くらの ほうから、はこの きしむ おとが きこえた——\nなにかが、こえを かかえて ふるえている。'},
+ tani:{flag:'yokanTani',keys:['km1','km2','km3'],on:h=>h.ch14a&&!h.ch14w,line:'たにの おくの いしが、ひくく うなった——\n『ちがう』の こえが、みだれはじめて いる。'},
+ hora:{flag:'yokanHora',keys:['hr1','hr2','hr3'],on:h=>h.ch15a&&!h.ch15w,line:'おかの うえの いえの ふだが、いちまい はがれて とんだ——\nとざした なにかが、ゆらぎはじめて いる。'},
+ uta:{flag:'yokanUta',keys:['ut1','ut2','ut3'],on:h=>h.ch16a&&!h.ch16w,line:'きたの おかで、うたの きれはしが うずを まいた——\nすいこむ なにかが、いきを ひそめて まっている。'}};
+function shimaYokanPending(){const d=SHIMA_YOKAN[Game.mapId];return !!(d&&!Game.hidden[d.flag]&&d.on(Game.hidden)&&d.keys.filter(k=>Game.hidden[k]).length===2);}
+async function shimaYokanScene(){
+  const d=SHIMA_YOKAN[Game.mapId];if(!d)return;
+  Game.hidden[d.flag]=true;
+  startTalk();
+  await say(d.line);
+  endTalk();
+  saveGame();
+}
 async function shimaIhenScene(){
   const d=SHIMA_IHEN[Game.mapId];if(!d)return;
   Game.hidden[d.flag]=true;
@@ -8687,6 +8703,7 @@ function updateField(dt){
     else if(Game.hidden.ch2&&!Game.hidden.mate1&&(Game.purified||0)>=5)mateJoinScene();
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&!Game.hidden.tamotoTold)tamotoScene();
     else if(shimaIhenPending())shimaIhenScene();
+    else if(shimaYokanPending())shimaYokanScene();
     else if(Game.mapId==='grass'&&Game.p.lv>=9&&!Game.hidden.wazaCatchup)wazaCatchupScene();
   }
   if(p.bump){
