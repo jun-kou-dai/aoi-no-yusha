@@ -2968,6 +2968,8 @@ const SHOP=[
   {id:'cloak',label:'とうめいマント',cost:180,key:'cloak',hint:'フィールドの「👻」ボタンで ON/OFFできる！'},
   {id:'book',label:'冒険の書',cost:100,key:'book',hint:'フィールドの「📕」ボタンで モンスター図鑑を ひらける！'},
   {id:'mkey',label:'まほうのかぎ',cost:300,key:'mkey',town:'icetown',hint:'ちそこの とざされた とびらが ひらく！'}];
+// ふなみせ(一座のふねの移動武具店 2026-07-21): 既存SHOP品のidを並べるだけ(定義の追加なし)。順=ぶき→よろい→くすり
+const FUNAMISE=['w8u','wtsukikage','w7','a8u','a7h','atsukikage','yakuso','iyakuso','tokusen','seisui2','inochi','hoshikake'];
 // でんせつのぶき: weaponAtkの値が武器の同一性(全武器で一意)。効果はここで引く
 const WEAPONFX={16:{twice:true},44:{vsKage:1.5},52:{critUp:0.05},56:{critUp:0.08},64:{critUp:0.06},82:{critUp:0.10},88:{critUp:0.10},94:{critUp:0.12},100:{critUp:0.14},60:{critUp:0.06},108:{critUp:0.16},24:{critUp:0.12},30:{twice:true},34:{venom:0.4},42:{drain:0.25},46:{vsGiant:1.6},76:{drain:0.2,critUp:0.08}};
 const WNAME={5:'どうのつるぎ',12:'はがねのつるぎ',16:'はやぶさのつるぎ',20:'ほのおのつるぎ',26:'ゆうしゃのつるぎ',36:'ふぶきのつるぎ',44:'かげぬいの たち',48:'らいめいのつるぎ',52:'おうじゃのけん',56:'とわのつるぎ',60:'うみなりのつるぎ',64:'ちそこのつるぎ',82:'ほしくだきのつるぎ',88:'ほしくだきのつるぎ＋1',94:'ほしくだきのつるぎ＋2',100:'ほしくだきのつるぎ＋3',108:'ほしのはしのつるぎ',24:'みきりのこだち',30:'しっぷうのつるぎ',34:'まだらのやいば',42:'きゅうけつのやいば',46:'きょじんごろし',76:'つきかげのつるぎ'};
@@ -5995,7 +5997,8 @@ async function talkNpc(n){
       saveGame();return;
     }
     if(Game.hidden.ch13a&&!Game.hidden.ch13c){
-      const gm=await ask([{id:'go',label:'くらのしまへ わたる'},{id:'rec',label:'📖 ふねの きろくちょう'},{id:'gear',label:'⚒ ふなそうびを みる'},{id:'no',label:'やめておく'}],'だんちょう「ふねを だすかい？」');
+      const gm=await ask([{id:'go',label:'くらのしまへ わたる'},{id:'mise',label:'🛒 ふなみせ（ぶき・くすり・かじ）'},{id:'rec',label:'📖 ふねの きろくちょう'},{id:'gear',label:'⚒ ふなそうびを みる'},{id:'no',label:'やめておく'}],'だんちょう「ふねを だすかい？」');
+      if(gm==='mise'){await runShop(true);endTalk();return;}
       if(gm==='rec'){await shipRecord();endTalk();return;}
       if(gm==='gear'){await shipGearShop();endTalk();return;}
       endTalk();
@@ -6006,7 +6009,8 @@ async function talkNpc(n){
       await say('だんちょう「あの しま、いまじゃ うたごえで もちきりだ。\nこんど 一座で『くらのしまの ものがたり』を やろうと おもってる。」');
       await say('だんちょう「——ところがだ。となりの たにを とおったら、がけの うえから\n『そのはなしは ちがう！』って こえが ふってきた。」');
       await say('だんちょう「やまびこのたに、って いうらしい。はなしを かたるたび\n「ちがう」と しかられて、たにの ひとは だまりこんじまった そうだ。」');
-      const gm=await ask([{id:'go',label:'ふねに のる'},{id:'no',label:'また こんど'}],'だんちょう「かたりを とりもどして きて くれないか。ふねなら すぐだ。」');
+      const gm=await ask([{id:'go',label:'ふねに のる'},{id:'mise',label:'🛒 ふなみせ'},{id:'no',label:'また こんど'}],'だんちょう「かたりを とりもどして きて くれないか。ふねなら すぐだ。」');
+      if(gm==='mise'){await runShop(true);endTalk();return;}
       if(gm!=='go'){await say('だんちょう「きが むいたら こえを かけてくれ。ふねは いつでも でられる。」');endTalk();return;}
       Game.hidden.ch14a=true;
       showChapter('だい 14 しょう','かたちを かえる ものがたり');
@@ -6018,7 +6022,8 @@ async function talkNpc(n){
       await say('だんちょう「たにの こだまも、いまじゃ すっかり うたいずきだ。\n——ところで、ひとつ きになる うわさを ひろった。」');
       await say('だんちょう「うみの むこうの『ほらふきじま』。おおぼらで しまじゅうを わらわせた\nほらふきの いえに、「うそつき」の しろい ふだが はられたと いう。」');
       await say('だんちょう「それから しまでは、だれも つくりばなしを しなく なった そうだ。\nつくりばなしは……うそ、なのかねえ。」');
-      const gm=await ask([{id:'go',label:'ふねに のる'},{id:'no',label:'また こんど'}],'だんちょう「たしかめて きて くれないか。ふねなら すぐだ。」');
+      const gm=await ask([{id:'go',label:'ふねに のる'},{id:'mise',label:'🛒 ふなみせ'},{id:'no',label:'また こんど'}],'だんちょう「たしかめて きて くれないか。ふねなら すぐだ。」');
+      if(gm==='mise'){await runShop(true);endTalk();return;}
       if(gm!=='go'){await say('だんちょう「きが むいたら こえを かけてくれ。ふねは いつでも でられる。」');endTalk();return;}
       Game.hidden.ch15a=true;
       showChapter('だい 15 しょう','うそと よばれた ものがたり');
@@ -6030,7 +6035,8 @@ async function talkNpc(n){
       await say('だんちょう「ほらふきじまの おおぼら、うちの ざちょうも はらを かかえてた よ。」');
       await say('だんちょう「——ところで、ざちょうが こどもの ころ おぼえた こもりうたの しま、\n『わすれうたのしま』って いうんだが……いま、うたが ひとつずつ きえて いるらしい。」');
       await say('だんちょう「しまの ひとは うたいだしを わすれちまう。のどまで でて いるのに、だ。\nうたに なにが おきてるのか、みて きて くれないか。」');
-      const gm=await ask([{id:'go',label:'ふねに のる'},{id:'no',label:'また こんど'}],'だんちょう「ふねなら すぐだ。」');
+      const gm=await ask([{id:'go',label:'ふねに のる'},{id:'mise',label:'🛒 ふなみせ'},{id:'no',label:'また こんど'}],'だんちょう「ふねなら すぐだ。」');
+      if(gm==='mise'){await runShop(true);endTalk();return;}
       if(gm!=='go'){await say('だんちょう「きが むいたら こえを かけてくれ。ふねは いつでも でられる。」');endTalk();return;}
       Game.hidden.ch16a=true;
       showChapter('だい 16 しょう','はじまりを わすれた ものがたり');
@@ -6056,7 +6062,8 @@ async function talkNpc(n){
     if(Game.hidden.ch17Key&&Game.hidden.ch17Stone&&Game.hidden.ch17Fuda&&Game.hidden.ch17Score&&!Game.hidden.ch17w){ // 章17: やかたの ばしょ
       await say('だんちょう「4つとも……そうか。ざちょうは、しまの ひとに\nちゃんと ふだを わたして、あずかって いったんだな。」');
       await say('だんちょう「わかった。ざちょうが むかう さきは ひとつだ——\nこどもの ころ、たからものを かくして いた『あつめのやかた』。」');
-      const gm=await ask([{id:'go',label:'ふねに のる'},{id:'no',label:'まだ いかない'}],'だんちょう「たのむ。ざちょうを、つれもどして やって くれ。」');
+      const gm=await ask([{id:'go',label:'ふねに のる'},{id:'mise',label:'🛒 ふなみせ'},{id:'no',label:'まだ いかない'}],'だんちょう「たのむ。ざちょうを、つれもどして やって くれ。」');
+      if(gm==='mise'){await runShop(true);endTalk();return;}
       if(gm!=='go'){await say('だんちょう「じゅんびが できたら、こえを かけてくれ。」');endTalk();return;}
       Game.hidden.ch17w=true;
       endTalk();
@@ -6068,7 +6075,8 @@ async function talkNpc(n){
       await say('にしの おきの かぜまちじま。むかしは、きせつの かぜを まつ ふねで にぎわった しま。\nけれど おおあらしで、みなとも いえも こわれ、ひとは べつの しまへ にげた。');
       await say('てがみの ぬしは、わかい 船大工カイ。\n『かえりたい ひとは いる。でも、さいしょに なにを つくるか、ひとりでは きめられない』');
       await say('だんちょう「なにも のこっていない ばしょから、ものがたりは はじめられるのか。\n……ふねなら、いま だせる。」');
-      const go=await ask([{id:'go',label:'かぜまちじまへ いく'},{id:'back',label:'もうすこし じゅんびする'}],'一座の ふねで にしの おきへ');
+      const go=await ask([{id:'go',label:'かぜまちじまへ いく'},{id:'mise',label:'🛒 ふなみせ'},{id:'back',label:'もうすこし じゅんびする'}],'一座の ふねで にしの おきへ');
+      if(go==='mise'){await runShop(true);endTalk();return;}
       if(go!=='go'){endTalk();return;}
       Game.hidden.ch18a=true;showChapter('だい 18 しょう','はじめる しま');
       endTalk();
@@ -6079,7 +6087,8 @@ async function talkNpc(n){
       await say('だんちょう「北の しおわかれから、へんな手紙が とどいた。\n紙は一枚なのに、夕ぐれ、夜、雨あがりの 三つの文字が かさなってる。」');
       await say('ときかさねじま。島の大時計が とまった夜から、\n灯を消した人、鍋を鳴らした子、空舟をはなした船頭が、たがいを うたがっている。');
       await say('時守ミナの文字だけが、三つの時の まんなかで 読めた。\n『ひとつの時だけで、ひとの本当を きめないでください』');
-      const go=await ask([{id:'go',label:'ときかさねじまへ いく'},{id:'back',label:'もうすこし じゅんびする'}],'一座の ふねで 北の しおわかれへ');
+      const go=await ask([{id:'go',label:'ときかさねじまへ いく'},{id:'mise',label:'🛒 ふなみせ'},{id:'back',label:'もうすこし じゅんびする'}],'一座の ふねで 北の しおわかれへ');
+      if(go==='mise'){await runShop(true);endTalk();return;}
       if(go!=='go'){endTalk();return;}
       Game.hidden.ch19a=true;Game.hidden.ch19SeenDusk=true;showChapter('だい 19 しょう','つなげて みえる もの');
       endTalk();
@@ -6090,7 +6099,8 @@ async function talkNpc(n){
       await say('だんちょう「かぜまちじまから、カイの信号が とどいた。\n南西の しおわかれで、島へ帰る三艘が 暗礁に とりのこされている。」');
       await say('先舟は細い岩間を通れる。けれど、家族と荷をのせた暮らし舟と、一座の船は 同じ形では通れない。');
       await say('だんちょう「先頭だけを 港へ入れても、みちびいたことには ならん。\nナギとソラも乗る。三艘の声を つないでくれ。」');
-      const go=await ask([{id:'go',label:'しおわかれの海峡へ'},{id:'back',label:'もうすこし じゅんびする'}],'一座の船で 三艘のもとへ');
+      const go=await ask([{id:'go',label:'しおわかれの海峡へ'},{id:'mise',label:'🛒 ふなみせ'},{id:'back',label:'もうすこし じゅんびする'}],'一座の船で 三艘のもとへ');
+      if(go==='mise'){await runShop(true);endTalk();return;}
       if(go!=='go'){endTalk();return;}
       Game.hidden.ch20a=true;Game.hidden.ch20Nav=ch20InitialNav();
       showChapter('だい 20 しょう','さいごの ふねまで');endTalk();
@@ -6105,6 +6115,7 @@ async function talkNpc(n){
       if(Game.hidden.ch18a)opts.push({id:'kazemachi',label:'かぜまちじまへ'});
       if(Game.hidden.ch19a)opts.push({id:'tokikasane',label:'ときかさねじまへ'});
       if(Game.hidden.ch20a)opts.push({id:'shiowakare',label:'しおわかれの海峡へ'});
+      opts.push({id:'mise',label:'🛒 ふなみせ（ぶき・くすり・かじ）'});
       opts.push({id:'rec',label:'📖 ふねの きろくちょう'});
       opts.push({id:'gear',label:'⚒ ふなそうびを みる'});
       opts.push({id:'no',label:'やめておく'});
@@ -6120,6 +6131,7 @@ async function talkNpc(n){
       else if(Game.hidden.ch15c)shipPrompt='だんちょう「ほらふきじまの おおぼら、一座の えんもくに ほしいねえ。ふねを だすかい？」';
       else if(Game.hidden.ch14c)shipPrompt='だんちょう「たにの こだまも、いまじゃ すっかり うたいずきだ。ふねを だすかい？」';
       const gm=await ask(opts,shipPrompt);
+      if(gm==='mise'){await runShop(true);endTalk();return;}
       if(gm==='rec'){await shipRecord();endTalk();return;}
       if(gm==='gear'){await shipGearShop();endTalk();return;}
       endTalk();
@@ -6691,33 +6703,9 @@ async function talkNpc(n){
     await say('せきばんの ともしびは、しずかに ひかりつづけている。');
     endTalk();return;
   }
-  if(n.forge){ // ほりびとの かじ(章9の常設・金とてつの恒久シンク)
-    const FW={82:[88,2000,1],88:[94,5000,2],94:[100,9000,3]};
-    const FA={60:[66,2000,1],66:[72,5000,2],72:[78,9000,3]};
+  if(n.forge){ // ほりびとの かじ(章9の常設・金とてつの恒久シンク)。本体はforgeRun(ふなみせ⚒と共用 2026-07-21)
     await say('ほりびとの かじば——ほのおは いまも いきている。');
-    while(true){
-      const wr=FW[Game.weaponAtk],ar=FA[Game.armorDef];
-      const list=[];
-      if(wr)list.push({id:'w',label:'⚔ '+(WNAME[Game.weaponAtk]||'')+'→＋'+(wr[0]===88?1:wr[0]===94?2:3)+'　'+wr[1]+'G・てつ'+wr[2],dis:Game.gold<wr[1]||(Game.items.hoshitetsu||0)<wr[2]});
-      if(ar)list.push({id:'a',label:'🛡 '+(ANAME[Game.armorDef]||'')+'→＋'+(ar[0]===66?1:ar[0]===72?2:3)+'　'+ar[1]+'G・てつ'+ar[2],dis:Game.gold<ar[1]||(Game.items.hoshitetsu||0)<ar[2]});
-      if(!list.length){
-        await say('かじの こえ「きたえられるのは ほしの てつの そうび——\nほしくだきのつるぎと ほしのよろい。ちそこの いちで あつらえて きな。」');
-        break;
-      }
-      list.push({id:'no',label:'やめる'});
-      const c=await ask(list,'かじ（'+Game.gold+'G　ほしのてつ×'+(Game.items.hoshitetsu||0)+'）');
-      if(c==='no'||!c)break;
-      const r=(c==='w')?wr:ar;
-      if(Game.gold<r[1]||(Game.items.hoshitetsu||0)<r[2]){await say('かじの こえ「かねか てつが たりないよ。」');continue;}
-      Game.gold-=r[1];Game.items.hoshitetsu-=r[2];
-      sfxCrit();flash('#ffb050',0.5,0.8);shakeBattle(0,0);
-      await say('カン……カン……カァン——！ ほしのてつが うちなおされて いく。');
-      if(c==='w'){Game.ownW=Game.ownW.filter(v=>v!==Game.weaponAtk);gainWeapon(r[0]);Game.weaponAtk=r[0];}
-      else{Game.ownA=Game.ownA.filter(v=>v!==Game.armorDef);gainArmor(r[0]);Game.armorDef=r[0];}
-      recalcStats();updateBars();sfxLevel();
-      await say((c==='w'?WNAME[Game.weaponAtk]:ANAME[Game.armorDef])+'が できあがった！\n（'+(c==='w'?('こうげき '+Game.p.atk):('しゅび '+Game.p.def))+'）');
-      saveGame();
-    }
+    await forgeRun(false);
     endTalk();saveGame();return;
   }
   if(n.ferry2){ // 章8c: ふねの うえの むすび(ナギ命名)
@@ -7825,8 +7813,38 @@ async function gunshiTalk(){
     if(c==='money'){if(await gunshiPay('money','gunshiFM')){h.gunshiN=(h.gunshiN||0)+1;await gunshiMoney();saveGame();}continue;}
   }
 }
-async function runShop(){
-  await say(Game.mapId==='theater'
+// ほりびとの かじ本体(ちそこ常設と ふなみせ⚒の両方から呼ぶ 2026-07-21)。段・価格・てつ消費・文言は従来のまま
+async function forgeRun(atSea){
+  const FW={82:[88,2000,1],88:[94,5000,2],94:[100,9000,3]};
+  const FA={60:[66,2000,1],66:[72,5000,2],72:[78,9000,3]};
+  while(true){
+    const wr=FW[Game.weaponAtk],ar=FA[Game.armorDef];
+    const list=[];
+    if(wr)list.push({id:'w',label:'⚔ '+(WNAME[Game.weaponAtk]||'')+'→＋'+(wr[0]===88?1:wr[0]===94?2:3)+'　'+wr[1]+'G・てつ'+wr[2],dis:Game.gold<wr[1]||(Game.items.hoshitetsu||0)<wr[2]});
+    if(ar)list.push({id:'a',label:'🛡 '+(ANAME[Game.armorDef]||'')+'→＋'+(ar[0]===66?1:ar[0]===72?2:3)+'　'+ar[1]+'G・てつ'+ar[2],dis:Game.gold<ar[1]||(Game.items.hoshitetsu||0)<ar[2]});
+    if(!list.length){
+      await say('かじの こえ「きたえられるのは ほしの てつの そうび——\nほしくだきのつるぎと ほしのよろい。'+(atSea?'この ふなみせで あつらえな。':'ちそこの いちで あつらえて きな。')+'」');
+      break;
+    }
+    list.push({id:'no',label:'やめる'});
+    const c=await ask(list,'かじ（'+Game.gold+'G　ほしのてつ×'+(Game.items.hoshitetsu||0)+'）');
+    if(c==='no'||!c)break;
+    const r=(c==='w')?wr:ar;
+    if(Game.gold<r[1]||(Game.items.hoshitetsu||0)<r[2]){await say('かじの こえ「かねか てつが たりないよ。」');continue;}
+    Game.gold-=r[1];Game.items.hoshitetsu-=r[2];
+    sfxCrit();flash('#ffb050',0.5,0.8);shakeBattle(0,0);
+    await say('カン……カン……カァン——！ ほしのてつが うちなおされて いく。');
+    if(c==='w'){Game.ownW=Game.ownW.filter(v=>v!==Game.weaponAtk);gainWeapon(r[0]);Game.weaponAtk=r[0];}
+    else{Game.ownA=Game.ownA.filter(v=>v!==Game.armorDef);gainArmor(r[0]);Game.armorDef=r[0];}
+    recalcStats();updateBars();sfxLevel();
+    await say((c==='w'?WNAME[Game.weaponAtk]:ANAME[Game.armorDef])+'が できあがった！\n（'+(c==='w'?('こうげき '+Game.p.atk):('しゅび '+Game.p.def))+'）');
+    saveGame();
+  }
+}
+async function runShop(funamise){
+  await say(funamise
+    ?'いちざの うりこ「ふなみせへ ようこそ！ しまめぐりの おともに、\nりくの みせの えりすぐりを つんできたよ！」'
+    :Game.mapId==='theater'
     ?'いちざの うりこ「おつかれさま！ ぶたいを みた ひとだけの おみやげやだよ。\nかみの おめんも、ほんとうの こえを うつした だいほんも あるよ！」'
     :Game.mapId==='umi'
     ?'うきみせの あきんど「おおっ、ふねの おきゃくさん！ なかうみの うきみせへ ようこそ。\nうみわたりの みちぐさに、めずらしい ものを そろえて いるよ。」'
@@ -7838,15 +7856,21 @@ async function runShop(){
     ?'しょうにん「いらっしゃい！ ゴーレムたいじの えいゆうさん！\nこおりと ほのおの たびに そなえて いきな。」'
     :'しょうにん「いらっしゃい！ ぶきと どうぐの みせだよ。」'));
   while(true){
-    const mode=await ask([{id:'buy',label:'かう'},{id:'sell',label:'うる'},{id:'exit',label:'やめる'}],'みせ（'+Game.gold+'G）');
-    if(mode!=='buy'&&mode!=='sell'){await say('しょうにん「まいど あり！ また きてくれよな。」');return;}
+    const modes=[{id:'buy',label:'かう'},{id:'sell',label:'うる'}];
+    if(funamise)modes.push({id:'kaji',label:'⚒ かじ（ほしのてつで きたえる）'});
+    modes.push({id:'exit',label:'やめる'});
+    const mode=await ask(modes,(funamise?'ふなみせ':'みせ')+'（'+Game.gold+'G）');
+    if(funamise&&mode==='kaji'){
+      await say('うりこの あいずで、ふねの かまどに ひが はいった。\nかじの こえ「うみの うえでも、てつを うつ おとは かわらないよ。」');
+      await forgeRun(true);continue;}
+    if(mode!=='buy'&&mode!=='sell'){await say(funamise?'いちざの うりこ「まいど！ よい ふなたびを！」':'しょうにん「まいど あり！ また きてくれよな。」');return;}
     if(mode==='sell'){await runSell();continue;}
     while(true){
     const list=[];
     let soldW=false,hadW=false,soldA=false,hadA=false;
-    for(const it of SHOP){
-      if(Game.mapId==='theater'&&it.town!=='theater')continue; // 一座の店は おみやげだけ
-      if(it.town&&Game.mapId!==it.town)continue; // 町かぎり品（まほうのかぎ＝ゆきのまち）
+    for(const it of (funamise?FUNAMISE.map(id=>SHOP.find(s=>s.id===id)).filter(Boolean):SHOP)){ // ふなみせは積み荷リストの順・町の店は従来どおり
+      if(!funamise&&Game.mapId==='theater'&&it.town!=='theater')continue; // 一座の店は おみやげだけ
+      if(!funamise&&it.town&&Game.mapId!==it.town)continue; // 町かぎり品（まほうのかぎ＝ゆきのまち）
       if(it.need&&!(Game.hidden&&Game.hidden[it.need]))continue; // 物語で ならぶ品（こども用そうび）
       const owned=(it.nk==='w'&&Game.nkW)||(it.nk==='a'&&Game.nkA)||(it.uitem&&Game.hidden[it.uitem])
         ||(it.atk&&(Game.ownW||[]).includes(it.atk))||(it.armor&&(Game.ownA||[]).includes(it.armor))
@@ -7868,11 +7892,12 @@ async function runShop(){
     if(c==='back'||!c)break;
     if(c==='infoW'||c==='infoA'){
       const better=SHOP.some(it=>c==='infoW'?(it.atk&&it.atk>Game.weaponAtk):(it.armor&&it.armor>Game.armorDef));
-      await say(better?'しょうにん「ゆきのまちの みせなら もっと つよい そうびを あつかって いるよ。」'
+      await say(funamise?'いちざの うりこ「それより うえは、⚒かじで きたえるか、\nものがたりの さきで であう しなだよ。」'
+               :better?'しょうにん「ゆきのまちの みせなら もっと つよい そうびを あつかって いるよ。」'
                       :'しょうにん「あんたの そうびは せかいいちだ！\nうちに それいじょうの しなは ないね。」');
       continue;}
     const it=SHOP.find(s=>s.id===c);
-    if(Game.gold<it.cost){await say('しょうにん「おっと、おかねが たりないよ！」');continue;}
+    if(Game.gold<it.cost){await say((funamise?'いちざの うりこ':'しょうにん')+'「おっと、おかねが たりないよ！」');continue;}
     Game.gold-=it.cost;
     sfxChest();
     if(it.atk){
