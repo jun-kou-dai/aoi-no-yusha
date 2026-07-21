@@ -2080,8 +2080,9 @@ function normalizeStoryProgress(h){
   if(all(['ut1','ut2','ut3']))h.ch16w=true;
   if(h.ch16c)h.ch16d=true;if(h.ch16d)h.ch16w=true;if(h.ch16w)set(['ch16a','ut1','ut2','ut3']);
 
-  // 章17: 章開始は章16結びを保証。4品だけでは船上の館発見場面を飛ばさない。
-  if(any(['ch17Key','ch17Stone','ch17Fuda','ch17Score','ch17w','cn1','cn2','cn3','cn4','ch17w2','ch17d','ch17c']))h.ch17a=true;
+  // 章17: 章開始は章16結びを保証。かたみ4品は島クリアの授与(案3 2026-07-21)につき、章17開始の根拠にしない。
+  if(h.ch13c)h.ch17Key=true;if(h.ch14c)h.ch17Stone=true;if(h.ch15c)h.ch17Fuda=true;if(h.ch16c)h.ch17Score=true; // 既存セーブへの一括付与(済んだ島のぶんだけ)
+  if(any(['ch17w','cn1','cn2','cn3','cn4','ch17w2','ch17d','ch17c']))h.ch17a=true;
   if(h.ch17a){h.ch16c=true;h.ch16d=true;h.ch16w=true;set(['ch16a','ut1','ut2','ut3']);}
   if(h.ch17c)h.ch17d=true;
   if(h.ch17d)h.ch17w2=true;
@@ -6054,10 +6055,17 @@ async function talkNpc(n){
       await say('だんちょう「……そういう ことか。あの ひとは、この めで みたんだ。\nはこに しまわれた こえ。「ちがう」と しばられた かたり。」');
       await say('だんちょう「うそつきの ふだ。きえた なまえ。——勇者どのが すくって まわった あとを\nずっと ついて あるいて、あの ひとは こわく なったんだ。」');
       await say('だんちょう「「つぎは まもれないかも しれん」——それで、あつめはじめた。\n……とめて やって くれ。あれは、まもろうと して とじこめて いる。」');
-      await say('だんちょう「4つの しまの、むすびの ばしょへ いって みて くれ。\nざちょうの あしあとが のこっている はずだ。ふねは いつでも だす。」');
+      await say('だんちょう「……まてよ。あなたが しまじまで あずかった 4つの かたみ——\n🔑かぎ、🪨いしへん、📄ふだ、🎼がくふ。あれが、あの ひとの こころを ひらく かぎだ。」');
+      await say('だんちょう「むかう さきは ひとつ。こどもの ころ、あの ひとが たからものを\nかくして いた——『あつめのやかた』だ。ふねは いつでも だせる。」');
       Game.hidden.ch17a=true;
       showChapter('だい 17 しょう','わけあう ものがたり');
-      endTalk();saveGame();return;
+      const gm=await ask([{id:'go',label:'ふねに のる'},{id:'mise',label:'🛒 ふなみせ'},{id:'no',label:'まだ いかない'}],'だんちょう「たのむ。ざちょうを、つれもどして やって くれ。」');
+      if(gm==='mise'){await runShop(true);endTalk();saveGame();return;}
+      if(gm!=='go'){await say('だんちょう「じゅんびが できたら、こえを かけてくれ。」');endTalk();saveGame();return;}
+      Game.hidden.ch17w=true;
+      endTalk();
+      await transitMap({to:'yakata1',tx:10,ty:11,msg:'一座の ふねは くろい いわかげを ぬけ、はこと くさりの やかたへ——'});
+      saveGame();return;
     }
     if(Game.hidden.ch17Key&&Game.hidden.ch17Stone&&Game.hidden.ch17Fuda&&Game.hidden.ch17Score&&!Game.hidden.ch17w){ // 章17: やかたの ばしょ
       await say('だんちょう「4つとも……そうか。ざちょうは、しまの ひとに\nちゃんと ふだを わたして、あずかって いったんだな。」');
@@ -6375,6 +6383,10 @@ async function talkNpc(n){
       showChapter('だい 16 しょう','はじまりを わすれた ものがたり');
       toast('十六ばんめの 蒼珠が ともった！');
       await say('あたらしい 章じゅもん『はじまりのうた』を おぼえた！\n（つかいおえた 章じゅもんが もういちど めを さます——たたかいの「じゅもん」から）');
+      sfxChest();
+      await say('しまの ひとが、うたいだしを かきとめた うつしの がくふを たくした。\nいちばん うえに おおきく——「サヨさんの うた」。');
+      Game.hidden.ch17Score=true;
+      toast('🎼 サヨの がくふを あずかった（かたみ 4 / 4）');
       await hoshiChainSay();
       saveGame();endTalk();return;
     }
@@ -6453,6 +6465,10 @@ async function talkNpc(n){
       showChapter('だい 15 しょう','うそと よばれた ものがたり');
       toast('十五ばんめの 蒼珠が ともった！');
       await say('あたらしい 章じゅもん『ほらがいのこえ』を おぼえた！\n（おおぼらで つぎの いちげきが 2ばい——たたかいの「じゅもん」から）');
+      sfxChest();
+      await say('ほらふきが、とびらから はがれおちた しろい ふだを 1まい たくした。\n「つくりばなしが こころを ひらいた あかしじゃ。もって いきな」');
+      Game.hidden.ch17Fuda=true;
+      toast('📄 はがされた しろい ふだを あずかった（かたみ 3 / 4）');
       await hoshiChainSay();
       saveGame();endTalk();return;
     }
@@ -6526,6 +6542,10 @@ async function talkNpc(n){
       showChapter('だい 14 しょう','かたちを かえる ものがたり');
       toast('十四ばんめの 蒼珠が ともった！');
       await say('あたらしい 章じゅもん『こだまがえし』を おぼえた！\n（うけた いちげきを こだまにして うちかえす——たたかいの「じゅもん」から）');
+      sfxChest();
+      await say('たにの ひとが、いしぶみの ねもとの ちいさな いしへんを たくした。\n「かたちを かえても しんは きえない——その あかしに」');
+      Game.hidden.ch17Stone=true;
+      toast('🪨 こだまの いしへんを あずかった（かたみ 2 / 4）');
       await hoshiChainSay();
       saveGame();endTalk();return;
     }
@@ -6638,6 +6658,10 @@ async function talkNpc(n){
       showChapter('だい 13 しょう','しまいこまれた ものがたり');
       toast('十三ばんめの 蒼珠が ともった！');
       await say('あたらしい 章じゅもん『ひらくことば』を おぼえた！\n（かたい まもりと ぶつりたいせいを ひらく——たたかいの「じゅもん」から）');
+      sfxChest(); // 案3(2026-07-21): かたみは島クリアで その場で 授かる(章17の再訪お使い廃止)
+      await say('しまの ひとが、ひらいた はこの ちいさな かぎを そっと たくした。\n「ものがたりを ひらいて くれた あなたに——しまの かたみです」');
+      Game.hidden.ch17Key=true;
+      toast('🔑 こえの はこの かぎを あずかった（かたみ 1 / 4）');
       await hoshiChainSay();
       saveGame();endTalk();return;
     }
