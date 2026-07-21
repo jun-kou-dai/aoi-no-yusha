@@ -7442,6 +7442,43 @@ async function endMiniGame(win){
   endTalk();
   saveGame();
 }
+// 案6軽量版(2026-07-21): 島に着いた直後、その島の最大の異変を1画面(3窓)見せる=山場の影を先に張る。
+// 一回きり(ihen*旗)・その章の進行中だけ・進行/乱数/ぬし戦は不変。章19/20は到着演出が既に異変を見せるため対象外。
+const SHIMA_IHEN={
+ kura:{flag:'ihenKura',on:h=>h.ch13a&&!h.ch13c,lines:[
+  'ふねを おりた とたん、みみが いたいほどの しずけさ。\nいえも はたけも あるのに、はなしごえが ひとつも ない。',
+  'ひろばで、しまの ひとが くちを ぱくぱくと うごかしている。\nけれど おとに ならない——こえが、どこかへ しまわれている。',
+  'しまの おくで、おおきな くらが いきを ひそめて いる。\nこの しずけさの こたえは、あの とびらの むこうだ。']},
+ tani:{flag:'ihenTani',on:h=>h.ch14a&&!h.ch14c,lines:[
+  'さんばしに あしを つけた とたん——がけの うえから こえが ふった。\n『ちがう。』',
+  'みちばたの おばあが はなしかけて、すぐ くちを つぐむ。\nかたるたび しかられて、たには だまりこんで しまった。',
+  'たにの いちばん おくで、いしの おもてが かすかに うごいた。\n『ちがう』の ぬしは、あそこに いる。']},
+ hora:{flag:'ihenHora',on:h=>h.ch15a&&!h.ch15c,lines:[
+  'とびらと いう とびらに、しろい ふだ——「うそつき」。\nかぜが ふくたび、ふだが かさかさと わらいを けしていく。',
+  'こどもが つくりばなしを しかけて、おとなに そでを ひかれた。\n「うそつきの こえは、けされるよ」',
+  'おかの うえの ほらふきの いえだけが、かたく とざされている。\nこの しまの わらいは、あそこに とじこめられた。']},
+ uta:{flag:'ihenUta',on:h=>h.ch16a&&!h.ch16c,lines:[
+  'あさもやの なか、こもりうたが きこえて——とちゅうで、ふっと きえた。',
+  'しまの ひとが うたいだしを さがして、のどに てを あてる。\n「でて こないの。うたの はじまりだけ、どうしても」',
+  'きたの おかの うたひの あたりで、なにかが うたを すいこんでいる。\nうたの はじまりは、あそこで ねむっている。']},
+ yakata1:{flag:'ihenYakata',on:h=>h.ch17w&&!h.ch17c,lines:[
+  'やかたの げんかんに、はこ、はこ、はこ——4つの しまの げんぽんが\nきちんと つまれて、くらやみの なかで ねむっている。',
+  'おくへ つづく とびらには、ふとい くさりが 4じゅう。\nまもる ための くさりが、ものがたりの いきを とめている。',
+  'くらやみの おくから、ざちょうの けはいが する。\n——まもりたかった だけの ひとが、そこに いる。']},
+ kazemachi:{flag:'ihenKaze',on:h=>h.ch18a&&!h.ch18c,lines:[
+  'さんばしは おれ、いえは かたむき、みなとは からっぽ。\nおおあらしが、しまの くらしを まるごと もっていった。',
+  'それでも、けむりが ひとすじ たっている。\n船大工カイが、ひとりで きを けずる おとだけが ひびく。',
+  'なにも のこっていない ばしょから、なにを はじめられる だろう。\nこの しまの ものがたりは、まだ しろい ページだ。']}};
+function shimaIhenPending(){const d=SHIMA_IHEN[Game.mapId];return !!(d&&!Game.hidden[d.flag]&&d.on(Game.hidden));}
+async function shimaIhenScene(){
+  const d=SHIMA_IHEN[Game.mapId];if(!d)return;
+  Game.hidden[d.flag]=true;
+  startTalk();
+  sfxEnc();flash('#232838',0.5,1.0);
+  for(const L of d.lines)await say(L);
+  endTalk();
+  saveGame();
+}
 // 既存のぼうけんのしょへ 一回きりの「めざめ」告知: 新呪文はレベル連動のため、配信前にLv到達済みのセーブでは
 // 習得告知が一度も出ない。武器の売り場も含め、フクロウの声で在り処を知らせる(SPEC_gunshi_catchup_20260719)
 // かんけつ後、むらに入った一回だけ: たもとの案内(2026-07-20「先に進めない・最終章完結と出ている」への正面対応)
@@ -8649,6 +8686,7 @@ function updateField(dt){
     else if(Game.mapId==='towa'&&!Game.hidden.towaCard){Game.hidden.towaCard=true;showChapter('とわの ふち','といの ねむる ばしょ');saveGame();}
     else if(Game.hidden.ch2&&!Game.hidden.mate1&&(Game.purified||0)>=5)mateJoinScene();
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&!Game.hidden.tamotoTold)tamotoScene();
+    else if(shimaIhenPending())shimaIhenScene();
     else if(Game.mapId==='grass'&&Game.p.lv>=9&&!Game.hidden.wazaCatchup)wazaCatchupScene();
   }
   if(p.bump){
