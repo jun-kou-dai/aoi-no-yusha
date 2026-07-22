@@ -1902,7 +1902,7 @@ icetown:{
   {x:6,y:3,kind:'ojii',needKey:'ch18BuiltPier',col:'#547b8e',msg:['りょうし「さんばしが もどった。これで、かえってくる ふねを うけとめられる。」']},
   {x:13,y:6,kind:'musume',small:true,needKey:'ch18BuiltShelter',col:'#c58f6a',msg:['しまの こ「かぜの おとが ちいさく なったよ。ここなら、よるを こわがらなくて いいね。」']},
   {x:9,y:8,kind:'hood',needKey:'ch18BuiltBeacon',col:'#7186a4',msg:['みはり「かぜみばたが ひがしを さしたら、あらしは すぐ そこだ。もう おくれない。」']}],
- spawns:[],chests:[],
+ spawns:[{id:'nagaregi',x:7,y:1},{id:'tobiyane',x:17,y:3},{id:'kuzureishi',x:4,y:10}],chests:[],
  spots:[],
  exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'}]},
  kazemachiNight:{
@@ -1946,7 +1946,7 @@ icetown:{
   {x:15,y:2,kind:'ch19scene',ch19Scene:'light',col:'#ffe5a0',msg:[]},
   {x:4,y:9,kind:'ch19scene',ch19Scene:'boat',col:'#7ab0c0',msg:[]},
   {x:8,y:3,kind:'ch19scene',ch19Scene:'bird',col:'#d5dbea',msg:[]}],
- spawns:[],chests:[],spots:[],
+ spawns:[{id:'kirinuki',x:4,y:2},{id:'tomaribari',x:14,y:11}],chests:[],spots:[],
  exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'}]},
  tokikasanebell:{
  song:'kage',bg:['#101b42','#435b86'],dark:true,darkR:7,darkCol:'25,35,70',darkA:0.34,
@@ -1964,7 +1964,7 @@ icetown:{
   {x:15,y:2,kind:'ch19scene',ch19Scene:'light',col:'#7b86a8',msg:[]},
   {x:4,y:9,kind:'ch19scene',ch19Scene:'boat',col:'#526b86',msg:[]},
   {x:8,y:3,kind:'ch19scene',ch19Scene:'bird',col:'#d5dbea',msg:[]}],
- spawns:[{id:'kiritoru',x:10,y:3,need:'ch19Solved',gone:'ch19d'}],chests:[],spots:[],
+ spawns:[{id:'kirinuki',x:3,y:3},{id:'hitokomadori',x:6,y:11},{id:'kiritoru',x:10,y:3,need:'ch19Solved',gone:'ch19d'}],chests:[],spots:[],
  exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'}]},
  tokikasanerain:{
  song:'umi',bg:['#536d83','#a8bac2'],dark:true,darkR:8,darkCol:'45,62,75',darkA:0.20,
@@ -1982,7 +1982,7 @@ icetown:{
   {x:15,y:2,kind:'ch19scene',ch19Scene:'light',col:'#f6d98a',msg:[]},
   {x:4,y:9,kind:'ch19scene',ch19Scene:'boat',col:'#7ab0c0',msg:[]},
  {x:8,y:3,kind:'ch19scene',ch19Scene:'bird',col:'#d5dbea',msg:[]}],
- spawns:[],chests:[],spots:[],
+ spawns:[{id:'tomaribari',x:3,y:4},{id:'hitokomadori',x:14,y:11}],chests:[],spots:[],
  exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'}]},
  // 章20『さいごの ふねまで』: 三艘の空間占有を組み替えて、最後尾まで海峡を渡す
  shiowakare:{
@@ -2883,6 +2883,14 @@ const FOES={
   sukuwarenu:{name:'すくわれなかったもの', hp:9999, atk:172, def:999, exp:0, g:0, col:'#3a3a5e', draw:'boss2', tint:'rgba(40,44,80,0.92)', mboss:true, still:true, huge:true, watch:true, physMul:1, fireMul:1, iceMul:1, dodge:0, winMsg:'すくわれなかったものは ほどけ、\nかぞえきれない ほしに なって よぞらへ かえっていった。'},
   shioarashi:{charge:true,name:'しおあらしの むれ',hp:2300,atk:166,def:68,exp:3500,g:2800,col:'#4d8eaa',draw:'stormflock',mboss:true,still:true,huge:true,watch:true,dodge:0.12,physMul:0.80,fireMul:1.6,iceMul:0.55,winMsg:'しおあらしの むれは あたたかい あめに ほどけ、\nうみへ かえる みちを みつけた。'},
   kiritoru:{charge:true,name:'きりとるもの',hp:2700,atk:170,def:72,exp:3800,g:3200,col:'#7662a0',draw:'timefracture',mboss:true,still:true,huge:true,dodge:0.35,physMul:0.75,fireMul:0.85,iceMul:0.85,winMsg:'きりとるものは 三つの文字盤から 一本の金の針へ ほどけ、\n止まっていた島の一分が、朝へ うごきだした。'},
+  // 章18 かぜまちじま: あらしに ちらされ、これから 建て直す島の 歩く敵(2026-07-22 案6A)
+  nagaregi:{name:'ながれぎ', hp:820, atk:160, def:62, exp:450, g:235, col:'#9a7a52', draw:'slime', tint:'rgba(154,122,82,0.82)', physMul:1, fireMul:1.4, iceMul:0.9, winMsg:'ながれぎは ぱらぱらと ほどけ、\nつかえそうな いたが 一まい、はまべに のこった。'},
+  tobiyane:{name:'とびやね', hp:800, atk:162, def:62, exp:470, g:245, col:'#c8a86a', draw:'crow', v:'bat', tint:'rgba(200,168,106,0.8)', dodge:0.2, physMul:1, fireMul:1.2, iceMul:0.9, winMsg:'とびやねは かぜを うしなって おち、\nしずかに じめんへ よこたわった。'},
+  kuzureishi:{name:'くずれいしがき', hp:1000, atk:162, def:70, exp:500, g:260, col:'#8f9a94', draw:'golem', v:'iron', tint:'rgba(143,154,148,0.85)', physMul:0.5, fireMul:0.9, iceMul:1.3, winMsg:'くずれいしがきは くずれ、\nつみなおせる いしが きれいに ならんだ。'},
+  // 章19 ときかさねじま: きりとられた 一場面の かけら(2026-07-22 案6A)
+  kirinuki:{name:'きりぬきのかげ', hp:880, atk:164, def:66, exp:520, g:270, col:'#6f6a90', draw:'slime', v:'dark', tint:'rgba(111,106,144,0.82)', physMul:1, fireMul:1.1, iceMul:1.1, winMsg:'きりぬきのかげは ほどけ、\nきりとられた まえと あとが、そっと つながった。'},
+  hitokomadori:{name:'ひとこまどり', hp:860, atk:166, def:66, exp:540, g:280, col:'#9a8ab8', draw:'crow', v:'bat', tint:'rgba(154,138,184,0.8)', dodge:0.22, physMul:1, fireMul:0.9, iceMul:1.25, winMsg:'ひとこまどりは くわえていた ばめんを おとし、\nその ひとこまは、つづきを おもいだした。'},
+  tomaribari:{name:'とまりばり', hp:1050, atk:166, def:72, exp:570, g:300, col:'#b0a068', draw:'golem', v:'iron', tint:'rgba(176,160,104,0.85)', physMul:0.55, fireMul:1.3, iceMul:0.9, winMsg:'とまりばりは かたむき、\nとまっていた 一ぷんが、こちりと すすんだ。'},
   kajiu:{name:'かじをうばうもの',hp:3100,atk:178,def:76,exp:4200,g:3600,col:'#24304a',draw:'blackhelm',mboss:true,still:true,huge:true,dodge:0.18,physMul:0.82,fireMul:0.82,iceMul:0.82,winMsg:'かじをうばうものは 黒い綱へ ほどけ、\n三艘の舵輪が おなじ朝の港へ まわりだした。'},
   namigarasu:{name:'なみがらす', hp:520, atk:136, def:52, exp:270, g:135, coward:true, col:'#8fb8d8', draw:'crow', v:'snow', tint:'rgba(110,150,190,0.72)', dodge:0.3, physMul:1, fireMul:1.2, iceMul:0.8, winMsg:'とりは しぶきに とけて、なみまに きえた。'},
   shiouzu:{name:'しおのうず', hp:600, atk:139, def:56, exp:320, g:160, col:'#4a7ab0', draw:'slime', v:'dark', tint:'rgba(60,100,150,0.8)', physMul:0.7, fireMul:0.6, iceMul:1.5, winMsg:'うずは ほどけ、しずかな なみに もどった。'},
@@ -4442,8 +4450,8 @@ const BOOK_ISLES=[
   ['ほらふきじま',['yadokari','kazesarai','usofuda','makoto']],
   ['わすれうたのしま',['utawasure','otomodoki','wasureishi','wasurare']],
   ['あつめのやかた',['yokubarite','kaginomure','tsumibako','hitorijime']],
-  ['かぜまちじま',['shioarashi']],
-  ['ときかさねじま',['kiritoru']],
+  ['かぜまちじま',['nagaregi','tobiyane','kuzureishi','shioarashi']],
+  ['ときかさねじま',['kirinuki','hitokomadori','tomaribari','kiritoru']],
   ['しおわかれの海峡',['kajiu']],
   ['ほしのうみ',['sukuwarenu']],
   ['みおくりの みさき',['nagorikage','shionomukuro','miokure']],
@@ -4537,6 +4545,12 @@ const BOOK_LORE={
   kirinokage:'きりの なかで みちに まよった たましい。ひかりの ほうへ あるきたがっている。',
   gslime:'おうごんの からだは おまもりがわり。おかねもちほど にげあしが はやい。',
   metal:'はがねの からだに けいけんの かたまり。であえた ひは うんが いい。',
+  nagaregi:'あらしが はこんできた ながれぎ。どこかの いえの はしらだった かもしれない——それを おぼえて いるのは、この きだけ。',
+  tobiyane:'かぜに さらわれた やね。もどる いえを さがして、まだ そらを まわって いる。',
+  kuzureishi:'まもるはずの かべが くずれ、まもる ものを うしなった。だれかが つみなおすまで、ここに いる。',
+  kirinuki:'ひとときから ひとこまだけを きりぬいた かげ。まえも あとも しらないので、じぶんが なんの ばめんか わからない。',
+  hitokomadori:'ひとこまだけを くわえて とぶ とり。はこんだ さきで、その ひとこまは うわさに なる。',
+  tomaribari:'とまったままの とけいの はり。ここで とめておけば、つらい つづきは こない——そう しんじて いる。',
   kotae:'とわに といつづける もの。こたえを もつ ものを、しずかに ためしに くる。'};
 const BOOK_TRAITS={
   niseyusha:['ぶたいの たたかい。勝っても 負けても ものがたりは すすむ','ぬのと かみの よろい——ほのおが よく きく'],
@@ -4562,6 +4576,12 @@ const BOOK_TRAITS={
   tsumibako:['きばこの やまは ほのおで もえあがる——ほのおが ばつぐん','こおりには すこし つよい'],
   sukuwarenu:['こうげきも じゅもんの ほのおも とどかない——7つの といに、章の じゅもんで こたえよ','こたえは だい1・2・3・5・6・7・17しょうの ものがたりの なかに ある'],
   hitorijime:['4つの すがたに かわる——とじた はこ／ただしさの こだま／うそを おそれる みみ／はじまりを わすれる やみ','それぞれに、13〜16しょうの 章じゅもんが 一つずつ 刺さる'],
+  nagaregi:['ながれぎの やま。うごきは おそい','ほのおが ばつぐん。こおりには すこし つよい'],
+  tobiyane:['かぜに のって ひらりと かわす——じゅもんなら はずさない','ほのおが よく きく'],
+  kuzureishi:['いしがきの からだは こうげきを はんぶんに','こおりで ひびを いれろ'],
+  kirinuki:['きりとられた ひとこまの あつまり','ほのおも こおりも すこし きく'],
+  hitokomadori:['ひらりと かわす——じゅもんなら はずさない','こおりが よく きく'],
+  tomaribari:['かたい はりの からだは こうげきを はんぶんに','ほのおが よく きく'],
   kiritoru:['ゆうぐれ／かねの時／雨あがりの 三つの姿へ 切りかわる','姿ごとに ほのお／つるぎ／こおりの 効きかたが かわる','ためた一撃と回避は 章じゅもん「ときをつなぐ」で ほどける'],
   kajiu:['章じゅもん「こえをまわす」で、敵が起こす本当の危険を 三艘から聞ける','狭い岩間=たて／横波=よこ／後ろをさらう渦=くさび','正しい隊列なら被害をへらし、つぎの一撃だけ対応する弱点がひらく'],
   iwanuke:['いわの からだは こうげきを はんぶんに する','じゅもんが よく きく。ほしのてつを おとす'],
