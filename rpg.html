@@ -163,6 +163,11 @@ body{
 #msgwin .adv{ position:absolute; right:14px; bottom:8px; color:#d8cfae; font-size:.8em; opacity:0;
   animation:advblink 1s ease-in-out infinite; }
 #msgwin.done .adv{ opacity:1; }
+#talkskip{ position:absolute; top:8px; right:52px; z-index:3; display:none; padding:5px 9px; border:1px solid rgba(255,217,122,.72); border-radius:999px;
+  background:rgba(23,27,48,.96); color:#ffe9b0; font-size:clamp(11px,1.8vmin,14px); line-height:1.2; letter-spacing:.08em; cursor:pointer; user-select:none; -webkit-user-select:none; }
+#talkskip.on{ display:block; }
+#talkskip:active{ transform:scale(.95); }
+#msgwin.can-skip #msgtext{ padding-right:8.4em; }
 @keyframes advblink{ 0%,100%{ transform:translateY(0); opacity:.9 } 50%{ transform:translateY(3px); opacity:.4 } }
 #cmdwin{ width:min(300px,54vw); max-height:80vh; max-height:80dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; pointer-events:auto; padding:10px 10px 12px; display:none; flex-direction:column; align-self:flex-start; }
 #cmdwin.on{ display:flex; }
@@ -755,7 +760,7 @@ body{
       <div class="ailbadge" id="bailbadge"></div>
     </div>
     <div class="b-bottom">
-      <div id="msgwin" class="glass"><canvas id="mface" width="120" height="120"></canvas><div id="msgtext"></div><div class="adv">▼</div></div>
+      <div id="msgwin" class="glass"><canvas id="mface" width="120" height="120"></canvas><div id="msgtext"></div><div id="talkskip">⏩ とばす</div><div class="adv">▼</div></div>
       <div id="cmdwin" class="glass"><div class="mtitle" id="mtitle">コマンド</div><div id="mlist"></div><div id="mscroll"><div class="msbtn" id="mup">▲ うえへ</div><div class="msbtn" id="mdown">▼ したへ</div></div><div id="mexit"></div></div>
     </div>
   </div>
@@ -842,7 +847,7 @@ function rr(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);c.a
 // ============================================================
 const cv=$('#cv');let ctx=cv.getContext('2d');
 const stage=$('#stage'), fxL=$('#fx'), flashEl=$('#flashfx'), fadeEl=$('#fade');
-const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), cmdwinEl=$('#cmdwin'), mlistEl=$('#mlist'), mexitEl=$('#mexit'), mtitleEl=$('#mtitle');
+const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talkskipEl=$('#talkskip'), cmdwinEl=$('#cmdwin'), mlistEl=$('#mlist'), mexitEl=$('#mexit'), mtitleEl=$('#mtitle');
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 let W=0,H=0,TM=0;
 
@@ -2125,8 +2130,7 @@ async function ch18BuildSite(site,skipRead=false){
   }
   if(!h.ch18Told){
     const trace=site==='Pier'?'くずれた さんばし。かわいた つなの さきだけ、あらしの あとにも のこっている。':site==='Shelter'?'かべの ひくい こやあと。なかには、こどもの くつと くすりばこが ならんでいる。':'おれた かざみばた。ひがしを むいた まま、さびついている。';
-    await say(trace);
-    await say('共同けんちくけんは ある。でも、だれと なにを つくるかは まだ きいていない。\n島の ちゅうおうで、船大工カイの はなしを きこう。');
+    await say(trace+'\n共同けんちくけんは ある。でも、だれと なにを つくるかは まだ きいていない。\n島の ちゅうおうで、船大工カイの はなしを きこう。');
     toast('船大工カイへ——三つの場所の はなしを きこう');
     return;
   }
@@ -2136,7 +2140,6 @@ async function ch18BuildSite(site,skipRead=false){
       await say('船大工カイ「ぬれた つなに からむ しおのかげは、ひで あぶると ほどけるんだ。\nここを なおせば、投網砲で さいしょの なみを おしかえせる。」');
     }else if(site==='Shelter'){
       await say('かべの ひくい こやあと。なかには、こどもの くつと くすりばこが ならんでいる。');
-      await say('くすりばこの すみだけが こげて かわき、しおの しみが そこを よけている。');
       await say('船大工カイ「ここを なおせば、にげていた ひとが よるを こせる。\nたたかいの とちゅうでも、くすりを とどけて もらえる。」');
     }else{
       await say('おれた かざみばた。ひがしを むいた まま、さびついている。');
@@ -2160,14 +2163,12 @@ async function ch18BuildSite(site,skipRead=false){
   const sel=await ask([{id:'build',label:s.icon+' '+s.name+'を つくる'},{id:'back',label:'まだ えらばない'}],'けんちくけんは あと '+ch18TicketLeft()+'まい。ここから はじめる？');
   if(sel!=='build')return;
   h[s.flag]=true;sfxChest();flash('#ffe4a8',0.42,0.9);Game.fieldShake=8;
-  await say('一座と しまの ひとたちが、いっせいに うごきだした。\nくぎの おと、つなの おと、だれかの わらいごえ——');
-  await say(s.icon+' '+s.name+'が できあがった！\n「かえってきても いい ばしょ」が、ひとつ ふえた。');
+  await say(s.icon+' '+s.name+'が できあがった！\nくぎの おと、つなの おと、だれかの わらいごえ——\n「かえってきても いい ばしょ」が、ひとつ ふえた。');
   if(ch18BuiltCount()>=2){
     h.ch18Ready=true;h.ch18Spell=true;h.ch18SpellNew=true;
     Game.p.hp=Game.p.mhp;Game.p.mp=Game.p.mmp;
     if(nkFollowing()){const ns=nkStats();Game.nkHp=ns.mhp;Game.nkMp=ns.mmp;}
     updateBars();sfxLevel();flash('#d8f2ff',0.55,1.1);
-    await say('ふたつの えらんだ ばしょを、かぜが いっぽんの みちで むすんだ。');
     await say('あたらしい 章じゅもん「あしたをえらぶ」を おぼえた！\n（⚔・🔥・❄から ひとつを えらび、弱点なら おなじ いちげきを もういちど とどける）');
     await say('からだと こころが みちた。\nひが しずむ——船大工カイの ところへ もどろう。');
     toast('あしたをえらぶを おぼえた！ 船大工カイの ところへ');
@@ -2180,7 +2181,6 @@ async function ch18StartNight(){
   endTalk();
   await transitMap({to:'kazemachiNight',tx:10,ty:11,msg:'ひが しずみ、うみの むこうで くろい なみが たちあがった——'});
   startTalk();
-  await say('よるの かぜが、できたばかりの ふたつの ばしょを つなぐ。');
   await say('船大工カイ「たおしに いくんじゃ ない。\nここで、かえってくる ひとの ばしょを まもるんだ！」');
   endTalk();
   const e=Game.enemies.find(x=>x.def===FOES.shioarashi);
@@ -2203,9 +2203,7 @@ async function ch18TalkChief(){
     return;
   }
   h.ch18Told=true;saveGame();
-  await say('船大工カイ「けんちくけんは ふたつ。\nでも、なおしたい ばしょは みっつ ある。」');
-  await say('船大工カイ「さんばし、かぜよけごや、かざみだい。\nぜんぶの あとを みて、いま いちばん はじめたい ふたつを えらんで。」');
-  await say('船大工カイ「どれかを すてるんじゃ ない。\nさいしょの いっぽを、じぶんたちで きめるんだ。」');
+  await say('船大工カイ「けんちくけんは ふたつ。なおしたい ばしょは みっつ——\nさんばし、かぜよけごや、かざみだい。\nいちばん はじめたい ふたつを えらんで。」');
   await say('船大工カイ「その場所へ いって、目の前で なおそう。\nつくる音も、ひとが もどるところも、ちゃんと 見てほしいんだ。」');
   toast('三つの 建築あとへ——現地で はじめる場所を えらぼう');
 }
@@ -2239,8 +2237,7 @@ async function ch19Switch(id){
   endTalk();
   await transitMap({to:id,tx,ty,msg:t.icon+' 大時計の はりが まわる——'+t.name+'の 島が かさなった。'});
   startTalk();
-  await say(t.note);
-  await say('ときの しおり：'+ch19SeenSummary());
+  await say(t.note+'\nときの しおり：'+ch19SeenSummary());
   endTalk();saveGame();
 }
 async function ch19ChooseConclusion(){
@@ -2252,14 +2249,12 @@ async function ch19ChooseConclusion(){
     '三つの時を かさねる。あの夜に おきたことは——');
   if(pick==='a'){
     h.ch19WrongA=true;saveGame();sfxSel();
-    await say('雨あがりの 舟には、岩場に とりのこされた 人が のっていた。\nハルが はなした 空舟には、「もどる先」が あった。');
-    await say('ひとつの場面だけなら「にげた」に見える。\nゆうぐれの舟と、雨あがりの舟を もういちど つなごう。');
+    await say('雨あがりの 舟には、岩場に とりのこされた 人が のっていた。\nハルが はなした 空舟には「もどる先」が あった——\nゆうぐれの舟と 雨あがりの舟を、もういちど つなごう。');
     return;
   }
   if(pick==='c'){
     h.ch19WrongC=true;saveGame();sfxSel();
-    await say('ゆうぐれには、ルウも 舟も すでに うごいていた。\nかねの時、ギンは 灯台にいて、ハルは 岸で つなを にぎっている。');
-    await say('順番だけでなく、「だれが どこにいたか」を 三つの島で かさねよう。');
+    await say('ゆうぐれには、ルウも 舟も すでに うごいていた。\nかねの時、ギンは 灯台に、ハルは 岸で つなを にぎっている。\n「だれが どこにいたか」を 三つの島で かさねよう。');
     return;
   }
   if(pick!=='rescue')return;
@@ -2268,8 +2263,7 @@ async function ch19ChooseConclusion(){
   if(nkFollowing()){const ns=nkStats();Game.nkHp=ns.mhp;Game.nkMp=ns.mmp;}
   updateBars();sfxLevel();flash('#ffe6a0',0.58,1.15);
   await say('三つの時が、ひとつの夜へ つながった——');
-  await say('ギンは 夜鳥が 灯へ ぶつからないよう、灯を おおった。\nルウは こわれた鐘の かわりに、真鍮の鍋を 鳴らした。');
-  await say('ハルは 岩場の遭難者へ 空舟を とどけるため、つなを はなした。\n三人は べつべつに見えて、同じ いのちを たすけていた。');
+  await say('ギンは 鳥を守るため 灯を おおい、ルウは 鐘の かわりに 鍋を 鳴らした。\nハルは 遭難者へ 空舟を とどけ、つなを はなした——\n三人は べつべつに見えて、同じ いのちを たすけていた。');
   await say('あたらしい 章じゅもん「ときをつなぐ」を おぼえた！\n（切り取られた場面を つなぎ、敵が つぎに見せる時まで あかす）');
   await say('からだと こころが みちた。\nそのとき、大時計の 文字盤に 三本の ひびが はしった——');
   saveGame();
@@ -2307,8 +2301,7 @@ async function ch19TalkClock(){
   if(!h.ch19Intro){
     h.ch19Intro=true;ch19MarkSeen(Game.mapId);
     await say('止まった大時計の下で、時守ミナが 三枚の 透きとおる文字盤を かさねた。');
-    await say('時守ミナ「同じ夜の ゆうぐれ、かねの時、雨あがりが、\nこの島では べつべつの景色に なってしまいました。」');
-    await say('時守ミナ「ひとつの時だけを見た人たちは、ルウ、ギン、ハルを\nそれぞれ うらぎりものだと きめてしまったのです。」');
+    await say('時守ミナ「同じ夜の ゆうぐれ、かねの時、雨あがりが べつべつの景色になり、\nひとつの時だけを見た人たちは、ルウ、ギン、ハルを\nうらぎりものだと きめてしまったのです。」');
     await say('時守ミナ「時計に ふれれば、三つの時を なんどでも いききできます。\n同じ人、同じ舟、同じ灯の、まえと あとを 見てください。」');
   }else ch19MarkSeen(Game.mapId);
   const opts=Object.entries(CH19_TIME).map(([id,t])=>({id,label:(h[t.key]?'● ':'○ ')+t.icon+' '+t.name}));
@@ -2340,7 +2333,7 @@ async function ch19TalkPerson(role){
     else if(role==='gin')await say('灯守ギン「もう 灯を もどせる。\n暗くしたのは 役目をすてたからじゃない。灯を守るために、いのちを守った。」');
     else await say('船頭ハル「舟が もどった！ 岩場の三人も いっしょだ。\n空舟を はなした先に、乗って帰る人が いたんだ。」');
   }
-  await say('ときの しおりに、この場面を かきとめた。\n'+ch19Time().note);
+  await say('ときの しおりに、この場面を かきとめた。');
 }
 async function ch19TalkScene(kind){
   ch19MarkSeen(Game.mapId);const phase=Game.mapId;
@@ -2509,7 +2502,7 @@ async function ch20ReachPort(){
   closeCh20Board(true);loadMap('shiowakare');updateBars();saveGame();
   startTalk();sfxLevel();flash('#b9e8ff',0.5,1.0);
   await say('黄いろの先舟だけではない。赤い暮らし舟も、青い一座の船も——\n三艘すべてが、暗礁のむこうへ ぬけた。');
-  await say('ナギ「道は、先頭が見つけるだけじゃ たりない。\nさいごの舟まで こえをまわして、はじめて みんなの道になる。」');
+  await say('ナギ「さいごの舟まで こえをまわして、はじめて みんなの道になる。」');
   await say('あたらしい 章じゅもん『こえをまわす』を おぼえた！\n三艘のこえが、つぎの危険と ひらく弱点を つたえる。');
   await say('そのとき、港の大きな舵輪が 黒く ねじれた。\n「かじをうばうもの」が、三艘の進む向きを ばらばらに しようとしている！');
   endTalk();toast('章じゅもん「こえをまわす」　MP 22');saveGame();
@@ -2517,13 +2510,11 @@ async function ch20ReachPort(){
 async function ch20TalkGuide(){
   const h=Game.hidden;
   if(h.ch20d){await say('ナギ「三艘の帆が、おなじ朝の風を つかんでる。\nいちばん後ろの舟にも、ちゃんと港から 手がのびているよ。」');return;}
-  if(h.ch20Ready){await say('ナギ「道は つながった。でも、あの黒い舵輪が みんなの向きを うばおうとしている。\n危険のこえを 三艘へ まわして、正しい隊列で うけよう。」');return;}
+  if(h.ch20Ready){await say('ナギ「あの黒い舵輪が、みんなの向きを うばおうとしている。\n危険のこえを 三艘へ まわして、正しい隊列で うけよう。」');return;}
   if(!h.ch20Intro){
     h.ch20Intro=true;
     await say('かぜまちじまの南西。しおわかれの海峡で、三艘の舟が 暗礁のあいだに とりのこされている。');
     await say('ナギ「先の舟だけなら、ぬけられる。でも後ろの二艘を おいていく道は、航路とは よべない。」');
-    if(nkFollowing())await say('こども「先頭の舟が こえたら、みんなを みちびいたことに なるの？」');
-    else await say('岸で見ていた こども「先頭の舟が こえたら、みんなを みちびいたことに なるの？」');
     await say('ナギ「金の舵輪に あいずを おくって。\nかじは わたしが とる。三艘まとめて 北へ ぬけるよ。」');
   }else await say('ナギ「金の舵輪に ふれて。\n三艘は わたしが みちびく。」');
 }
@@ -2538,7 +2529,6 @@ async function ch20TalkHelm(){
   if(Game.hidden.ch20Ready){await say('黒い影が 舵輪へ からみついている。\n三艘から まわってくる声を、たたかいの隊列へ つなごう。');return;}
   if(!Game.hidden.ch20Intro){await say('ナギ「先に 三艘のこえを きいて。\n先頭だけでなく、さいごの舟まで ぬける航路を いっしょに見つけよう。」');return;}
   await say('金の舵輪に、三艘の位置と 暗礁のならびが 浮かびあがった。');
-  await say('ナギ「かじは わたしが とる。\nあなたは 三艘の こえを きいていて。」');
   endTalk();await ch20AutoSail();
 }
 async function ch20TalkVoice(){
@@ -2551,7 +2541,6 @@ async function ch20Finish(){
   if(nkFollowing())await say('こどもは いちばん後ろの舟へ かけより、投げられた綱を 両手で うけとった。');
   else await say('岸のこどもが いちばん後ろの舟へ かけより、投げられた綱を 両手で うけとった。');
   await say('カイ「先頭が 着いたときじゃない。\nさいごの一本を、だれかが 岸で うけとったとき——渡ったことに なるんだな。」');
-  await say('『道は、先を行く者だけのものではない。\nさいごの舟が こえ、岸の手が うけとるまで、こえを まわしつづける。』');
   Game.hidden.ch20c=true;saveGame();sfxLevel();flash('#d9f1ff',0.55,1.2);
   showChapter('だい 20 しょう','さいごの ふねまで');
   await say('二十ばんめの 蒼珠が ともった！');
@@ -4985,6 +4974,22 @@ function drawP(){
 // メッセージ（タイプライター）＆コマンドメニュー
 // ============================================================
 let MSG=null,MENU=null,PTAP=null;
+const TALK_SKIP={eligible:false,on:false};
+function talkSkipRender(){
+  const show=!!(TALK_SKIP.eligible&&Game&&Game.talking);
+  talkskipEl.classList.toggle('on',show);msgwinEl.classList.toggle('can-skip',show);
+}
+function talkSkipAdvance(msg){
+  if(!TALK_SKIP.on||!msg)return;
+  msg.shown=msg.full.length;msg.done=true;msg.timer=0;msgtextEl.textContent=msg.full;msgwinEl.classList.add('done');
+  setTimeout(()=>{if(TALK_SKIP.on&&MSG===msg)finishMsg();},110);
+}
+function talkSkipBegin(){TALK_SKIP.eligible=true;TALK_SKIP.on=false;talkSkipRender();}
+function talkSkipStop(){TALK_SKIP.eligible=false;TALK_SKIP.on=false;talkSkipRender();}
+talkskipEl.addEventListener('pointerdown',e=>{
+  e.stopPropagation();e.preventDefault();if(!TALK_SKIP.eligible)return;
+  TALK_SKIP.on=true;sfxOk();talkSkipAdvance(MSG);
+});
 // はなしての かおグラ（ホワイトリスト＝ちゅうかんの「」や システムぶんには でない）
 const FACES={
   'おうさま':{hair:'side',hcol:'#b9bec9',beard:'short',bcol:'#c9ced8',crown:1},
@@ -5117,6 +5122,7 @@ function say(txt){
     const m=txt.match(/^([^「\n]{1,8})「/);
     if(m&&drawPortrait(m[1]))msgwinEl.classList.add('hasface');
     else msgwinEl.classList.remove('hasface');
+    talkSkipRender();talkSkipAdvance(MSG);
   });
 }
 function updateMsg(dt){
@@ -5144,6 +5150,7 @@ function msgConfirm(){
   return true;
 }
 function ask(items,title){
+  talkSkipStop();
   return new Promise(res=>{
     battleUiEl.classList.toggle('menu-only',battleUiEl.classList.contains('talk')&&!MSG&&!msgtextEl.textContent.trim());
     let first=items.findIndex(it=>!it.dis);if(first<0)first=0;
@@ -5741,6 +5748,7 @@ function startTalk(){
   showUI('ui-battle');
 }
 function endTalk(){
+  if(typeof talkSkipStop==='function')talkSkipStop();
   Game.talking=false;
   battleUiEl.classList.remove('talk','menu-only');
   MSG=null;msgtextEl.textContent='';msgwinEl.classList.remove('done');msgwinEl.classList.remove('hasface');
@@ -5840,19 +5848,19 @@ async function talkTroupeLeader(){
   }
   if(!h.ch12w){
     const n=ch12VoiceCount();
-    await say('だんちょう「わしらが きいたのは、ゆうしゃの うわさだけ。\nほんとうを そえるなら、けされた ひとの こえを きかせてくれ。」');
-    await say('ソラ、ナギ、ほりびとのまご——\n三人の ほんとうの こえを あつめよう。（'+n+' / 3）');
+    await say('だんちょう「ほんとうを そえるなら、けされた ひとの こえを きかせてくれ。」\nソラ、ナギ、ほりびとのまご——三人の こえを あつめよう。（'+n+' / 3）');
     endTalk();return;
   }
   if(!h.ch12c){
-    await say('あなたたちは、三つの こえを ぶたいへ とどけた。');
-    await say('ソラの なまえ。ナギが わたった うみ。\nほりびとが ひかりへ のばした て——だんちょうは えんもくを かえず、まくあいに ひとことだけ くわえた。');
+    talkSkipBegin();
+    await say('だんちょうは えんもくを かえず、\nまくあいに ひとことだけ くわえた。');
     flash('#ffe9b0',0.36,0.9);sfxHeal();
     await say('——まくあい。\n「この おはなしには、もとに なった ほんとうの ひとたちが いる」');
     await say('まくが おりた。テントを でた かえりみち——\nこえを とどけに きた ソラが、そっと まっていた。');
     endTalk();
     await transitMap({to:'grass',tx:11,ty:11,msg:'まくがおり、あかいテントの そとへ でた——'});
     startTalk();
+    talkSkipBegin();
     await say('きゃくせきに いた こども「おねえさん。\nおなまえ、きいても いい？」');
     await say('ソラ「……ソラ。わたしは、ソラ。\nきいてくれて、ありがとう。」');
     const owned=KAKAGE.filter(e=>e.own());
@@ -5862,6 +5870,7 @@ async function talkTroupeLeader(){
     if(ordered.length>1){
       const titleKey=await ask(ordered.map(e=>({id:e.k,label:(e===current?'● ':'')+e.name})),'こどもの かたりべちょうへ うつす しょうごう');
       chosen=ordered.find(e=>e.k===titleKey)||chosen;
+      talkSkipBegin();
     }
     h.ch12TitleKey=chosen?chosen.k:'';
     if(chosen)await say('いっしょに あるいた こどもは、あなたが いままで えてきた しょうごう\n「'+chosen.name+'」を じぶんの かたりべちょうへ うつした。');
@@ -5908,18 +5917,18 @@ async function talkNpc(n){
   if(n.ch18Chief){await ch18TalkChief();if(Game.talking)endTalk();saveGame();return;}
   if(n.ch18Site){await ch18BuildSite(n.ch18Site);endTalk();saveGame();return;}
   if(n.hoshibashi){await hoshibashiTalk();if(Game.talking)endTalk();saveGame();return;}
-  if(n.troupeTent){
+    if(n.troupeTent){
     if(Game.hidden.ch17d&&!Game.hidden.ch17c){ // 章17・場面5: ざちょうの はじめての「じぶんの ものがたり」
       await say('あかい テントの まえに、ひとだかりが できている。\nしまじまから、ふねを ついで あつまって きたのだ。');
       endTalk();
       await transitMap({to:'theater',tx:9,ty:10,msg:'まんせきの きゃくせき。きょうの えんもくは、ただ ひとつ——'});
       startTalk();
+      talkSkipBegin();
       await say('だんちょう「本日の えんもく——『ざちょうの ものがたり』。\nはじめての、ざちょう じしんの はなしです。」');
       await say('まくが あがる。ぶたいに たったのは、ちいさな ろうじん ひとり。');
       // 幕の絵が 4しまの けしきへ かわる(実切替)
       Game.stageBg='kura';flash('#ffe9c0',0.35,0.7);
-      await say('ざちょう「まずは——くらのしまで ねむって いた ほんの はなしから。」');
-      await say('ざちょう「あれは くらのしまの ひとたちの ほんじゃ。\nわしの ものでは ない。あずかって、うつさせて もらった。」');
+      await say('ざちょう「まずは——くらのしまの、ねむって いた ほんの はなし。\nあれは しまの ひとたちの ほんじゃ。あずかって、うつさせて もらった。」');
       Game.stageBg='tani';flash('#e8e0ff',0.35,0.7);
       await say('ざちょう「つぎは、たにの ひとたちの『はしの はなし』。\nおばあの かたりも、こどもの かたりも、ふなのりの かたりも、ぜんぶ ほんとうじゃ。」');
       Game.stageBg='hora';flash('#fff0d0',0.35,0.7);
@@ -5981,11 +5990,12 @@ async function talkNpc(n){
   }
   if(n.troupeShip){
     if(Game.hidden.ch12c&&!Game.hidden.ch13a){ // 章13の発注(発注元=だんちょう)
-      await say('だんちょう「おお、蒼の勇者どの。ちょうど よかった。」');
-      await say('だんちょう「つぎの まちへ わたる とちゅう、みょうな しまを みた。\nいえも はたけも あるのに、こえが ひとつも きこえない。」');
+      talkSkipBegin();
+      await say('だんちょう「おお、ちょうど よかった。つぎの まちへ わたる とちゅう、みょうな しまを みた。\nいえも はたけも あるのに、こえが ひとつも きこえない。」');
       await say('だんちょう「しまの ひとは くちを うごかすのに、おとが でない。\nものがたりが——ぜんぶ、どこかに しまわれちまってる んだ。」');
       const gm=await ask([{id:'go',label:'ふねに のる'},{id:'no',label:'また こんど'}],'だんちょう「みに いって くれないか。ふねなら すぐだ。」');
       if(gm!=='go'){await say('だんちょう「きが むいたら こえを かけてくれ。ふねは いつでも でられる。」');endTalk();return;}
+      talkSkipBegin();
       await say('だんちょう「——のりこむ まえに、ひとつだけ。\nよぞらの はてを ごらん。」');
       sfxLevel();flash('#cfe0ff',0.45,1.1);
       {const q=isoCtr(Game.p.tx,Game.p.ty);for(let i=0;i<26&&P.length<420;i++)puff(rnd(0,W),rnd(0,H*0.4),'rgba(200,220,255,.9)',1,rnd(20,60),rnd(1.2,2.4),{up:true,s0:1.2,s1:3});}
@@ -6008,9 +6018,8 @@ async function talkNpc(n){
       return;
     }
     if(Game.hidden.ch13c&&!Game.hidden.ch14a){ // 章14の発注(発注元=だんちょう)
-      await say('だんちょう「あの しま、いまじゃ うたごえで もちきりだ。\nこんど 一座で『くらのしまの ものがたり』を やろうと おもってる。」');
-      await say('だんちょう「——ところがだ。となりの たにを とおったら、がけの うえから\n『そのはなしは ちがう！』って こえが ふってきた。」');
-      await say('だんちょう「やまびこのたに、って いうらしい。はなしを かたるたび\n「ちがう」と しかられて、たにの ひとは だまりこんじまった そうだ。」');
+      await say('だんちょう「あの しま、いまじゃ うたごえで もちきりだ。」');
+      await say('だんちょう「となりの『やまびこのたに』——はなしを かたるたび、がけの うえから\n『そのはなしは ちがう！』と こえが ふってくる。\nたにの ひとは、みんな だまりこんじまった そうだ。」');
       const gm=await ask([{id:'go',label:'ふねに のる'},{id:'mise',label:'🛒 ふなみせ'},{id:'no',label:'また こんど'}],'だんちょう「かたりを とりもどして きて くれないか。ふねなら すぐだ。」');
       if(gm==='mise'){await runShop(true);endTalk();return;}
       if(gm!=='go'){await say('だんちょう「きが むいたら こえを かけてくれ。ふねは いつでも でられる。」');endTalk();return;}
@@ -6021,7 +6030,7 @@ async function talkNpc(n){
       saveGame();return;
     }
     if(Game.hidden.ch14c&&!Game.hidden.ch15a){ // 章15の発注(発注元=だんちょう)
-      await say('だんちょう「たにの こだまも、いまじゃ すっかり うたいずきだ。\n——ところで、ひとつ きになる うわさを ひろった。」');
+      await say('だんちょう「たにの こだまも、いまじゃ すっかり うたいずきだ。」');
       await say('だんちょう「うみの むこうの『ほらふきじま』。おおぼらで しまじゅうを わらわせた\nほらふきの いえに、「うそつき」の しろい ふだが はられたと いう。」');
       await say('だんちょう「それから しまでは、だれも つくりばなしを しなく なった そうだ。\nつくりばなしは……うそ、なのかねえ。」');
       const gm=await ask([{id:'go',label:'ふねに のる'},{id:'mise',label:'🛒 ふなみせ'},{id:'no',label:'また こんど'}],'だんちょう「たしかめて きて くれないか。ふねなら すぐだ。」');
@@ -6034,8 +6043,7 @@ async function talkNpc(n){
       saveGame();return;
     }
     if(Game.hidden.ch15c&&!Game.hidden.ch16a){ // 章16の発注(発注元=だんちょう)
-      await say('だんちょう「ほらふきじまの おおぼら、うちの ざちょうも はらを かかえてた よ。」');
-      await say('だんちょう「——ところで、ざちょうが こどもの ころ おぼえた こもりうたの しま、\n『わすれうたのしま』って いうんだが……いま、うたが ひとつずつ きえて いるらしい。」');
+      await say('だんちょう「ほらふきじまの おおぼらには、ざちょうも はらを かかえてた よ。\n——その ざちょうが こどもの ころ おぼえた こもりうたの しま、\n『わすれうたのしま』…… いま、うたが ひとつずつ きえて いるらしい。」');
       await say('だんちょう「しまの ひとは うたいだしを わすれちまう。のどまで でて いるのに、だ。\nうたに なにが おきてるのか、みて きて くれないか。」');
       const gm=await ask([{id:'go',label:'ふねに のる'},{id:'mise',label:'🛒 ふなみせ'},{id:'no',label:'また こんど'}],'だんちょう「ふねなら すぐだ。」');
       if(gm==='mise'){await runShop(true);endTalk();return;}
@@ -6047,15 +6055,13 @@ async function talkNpc(n){
       saveGame();return;
     }
     if(Game.hidden.ch16c&&!Game.hidden.ch17a){ // 章17・場面1: ざちょうが きえる(だんちょうも しらない)
+      talkSkipBegin();
       await say('だんちょう「勇者どの！ たいへんだ、ざちょうが いないんだ。」');
       await say('だんちょう「けさから すがたが みえん。ふねの せんしつも、\nもぬけの からで……いや、まて。なにか おいてある。」');
-      await say('せんしつの つくえに、4まいの ふだが きちんと そろえて おいてあった。\n——「くらのしま げんぽん あずかりました」「やまびこのたに——」「ほらふきじま——」「わすれうたのしま——」');
-      await say('だんちょう「うけとりふだ……？ ざちょうが、4つの しまの げんぽんを\nぜんぶ あずかって いったって いうのか。なんの ために——」');
-      await say('ふだの したに、みじかい かきおきが あった。');
-      await say('『また うしなわれる まえに、ぜんぶ まもる。\n——だれにも、もう ひとつも けさせない』');
-      await say('だんちょう「……そういう ことか。あの ひとは、この めで みたんだ。\nはこに しまわれた こえ。「ちがう」と しばられた かたり。」');
-      await say('だんちょう「うそつきの ふだ。きえた なまえ。——勇者どのが すくって まわった あとを\nずっと ついて あるいて、あの ひとは こわく なったんだ。」');
-      await say('だんちょう「「つぎは まもれないかも しれん」——それで、あつめはじめた。\n……とめて やって くれ。あれは、まもろうと して とじこめて いる。」');
+      await say('せんしつの つくえに、4まいの うけとりふだが そろえて おいてあった。\n——「くらのしま げんぽん あずかりました」。のこる 3まいは、しまの なまえだけが ちがう。');
+      await say('ふだの したに、みじかい かきおき——\n『また うしなわれる まえに、ぜんぶ まもる。だれにも、もう ひとつも けさせない』');
+      await say('だんちょう「……そういう ことか。勇者どのの あとを ずっと ついて あるいて、\n4つの しまの きえかけを この めで みて——あの ひとは、こわく なったんだ。」');
+      await say('だんちょう「とめて やって くれ。\nあれは、まもろうと して とじこめて いるんだ。」');
       await say('だんちょう「……まてよ。あなたが しまじまで あずかった 4つの かたみ——\n🔑かぎ、🪨いしへん、📄ふだ、🎼がくふ。あれが、あの ひとの こころを ひらく かぎだ。」');
       await say('だんちょう「むかう さきは ひとつ。こどもの ころ、あの ひとが たからものを\nかくして いた——『あつめのやかた』だ。ふねは いつでも だせる。」');
       Game.hidden.ch17a=true;
@@ -6069,7 +6075,6 @@ async function talkNpc(n){
       saveGame();return;
     }
     if(Game.hidden.ch17Key&&Game.hidden.ch17Stone&&Game.hidden.ch17Fuda&&Game.hidden.ch17Score&&!Game.hidden.ch17w){ // 章17: やかたの ばしょ
-      await say('だんちょう「4つとも……そうか。ざちょうは、しまの ひとに\nちゃんと ふだを わたして、あずかって いったんだな。」');
       await say('だんちょう「わかった。ざちょうが むかう さきは ひとつだ——\nこどもの ころ、たからものを かくして いた『あつめのやかた』。」');
       const gm=await ask([{id:'go',label:'ふねに のる'},{id:'mise',label:'🛒 ふなみせ'},{id:'no',label:'まだ いかない'}],'だんちょう「たのむ。ざちょうを、つれもどして やって くれ。」');
       if(gm==='mise'){await runShop(true);endTalk();return;}
@@ -6106,7 +6111,6 @@ async function talkNpc(n){
     }
     if(Game.hidden.ch19c&&!Game.hidden.ch20a){ // 章20: 三艘を「最後尾まで渡す」空間航海
       await say('だんちょう「かぜまちじまから、カイの信号が とどいた。\n南西の しおわかれで、島へ帰る三艘が 暗礁に とりのこされている。」');
-      await say('先舟は細い岩間を通れる。けれど、家族と荷をのせた暮らし舟と、一座の船は 同じ形では通れない。');
       await say('だんちょう「先頭だけを 港へ入れても、みちびいたことには ならん。\nナギとソラも乗る。三艘の声を つないでくれ。」');
       const go=await ask([{id:'go',label:'しおわかれの海峡へ'},{id:'mise',label:'🛒 ふなみせ'},{id:'back',label:'もうすこし じゅんびする'}],'一座の船で 三艘のもとへ');
       if(go==='mise'){await runShop(true);endTalk();return;}
@@ -6455,6 +6459,7 @@ async function talkNpc(n){
       endTalk();return;
     }
     if(!Game.hidden.ch15c){
+      talkSkipBegin();
       await say('ふだの きえた とびらの まえに たつ。なかで、だれかが いきを ひそめている。');
       if(nkFollowing())await say('こども「……ほらふきの おじいさん。わたし、あなたの ほらで わらったよ。\nねえ——もういちど、きかせて？」');
       await say('とびらが きしんで ひらき、しらがの ほらふきが おずおずと かおを だした。\nそして ちいさく いきを すい——');
@@ -6649,7 +6654,7 @@ async function talkNpc(n){
       endTalk();return;
     }
     if(!Game.hidden.ch13c){
-      await say('とびらの ひらいた ほんだなに、かぞえきれない ものがたりが ねむっている。\nどれも ほこりを かぶって、ひょうしは つめたい。');
+      await say('とびらの ひらいた ほんだなに、かぞえきれない ものがたりが\nほこりを かぶって ねむっている。');
       if(nkFollowing())await say('こども「……よんで あげようよ。ぜんぶは むりでも、ひとつずつ。\nものがたりは、よまれたら めを さますんだよ。」');
       await say('いちばん てまえの ほんを ひらくと、ページの あいだから\nちいさな こえが めを さました——つぎつぎに、たなじゅうの ほんが ひかりだす！');
       sfxLevel();flash('#ffe9c0',0.6,1.2);
@@ -7273,7 +7278,6 @@ async function talkKing(){
     }
     if(Game.hidden.ch12c){
       await say('おうさま「旅芸人の おなじ えんもくに、ほんとうの ひとたちを つたえる\nまくあいが くわわったそうじゃな。きゃくせきの こが ソラどのへ なを きいたとか。」');
-      await say('おうさま「そして、そなたと あるいた こどもは\nそなたの しょうごうを じぶんの かたりべちょうへ うつしたそうじゃな。」');
       await say('おうさま「ものがたりは、かたった ものだけの ものではない。\nうけとった ものの なかで、また いきはじめるのじゃな。」');
     }else if(Game.hidden.ch12a){
       await say('おうさま「ひろばの あかいテントが ずいぶん にぎやかじゃ。\nだが、そなたの たびを ひとりだけの てがらに しておるとか。」');
