@@ -7641,6 +7641,32 @@ async function shimaSakiScene(){
   endTalk();
   saveGame();
 }
+// 第5手『こえの ふたつ』(2026-07-23): 章13〜16の ぬし撃破の瞬間に「どれから ○○する？」の二択。
+// どちらも本物(順序=テーマを壊さない)。締め台詞1つ+小さな貰い物が変わる。一回きり(choice1x)。案7報酬・蒼珠・進行は不変。
+const SHIMA_CHOICE={
+ kura:{flag:'choice13',q:'とじこめられていた こえたち。どの こえから、しまへ かえす？',
+  a:{label:'ともだちへの てがみの こえ',line:'まいとし てがみを かいた こえが、まっさきに うみを わたっていった。\nへんじの ない てがみは、ちゃんと とどいていたのだ。',gift:{yakuso:3}},
+  b:{label:'まいあさの あいさつの こえ',line:'はたけの すみの はなへ、まいあさの あいさつが かえっていった。\nなまえも しらない はなが、ちいさく うなずいた きが した。',gift:{seisui:2}}},
+ tani:{flag:'choice14',q:'みっつの はしの かたり。どれから、いしぶみに のこす？',
+  a:{label:'わかい いしくの こいの はなし',line:'ひとばんで はしを かけた わかい いしくの かたりが、まっさきに いしぶみへ きざまれた。\nかわの むこうへ、いまも みちが つづいている。',gift:{yakuso:3}},
+  b:{label:'やまを またぐ おおおとこの はなし',line:'やまを ひとまたぎした おおおとこの かたりが、まっさきに いしぶみへ きざまれた。\nこどもたちが、その おおきさに めを かがやかせた。',gift:{seisui:2}}},
+ hora:{flag:'choice15',q:'とりもどした ほらばなし。どれから、しまじゅうに きかせる？',
+  a:{label:'くじらの せなかの はなし',line:'くじらの せなかで うみを ひとまたぎ——その ほらが、まっさきに しまへ ひろがった。\nしぶきの にじを、あらしの よるに おもいだす こが いる。',gift:{yakuso:3}},
+  b:{label:'よぞらの つりざおの はなし',line:'よぞらに つりざおを なげて ほしを つる——その ほらが、まっさきに しまへ ひろがった。\nねむれない こが、まどの ほしを「つりざおの ほし」と よんで わらう。',gift:{seisui:2}}},
+ uta:{flag:'choice16',q:'かえってきた うた。どの うたいだしから、くちずさむ？',
+  a:{label:'なみの うえの こもりうた',line:'「ねんね ころり、なみの うえ」——その うたいだしから、しまが くちずさみはじめた。\nねつの こを あやした、いちばん ふるい こもりうた。',gift:{yakuso:3}},
+  b:{label:'サヨの はじまりの うた',line:'サヨが つくった はじまりの うたから、しまが くちずさみはじめた。\nつくり手の なまえと ともに、うたいだしが かえってきた。',gift:{seisui:2}}}};
+async function islandChoice(key){
+  const d=SHIMA_CHOICE[key];if(!d||Game.hidden[d.flag])return;
+  const pick=await ask([{id:'a',label:d.a.label},{id:'b',label:d.b.label}],d.q);
+  const opt=(pick==='b')?d.b:d.a;
+  Game.hidden[d.flag]=true;
+  await say(opt.line);
+  for(const it in opt.gift)Game.items[it]=(Game.items[it]||0)+opt.gift[it];
+  const giftText=Object.keys(opt.gift).map(k=>ITEMS[k].name+'×'+opt.gift[k]).join('・');
+  await say('しまの ひとから、'+giftText+'を うけとった。');
+  updateBars();saveGame();
+}
 async function shimaIhenScene(){
   const d=SHIMA_IHEN[Game.mapId];if(!d)return;
   Game.hidden[d.flag]=true;
@@ -15223,6 +15249,7 @@ async function victory(){
     await say('『……とじこめて いたのは、うしなうのが こわかった から。\nでも……こえは、こんなに あたたかかったのか』');
     await say('とおくの ひろばから、はなしごえと わらいごえが きこえはじめた——\nしずかだった しまに、こえが かえっていく。');
     sfxLevel();flash('#ffe9c0',0.5,1.0);
+    await islandChoice('kura');
     toast('くらの おくの おおきな とびらが ひらいた！');
   }
   if(foe===FOES.mototadasu&&!Game.hidden.ch14d){ // 章14: おさえつけられた かたりが じゆうになる
@@ -15231,6 +15258,7 @@ async function victory(){
     await say('『……わたしは、はじまりの はなしを あずかった もの。\nかわって いくのが、ただ、こわかった のだ』');
     await say('たにの あちこちで、こだまが こたえはじめた——\n『ちがう』の かわりに、『きかせて』が ひびいていく。');
     sfxLevel();flash('#e8e0ff',0.5,1.0);
+    await islandChoice('tani');
     toast('たにの こだまが じゆうに なった——おくの「こだまの いしぶみ」へ！');
   }
   if(foe===FOES.makoto&&!Game.hidden.ch15d){ // 章15: ふだが はがれ、いえが ひらく
@@ -15239,6 +15267,7 @@ async function victory(){
     await say('『……わたしは、うそに きずつく ひとを まもりたかった。\nいつから、ゆめや ほらまで しばって いたのだろう』');
     await say('おかの したから、こどもたちの わらいごえが のぼってきた——\nつくりばなしが、また しまの たからに もどっていく。');
     sfxLevel();flash('#fff0d0',0.5,1.0);
+    await islandChoice('hora');
     toast('ほらふきの いえの ふだが きえた——とびらを たたこう！');
   }
   if(foe===FOES.wasurare&&!Game.hidden.ch16d){ // 章16: すいこまれた うたが しまへ かえる
@@ -15247,6 +15276,7 @@ async function victory(){
     await say('『……おもいだして、くれたのか。 わたしの なまえを。\nわたしの、うたを』');
     await say('しまの いえいえから、こもりうたの つづきが きこえてきた——\nうたいだしから おわりまで、とぎれずに。');
     sfxLevel();flash('#ffeed0',0.5,1.0);
+    await islandChoice('uta');
     toast('うたたちが しまへ かえっていく——きたの おかの「うたひ」へ！');
   }
   if(foe===FOES.hitorijime&&!Game.hidden.ch17d){ // 章17: はこが ひらき、ざちょうが われに かえる
