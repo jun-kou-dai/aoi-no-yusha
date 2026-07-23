@@ -2272,6 +2272,14 @@ async function ch19ChooseConclusion(){
   endTalk();
   await transitMap({to:'tokikasanebell',tx,ty,msg:'三つの時を 切りはなしていた影が、大時計の前に かたちを むすぶ——'});
   startTalk();
+  if(!Game.hidden.saki19){ // 第2手: 章をまたいだ さきよみの正体割れ(一回きり)。既存の きりとるもの戦は不変
+    Game.hidden.saki19=true;
+    await say('おおどけいの まえに、あの たびびとが たって いた。さきよみ——\nはじめて、まっすぐ こちらを むいて いる。');
+    await say('さきよみ「なぜ わたしが いつも さきに いたか、わかったろう。\nこの しまでは——まえと あとを、いちどに 見て しまえるのだ。」');
+    await say('さきよみ「さきに 見えれば、うしなう まえに あずかれる。\n……でも、あずかった こえは、だれにも きこえない。ざちょうと おなじだ。」');
+    await say('さきよみ「わたしの やりかたを、そこに おいて いく。\nあれと むきあって、きみの こたえを 見せて くれ。」');
+    saveGame();
+  }
   await say('きりとるもの「まえも、あとも、みるな。\nひとつだけ みて、だれかを きめろ——」');
   await say('「ときをつなぐ」なら、切りかわる姿の つぎまで 見通せる。');
   endTalk();saveGame();
@@ -7553,6 +7561,33 @@ async function shimaYokanScene(){
   endTalk();
   saveGame();
 }
+// 第2手『かげの収集家=さきよみ』章13スライス(2026-07-23): 最初のこえを拾った直後、一回きり2窓。
+// 先に一つ持ち去られた跡＋去る後ろ姿の捨て台詞。骨格・お使い・ぬし戦・乱数・セーブは不変。一回きり(saki*旗)。
+const SHIMA_SAKI={
+ kura:{flag:'saki13',on:h=>h.ch13a&&h.ka1&&!h.ch13c,lines:[
+  'はこの ひとつが、からっぽだった。ふたは あいたまま——\nだれかが、さきに こえを ひとつ もっていった あとだ。',
+  'とおい きしを、みなれぬ たびびとが しずかに あるいていく。\nさきよみ「うしなう まえに、わたしが あずかる。……きみは、おそいね。」']},
+ tani:{flag:'saki14',on:h=>h.ch14a&&h.km1&&!h.ch14c,lines:[
+  'こだまの いしの ひとつが、ひび われて しずんで いた。\nだれかが きく まえに、こえを ひとつ すくいとった あとだ。',
+  'たにの ふちを、あの たびびとが とおざかって いく。\nさきよみ「ただしい かたちに なる まえに、あずかる。それが やさしさだ。」']},
+ hora:{flag:'saki15',on:h=>h.ch15a&&h.hr1&&!h.ch15c,lines:[
+  'ほらがいが ひとつ、すなに うもれて いた。ふいても おとが しない——\nさきよみが、なかの ほらばなしを さきに もっていった あとだ。',
+  'おかの うえに、たびびとの せなかが みえた。おいかけても、\nつく ころには もう いない。さきよみ「はやさでは、まけないよ。」']},
+ uta:{flag:'saki16',on:h=>h.ch16a&&h.ut1&&!h.ch16c,lines:[
+  'うたの かけらが ひとつ、きえた あとの しろい くうはく。\nさきよみが、うたいだしを ひとつ さきに あずかって いった。',
+  'きたの おかを、あの せなかが こえて いく。\nさきよみ「わすれられる くらいなら、わたしが おぼえて おく。」']},
+ kazemachi:{flag:'saki18',on:h=>h.ch18a&&(h.ch18BuiltPier||h.ch18BuiltShelter||h.ch18BuiltBeacon)&&!h.ch18c,lines:[
+  'はまべに、みなれぬ あしあとが ひとつ のこって いた。\nさきよみが きて——けれど、もっていく こえは、もう なかった。',
+  'とおくで、たびびとが めずらしく たちどまって いる。\nさきよみ「あらしが ぜんぶ もっていった あとか。……ここでは、わたしも おそかった。」']}};
+function shimaSakiPending(){const d=SHIMA_SAKI[Game.mapId];return !!(d&&!Game.hidden[d.flag]&&d.on(Game.hidden));}
+async function shimaSakiScene(){
+  const d=SHIMA_SAKI[Game.mapId];if(!d)return;
+  Game.hidden[d.flag]=true;
+  startTalk();
+  for(const L of d.lines)await say(L);
+  endTalk();
+  saveGame();
+}
 async function shimaIhenScene(){
   const d=SHIMA_IHEN[Game.mapId];if(!d)return;
   Game.hidden[d.flag]=true;
@@ -8771,6 +8806,7 @@ function updateField(dt){
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&!Game.hidden.tamotoTold)tamotoScene();
     else if(shimaIhenPending())shimaIhenScene();
     else if(shimaYokanPending())shimaYokanScene();
+    else if(shimaSakiPending())shimaSakiScene();
     else if(Game.mapId==='grass'&&Game.p.lv>=9&&!Game.hidden.wazaCatchup)wazaCatchupScene();
   }
   if(p.bump){
