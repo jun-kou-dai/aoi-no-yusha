@@ -3260,6 +3260,7 @@ function loadMap(id){
   MAP=w.map;SPAWNS=w.spawns;CHESTS=w.chests;SPRING=w.spring||null;BZONE=w.bzone||null;SPOTS=w.spots||[];Game._spotLast=null;
   if(id==='cave2'&&Game.hidden.gate1)MAP=MAP.map((row,i)=>i===8?row.slice(0,16)+'F'+row.slice(17):row); // ひらいた とびらは ひらいたまま
   if(id==='umi'&&Game.hidden.ch11d)MAP=MAP.map(row=>row.replace(/X/g,'W')); // あらなみは ほどけたまま(みなと開通)
+  Game.kodama=null; // やまびこ おいかけ(章14): マップを移ったら こだまは いない(保存しない一時状態)
   if(id!=='hoshiumi')CH21_REPLAY=false; // 再訪はほしのうみ滞在中だけ有効(2026-07-20)
   if(id!=='hoshiminamoto')URA_REPLAY=false; // 裏章の再戦はほしのみなもと滞在中だけ有効(2026-07-23)
   Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!(Game.hidden[s.need]||(s.id==='sukuwarenu'&&CH21_REPLAY)||(s.id==='hajimarazu'&&URA_REPLAY)))&&!(s.gone&&Game.hidden[s.gone]&&!(s.id==='sukuwarenu'&&CH21_REPLAY)&&!(s.id==='hajimarazu'&&URA_REPLAY))&&!(s.shinpan&&Game.diff!==7)&&!(id==='grass'&&Game.hidden.ch21c)).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
@@ -3283,7 +3284,7 @@ function resetGame(){
   Game.items={yakuso:0,seisui:0,dokukesi:0};Game.chestsOpen=[];Game.spotsRead=[];Game.springUsed={};Game.dmgTaken=0;Game.t0=0;
   Game.goldT=35;Game.saidYes=false;Game.dayT=DAY_START;Game.metalT=20;Game.stats={battles:0,crits:0,deaths:0};
   Game._islandRewardCatchup=0;
-  Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.purified=0;Game.hidden={weakV:1,weakKnown:{},firstVillageTalk:false};Game.popo=null;Game.popoT=null;Game.mate=null;Game.mateT=null;Game.minigame=null;Game.nkOn=false;Game.nkRest=false;Game.nkHp=0;Game.nkMp=0;Game.nkTac='omakase';Game.nkW=0;Game.nkA=0;Game.nkm=null;Game.nkmT=null;Game.kakage='';
+  Game.qChild=0;Game.bonusDef=0;Game.bonusHp=0;Game.bonusMp=0;Game.gheart=0;Game.ng=0;Game.purified=0;Game.hidden={weakV:1,weakKnown:{},firstVillageTalk:false};Game.popo=null;Game.popoT=null;Game.mate=null;Game.mateT=null;Game.minigame=null;Game.kodama=null;Game.nkOn=false;Game.nkRest=false;Game.nkHp=0;Game.nkMp=0;Game.nkTac='omakase';Game.nkW=0;Game.nkA=0;Game.nkm=null;Game.nkmT=null;Game.kakage='';
   CH20_RUN=null;CH20_PREVIEW=null;CH20_HITS=[];{const cw=document.getElementById('convoywin');if(cw)cw.classList.remove('show');}
   Game.door=false;Game.mkey=false;Game.chCard=null;Game.visited={};Game.cloak=false;Game.invisible=false;Game.cloakSteps=0;Game.book=false;Game.talkOff=false;Game.seen={};
   Game.proofOpen=false;Game.inventoryOpen=false;Game._proofMask=0;Game._proofGainOn=false;Game._proofGainQueue=[];
@@ -6636,23 +6637,13 @@ async function talkNpc(n){
     await say('いえの まえに こどもたちが あつまって、ほらふきの おおぼらに\nめを かがやかせている。しまは もう、しずかすぎない。');
     endTalk();return;
   }
-  if(n.kmKey&&!Game.hidden[n.kmKey]){ // 章14: こだまのいしを ならす(3つで ぬしが めざめる)
-    await say('こだまのいし。ふるい あなに むかって、そっと こえを かけた——');
+  if(n.kmKey&&!Game.hidden[n.kmKey]){ // 章14: こだまのいし=ふれると こえが とびだして にげる(やまびこ おいかけ)
+    if(Game.kodama){toast('こだまは たにを かけまわっている！');endTalk();return;} // 追いかけ中は 読む窓を出さない
+    await say('こだまのいし。ふるい あなに むかって、そっと こえを かけた——\nこえは ひかりの たまに なって とびだし、たにを かけていった！');
     sfxChest();flash('#d8e2ff',0.32,0.8);
-    if(n.msg&&n.msg[0])await say(n.msg[0]);
-    Game.hidden[n.kmKey]=true;
-    const kmc=['km1','km2','km3'].filter(k=>Game.hidden[k]).length;
-    await say('おなじ はしの はなしなのに、こえごとに かたちが ちがう。\nどの こえも あたたかい——いしは 三たび こだまして、しずかに ひかった。');
-    toast('こだまのいしが なった（'+kmc+' / 3）');
-    if(kmc>=3&&!Game.hidden.ch14w){
-      Game.hidden.ch14w=true;
-      await say('みっつの こだまが たにの おくへ かけのぼって いく——');
-      await say('がけの うえで、おおきな いしの おもてが めりめりと うごいた。\n『ちがう。 ちがう。 ただしい ものがたりは、ひとつだけだ——のこりは、けす』');
-      if(Game.mapId==='tani'&&!Game.enemies.some(e=>(e.sp&&e.sp.id)==='mototadasu'))
-        Game.enemies.push({id:'mototadasu',sp:{id:'mototadasu',x:10,y:3,need:'ch14w',gone:'ch14d'},def:FOES.mototadasu,tx:10,ty:3,px:10,py:3,hx:10,hy:3,seed:rnd(9),timer:rnd(0.5,1.5),moving:null});
-      toast('たにの おくで、ぬしが めざめた…！');
-    }
-    saveGame();endTalk();return;
+    endTalk();
+    startKodamaChase(n);
+    return;
   }
   if(n.hiroKey){ // 章14: こだまの いしぶみ(結び)
     if(!Game.hidden.ch14d){
@@ -7570,6 +7561,83 @@ async function endMiniGame(win){
   endTalk();
   saveGame();
 }
+// ============================================================
+// 第4手『やまびこ おいかけ』(2026-07-25): 章14 やまびこのたに だけの あそび。
+// 中盤8島が どこも「歩いて ふれて 読む」で同じ=淡々。たにでは こえが にげるので「歩いて 追いかけて つかまえる」に変わる。
+// 新しい画面は作らない=むらの「スライムつかまえ」と同じ 盤の上の追いかけっこ(startMiniGame/drawMiniSlime と同型)。
+// 3れんぞくで にげると こだまは つかれて 止まる=かならず つかまる(罰なし・時間制限なし・逃げ切りなし)。
+// km1/km2/km3・3つ集計・ぬし覚醒・案7報酬・蒼珠・進行・セーブ形式は不変。追加フラグ ゼロ(Game.kodama は保存しない)。
+// 音は 既存の sfxChest だけ。読む窓は 差し替えで 増やさない。
+// ============================================================
+// こえの きれはし: はねるたび 1つ こぼす(トーストであって 読む窓ではない)
+const KODAMA_HAHEN={
+ km1:['『……たにに はしを かけたのは』','『……わかい いしくさん』','『……ひとばんで、こいびとの もとへ』'],
+ km2:['『……はしを かけたのは』','『……おおおとこ！』','『……やまを ひとまたぎ、いわを ぽーん！』'],
+ km3:['『……はしを かけたのは ふなのり』','『……うみが こいしくて』','『……たにがわに ほばしらを わたした』']};
+function kodamaSpot(dmin,dmax,fromX,fromY){ // 勇者から dmin〜dmax マス はなれた あるける ところ
+  const spots=[];
+  for(let y=1;y<MH-1;y++)for(let x=1;x<MW-1;x++){
+    if(!walkable(x,y)||tileAt(x,y)==='R')continue;
+    if(npcAt(x,y))continue;
+    const d=Math.max(Math.abs(x-Game.p.tx),Math.abs(y-Game.p.ty));
+    if(d<dmin||d>dmax)continue;
+    spots.push([x,y]);
+  }
+  return spots.length?spots[ri(0,spots.length-1)]:[fromX,fromY];
+}
+function startKodamaChase(n){
+  const stage=Math.min(2,['km1','km2','km3'].filter(k=>Game.hidden[k]).length); // 0,1,2 = はねる とおさが のびる
+  const jd=[4,5,6][stage];
+  const sp=kodamaSpot(jd,jd+2,n.x,n.y);
+  Game.kodama={tx:sp[0],ty:sp[1],px:sp[0],py:sp[1],fx:sp[0],fy:sp[1],jt:0,hop:0,moving:false,
+    jumps:0,tired:false,stage:stage,key:n.kmKey,msg:(n.msg&&n.msg[0])||'',caught:false};
+  if(Game.cam){
+    const a=isoCtr(n.x,n.y),b=isoCtr(sp[0],sp[1]);
+    puff(a.x,a.y,'rgba(180,228,255,.95)',16,120,0.7,{up:true,s0:2,s1:4});
+    puff(b.x,b.y,'rgba(180,228,255,.95)',20,120,0.9,{up:true,s0:2,s1:4});
+  }
+  sfxRun();
+  toast('こえが こだまに なって はねた！ おいかけよう');
+  Game._qt=null;
+}
+function kodamaJump(){ // 近づかれると 谷の むこうへ ひとはね(勇者の足のほうが速いので 逃走では 遊びにならない)
+  const ko=Game.kodama;if(!ko)return;
+  const jd=[4,5,6][ko.stage|0];
+  const sp=kodamaSpot(jd,jd+2,ko.tx,ko.ty);
+  const hz=KODAMA_HAHEN[ko.key]||[];
+  if(Game.cam){
+    const a=isoCtr(ko.px,ko.py),b=isoCtr(sp[0],sp[1]);
+    puff(a.x,a.y,'rgba(180,228,255,.95)',18,130,0.8,{up:true,s0:2,s1:4});
+    puff(b.x,b.y,'rgba(180,228,255,.95)',18,130,0.8,{up:true,s0:2,s1:4});
+  }
+  sfxRun();
+  ko.tx=sp[0];ko.ty=sp[1];ko.px=sp[0];ko.py=sp[1];ko.fx=sp[0];ko.fy=sp[1];ko.moving=false;ko.jt=0;
+  ko.jumps++;
+  if(ko.jumps>=3){ko.tired=true;toast('こだまが いきを きらして とまった——いまだ！');}
+  else toast('こだまの こえが ひとつ こぼれた——'+(hz[ko.jumps-1]||''));
+  Game._qt=null;
+}
+async function catchKodama(){
+  const ko=Game.kodama;if(!ko||ko.caught)return;
+  ko.caught=true;Game.kodama=null;Game._qt=null;
+  if(Game.cam){const q=isoCtr(ko.px,ko.py);puff(q.x,q.y,'rgba(190,232,255,.95)',22,130,1,{up:true,s0:2,s1:4});popup(q.x,q.y-16,'つかまえた！','sp');}
+  sfxChest();flash('#d8e2ff',0.32,0.8);
+  startTalk();
+  if(ko.msg)await say(ko.msg);
+  Game.hidden[ko.key]=true;
+  const kmc=['km1','km2','km3'].filter(k=>Game.hidden[k]).length;
+  await say('おなじ はしの はなしなのに、こえごとに かたちが ちがう。\nどの こえも あたたかい——こだまは 三たび はねて、てのひらで しずかに ひかった。');
+  toast('こだまを つかまえた（'+kmc+' / 3）');
+  if(kmc>=3&&!Game.hidden.ch14w){
+    Game.hidden.ch14w=true;
+    await say('みっつの こだまが たにの おくへ かけのぼって いく——');
+    await say('がけの うえで、おおきな いしの おもてが めりめりと うごいた。\n『ちがう。 ちがう。 ただしい ものがたりは、ひとつだけだ——のこりは、けす』');
+    if(Game.mapId==='tani'&&!Game.enemies.some(e=>(e.sp&&e.sp.id)==='mototadasu'))
+      Game.enemies.push({id:'mototadasu',sp:{id:'mototadasu',x:10,y:3,need:'ch14w',gone:'ch14d'},def:FOES.mototadasu,tx:10,ty:3,px:10,py:3,hx:10,hy:3,seed:rnd(9),timer:rnd(0.5,1.5),moving:null});
+    toast('たにの おくで、ぬしが めざめた…！');
+  }
+  saveGame();endTalk();
+}
 // 案6軽量版(2026-07-21): 島に着いた直後、その島の最大の異変を1画面(3窓)見せる=山場の影を先に張る。
 // 一回きり(ihen*旗)・その章の進行中だけ・進行/乱数/ぬし戦は不変。章19/20は到着演出が既に異変を見せるため対象外。
 const SHIMA_IHEN={
@@ -8355,6 +8423,7 @@ function questTextCore(){
     }
     if(Game.mapId==='tani'){
       const kmc=['km1','km2','km3'].filter(k=>Game.hidden[k]).length;
+      if(Game.kodama)return Game.kodama.tired?('もくてき：こだまが とまった！ いまの うちに つかまえよう（'+kmc+' / 3）'):('もくてき：はねる こだまを おいかけよう（'+kmc+' / 3・あと '+(3-Game.kodama.jumps)+'はね）');
       if(!Game.hidden.ch14w)return 'もくてき：たにの「こだまのいし」を ならそう（'+kmc+' / 3）';
       if(!Game.hidden.ch14d)return 'もくてき：がけの うえで めざめた ぬし「もとをただすもの」と むきあえ';
       if(!Game.hidden.ch14c)return 'もくてき：たにの おくの「こだまの いしぶみ」へ——じぶんの ことばで かたる ときだ';
@@ -8401,7 +8470,8 @@ function questTextCore(){
     if(Game.hidden.ch14c&&!Game.hidden.ch15a)return 'もくてき：むらの きしの 一座の ふねへ——だんちょうが「ほらふきじま」の うわさを ひろった';
     if(Game.hidden.ch14d&&!Game.hidden.ch14c)return 'もくてき：やまびこのたにの おくの「こだまの いしぶみ」へ——じぶんの ことばで かたろう';
     if(Game.hidden.ch14w&&!Game.hidden.ch14d)return 'もくてき：やまびこのたにの がけで めざめた「もとをただすもの」と むきあえ';
-    if(Game.hidden.ch14a&&!Game.hidden.ch14w){const kmc=['km1','km2','km3'].filter(k=>Game.hidden[k]).length;return 'もくてき：やまびこのたにの「こだまのいし」を ならそう（'+kmc+' / 3）';}
+    if(Game.hidden.ch14a&&!Game.hidden.ch14w){const kmc=['km1','km2','km3'].filter(k=>Game.hidden[k]).length;
+      return Game.kodama?(Game.kodama.tired?('もくてき：こだまが とまった！ いまの うちに つかまえよう（'+kmc+' / 3）'):('もくてき：はねる こだまを おいかけよう（'+kmc+' / 3）')):('もくてき：やまびこのたにの「こだまのいし」を ならそう（'+kmc+' / 3）');}
     if(Game.hidden.ch13c&&!Game.hidden.ch14a)return 'もくてき：むらの きしの 一座の ふねへ——だんちょうが たにの はなしを もっている';
     if(Game.hidden.ch13d&&!Game.hidden.ch13c)return 'もくてき：くらのしまの おくの「ねむりの ほんだな」へ——こえたちを かえそう';
     if(Game.hidden.ch13w&&!Game.hidden.ch13d)return 'もくてき：くらのしまの おくで めざめた「しまいこむもの」と むきあえ';
@@ -8698,6 +8768,7 @@ function tapMove(cx,cy){
    if(w.inn)ents.push({x:w.inn.x,y:w.inn.y});
    if(SPOTS)for(const sp of SPOTS)ents.push({x:sp.x,y:sp.y}); // しらべるポイントも吸着対象(NPC隣接時に負けない)
    if(Game.enemies)for(const e of Game.enemies)if(e.def&&e.def.still)ents.push({x:e.tx,y:e.ty}); // 動かないボスもタップで挑める(となりまで歩いて最後の一歩で接触)
+   if(Game.kodama)ents.push({x:Game.kodama.tx,y:Game.kodama.ty}); // にげる こだまも タップで おいかけられる
    let best=null,bd=1e9;
    for(const e of ents){const q=isoCtr(e.x,e.y);
      const dx=lx-q.x, dy=ly-(q.y-cam.TH*0.45); // 体の中心は足元タイルより上
@@ -8953,6 +9024,33 @@ function updateField(dt){
     Game._qt=null; // のこり時間を まいフレーム こうしん
     if(mg.got>=3)endMiniGame(true);
     else if(mg.t<=0)endMiniGame(false);
+  }
+  // やまびこ おいかけ(章14): となりまで 行くと こだまは 谷の むこうへ ひとはね。三たび はねたら つかれて とどまる=かならず つかまる
+  if(Game.kodama&&Game.scene==='field'&&Game.mapId==='tani'&&!Game.talking&&!Game.battling&&!Game.transiting){
+    const ko=Game.kodama;
+    Game.grace=Math.max(Game.grace,0.5); // おいかけ中は まものが こない(スライムつかまえと同じ)
+    if(ko.moving){
+      ko.jt+=dt;const k=Math.min(1,ko.jt/0.30);
+      ko.px=lerp(ko.fx,ko.tx,k);ko.py=lerp(ko.fy,ko.ty,k);ko.hop=Math.sin(k*Math.PI);
+      if(k>=1){ko.moving=false;ko.hop=0;ko.jt=0;}
+    }else if(ko.tired){ // いきを きらして とどまる=つかまえる ばん
+      if(Game.cam&&Math.random()<dt*4){const q=isoCtr(ko.px,ko.py);P.push({x:q.x+rnd(-5,5),y:q.y-16,vx:rnd(-6,6),vy:-24,life:0.55,t:0,size:1.9,col:'rgba(190,232,255,.95)',grav:0,light:true,drag:1});}
+    }else{ // まだ 元気=谷を ふわふわ ただよう(勇者より おそい。にげ切られる ことは ない)
+      ko.jt+=dt;
+      if(ko.jt>=1.15){
+        const dirs=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
+        const ok=dirs.map(dd=>[ko.tx+dd[0],ko.ty+dd[1]]).filter(([x,y])=>
+          x>=1&&x<=MW-2&&y>=1&&y<=MH-2&&walkable(x,y)&&tileAt(x,y)!=='R'
+          &&!npcAt(x,y)&&Math.max(Math.abs(x-Game.p.tx),Math.abs(y-Game.p.ty))>=2);
+        if(ok.length){const pick=ok[ri(0,ok.length-1)];
+          ko.fx=ko.tx;ko.fy=ko.ty;ko.tx=pick[0];ko.ty=pick[1];ko.moving=true;}
+        ko.jt=0;
+      }
+    }
+    if(Math.max(Math.abs(ko.tx-Game.p.tx),Math.abs(ko.ty-Game.p.ty))<=1){
+      if(ko.tired)catchKodama();
+      else kodamaJump();
+    }
   }
   // みちづれ（こどものかげ）の ついてくる うごき＋きらめきの つぶ
   if(Game.nkm){
@@ -10200,6 +10298,7 @@ function drawFieldScene(){
   drawVignette();
   drawExitBeacons(); // でぐちビーコンは さいごに えがく＝くらやみ/よる/きりに つぶされない
   drawQuestBeacons(); // めあての 金の光柱も どのoverlayにも つぶされない
+  if(Game.kodama)drawKodama(); // こだまは めあての 金の柱に のまれないよう さいごに(章14)
   drawChapterCard(); // しょうタイトルは さいじょうそう
   drawMinimap(); // ちいさな ちず（あかるい しまだけ・かいわちゅうは けす）
 }
@@ -12085,6 +12184,31 @@ function drawMiniSlime(ms){
   ctx.beginPath();ctx.arc(ts*0.055,-ts*0.16,ts*0.022,0,Math.PI*2);ctx.fill();
   ctx.restore();
 }
+function drawKodama(){ // にげる こだま=ひかりの たま。足もと基準は drawMiniSlime と同じ
+  const cam=Game.cam,ko=Game.kodama;if(!cam||!ko)return;
+  const c={x:cam.ox+(ko.px-ko.py)*cam.TW/2,y:cam.oy+(ko.px+ko.py)*cam.TH/2+cam.TH/2};
+  const ts=cam.TW*0.44,fy=c.y+cam.TH*0.14;
+  const fl=(Math.sin(TM*3.2)*0.5+0.5)*ts*0.07,hop=(ko.hop||0)*ts*0.44;
+  ctx.fillStyle='rgba(8,14,28,'+(0.26-(ko.hop||0)*0.10).toFixed(2)+')';
+  ctx.beginPath();ctx.ellipse(c.x,fy,ts*0.17,ts*0.06,0,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.translate(c.x,fy-ts*0.44-fl-hop);
+  ctx.save();ctx.globalCompositeOperation='lighter'; // めあての白い光柱に のまれないよう 加算で ともす
+  const gg=ctx.createRadialGradient(0,0,ts*0.02,0,0,ts*0.66);
+  gg.addColorStop(0,'rgba(226,246,255,.95)');gg.addColorStop(0.34,'rgba(116,196,255,.60)');gg.addColorStop(1,'rgba(70,150,255,0)');
+  ctx.fillStyle=gg;ctx.beginPath();ctx.arc(0,0,ts*0.66,0,Math.PI*2);ctx.fill();ctx.restore();
+  ctx.fillStyle='#8fd0ff';ctx.beginPath();ctx.arc(0,0,ts*0.23,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#eaf8ff';ctx.beginPath();ctx.arc(-ts*0.06,-ts*0.07,ts*0.11,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(16,44,86,.55)';ctx.lineWidth=Math.max(1,ts*0.02);
+  ctx.beginPath();ctx.arc(0,0,ts*0.23,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle='rgba(150,215,255,.9)';ctx.lineWidth=Math.max(1,ts*0.026);
+  ctx.beginPath();ctx.arc(0,0,ts*0.36+ts*(ko.tired?0.08:0.03)*Math.sin(TM*(ko.tired?7:5)),0,Math.PI*2);ctx.stroke();
+  ctx.font='bold '+Math.max(11,Math.round(ts*(ko.tired?0.46:0.36)))+'px sans-serif';ctx.textAlign='center';
+  ctx.lineWidth=Math.max(2,ts*0.05);ctx.strokeStyle='rgba(8,22,44,.8)';
+  ctx.strokeText('♪',0,-ts*0.44);
+  ctx.fillStyle=ko.tired?'#eaf8ff':'#bfe6ff';
+  ctx.fillText('♪',0,-ts*0.44);
+  ctx.restore();
+}
 // ついてくる みちづれ（こどものかげ：ふわりと うかぶ 影の子）
 function drawMateField(){
   if(!Game.hidden.mate1||!Game.mate)return;
@@ -12950,7 +13074,10 @@ function questBeaconTargets(){
   // 章14: 一座のふね → こだまのいし → ぬし → いしぶみ
   if(Game.mapId==='grass'&&w.npcs&&h.ch13c&&!h.ch14a)for(const n of w.npcs)if(n.troupeShip)push(n.x,n.y);
   if(Game.mapId==='tani'&&w.npcs){
-    if(h.ch14a&&!h.ch14w)for(const n of w.npcs)if(n.kmKey&&!h[n.kmKey])push(n.x,n.y);
+    if(h.ch14a&&!h.ch14w){
+      if(Game.kodama)push(Game.kodama.tx,Game.kodama.ty); // にげる こだまを 追う
+      else for(const n of w.npcs)if(n.kmKey&&!h[n.kmKey])push(n.x,n.y);
+    }
     if(h.ch14w&&!h.ch14d)foeB(e=>e.def===FOES.mototadasu);
     if(h.ch14d&&!h.ch14c)for(const n of w.npcs)if(n.hiroKey)push(n.x,n.y);
   }
