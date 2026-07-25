@@ -172,6 +172,7 @@ body{
 #cmdwin{ width:min(300px,54vw); max-height:80vh; max-height:80dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; pointer-events:auto; padding:10px 10px 12px; display:none; flex-direction:column; align-self:flex-start; }
 #cmdwin.on{ display:flex; }
 .mtitle{ font-size:clamp(11px,1.8vmin,13px); letter-spacing:.3em; color:#efe6c8; text-align:center;
+  white-space:pre-line; line-height:1.7; /* 買う前の たしかめ窓は 名前/数値と差/効果/所持金 の4行。書いた改行のまま読ませる(2026-07-26) */
   padding:2px 0 8px; border-bottom:1px solid rgba(236,229,207,.14); margin-bottom:6px; }
 #mlist{ display:flex; flex-direction:column; gap:2px; flex:0 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; }
 #mexit{ flex:none; display:flex; flex-direction:column; }
@@ -248,8 +249,8 @@ body{
 @media (min-width:641px){ #ui-battle.talk #cmdwin{ width:min(440px,62vw); } }
 #mscroll{ display:none; flex:none; gap:8px; padding:6px 2px 0; } /* ▲▼常設スクロールボタン(「スクロールボタンいるだろ」2026-07-20) */
 #mscroll.on{ display:flex; }
-#mscroll .msbtn{ flex:1; text-align:center; padding:10px 0; border-radius:10px; font-size:13px; letter-spacing:.14em; color:#ffe9b0; background:rgba(7,9,19,.92); border:1px solid rgba(255,217,122,.5); cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
-#mscroll .msbtn.dim{ opacity:.35; }
+#mscroll .msbtn{ flex:1; text-align:center; padding:17px 0; border-radius:12px; font-size:18px; font-weight:700; letter-spacing:.14em; color:#2a1c06; background:linear-gradient(180deg,#ffe9a8,#f0c96a); border:2px solid rgba(255,240,190,.95); box-shadow:0 2px 0 rgba(0,0,0,.35); cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:manipulation; } /* 指で押す前提の大きさへ(2026-07-26「ボタンをつけろと言っている」=小さくて一覧に紛れ、ボタンだと分からなかった) */
+#mscroll .msbtn.dim{ opacity:.32; }
 #mscroll .msbtn:active{ transform:scale(.96); }
 
 /* ---------- ミュート ---------- */
@@ -630,6 +631,7 @@ body{
   #bproofhud .proof-orb{ width:9px; height:9px; flex:0 0 9px; font-size:5px; }
   #fstat{ max-width:calc(100vw - 205px); } /* 側面ボタン最長時(とうめい のこり60歩)の左端197pxに チップ右端が かからない幅 */
   #fweap,#farm{ display:inline-block; max-width:min(162px,44vw); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:bottom; font-size:1.02em; } /* 長い装備名も省略されず1行で収まる字幅 */
+  #bgear{ display:block; width:100%; margin-top:3px; font-size:11px; letter-spacing:.02em; color:#ffe9b0; opacity:.92; white-space:normal; } /* たたかい中の そうび表示(2026-07-26) */
   .bar{ width:clamp(46px,11vw,110px); }
   .num{ min-width:3.6em; }
   .chip{ gap:6px; padding:8px 10px; }
@@ -751,6 +753,7 @@ body{
         <span class="lv">LV <b id="blv">1</b></span>
         <span class="bgrp"><span class="blabel">HP</span><span class="bar"><i id="bhp"></i></span><span class="num" id="bhpn">26/26</span></span>
         <span class="bgrp"><span class="blabel">MP</span><span class="bar mp"><i id="bmp"></i></span><span class="num" id="bmpn">8/8</span></span>
+        <span id="bgear"></span><!-- たたかい中も そうびが 読めるように(2026-07-26 それまで LV/HP/MP だけだった) -->
       </div>
       <div class="chip glass" id="nkstat" style="display:none">
         <span class="lv">こども</span>
@@ -2375,7 +2378,18 @@ async function ch19TalkClock(){
   const h=Game.hidden;
   if(h.ch19d&&!h.ch19c){await ch19Finish();return;}
   if(h.ch19c){
+    // 2026-07-26: 章クリア後は 時が切り替わらなくなり、「雨あがり」の いずみ・よみもの・まもの2体へ
+    // 二度と 行けなくなっていた（ふねは いつも ゆうぐれ へ着く）。ミナに 渡してもらう。
     await say('時守ミナ「時計は もう、どの時も かくしません。\n夕ぐれも、鐘の音も、雨あがりも——ひとつづきの 島の夜です。」');
+    const T=[{id:'tokikasanedusk',label:'🌇 ゆうぐれ'},{id:'tokikasanebell',label:'🔔 かねの とき'},{id:'tokikasanerain',label:'🌧 あめあがり'}];
+    const now=Game.mapId;
+    const opts=T.filter(t=>t.id!==now).concat([{id:'no',label:'ここに いる'}]);
+    const c=await ask(opts,'時守ミナ「どの 時を 歩きますか？」');
+    if(!c||c==='no'){await say('時守ミナ「はい。ここも、ちゃんと この島の 時です。」');return;}
+    await say('時守ミナ「では——針を、そちらへ。」');
+    endTalk();
+    await transitMap({to:c,tx:10,ty:11,msg:(MAPNAME[c]||'')+'へ——'});
+    saveGame();
     return;
   }
   if(h.ch19Solved){
@@ -2839,6 +2853,9 @@ const tileAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?'T':MAP[y][x];
 // R(やみの台地)は がけ：のぼれない。みちなりに あるけるように する
 const walkable=(x,y)=>{const t=tileAt(x,y);if(Game.mapId==='umi'&&t==='W')return true;return t==='G'||t==='P'||t==='F'||t==='S'||t==='E'||t==='M'||t==='N'||t==='K';};
 const spotAt=(x,y)=>SPOTS&&SPOTS.find(sp=>sp.x===x&&sp.y===y); // しらべるポイント(体当たり式=NPC同格)
+// いやしの いずみ: 旅の途中は 1マップ1回きり。ものがたりを 終えたセーブでは 何度でも わく(2026-07-26)。
+// 一度つかうと 水の絵は のこったまま 二度と こたえない＝「泉＝回復」の約束を やぶる置物に なっていた。
+const springReady=()=>(Game.hidden&&Game.hidden.ch21c)?true:!Game.springUsed[Game.mapId];
 const exitAt=(x,y)=>{const w=WORLDS[Game.mapId];return w.exits&&w.exits.find(e=>e.x===x&&e.y===y&&(!e.need||Game.hidden[e.need]));};
 // 物語フラグつきNPCの表示判定（child=ポポ救出後は消える／goneKid=さらわれ中は消える／captive=とらわれ中だけ現れる）
 const npcGone=n=>{
@@ -4452,8 +4469,13 @@ function updateBars(){
   $('#flv').textContent=p.lv;$('#blv').textContent=p.lv;
   $('#fgold').textContent=Game.gold;
   {const _fd=$('#fdiff');if(_fd)_fd.textContent=curDiff().name;}
-  {const _fw=$('#fweap');if(_fw)_fw.textContent='⚔ '+(WNAME[Game.weaponAtk]||(Game.weaponAtk?'ぶき':'すで'));}
-  {const _fa=$('#farm');if(_fa)_fa.textContent='🛡 '+(ANAME[Game.armorDef||0]||((Game.armorDef||0)?'よろい':'ぬのの ふく'));}
+  // 2026-07-26: 名前だけだと 旧装備と新装備が同名(⚔78も⚔128も「みつどきのこだち」)で見分けられない＝数値を そえる。
+  //             戦闘中は そもそも 装備が どこにも出ていなかったので #bgear にも 同じものを出す。
+  {const wn=(WNAME[Game.weaponAtk]||(Game.weaponAtk?'ぶき':'すで'))+(Game.weaponAtk?' '+Game.weaponAtk:'');
+   const an=(ANAME[Game.armorDef||0]||((Game.armorDef||0)?'よろい':'ぬのの ふく'))+((Game.armorDef||0)?' '+Game.armorDef:'');
+   const _fw=$('#fweap');if(_fw)_fw.textContent='⚔ '+wn;
+   const _fa=$('#farm');if(_fa)_fa.textContent='🛡 '+an;
+   const _bg=$('#bgear');if(_bg)_bg.textContent='⚔'+wn+'　🛡'+an;}
   setBar($('#fhp'),$('#fhpn'),p.hp,p.mhp);setBar($('#bhp'),$('#bhpn'),p.hp,p.mhp);
   setBar($('#fmp'),$('#fmpn'),p.mp,p.mmp);setBar($('#bmp'),$('#bmpn'),p.mp,p.mmp);
   {const on=!!(Game.nkOn&&!Game.nkRest);
@@ -5385,7 +5407,7 @@ function ask(items,title){
         const lt=mlistEl.getBoundingClientRect().top;
         const reserve=48+(mexitEl.offsetHeight||44)+20; // ▲▼ボタン+もどる+余白
         mlistEl.style.maxHeight=Math.max(96,Math.floor(innerHeight-lt-reserve))+'px';};
-      const upd=()=>{const over=mlistEl.scrollHeight-mlistEl.clientHeight>14;ms.classList.toggle('on',over);
+      const upd=()=>{const over=mlistEl.scrollHeight-mlistEl.clientHeight>0;ms.classList.toggle('on',over); // 1pxでもはみ出せば出す(旧:14px超のときだけ=わずかに切れている幅でボタンが出ず、動かす手段が無くなった)
         mu.classList.toggle('dim',mlistEl.scrollTop<=4);
         md.classList.toggle('dim',mlistEl.scrollHeight-mlistEl.clientHeight-mlistEl.scrollTop<=4);};
       fitList();mlistEl.onscroll=upd;upd();ms.__fit=fitList;ms.__upd=upd; // 回転(resize)後にも測り直せるよう保持
@@ -7200,7 +7222,15 @@ async function talkNpc(n){
     // 章10: おるすばん中の こどもを よびもどす
     if(n.heir&&Game.nkOn&&Game.nkRest){
       await say('こども「おかえりなさい！ むらの みんなに、たびの おはなしを してたの。\n……ねえ、つぎは つれてって くれる？」');
-      const g11=await ask([{id:'yes',label:'いっしょに いこう'},{id:'no',label:'まだ まってて'}],'どうする？');
+      // 2026-07-26: こどもが なかまに なった時点で「スライムつかまえ」へ届く道が どこにも 無くなっていた
+      //（同行中は むらに居らず、待機中は この分岐で 会話が 終わっていた）。ここに 遊びへの口を もどす。
+      const g11=await ask([{id:'yes',label:'いっしょに いこう'},{id:'play',label:'🟢 スライムつかまえで あそぶ'},{id:'no',label:'まだ まってて'}],'どうする？');
+      if(g11==='play'){
+        await say('こども「やった！ ……ねえ、まえに つかまえた あの こ、また いるかな。」');
+        endTalk();saveGame();
+        if(typeof startMiniGame==='function')startMiniGame();
+        return;
+      }
       if(g11==='yes'){
         Game.nkRest=false;const stn=nkStats();Game.nkHp=stn.mhp;Game.nkMp=stn.mmp;nkSpawnFollower();updateBars();
         sfxOk();await say('こども「うん！ まってました！」');
@@ -7898,7 +7928,7 @@ async function wazaCatchupScene(){
     await say('フクロ「たたかいで「じゅもん」を ひらけば、⚔こうげきと ✚かいふく・ほじょに\nくわわっておる。ためすが よい。」');
   }
   await say('フクロ「あたらしい ぶきと よろいも、そうげん・ゆきのまち・ちそこの\nみせに ✦じるしで ならんでおる。」');
-  await say('フクロ「なにを かうべきかは、ひろばの わしが みたてて やろう。」');
+  await say('フクロ「なにを かうべきかは、きたの おかの わしが みたてて やろう。」'); // 2026-07-26: v1623で北東の丘へ移設済みなのに「ひろばの わし」と名乗っていた
   endTalk();
   saveGame();
 }
@@ -8136,16 +8166,41 @@ async function shipGearShop(){
 // 作戦の相談屋「ぐんしの フクロ」: 金を払うと いまの状態を分析して 戦略を教える(SPEC_gunshi_strategy_20260719)
 // ============================================================
 const GUNSHI_FEE={gear:120,spell:120,money:80};
+// 2026-07-26: 旧版は「spawns の定義が1つでもある島」を全部ならべ、33行になっていた。
+// しかも あつめのやかた が3行、ときかさねじま が3行に割れ、敵が全滅した島まで残っていた。
+// いまは「いま ほんとうに 湧く敵が1体以上いる島」だけを、島名(「・」より前)で1行にまとめる。
 function gunshiIslands(){
-  const out=[];
-  for(const id in WORLDS){if(Game.visited&&Game.visited[id]&&(WORLDS[id].spawns||[]).length&&MAPNAME[id])out.push(id);}
-  if(!out.includes(Game.mapId)&&(WORLDS[Game.mapId]&&(WORLDS[Game.mapId].spawns||[]).length))out.push(Game.mapId);
-  return out;
+  const groups=[],byName={};
+  const add=id=>{
+    if(!MAPNAME[id]||!WORLDS[id])return;
+    if(!(WORLDS[id].spawns||[]).some(sp=>spawnAlive(sp,id)))return;
+    const name=String(MAPNAME[id]).split('・')[0];
+    if(byName[name]){if(!byName[name].ids.includes(id))byName[name].ids.push(id);return;}
+    byName[name]={label:name,ids:[id]};groups.push(byName[name]);
+  };
+  for(const id in WORLDS)if(Game.visited&&Game.visited[id])add(id);
+  add(Game.mapId);
+  return groups;
+}
+// 2026-07-26: 以前は spawns を素通しで読んでいたため、フクロが
+//  ・2周目(ng)でしか出ない敵を「かせぎばの1位」に挙げる
+//  ・もう たおして消えた ぬし(gone)の よわみを語る
+//  ・1体も湧かない島にも みたてを出す
+// という「行っても居ない」案内をしていた。loadMap と同じ条件で ふるう。
+function spawnAlive(sp,mapId){
+  if(!sp)return false;
+  if(mapId==='grass'&&Game.hidden&&Game.hidden.ch21c)return false; // かんけつ後の むらは まものが 湧かない(loadMap と同条件)
+  if(sp.need&&!(Game.hidden&&Game.hidden[sp.need]))return false;
+  if(sp.gone&&Game.hidden&&Game.hidden[sp.gone])return false;
+  if(sp.ng&&(Game.ng||0)<sp.ng)return false;
+  return true;
 }
 function gunshiFoes(ids){
   const seen={},out=[];
   for(const id of ids){
+    if(!WORLDS[id])continue;
     for(const sp of (WORLDS[id].spawns||[])){
+      if(!spawnAlive(sp,id))continue;
       const f=FOES[sp.id];
       if(!f||seen[f.name])continue;
       seen[f.name]=1;out.push({f,map:id});
@@ -8164,7 +8219,8 @@ async function gunshiGear(){
   if(WFXDESC[w])await say('フクロ「その ぶきの こせいは——'+WFXDESC[w]+'。\nいかして おるか？」');
   if(AFXDESC[a])await say('フクロ「よろいの こせいは——'+AFXDESC[a]+'。」');
   const canBuy=it=>(!it.need||(Game.hidden&&Game.hidden[it.need]));
-  const shopWhere=it=>it.town==='funamise'?'いちざの ふねの「⚒ いちざの したく」':((MAPNAME[it.town]||'まち')+'の みせ'); // したくの品は 町の店には ならばない
+  const shopWhere=it=>it.town==='funamise'?'いちざの ふねの「⚒ いちざの したく」'
+    :(it.town?((MAPNAME[it.town]||'まち')+'の みせ'):'どの まちの みせでも'); // したくの品は 町の店には ならばない／town無しは どこでも買える品
   const candW=SHOP.filter(it=>it.atk&&it.atk>w&&!(Game.ownW||[]).includes(it.atk)&&canBuy(it)).sort((x,y)=>x.cost-y.cost);
   const candA=SHOP.filter(it=>it.armor&&it.armor>a&&!(Game.ownA||[]).includes(it.armor)&&canBuy(it)).sort((x,y)=>x.cost-y.cost);
   if(candW.length){
@@ -8179,51 +8235,70 @@ async function gunshiGear(){
     await say('フクロ「よろいの つぎの いっては『'+n.label+'』（しゅび+'+n.armor+'）。\n'+shopWhere(n)+'で '+n.cost+'G。'+(Game.gold>=n.cost?'いま かえるぞ。':'あと '+(n.cost-Game.gold)+'G ためよ。')+'」');
     if(AFXDESC[n.armor])await say('フクロ「こせいは——'+AFXDESC[n.armor]+'。」');
   }else await say('フクロ「よろいも、いま みせに ならぶ なかでは さいきょう じゃ。」');
-  {const pw=SHOP.filter(it=>it.atk&&WEAPONFX[it.atk]&&it.atk!==w&&!(Game.ownW||[]).includes(it.atk)&&canBuy(it)).sort((x,y)=>x.cost-y.cost).slice(0,2);
-   const pa=SHOP.filter(it=>it.armor&&ARMORFX[it.armor]&&it.armor!==a&&!(Game.ownA||[]).includes(it.armor)&&canBuy(it)).sort((x,y)=>x.cost-y.cost).slice(0,2);
+  // こせいで えらぶ そうび(2026-07-26 作り直し)。
+  // 旧: 値段の安い順に2点 ＝ ⚔128の旅人に 420Gの みきりのこだち・240Gの かぜのマント を薦めていた。
+  //     さらに「つぎの いって」は 数が上の品しか見ないので、数が下の「いちざの したく」8点は 構造上 一件も出なかった。
+  // 新: いまの実力に近い=高い順。そして したく(town==='funamise')は「数は下でも こせいで えらぶ品」なので 先頭へ。
+  {const has=it=>it.atk?(Game.ownW||[]).includes(it.atk):(Game.ownA||[]).includes(it.armor);
+   const fx=SHOP.filter(it=>((it.atk&&WEAPONFX[it.atk])||(it.armor&&ARMORFX[it.armor]))&&!has(it)&&canBuy(it)
+     &&(it.atk?it.atk!==w:it.armor!==a));
+   fx.sort((x,y)=>{const sx=(x.town==='funamise')?1:0,sy=(y.town==='funamise')?1:0;return sx!==sy?sy-sx:y.cost-x.cost;});
+   const pw=fx.filter(it=>it.atk).slice(0,2),pa=fx.filter(it=>it.armor).slice(0,2);
    if(pw.length||pa.length){
-     await say('フクロ「つよさ だけでなく、こせいで えらぶ そうびも あるぞ。」');
-     for(const it of pw)await say('フクロ「⚔『'+it.label+'』——'+(WFXDESC[it.atk]||'')+'。\n'+shopWhere(it)+'で '+it.cost+'G じゃ。」');
-     for(const it of pa)await say('フクロ「🛡『'+it.label+'』——'+(AFXDESC[it.armor]||'')+'。\n'+shopWhere(it)+'で '+it.cost+'G じゃ。」');
-     await say('フクロ「✦じるしの そうびが それじゃ。ほかにも あるゆえ、\nそうげん・ゆきのまち・ちそこの みせを のぞくが よい。」');
+     await say('フクロ「つよさ だけでなく、こせいで えらぶ そうびも あるぞ。\n数が いまより 下でも、こせいで うわまわる ことが ある。」');
+     for(const it of pw)await say('フクロ「⚔『'+it.label+'』（こうげき+'+it.atk+'／いま '+w+'）——'+(WFXDESC[it.atk]||'')+'。\n'+shopWhere(it)+'で '+it.cost+'G じゃ。」');
+     for(const it of pa)await say('フクロ「🛡『'+it.label+'』（しゅび+'+it.armor+'／いま '+a+'）——'+(AFXDESC[it.armor]||'')+'。\n'+shopWhere(it)+'で '+it.cost+'G じゃ。」');
+     const where=[...new Set([...pw,...pa].map(shopWhere))];
+     await say('フクロ「✦じるしの そうびが それじゃ。\n'+where.join('・')+'に ならんでおる。」'); // 旧: 3つの町を べた書き＝ふねと島の店を無視していた
    }}
-  {const sh=SHOP.find(it=>it.def&&!Game.shield)||(!Game.shield2&&SHOP.find(it=>it.def2&&!Game.shield2));
-   if(sh&&sh.def)await say('フクロ「たてを もっておらんな。'+(MAPNAME[sh.town]||'みせ')+'で『'+sh.label+'』（'+sh.cost+'G）じゃ。」');}
+  {const sh=(!Game.shield&&SHOP.find(it=>it.def))||(!Game.shield2&&SHOP.find(it=>it.def2)); // 旧: def2の品を拾っても直後の if(sh.def) で落ちて 永久に何も言わなかった
+   if(sh)await say('フクロ「たてを もっておらんな。'+shopWhere(sh)+'で『'+sh.label+'』（'+sh.cost+'G）じゃ。」');}
   const oldW=(Game.ownW||[]).filter(v=>v!==Game.weaponAtk&&v<Game.weaponAtk&&!WEAPONFX[v]).length+(Game.ownA||[]).filter(v=>v!==Game.armorDef&&v<(Game.armorDef||0)&&!ARMORFX[v]).length;
   if(oldW>=2)await say('フクロ「ふくろに よわい そうびが '+oldW+'つ ねむっておる。\nみせの「うる」で まとめて かねに かえよ。」');
 }
 async function gunshiSpell(){
-  const ids=gunshiIslands();
-  const opts=ids.map(id=>({id:'m_'+id,label:MAPNAME[id]||id}));
+  // 自分の呪文の話を先に(旧: 最後の1窓だけで、ラベルの約束を果たしていなかった)
+  {const nx=SPELL_LEARN.find(sl=>sl[1]>Game.p.lv);
+   if(nx)await say('フクロ「そなたは つぎ、レベル'+nx[1]+'で『'+nx[0]+'』を さずかる。」');
+   else await say('フクロ「じゅもんは もう きわめて おる。あとは つかいどころ じゃ。」');}
+  const groups=gunshiIslands();
+  if(!groups.length){await say('フクロ「いま そなたが 行ける しまに、みたてる まものが おらぬ。\nふねで あたらしい しまへ わたるが よい。」');return;}
+  const opts=groups.map((g,i)=>({id:'m_'+i,label:g.label}));
   opts.push({id:'back',label:'やめる'});
   const c=await ask(opts,'フクロ「どの しまの まものを みたてる？」');
   if(!c||c==='back')return;
-  const id=c.slice(2);
-  const foes=gunshiFoes([id]);
+  const g=groups[+c.slice(2)];if(!g)return;
+  const id=g.ids[0];
+  const foes=gunshiFoes(g.ids);
   const fire=foes.filter(x=>(x.f.fireMul??1)>=1.3).map(x=>x.f.name);
   const ice=foes.filter(x=>(x.f.iceMul??1)>=1.3).map(x=>x.f.name);
   const hard=foes.filter(x=>(x.f.physMul??1)<=0.7).map(x=>x.f.name);
   const dodgey=foes.filter(x=>(x.f.dodge||0)>=0.18).map(x=>x.f.name);
-  await say('フクロ「'+(MAPNAME[id]||id)+'の まものの みたて じゃ。」');
+  await say('フクロ「'+g.label+'の まものの みたて じゃ——いま '+foes.length+'しゅるい おる。」');
   if(fire.length)await say('フクロ「🔥ほのおの じゅもんが よくきく——\n'+fire.join('、')+'」');
   if(ice.length)await say('フクロ「❄こおりの じゅもんが よくきく——\n'+ice.join('、')+'」');
   if(hard.length)await say('フクロ「つるぎが とおりにくい——'+hard.join('、')+'。\nじゅもんで やくか、ルカニで まもりを くだくのじゃ。」');
   if(dodgey.length)await say('フクロ「みが かるく、けんを かわしやすい——'+dodgey.join('、')+'。\nじゅもんは かわされんぞ。」');
   if(!fire.length&&!ice.length&&!hard.length&&!dodgey.length)await say('フクロ「ここの まものに めだった よわみは ない。\nちからと まもりで おしきるのじゃ。」');
-  const nx=SPELL_LEARN.find(sl=>sl[1]>Game.p.lv);
-  if(nx)await say('フクロ「そなたは つぎ、レベル'+nx[1]+'で『'+nx[0]+'』を さずかる。\nそれを たのしみに きたえるのじゃ。」');
-  else await say('フクロ「じゅもんは もう きわめて おるな。たいしたものじゃ。」');
 }
 async function gunshiMoney(){
-  const foes=gunshiFoes(gunshiIslands()).filter(x=>!(x.f.boss||x.f.mboss||x.f.winMsg)&&((x.f.g||0)>0||(x.f.exp||0)>0));
+  const foes=gunshiFoes(gunshiIslands().flatMap(g=>g.ids)).filter(x=>!(x.f.boss||x.f.mboss||x.f.winMsg)&&((x.f.g||0)>0||(x.f.exp||0)>0));
   const byG=[...foes].sort((a,b)=>(b.f.g||0)-(a.f.g||0)).slice(0,3);
   const byE=[...foes].sort((a,b)=>(b.f.exp||0)-(a.f.exp||0)).slice(0,3);
+  const maxLv=Game.p.lv>=MAXLV; // 上限に とどいた旅人に けいけんちの話は 空振り(2026-07-26)
   await say('フクロ「かせぎばの みたて じゃ。いった ことの ある しまなら——」');
+  if(!foes.length)await say('フクロ「……いま 行ける しまに、かせげる まものが おらぬ。\nふねで あたらしい しまへ わたるが よい。」');
   if(byG.length)await say('フクロ「おかね なら：\n'+byG.map(x=>'・'+x.f.name+'（'+(MAPNAME[x.map]||'')+'・'+(x.f.g||0)+'G）').join('\n')+'」');
-  if(byE.length)await say('フクロ「きたえる なら：\n'+byE.map(x=>'・'+x.f.name+'（'+(MAPNAME[x.map]||'')+'・けいけんち'+(x.f.exp||0)+'）').join('\n')+'」');
-  await say('フクロ「よるは まものが つよいが、けいけんちは 1.6ばい。\nやどだいを はらっても おつりが くる。」');
+  if(!maxLv&&byE.length)await say('フクロ「きたえる なら：\n'+byE.map(x=>'・'+x.f.name+'（'+(MAPNAME[x.map]||'')+'・けいけんち'+(x.f.exp||0)+'）').join('\n')+'」');
+  if(!maxLv)await say('フクロ「よるは まものが つよいが、けいけんちは 1.6ばい。\nやどだいを はらっても おつりが くる。」');
+  else{
+    await say('フクロ「そなたは レベル'+MAXLV+'——ここが 上じゃ。けいけんちは もう つもらぬ。\nこれから のびるのは 三つ だけ じゃ。」');
+    await say('フクロ「ひとつ、⚔ちからのたね。まものを たおすと たまに おちる。\nひとつ、おかね——⚒したくと、みせの さいごの二品に かわる。\nひとつ、きょじんのこころ。さまよう きょじんが まれに おとし、HPの うつわが ふえる。」');
+  }
   if(foes.some(x=>x.f.gold))await say('フクロ「きんいろのスライムは にげあしが はやい。\nであったら さきに しとめよ。ラリホーで ねむらせる てもある。」');
-  if(foes.some(x=>x.f.metal))await say('フクロ「メタルの スライムは まもりが やまの ように かたい。\nかいしんの いちげきか、ルカニで まもりを くだくのじゃ。」');
+  // メタルは spawns ではなく「よるの そうげん」に 時をおいて 湧く＝島の一覧からは 永久に 拾えなかった(2026-07-26)
+  if(!Game.hidden.ch21c)await say('フクロ「メタルの スライムは、よるの そうげんに ときおり わく。\nまもりが やまの ように かたい——かいしんの いちげきか、ルカニで くだくのじゃ。」');
+  else await say('フクロ「そうげんは、たびが おわってから しずかに なった——もう まものは わかぬ。\nかせぐなら ふねで しまへ わたるが よい。」'); // かんけつ後は 金もメタルも湧かない
 }
 async function gunshiMemory(){
   const n=Game.hidden.gunshiN||0;
@@ -8231,7 +8306,8 @@ async function gunshiMemory(){
   if(n>=3)await say('フクロ「先代は つよかった。じゃが、ひとりで ぜんぶを せおいこんだ。\nわしの さくせんも、さいごは とどかなんだ。……それが くやしゅうての。」');
   if(n>=7)await say('フクロ「そなたは よく ひとを たよる。ひとに たよるのも、ゆうしゃの うで。\n……先代に みせて やりたかったわい。」');
   if(Game.hidden.ch21c)await say('フクロ「ものがたりの むすび、みごとじゃった。\n先代も、ほしの どこかで みておったろうよ。」');
-  if(n<3)await say('フクロ「わしの むかしばなしの つづきは、\nもそっと そうだんを かさねてから じゃ。」');
+  // 旧: 「もそっと そうだんを かさねてから」だけで、何を何回すれば進むのか どこにも書いていなかった(2026-07-26)
+  if(n<7)await say('フクロ「わしの むかしばなしには つづきが ある。\n⚔そうび・🔮よわみ・💰かせぎば の みたてを '+(n<3?(3-n):(7-n))+'かい きけば、また はなそう。\n（いままで '+n+'かい。つぎは '+(n<3?3:7)+'かいめ じゃ）」');
 }
 // つぎの一手の道しるべ: めあての場所と行き方を無料で断言する(フクロを実用の入口に 2026-07-20)
 // ============================================================
@@ -8240,27 +8316,36 @@ async function gunshiMemory(){
 // 別のしまへは フクロが わたしてくれる。むらの中なら 金の光が その場所を さし、足が ひとりでに むかう。
 // 進行フラグ・セーブ形式は不変(TAMESU_AT/TAMESU_GO は保存しない一時状態)。
 // ============================================================
+// 「いま できること」の台帳(2026-07-26 作り直し)。
+// ★これが クリア済みの唯一の道しるべ。めあての金柱も もくてきバーも フクロを指すので、
+//   これから なにを足すときも「ここへ1行 足す」だけで 必ず 遊ぶ人に届く。順は 備える→臨む→そのほか。
 function tamesuList(){
   const h=Game.hidden,out=[];
-  if(h.ch14c)out.push({id:'tani',label:'🌿 やまびこのたに ─ にげる こだまを おいかける',
-    line:'たにの「こだまのいし」に ふれると、こえが ひかりの たまに なって とびだす。\n三たび はねさせると いきが きれて とどまる——そこを つかまえる。',
-    to:{map:'tani',tx:10,ty:11}});
-  if(h.ch21c)out.push({id:'tamoto',label:'✨ ほしのはしの たもと ─ さいしゅうしょうを もういちど',
-    line:'むらの おかに のこった ひかりの わ。ほしのうみへ なんども のぼれる。',at:{x:8,y:10}});
-  if(h.uraTold)out.push({id:'ura',label:'🌌 はじまりの ほしあかり ─ いちばん つよい あいて',
-    line:'たもとの となりの あおい ほしあかり。九つめの しま「ほしのみなもと」へ つづく。\nいままでで いちばん つよい あいてが まっておる。',at:{x:10,y:10}});
   if(h.ch13d)out.push({id:'nushiAgain',label:'⚔ しまの ぬしと もういちど 立ちあう',
     line:'たおした ぬしの すがたは、しまの きおくに のこっておる。わしが よびもどそう。\nぬしの「ちからを ためる 一げき」は、よろいでは かるく ならぬ——\nみを まもるか、章の じゅもんで こたえよ。ふつうの 一げきは よろいで かるくなる。',
     nushi:true}); // 2026-07-25: クリア済みは ch*d で ぬしが全員消えるため、ためせる道が無かった
-  if(h.ch13a)out.push({id:'fune',label:'🚢 一座の ふね ─ ぶきを かう・きたえる・しまへ わたる',
-    line:'にしの きしの ふね。「ふなみせ」で ぶきと くすりを かい、かじで きたえられる。\nいちど わたった しまへは、ここから いつでも もどれる。',at:{x:1,y:6}});
+  if(h.ch13a)out.push({id:'fune',label:'🚢 一座の ふね ─ ⚒したくを かう・しまへ わたる',
+    line:'にしの きしの ふね。メニューの「⚒ いちざの したく」に、\nしまごとの ひとしなものが 1つずつ ならぶ——ぬしの いちげきに こたえる そうびじゃ。\nしまへ わたれば、みせ・やど・いずみ・よみもの・あるく つよい まものも まっておる。',at:{x:1,y:6}});
+  if(h.ch21c)out.push({id:'mise',label:'🛒 むらの みせ ─ かんけつ後だけ ならぶ 二品',
+    line:'ひろばの みせに、たびの おわりを こえた 二品が ならんでおる——\n⚔ほしのはしのつるぎ と 🛡よあけのよろい。\nいまの そなたの 数を、まっすぐ 上へ こえる ただ二つの しなじゃ。',at:{x:5,y:9}});
+  if(h.uraTold)out.push({id:'ura',label:'🌌 はじまりの ほしあかり ─ いちばん つよい あいて',
+    line:'たもとの となりの あおい ほしあかり。九つめの しま「ほしのみなもと」へ つづく。\nいままでで いちばん つよい あいてが まっておる。',at:{x:9,y:10}}); // 2026-07-26: (10,10)は こどもの立ち位置だった＝柱が こどもを指し、ミニゲームの さそいが開いていた
+  if(h.ch21c)out.push({id:'tamoto',label:'✨ ほしのはしの たもと ─ さいしゅうしょうを もういちど',
+    line:'むらの おかに のこった ひかりの わ。ほしのうみへ なんども のぼれる。',at:{x:8,y:10}});
+  if(h.ch12c)out.push({id:'butai',label:'🎭 いちざの ぶたい ─ こだまと けいこする',
+    line:'みなみひがしの あかい テントから ぶたいへ。だんちょうに たのめば、\n「ものがたりの こだま」と なんども けいこできる——きずも ついえも のこらぬ 手あわせじゃ。',at:{x:17,y:12}});
+  if(h.ch14c)out.push({id:'tani',label:'🌿 やまびこのたに ─ にげる こだまを おいかける',
+    line:'たにの「こだまのいし」に ふれると、こえが ひかりの たまに なって とびだす。\n三たび はねさせると いきが きれて とどまる——そこを つかまえる。',
+    to:{map:'tani',tx:10,ty:11}});
+  if(h.ch21c)out.push({id:'ou',label:'👑 おうさまに あう ─ きびしさを かえる・つよくて はじめから',
+    line:'ひろばの おうさま。HPと MPを ただで まんたんに してくれる。\n「きびしさ」を 7だんまで あげられ、いちばん上の「しんぱん」でだけ\nとわのふちに 一体だけ あらわれる あいてが おる。',at:{x:3,y:10}});
   return out;
 }
 async function gunshiTamesu(){
   const list=tamesuList();
   if(!list.length){await say('フクロ「いまは、めのまえの たびに あつまる ときじゃ。\nつぎの ゆきさきは 🧭で みたてよう。」');return;}
   const c=await ask(list.map(e=>({id:e.id,label:e.label})).concat([{id:'no',label:'やめておく'}]),
-    'フクロ「いま そなたが ためせるのは、この あたりじゃ。\nえらべば、わしが そこまでの みちを ひらく。」');
+    'フクロ「いま そなたに できるのは、この '+list.length+'つ じゃ。\nえらべば、わしが そこまでの みちを ひらく。」');
   if(!c||c==='no')return;
   const e=list.find(x=>x.id===c);if(!e)return;
   await say(e.line);
@@ -8294,7 +8379,9 @@ async function gunshiNavi(){
   }else if(d.map===Game.mapId){
     await say('フクロ「めあては この しまの なかに ある。\nしたの「もくてき」の おびを タップすれば、きんいろの ひかりが みちを てらす。」');
   }
-  if(Game.hidden.ch21c)await say('フクロ「ほしのうみを もういちど あるくなら、\nむらの おかの ひかり——『ほしのはしの たもと』じゃ。」');
+  // 旧: ここで「たもと」を もう一度 言っていたが、1窓目と同じ場所＝重複だった。
+  //     たもとは「✨いま できること」の台帳の中にあるので、そちらへ案内する(2026-07-26)
+  if(Game.hidden.ch21c)await say('フクロ「たびの さきは、わしの「✨いま できること」に '+tamesuList().length+'つ ならべてある。\nどれから 手を つけても よいぞ。」');
 }
 async function gunshiTalk(){
   const h=Game.hidden;
@@ -8308,10 +8395,10 @@ async function gunshiTalk(){
   }
   while(true){
     const c=await ask([
-      {id:'tamesu',label:'✨ いま ためせること'},
+      {id:'tamesu',label:'✨ いま できること（'+tamesuList().length+'）'}, // 2026-07-26「ためせる」は開発語だった＝用件の言葉へ。数を出して 中身があると分かるように
       {id:'navi',label:'🧭 つぎは どこへ いけばいい？'},
       {id:'gear',label:'⚔ そうびの みたて'},
-      {id:'spell',label:'🔮 じゅもんと てきの みたて'},
+      {id:'spell',label:'🔮 てきの よわみを みたてる'}, // 旧ラベルは「じゅもんと」を約束しながら 自分の呪文の話は最後の1窓だけだった
       {id:'money',label:'💰 かせぎばの みたて'},
       {id:'omoi',label:'🦉 フクロの おもいで'},
       {id:'no',label:'たちさる'}
@@ -8426,7 +8513,9 @@ async function runShop(funamise,shitaku){
       if(it.armor)hadA=true;
       const sp=it.atk?' ⚔+'+it.atk:(it.armor?' 🛡+'+it.armor:(it.def?' 🛡+'+it.def:(it.def2?' 🛡+'+it.def2:(it.nk==='w'?' ⚔+12(こども)':(it.nk==='a'?' 🛡+14(こども)':''))))); // 性能を そのばで くらべられるように
       const fx=((it.atk&&WEAPONFX[it.atk])||(it.armor&&ARMORFX[it.armor]))?'✦':''; // 効果持ちの しるし（かうと 効果文が でる）
-      list.push({id:it.id,label:it.label+fx+sp+'  '+it.cost+'G',dis:Game.gold<it.cost});
+      // 2026-07-26: いまの そうびより 数が下の品が、理由もなく ならんで見えていた。行に そのまま書く。
+      const low=(it.atk&&it.atk<(Game.weaponAtk||0))||(it.armor&&it.armor<(Game.armorDef||0))?'　↓いまより よわい':'';
+      list.push({id:it.id,label:it.label+fx+sp+'  '+it.cost+'G'+low,dis:Game.gold<it.cost});
     }
     if(!shitaku&&soldA&&!hadA)list.unshift({id:'infoA',label:'よろい：いまが この みせの さいきょう',dis:true}); // したくは「その島に効く一点もの」＝つよさの順に ならばない
     if(!shitaku&&soldW&&!hadW)list.unshift({id:'infoW',label:'ぶき：いまが この みせの さいきょう',dis:true});
@@ -8442,7 +8531,38 @@ async function runShop(funamise,shitaku){
       continue;}
     const it=SHOP.find(s=>s.id===c);
     if(Game.gold<it.cost){await say((funamise?'いちざの うりこ':'しょうにん')+'「おっと、おかねが たりないよ！」');continue;}
-    Game.gold-=it.cost;
+    let payAmount=it.cost; // ほしのてつを つかうと ここが へる
+    { // 買う前の たしかめ(2026-07-26): ①指が すべって ふれただけで 買わされるのを止める
+      //                              ②いままで 買ったあとにしか 読めなかった「効果」と「いまの そうびとの 差」を ここで見せる
+      const lines=[];
+      if(it.atk){const now=Game.weaponAtk||0,d=it.atk-now;
+        lines.push('⚔ こうげき '+it.atk+'（いま '+now+(d===0?'／おなじ':(d>0?'／＋'+d:'／−'+(-d)))+'）');
+        if(WFXDESC[it.atk])lines.push('✦ '+WFXDESC[it.atk]);
+        if(d<0)lines.push('※ 数は ひくいが、こせいで えらぶ そうび。');}
+      else if(it.armor){const now=Game.armorDef||0,d=it.armor-now;
+        lines.push('🛡 しゅび '+it.armor+'（いま '+now+(d===0?'／おなじ':(d>0?'／＋'+d:'／−'+(-d)))+'）');
+        if(AFXDESC[it.armor])lines.push('✦ '+AFXDESC[it.armor]);
+        if(d<0)lines.push('※ 数は ひくいが、こせいで えらぶ そうび。');}
+      else if(it.def)lines.push('🛡 しゅび ＋'+it.def);
+      else if(it.def2)lines.push('🛡 しゅび ＋'+it.def2);
+      else if(it.hint)lines.push(it.hint.split('\n')[0]);
+      if((it.atk&&SELL_W[it.atk]==null)||(it.armor&&SELL_A[it.armor]==null))lines.push('※ この そうびは うれません。');
+      // ほしのてつ を したくの 支払いに つかえる(2026-07-26)。
+      // ⚔100/🛡78 を こえた旅人は かじの表から外れ、島の宝箱で拾う ほしのてつ の使い道が
+      // 「250Gで売る」しか無くなっていた。したくの品は 一つ3,000G分として うけとる。
+      const iron=Game.items.hoshitetsu||0;
+      const useN=(it.town==='funamise'&&iron>0)?Math.min(3,iron,Math.floor(it.cost/3000)):0;
+      const disc=useN*3000;
+      const opts=[{id:'yes',label:'⭕ かう（'+it.cost+'G）'}];
+      if(useN>0)opts.push({id:'iron',label:'⭐ ほしのてつ×'+useN+' と '+(it.cost-disc)+'G で かう'});
+      opts.push({id:'no',label:'やめる'});
+      if(useN>0)lines.push('⭐ ほしのてつを '+useN+'つ まで、1つ 3000G ぶんとして つかえます。（もっている '+iron+'）');
+      const ok=await ask(opts,it.label+'\n'+lines.join('\n')+'\n（もっている おかね '+Game.gold+'G）');
+      if(ok!=='yes'&&ok!=='iron'){continue;}
+      if(ok==='iron'){Game.items.hoshitetsu=iron-useN;payAmount=it.cost-disc;
+        await say('いちざの うりこ「ほしの てつ '+useN+'つ、たしかに。\nこれは しまの かじが よろこぶ——'+disc+'G ぶん まけとくよ。」');}
+    }
+    Game.gold-=payAmount;
     sfxChest();
     if(it.atk){
       gainWeapon(it.atk);
@@ -8614,6 +8734,10 @@ function questTextCore(){
     }
     if(Game.hidden.ch21c){
       if(Game.mapId==='hoshiminamoto')return Game.hidden.uraCleared?'もくてき：はじまりを かたりおえた——でぐちから むらへ もどれる':'もくてき：ほしのみなもとの おくで「かたられなかった はじまり」と むきあえ';
+      // 2026-07-26: クリア済みの めあては ずっと「たもと=終わった最終章の再演」だけを指しており、
+      // あとから足したもの(したく・ぬし再戦・島の店…)へ 道が1本も通っていなかった。
+      // むらに居るあいだは フクロ(=いま できることの台帳)を 唯一の入口にする。
+      if(Game.mapId==='grass')return 'もくてき：きたの おかの フクロへ——✨いま できること が '+tamesuList().length+'こ ある';
       if(Game.hidden.uraTold&&!Game.hidden.uraCleared)return 'さいしゅうしょう、かんけつ——たもとの となりの ✨はじまりの ひかり から ほしのみなもとへ のぼれる';
       return 'さいしゅうしょう、かんけつ——✨ほしのはしの たもとから ほしのうみへ もういちど のぼれる';
     }
@@ -8991,7 +9115,7 @@ function tapMove(cx,cy){
    if(w.npcs)for(const n of w.npcs)if(!npcGone(n)){const p=ch19NpcPos(n);ents.push({x:p.x,y:p.y});}
    if(w.king)ents.push({x:w.king.x,y:w.king.y});
    if(w.inn)ents.push({x:w.inn.x,y:w.inn.y});
-   if(SPOTS)for(const sp of SPOTS)ents.push({x:sp.x,y:sp.y}); // しらべるポイントも吸着対象(NPC隣接時に負けない)
+   if(SPOTS)for(const sp of SPOTS){if((Game.spotsRead||[]).includes(sp))continue;ents.push({x:sp.x,y:sp.y});} // しらべるポイントも吸着対象(NPC隣接時に負けない)。ただし既読は外す——窓が出ないのに指だけ奪って、何も起きない場所へ歩かされていた(2026-07-26)
    if(Game.enemies)for(const e of Game.enemies)if(e.def&&e.def.still)ents.push({x:e.tx,y:e.ty}); // 動かないボスもタップで挑める(となりまで歩いて最後の一歩で接触)
    if(Game.kodama)ents.push({x:Game.kodama.tx,y:Game.kodama.ty}); // にげる こだまも タップで おいかけられる
    let best=null,bd=1e9;
@@ -9129,7 +9253,7 @@ function updateField(dt){
         if(!walkable(nx,ny)||occ(nx,ny))continue;
         const sp=exitAt(nx,ny)
           ||CHESTS.some(ch=>ch.x===nx&&ch.y===ny&&!Game.chestsOpen.includes(ch))
-          ||(SPRING&&!Game.springUsed[Game.mapId]&&SPRING.x===nx&&SPRING.y===ny);
+          ||(SPRING&&springReady()&&SPRING.x===nx&&SPRING.y===ny);
         if(sp){go(nx,ny);acted=true;break;}
       }
       // 3) ふつうの あるき：ななめ。ふさがれていたら みち(P)ゆうせんで たて・よこに そう
@@ -9323,7 +9447,7 @@ function updateField(dt){
     {const sp=spotAt(p.tx,p.ty); // しらべるポイント: ふんだら よむ(未読のときだけ)。よんだ あとは ただの みちに なる
      if(!sp)Game._spotLast=null;
      else if(!(Game.spotsRead||[]).includes(sp)&&Game._spotLast!==sp&&!Game.talking&&!Game.transiting&&!Game.kodama){Game._spotLast=sp;spotTalk(sp);}} // こだまを おいかけている あいだは 窓を ひらかない(おいかけが とぎれる)
-    if(SPRING&&SPRING.x===p.tx&&SPRING.y===p.ty&&!Game.springUsed[Game.mapId]){
+    if(SPRING&&SPRING.x===p.tx&&SPRING.y===p.ty&&springReady()){
       Game.springUsed[Game.mapId]=true;
       p.hp=p.mhp;p.mp=p.mmp;p.poison=false;Game.cloakSteps=CLOAK_MAX;if(Game.nkOn){const stn=nkStats();Game.nkHp=stn.mhp;Game.nkMp=stn.mmp;}updateBars();
       sfxHeal();flash('#bff0d8',0.25,0.8);
@@ -12313,7 +12437,7 @@ function drawChest(c){
   ctx.restore();
 }
 function drawSpring(){
-  const used=Game.springUsed[Game.mapId];
+  const used=!springReady(); // 絵も 機能と同じ条件で(2026-07-26)
   const cam=Game.cam,c=isoCtr(SPRING.x,SPRING.y);
   c.y-=propZ(SPRING.x,SPRING.y);
   const rx=cam.TW*0.36,ry=cam.TH*0.66;
@@ -13146,7 +13270,7 @@ function questDest(){
   if(h.ch21c){
     if(Game.mapId==='hoshiminamoto')return {map:'hoshiminamoto',exp:h.uraCleared?'はじまりを かたりおえた。でぐちから むらへ もどろう。':'ほしのみなもとの おくで「かたられなかった はじまり」が まっている。かきかけの 三体（序・破・急）を こえて いどめ。'};
     if(h.uraTold&&!h.uraCleared)return {map:'grass',exp:'むらの おかの たもとの となりに ✨はじまりの ひかり——ふれると ほしのみなもとへ のぼれる。すべての ものがたりの みなもとだ。'};
-    return {map:'grass',exp:'むらの おかの ✨ほしのはしの たもと(ひかりの わ)から、\nほしのうみへ もういちど のぼれる。ものがたりは なんどでも あえる。'};
+    return {map:'grass',exp:'たびは ひととおり おわった。ここからは、きたの おかの わしの\n「✨いま できること」に ならべた '+tamesuList().length+'つ から えらぶ——\nぬしと もういちど 立ちあうも、⚒したくを ととのえるも、そなた しだい じゃ。'}; // 2026-07-26: たもと1本だけを指していた案内を 台帳へ
   }
   if(h.ch21d&&!h.ch21c)return {map:'grass',exp:'むらの ひろばへ。こどもと みんなが、さいごの ものがたりを まっている。'};
   if(h.ch21a&&!h.ch21d)return {map:'hoshiumi',exp:Game.mapId==='hoshiumi'?'ほしのみちの おくで すくわれなかったものが まつ。こうげきは とどかない——7つの といに 章じゅもんで こたえよ。':'むらの こどもに はなすと、ほしのはしで ほしのうみへ わたれる。'};
@@ -13397,7 +13521,7 @@ function questBeaconTargets(){
   }
   if(Game.mapId==='hoshiumi'&&h.ch21a&&!h.ch21d)foeB(e=>e.def===FOES.sukuwarenu);
   if(Game.mapId==='grass'&&TAMESU_AT)push(TAMESU_AT.x,TAMESU_AT.y); // フクロが さした ばしょ(いま ためせること)
-  else if(Game.mapId==='grass'&&h.ch21c&&w.npcs)for(const n of w.npcs)if(n.hoshibashi)push(n.x,n.y); // かんけつ後の めあて=たもと(2026-07-20「先に進めない」)
+  else if(Game.mapId==='grass'&&h.ch21c&&w.npcs)for(const n of w.npcs){if(n.gunshi)push(n.x,n.y);} // かんけつ後の めあて=フクロ(2026-07-26「めあてが別のとこ指してるんで気づかなかった」=たもとを指したままで、あとから足したものへ道が無かった。たもとは台帳の中にある)
   if(Game.mapId==='hoshiumi'&&h.ch21d&&w.exits)for(const ex of w.exits)push(ex.x,ex.y);
   // 村: じいさん・こども(はなす用事が あるとき)
   if(Game.mapId==='grass'&&w.npcs)for(const n of w.npcs)if((n.msgElder||n.heir||n.hood)&&npcStoryPending(n))push(n.x,n.y);
