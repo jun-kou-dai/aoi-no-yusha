@@ -8951,7 +8951,10 @@ function updateField(dt){
         else if(w.king&&w.king.x===nx&&w.king.y===ny){if(!hush){talkKing();acted=true;}}
         else if(w.inn&&w.inn.x===nx&&w.inn.y===ny){if(!hush){runInn();acted=true;}}
         else if(spotAt(nx,ny)){if(!hush){spotTalk(spotAt(nx,ny));acted=true;}}
-        else if(Game.mapId==='cave2'&&nx===16&&ny===8&&tileAt(nx,ny)==='D'){gateTry();acted=true;}
+        // ちそこの とざされた とびら: 宝箱・出入口と同じ「となり3マス」判定にする(2026-07-25 実機バグ修理)
+        // 旧: 押した正面1マスだけ=ひし形移動では 扉の真上/真下から 絶対に開かず、脇へ すり抜けていた
+        else if(Game.mapId==='cave2'&&!Game.hidden.gate1&&tileAt(16,8)==='D'
+                &&cands.some(cc=>p.tx+cc[0]===16&&p.ty+cc[1]===8)){gateTry();acted=true;}
       }
       // 2) でいりぐち・たからばこ・いずみは おした ほうこうの 3マスから すいつく
       //    （ひし形いどうだと 1マスの まとに たて・よこから のれないため）
