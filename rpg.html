@@ -1696,7 +1696,7 @@ icetown:{
   {id:'shiorikage',x:14,y:6},
   {id:'hakomori',x:5,y:9},
   {id:'kagimushi',x:14,y:9},
-  {id:'shimaikomu',x:10,y:3,need:'ch13w',gone:'ch13d'}],
+  {id:'shimaikomu',x:10,y:3,need:'ch13a',gone:'ch13d'}], // 島に着いた時から 見えている(2026-07-25: 備えて挑む)
  chests:[{x:16,y:8,item:'hoshitetsu'},{x:3,y:4,item:'inochi'}],
  exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'いちざの こぶねで、むらの きしへ もどった。'}]},
  tani:{ // 章14『かたちを かえる ものがたり』: こだまが「ちがう」と しかる 谷(一座の船で わたる)
@@ -8472,6 +8472,7 @@ function questTextCore(){
     // 章12は 章11後の全島共通の主線。島別の文より先に出す
     if(Game.mapId==='kura'){
       const kc=['ka1','ka2','ka3'].filter(k=>Game.hidden[k]).length;
+      if(!Game.hidden.ch13w)return 'もくてき：くらの ぬしは もう そこに いる。しまわれた こえを とりもどせ（'+kc+' / 3）── かたい からだには ほのおが とおる';
       if(!Game.hidden.ch13w)return 'もくてき：くらの「しまわれたこえ」の はこを ひらこう（'+kc+' / 3）';
       if(!Game.hidden.ch13d)return 'もくてき：くらの おくで めざめた ぬし「しまいこむもの」と むきあえ';
       if(!Game.hidden.ch13c)return 'もくてき：おくの「ねむりの ほんだな」へ——こえたちを かえす ときだ';
@@ -9368,8 +9369,28 @@ function updateField(dt){
     P.push({x:bx,y:by,vx:(lft?1:-1)*rnd(210,330),vy:-rnd(180,280),life:rnd(2.6,3.6),t:0,size:rnd(15,26),col:'rgba(255,200,92,.97)',grav:135,light:true,drag:0.999});
   }
 }
+// 章13: こえを 3つ とりもどすまで、ぬしには ことばが とどかない。
+// 倒せない戦いに 引きずり込まない=近づくと「なにが 要るか」だけを 見せて 返す。
+async function nushiNotYet(){
+  if(Game.talking)return;
+  const kc=['ka1','ka2','ka3'].filter(k=>Game.hidden[k]).length;
+  startTalk();sfxEnc();flash('#2a2038',0.45,0.8);
+  if(!Game.hidden.nushiKura){
+    Game.hidden.nushiKura=true;
+    await say('くらの ぬし——しまいこむもの。\nとじこめた こえを かかえこんで、いわの ように ふくれあがっている。');
+    await say('つるぎを あてても、かたい からだに はじかれる。\n『……しまって おけば、なくならない。だれにも とられない。』');
+    await say('しまの ひとの こえが うしろで する——\n「しまわれた こえを とりもどすんだ。ひとつ かえるたび、あの からだは ゆるむ」');
+    await say('（かたい ぬしには ほのおが とおる。ふねの ふなみせで そうびを ととのえ、\nくすりを つんでから いどむと よい）');
+    saveGame();
+  }else{
+    await say('ぬしの からだは まだ かたい。\nしまわれた こえ '+kc+' / 3——のこりを とりもどせば、ことばが とどく。');
+  }
+  endTalk();
+  toast('しまわれた こえ '+kc+' / 3 ── のこりを とりもどせ');
+}
 async function startEncounter(e){
   if(Game.battling)return;
+  if(e&&e.def===FOES.shimaikomu&&!Game.hidden.ch13w){await nushiNotYet();return;} // まだ ことばが とどかない
   Game.battling=true;
   Game.autoPath=null;
   const p=Game.p;
