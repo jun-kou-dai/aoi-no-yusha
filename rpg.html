@@ -2945,27 +2945,27 @@ const FOES={
   oisugaru:{name:'おいすがる はこ', hp:900, atk:150, def:60, exp:520, g:300, col:'#7a6248', draw:'golem', v:'iron', tint:'rgba(120,96,64,0.9)', hunter:true, huge:true, physMul:0.7, fireMul:1.4, iceMul:1.0, dodge:0, winMsg:'おいすがる はこは ふたを ひらいたまま とまり、\nなかから ほこりと、だれかの こえが こぼれた。'}, // 便1(2026-07-25): 第3部に1体も居なかった「徘徊する強敵」を くらのしまへ戻す
   hakomori:{name:'はこもり', hp:720, atk:144, def:58, exp:340, g:170, col:'#6a5a40', draw:'golem', v:'iron', tint:'rgba(96,82,56,0.85)', physMul:0.5, fireMul:1.3, iceMul:1.1, winMsg:'はこもりは くずれ、なかから ふるい ほんの においが した。'},
   shiorikage:{name:'しおりのかげ', hp:560, atk:138, def:50, exp:280, g:140, col:'#5a5468', draw:'crow', v:'bat', tint:'rgba(80,74,100,0.85)', dodge:0.22, physMul:1, fireMul:1.2, iceMul:0.9, winMsg:'しおりのかげは ぱらりと おち、ページの すきまに きえた。'},
-  shimaikomu:{charge:true, name:'しまいこむもの', hp:1500, atk:148, def:64, exp:2200, g:1800, col:'#8a6a3a', draw:'boss2', tint:'rgba(120,92,50,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:0.6, fireMul:1.2, iceMul:0.9, winMsg:'しまいこむものは ほどけ、\nとじられていた こえたちが いっせいに あふれだした！'},
+  shimaikomu:{nushi:true, charge:true, name:'しまいこむもの', hp:1500, atk:148, def:64, exp:2200, g:1800, col:'#8a6a3a', draw:'boss2', tint:'rgba(120,92,50,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:0.6, fireMul:1.2, iceMul:0.9, winMsg:'しまいこむものは ほどけ、\nとじられていた こえたちが いっせいに あふれだした！'},
   manebi:{name:'まねびのかげ', hp:580, atk:144, def:50, exp:300, g:150, col:'#6a6484', draw:'slime', tint:'rgba(96,90,124,0.85)', dodge:0.18, physMul:1, fireMul:1.1, iceMul:1.1, winMsg:'まねびのかげは じぶんの こえを ひとつ みつけて、すっと きえた。'},
   yamabiko:{name:'やまびこどり', hp:640, atk:146, def:54, exp:320, g:160, col:'#5a6a88', draw:'crow', tint:'rgba(90,106,136,0.85)', physMul:1, fireMul:1.2, iceMul:0.9, winMsg:'やまびこどりは ひとこえ ないて、たにの おくへ とんでいった。'},
   kuchibue:{name:'いわのくちぶえ', hp:800, atk:150, def:60, exp:360, g:185, col:'#7a8496', draw:'golem', v:'iron', tint:'rgba(116,126,146,0.85)', physMul:1, fireMul:0.8, iceMul:1.3, winMsg:'いわのくちぶえは ひびわれ、たかい ねいろが ひとつ のこった。'},
-  mototadasu:{charge:true, name:'もとをただすもの', hp:1600, atk:152, def:64, exp:2400, g:2000, col:'#565c74', draw:'boss2', tint:'rgba(92,96,120,0.94)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.9, iceMul:1.3, winMsg:'もとをただすものは くずれ、\nおさえつけられていた こだまが いっせいに うたいだした！'},
+  mototadasu:{nushi:true, charge:true, name:'もとをただすもの', hp:1600, atk:152, def:64, exp:2400, g:2000, col:'#565c74', draw:'boss2', tint:'rgba(92,96,120,0.94)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.9, iceMul:1.3, winMsg:'もとをただすものは くずれ、\nおさえつけられていた こだまが いっせいに うたいだした！'},
   yadokari:{name:'ほらがいやどかり', hp:620, atk:148, def:52, exp:330, g:165, col:'#c89868', draw:'slime', v:'iron', tint:'rgba(200,152,104,0.8)', physMul:1, fireMul:1.1, iceMul:1.1, winMsg:'ほらがいやどかりは からを おいて にげた。からから とおい うみの おとが する。'},
   kazesarai:{name:'かぜさらい', hp:680, atk:150, def:56, exp:350, g:175, col:'#7ab0c8', draw:'crow', v:'bat', tint:'rgba(122,176,200,0.8)', dodge:0.2, physMul:1, fireMul:1.2, iceMul:0.9, winMsg:'かぜさらいは さらった ことばを まきちらして、かぜに もどった。'},
   usofuda:{name:'うそふだのやま', hp:840, atk:152, def:62, exp:380, g:195, col:'#d8d0c0', draw:'golem', v:'iron', tint:'rgba(216,208,192,0.85)', physMul:1, fireMul:1.4, iceMul:0.8, winMsg:'うそふだのやまは くずれ、ふだは ただの かみに もどった。'},
-  makoto:{charge:true, name:'まことをせまるもの', hp:1700, atk:156, def:66, exp:2600, g:2200, col:'#b8bcc8', draw:'boss2', tint:'rgba(150,152,164,0.7)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:1.3, iceMul:0.9, winMsg:'まことをせまるものは ほどけ、\nしろい ふだが ただの かみきれに なって まいおちた。'},
+  makoto:{nushi:true, charge:true, name:'まことをせまるもの', hp:1700, atk:156, def:66, exp:2600, g:2200, col:'#b8bcc8', draw:'boss2', tint:'rgba(150,152,164,0.7)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:1.3, iceMul:0.9, winMsg:'まことをせまるものは ほどけ、\nしろい ふだが ただの かみきれに なって まいおちた。'},
   utawasure:{name:'うたわすれ', hp:660, atk:152, def:54, exp:360, g:180, col:'#8a90b0', draw:'slime', tint:'rgba(138,144,176,0.8)', physMul:1, fireMul:1.1, iceMul:1.1, winMsg:'うたわすれは ほどけて、わすれられた うたいだしが ひとつ そらへ かえった。'},
   otomodoki:{name:'おともどき', hp:720, atk:154, def:58, exp:380, g:190, col:'#6a88a0', draw:'crow', v:'bat', tint:'rgba(106,136,160,0.8)', dodge:0.18, physMul:1, fireMul:0.9, iceMul:1.2, winMsg:'おともどきは まねた こえを ぜんぶ おとして、ただの かぜに もどった。'},
   wasureishi:{name:'わすれいし', hp:900, atk:156, def:64, exp:410, g:210, col:'#7a8078', draw:'golem', v:'iron', tint:'rgba(122,128,120,0.85)', physMul:0.5, fireMul:1.2, iceMul:1, winMsg:'わすれいしは くずれ、きざまれていた ふるい うたが ひかりに なった。'},
-  wasurare:{charge:true, name:'わすれられしもの', hp:1800, atk:160, def:68, exp:2800, g:2400, col:'#7a7268', draw:'boss2', tint:'rgba(120,110,100,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, dodge:0.2, physMul:1, fireMul:0.9, iceMul:0.9, winMsg:'わすれられしものは ほどけ、\nすいこまれていた うたたちが いっせいに しまへ かえっていった。'},
+  wasurare:{nushi:true, charge:true, name:'わすれられしもの', hp:1800, atk:160, def:68, exp:2800, g:2400, col:'#7a7268', draw:'boss2', tint:'rgba(120,110,100,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, dodge:0.2, physMul:1, fireMul:0.9, iceMul:0.9, winMsg:'わすれられしものは ほどけ、\nすいこまれていた うたたちが いっせいに しまへ かえっていった。'},
   yokubarite:{name:'よくばりて', hp:700, atk:154, def:56, exp:380, g:195, col:'#a8863a', draw:'slime', tint:'rgba(168,134,58,0.8)', physMul:1, fireMul:1.1, iceMul:1.1, winMsg:'よくばりては ゆびを ひらいて、にぎっていた ひかりを そっと はなした。'},
   kaginomure:{name:'かぎのむれ', hp:760, atk:156, def:60, exp:400, g:205, col:'#8a8a5a', draw:'crow', v:'bat', tint:'rgba(138,138,90,0.8)', dodge:0.2, physMul:1, fireMul:1.2, iceMul:0.9, winMsg:'かぎのむれは ばらばらと おち、どれも ひとりでに かちりと ひらいた。'},
   tsumibako:{name:'つみあげばこ', hp:950, atk:158, def:66, exp:430, g:225, col:'#8a6c48', draw:'golem', tint:'rgba(138,108,72,0.85)', physMul:1, fireMul:1.4, iceMul:0.9, winMsg:'つみあげばこは くずれ、なかの ものがたりが ほっと いきを ついた。'},
   monoecho:{name:'ものがたりの こだま', hp:1500, atk:104, def:44, exp:0, g:0, col:'#8ab4ff', draw:'boss2', tint:'rgba(120,160,230,0.75)', stage:true, mboss:true, still:true, huge:true, watch:true, physMul:1, fireMul:1, iceMul:1, dodge:0, winMsg:'ものがたりの こだまは、ぱっと ひかりの つぶに なって ぶたいに ちった。\n（けいこは おわり——きゃくせきから はくしゅ）'},
-  hitorijime:{name:'ひとりじめのもの', hp:2400, atk:164, def:70, exp:3400, g:3000, col:'#8a6c3a', draw:'boss2', tint:'rgba(122,96,52,0.9)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:1.1, iceMul:1.1, winMsg:'ひとりじめのものは ほどけ、\nかかえこまれた ものがたりたちが ひかりの とりに なって とびたった！'},
+  hitorijime:{nushi:true, name:'ひとりじめのもの', hp:2400, atk:164, def:70, exp:3400, g:3000, col:'#8a6c3a', draw:'boss2', tint:'rgba(122,96,52,0.9)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:1.1, iceMul:1.1, winMsg:'ひとりじめのものは ほどけ、\nかかえこまれた ものがたりたちが ひかりの とりに なって とびたった！'},
   sukuwarenu:{name:'すくわれなかったもの', hp:9999, atk:172, def:999, exp:0, g:0, col:'#3a3a5e', draw:'boss2', tint:'rgba(40,44,80,0.92)', mboss:true, still:true, huge:true, watch:true, physMul:1, fireMul:1, iceMul:1, dodge:0, winMsg:'すくわれなかったものは ほどけ、\nかぞえきれない ほしに なって よぞらへ かえっていった。'},
-  shioarashi:{charge:true,name:'しおあらしの むれ',hp:2300,atk:166,def:68,exp:3500,g:2800,col:'#4d8eaa',draw:'stormflock',mboss:true,still:true,huge:true,watch:true,dodge:0.12,physMul:0.80,fireMul:1.6,iceMul:0.55,winMsg:'しおあらしの むれは あたたかい あめに ほどけ、\nうみへ かえる みちを みつけた。'},
-  kiritoru:{charge:true,name:'きりとるもの',hp:2700,atk:170,def:72,exp:3800,g:3200,col:'#7662a0',draw:'timefracture',mboss:true,still:true,huge:true,dodge:0.35,physMul:0.75,fireMul:0.85,iceMul:0.85,winMsg:'きりとるものは 三つの文字盤から 一本の金の針へ ほどけ、\n止まっていた島の一分が、朝へ うごきだした。'},
+  shioarashi:{nushi:true, charge:true,name:'しおあらしの むれ',hp:2300,atk:166,def:68,exp:3500,g:2800,col:'#4d8eaa',draw:'stormflock',mboss:true,still:true,huge:true,watch:true,dodge:0.12,physMul:0.80,fireMul:1.6,iceMul:0.55,winMsg:'しおあらしの むれは あたたかい あめに ほどけ、\nうみへ かえる みちを みつけた。'},
+  kiritoru:{nushi:true, charge:true,name:'きりとるもの',hp:2700,atk:170,def:72,exp:3800,g:3200,col:'#7662a0',draw:'timefracture',mboss:true,still:true,huge:true,dodge:0.35,physMul:0.75,fireMul:0.85,iceMul:0.85,winMsg:'きりとるものは 三つの文字盤から 一本の金の針へ ほどけ、\n止まっていた島の一分が、朝へ うごきだした。'},
   // 章18 かぜまちじま: あらしに ちらされ、これから 建て直す島の 歩く敵(2026-07-22 案6A)
   nagaregi:{name:'ながれぎ', hp:820, atk:160, def:62, exp:450, g:235, col:'#9a7a52', draw:'slime', tint:'rgba(154,122,82,0.82)', physMul:1, fireMul:1.4, iceMul:0.9, winMsg:'ながれぎは ぱらぱらと ほどけ、\nつかえそうな いたが 一まい、はまべに のこった。'},
   tobiyane:{name:'とびやね', hp:800, atk:162, def:62, exp:470, g:245, col:'#c8a86a', draw:'crow', v:'bat', tint:'rgba(200,168,106,0.8)', dodge:0.2, physMul:1, fireMul:1.2, iceMul:0.9, winMsg:'とびやねは かぜを うしなって おち、\nしずかに じめんへ よこたわった。'},
@@ -2979,7 +2979,7 @@ const FOES={
   hakage:{name:'はの かげ', hp:1350, atk:180, def:68, exp:0, g:0, col:'#6a9ac8', draw:'crow', v:'bat', tint:'rgba(106,154,200,0.82)', dodge:0.25, physMul:1, fireMul:0.7, iceMul:1.5, winMsg:'はの かげは こおりに くだけ、\nとちゅうで とまった はなしが、また うごきだした。'},
   kyukage:{name:'きゅうの かげ', hp:1650, atk:178, def:84, exp:0, g:0, col:'#8a7ab0', draw:'golem', v:'iron', tint:'rgba(138,122,176,0.85)', physMul:0.5, fireMul:1.1, iceMul:1.1, winMsg:'きゅうの かげは くだけ、\nおわれなかった むすびが、しずかに とじた。'},
   hajimarazu:{charge:true, name:'かたられなかった はじまり', hp:6000, atk:185, def:92, exp:0, g:0, col:'#3a4a7a', draw:'boss2', tint:'rgba(58,74,122,0.9)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:0.55, fireMul:0.8, iceMul:0.8, dodge:0, winMsg:'かたられなかった はじまりは、はじめて さいごまで かたられ——\nひかりに ほどけて、みなもとの いずみへ かえっていった。'},
-  kajiu:{name:'かじをうばうもの',hp:3100,atk:178,def:76,exp:4200,g:3600,col:'#24304a',draw:'blackhelm',mboss:true,still:true,huge:true,dodge:0.18,physMul:0.82,fireMul:0.82,iceMul:0.82,winMsg:'かじをうばうものは 黒い綱へ ほどけ、\n三艘の舵輪が おなじ朝の港へ まわりだした。'},
+  kajiu:{nushi:true, name:'かじをうばうもの',hp:3100,atk:178,def:76,exp:4200,g:3600,col:'#24304a',draw:'blackhelm',mboss:true,still:true,huge:true,dodge:0.18,physMul:0.82,fireMul:0.82,iceMul:0.82,winMsg:'かじをうばうものは 黒い綱へ ほどけ、\n三艘の舵輪が おなじ朝の港へ まわりだした。'},
   namigarasu:{name:'なみがらす', hp:520, atk:136, def:52, exp:270, g:135, coward:true, col:'#8fb8d8', draw:'crow', v:'snow', tint:'rgba(110,150,190,0.72)', dodge:0.3, physMul:1, fireMul:1.2, iceMul:0.8, winMsg:'とりは しぶきに とけて、なみまに きえた。'},
   shiouzu:{name:'しおのうず', hp:600, atk:139, def:56, exp:320, g:160, col:'#4a7ab0', draw:'slime', v:'dark', tint:'rgba(60,100,150,0.8)', physMul:0.7, fireMul:0.6, iceMul:1.5, winMsg:'うずは ほどけ、しずかな なみに もどった。'},
   uminohebi:{name:'おおうみへび', hp:680, atk:142, def:54, exp:360, g:180, col:'#3a8a7a', draw:'golem', v:'ent', tint:'rgba(50,120,105,0.8)', physMul:1, fireMul:1.2, iceMul:1.2, dodge:0.1, winMsg:'うみへびは ふかみへ しずんで いった。'},
@@ -14042,7 +14042,7 @@ function autoDecide(){
   const p=Game.p,bt=Game.bt;
   if(bt&&bt.charge){ // ため中: 大技の期待ダメージを実式で見積り、素受けでも25%余裕が残るなら殴る(常時ぼうぎょの作業感を解消・危なければ従来どおり守る)
     const Dc=curDiff(),f=bt.foe;
-    const ha=Math.round(f.atk*(bt.night?1.3:1)*diffEnemyAtk(f))*2;
+    const ha=Math.round(f.atk*(bt.night?1.3:1)*diffEnemyAtk(f))*(f.nushi?3:2); // 見積りは本体のため倍率と同じ式(島のぬしは×3)
     let hd=Math.max(1,ha-p.def+3);
     const mf2=f.boss?(Dc.bossMinFrac||Dc.minFrac||0):(Dc.minFrac||0);
     hd=Math.max(hd,Math.round(ha*mf2));
@@ -15029,6 +15029,11 @@ async function enemyAction(){
     await say('ただしさの こだまが、ちからを ためて いる…！');
     return;
   }
+  // ため周期は3ターンのまま(2026-07-25: いちど ぬしだけ2ターンへ詰めたが、章13の実測A/Bで
+  // 敵の行動の69%が「ためている/すさまじい いちげき」の往復になり、ふつうのこうげきが14回→6回、
+  // 何も起きない「ようすを みている」が9回→16回へ。重くした通常こうげき(37)が出番を失って
+  // 二つの直しが打ち消し合っていた。詰めた理由「戦いが5ターンで短い」も ため×3で7〜8ターンに
+  // 伸びた時点で消えている。手ごたえは 周期ではなく ため×3 と bossMinFrac が担う)
   if(foe.charge&&!bt.charge&&bt.turn%3===2){
     bt.charge=true;
     sfxCharge();
@@ -15043,6 +15048,7 @@ async function enemyAction(){
   let fadMul=1; if(bt.foeAtkDown&&bt.foeAtkDown.t>0){fadMul=bt.foeAtkDown.mul;bt.foeAtkDown.t--;} // ナギのうた: こうげき3回を3わり減
   let atk=Math.round(foe.atk*(bt.night?1.3:1)*diffEnemyAtk(foe)*fadMul),label=foe.name+'の こうげき！',fire=false,holy=false,heavy=false,spel=false,ecrit=false,ch20DmgMul=1;
   if(foe===FOES.sukuwarenu)atk=Math.round(atk*(1-0.1*Math.min(6,bt.finQ||0))); // なんいど：敵こうげき係数
+  const atkPlain=atk; // どの分岐も こうげき力を いじらなかった場合＝ふつうの こうげき(と メラ)の目印
   if(foe===FOES.kajiu){
     const hz=CH20_HAZARDS[(bt.ch20Hazard||0)%CH20_HAZARDS.length];let correct=false;
     if(bt.ch20Signal){
@@ -15053,6 +15059,9 @@ async function enemyAction(){
       if(correct){ch20DmgMul=0.35;bt.ch20Opening=hz.kind;label=CH20_FORMS[pick].icon+' '+CH20_FORMS[pick].name+'！ 三艘が「'+hz.name+'」を うけながした！';}
       else label=CH20_FORMS[pick].icon+' '+CH20_FORMS[pick].name+'では「'+hz.name+'」を ささえきれない！';
     }else label='黒い舵輪が 三艘の向きを うばい、「'+hz.name+'」へ ぶつけた！';
+    // 三つの危険は 章20の山場そのもの。素で受けると重い(2026-07-25 実測: ×1では下限45=HPの13%で、
+    // 章20が島のぬし8体でいちばん安全な相手だった)。『こえをまわす』で隊列を合わせれば 0.35倍へ落ちる＝備えが効く。
+    atk=Math.round(atk*1.7);
     bt.ch20LastReaction={hazard:hz.name,expected:hz.form,pick:bt.ch20Signal?bt.ch20Formation:null,correct,mul:ch20DmgMul};
     bt.ch20Hazard=((bt.ch20Hazard||0)+1)%CH20_HAZARDS.length;bt.ch20Fake=false;bt.ch20DmgMul=ch20DmgMul;heavy=true;renderBattleWeakness();
   }else if(bt.soar){
@@ -15062,7 +15071,10 @@ async function enemyAction(){
     heavy=true;
   }else if(bt.charge){
     bt.charge=false;
-    atk=atk*2;
+    // 島のぬしだけ ため一撃を ×3 へ(2026-07-25 実測: ×2では38〜47%で、予告を無視して殴りつづけて576戦0敗だった)。
+    // ×3で 大技の上限 capHeavy に張りつく＝2発つづけて素で受けたら たおれる。予告は1ターン前に必ず出るので不意打ちにはならない。
+    // 答えは全部すでに手の中にある: ぼうぎょ/とわのまもり/こだまがえし/ナギのうた/ほらがいのこえ/かげのきし。
+    atk=atk*(foe.nushi?3:2);
     label=foe.name+'の すさまじい いちげき！';
     heavy=true;
   }else if(!foe.boss&&Math.random()<curDiff().crit){
@@ -15090,6 +15102,11 @@ async function enemyAction(){
     label=foe.name+'は メラを となえた！'; // いりょくは つうじょうこうげきと同式（えんしゅつのみ）
     spel=true;
   }
+  // 島のぬしの「ふつうの こうげき」だけ 1.45倍(2026-07-25 実測: ぬしのこうげき148〜178 に対し 旅の終わりの
+  // まもりが165で、式の答えが1に沈み 床の値から動かなかった＝よろいを鍛えても痛さが変わらない相手だった。
+  // こうげき側を上げて「こうげき−まもり」を生かす。大技・つうこん・章19の三つの姿・章20の三つの危険には重ねない
+  // ＝atk を いじった分岐は atkPlain と食い違うので 素通りする)
+  if(foe.nushi&&atk===atkPlain)atk=Math.round(atk*1.45);
   const tgtNk=nkFollowing()&&Game.nkHp>0&&Math.random()<0.35; // なかまが ねらわれる
   await say(label);
   const physical=!fire&&!holy&&!spel;
@@ -15140,6 +15157,9 @@ async function enemyAction(){
   let d=calcDmg(atk,defNow);
   {const Dc0=curDiff(),mf=foe.boss?(Dc0.bossMinFrac||Dc0.minFrac||0):(Dc0.minFrac||0);
    d=Math.max(d,Math.round(atk*mf));} // なんいど：被ダメ下限。ボスはbossMinFrac優先（ふつう帯ボスの被弾が空気になる対処・未定義はminFracへ＝でんせつ以上とざこ・中ボスは不変）
+   // 2026-07-25: ぬしにも bossMinFrac(0.25)を効かせる案は撤回した。床は「こうげき×割合」なので よろいを通らず、
+   // 上げるほど「よろいを鍛えても痛さが変わらない」を強めてしまう。ぬしの手ごたえは 上の 1.45倍(こうげき側)で作る
+   // ＝こうげき−まもり が生きるので、よろいの数値が そのまま痛さに出る。なかま側(15120行)とも扱いが揃う。
   {const afx=ARMORFX[Game.armorDef]||{};
    if(afx.elemGuard&&(fire||holy))d=Math.max(1,Math.round(d*afx.elemGuard));
    if(afx.critGuard&&ecrit)d=Math.max(1,Math.round(d*afx.critGuard));} // はがねのよろい：つうこんに つよい
