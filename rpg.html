@@ -3261,6 +3261,7 @@ function loadMap(id){
   if(id==='cave2'&&Game.hidden.gate1)MAP=MAP.map((row,i)=>i===8?row.slice(0,16)+'F'+row.slice(17):row); // ひらいた とびらは ひらいたまま
   if(id==='umi'&&Game.hidden.ch11d)MAP=MAP.map(row=>row.replace(/X/g,'W')); // あらなみは ほどけたまま(みなと開通)
   Game.kodama=null; // やまびこ おいかけ(章14): マップを移ったら こだまは いない(保存しない一時状態)
+  if(id!=='grass'){TAMESU_AT=null;TAMESU_GO=false;} // フクロが さした ばしょは むらの中だけ
   if(id!=='hoshiumi')CH21_REPLAY=false; // 再訪はほしのうみ滞在中だけ有効(2026-07-20)
   if(id!=='hoshiminamoto')URA_REPLAY=false; // 裏章の再戦はほしのみなもと滞在中だけ有効(2026-07-23)
   Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!(Game.hidden[s.need]||(s.id==='sukuwarenu'&&CH21_REPLAY)||(s.id==='hajimarazu'&&URA_REPLAY)))&&!(s.gone&&Game.hidden[s.gone]&&!(s.id==='sukuwarenu'&&CH21_REPLAY)&&!(s.id==='hajimarazu'&&URA_REPLAY))&&!(s.shinpan&&Game.diff!==7)&&!(id==='grass'&&Game.hidden.ch21c)).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
@@ -6637,6 +6638,17 @@ async function talkNpc(n){
     await say('いえの まえに こどもたちが あつまって、ほらふきの おおぼらに\nめを かがやかせている。しまは もう、しずかすぎない。');
     endTalk();return;
   }
+  if(n.kmKey&&Game.hidden[n.kmKey]&&Game.mapId==='tani'&&Game.hidden.ch14c){ // クリア済みの たに: もういちど おいかけっこ(進行もセーブも 変わらない)
+    if(Game.kodama){toast('こだまは たにを かけまわっている！');endTalk();return;}
+    const go=await ask([{id:'y',label:'こだまを おいかける'},{id:'n',label:'やめておく'}],
+      'こだまのいし。あなの おくで、かえってきた こえが まだ ゆれている。\nもういちど、おいかけっこを して みる？');
+    if(go!=='y'){await say('いしは しずかに ひかって、こえを かかえたまま だまった。');endTalk();return;}
+    await say('こえが ひかりの たまに なって とびだした！\n——たにを かけていく。おいかけて つかまえよう。');
+    sfxChest();flash('#d8e2ff',0.32,0.8);
+    endTalk();
+    startKodamaChase(n,true);
+    return;
+  }
   if(n.kmKey&&!Game.hidden[n.kmKey]){ // 章14: こだまのいし=ふれると こえが とびだして にげる(やまびこ おいかけ)
     if(Game.kodama){toast('こだまは たにを かけまわっている！');endTalk();return;} // 追いかけ中は 読む窓を出さない
     await say('こだまのいし。ふるい あなに むかって、そっと こえを かけた——\nこえは ひかりの たまに なって とびだし、たにを かけていった！');
@@ -7585,12 +7597,12 @@ function kodamaSpot(dmin,dmax,fromX,fromY){ // 勇者から dmin〜dmax マス �
   }
   return spots.length?spots[ri(0,spots.length-1)]:[fromX,fromY];
 }
-function startKodamaChase(n){
-  const stage=Math.min(2,['km1','km2','km3'].filter(k=>Game.hidden[k]).length); // 0,1,2 = はねる とおさが のびる
+function startKodamaChase(n,replay){
+  const stage=replay?ri(0,2):Math.min(2,['km1','km2','km3'].filter(k=>Game.hidden[k]).length); // 0,1,2 = はねる とおさが のびる
   const jd=[4,5,6][stage];
   const sp=kodamaSpot(jd,jd+2,n.x,n.y);
   Game.kodama={tx:sp[0],ty:sp[1],px:sp[0],py:sp[1],fx:sp[0],fy:sp[1],jt:0,hop:0,moving:false,
-    jumps:0,tired:false,stage:stage,key:n.kmKey,msg:(n.msg&&n.msg[0])||'',caught:false};
+    jumps:0,tired:false,stage:stage,key:n.kmKey,msg:(n.msg&&n.msg[0])||'',caught:false,replay:!!replay};
   if(Game.cam){
     const a=isoCtr(n.x,n.y),b=isoCtr(sp[0],sp[1]);
     puff(a.x,a.y,'rgba(180,228,255,.95)',16,120,0.7,{up:true,s0:2,s1:4});
@@ -7624,6 +7636,10 @@ async function catchKodama(){
   sfxChest();flash('#d8e2ff',0.32,0.8);
   startTalk();
   if(ko.msg)await say(ko.msg);
+  if(ko.replay){ // 再訪=もらうものは なにも 変わらない。こえを もう一度 きくだけ
+    await say('こえは ひとしきり たにに ひびいて、また いしの あなへ もどっていった。\nかたちを かえても、しんは きえない——たには、いまも そう うたっている。');
+    endTalk();return;
+  }
   Game.hidden[ko.key]=true;
   const kmc=['km1','km2','km3'].filter(k=>Game.hidden[k]).length;
   await say('おなじ はしの はなしなのに、こえごとに かたちが ちがう。\nどの こえも あたたかい——こだまは 三たび はねて、てのひらで しずかに ひかった。');
@@ -8102,6 +8118,42 @@ async function gunshiMemory(){
   if(n<3)await say('フクロ「わしの むかしばなしの つづきは、\nもそっと そうだんを かさねてから じゃ。」');
 }
 // つぎの一手の道しるべ: めあての場所と行き方を無料で断言する(フクロを実用の入口に 2026-07-20)
+// ============================================================
+// 「いま ためせること」(2026-07-25): 作ったものへ たどりつく道を ゲームの中に置く。
+// 発注者「どこでチェックすればいいかわからないし、その誘導もない」への正面対応。
+// 別のしまへは フクロが わたしてくれる。むらの中なら 金の光が その場所を さし、足が ひとりでに むかう。
+// 進行フラグ・セーブ形式は不変(TAMESU_AT/TAMESU_GO は保存しない一時状態)。
+// ============================================================
+function tamesuList(){
+  const h=Game.hidden,out=[];
+  if(h.ch14c)out.push({id:'tani',label:'🌿 やまびこのたに ─ にげる こだまを おいかける',
+    line:'たにの「こだまのいし」に ふれると、こえが ひかりの たまに なって とびだす。\n三たび はねさせると いきが きれて とどまる——そこを つかまえる。',
+    to:{map:'tani',tx:10,ty:11}});
+  if(h.ch21c)out.push({id:'tamoto',label:'✨ ほしのはしの たもと ─ さいしゅうしょうを もういちど',
+    line:'むらの おかに のこった ひかりの わ。ほしのうみへ なんども のぼれる。',at:{x:8,y:10}});
+  if(h.uraTold)out.push({id:'ura',label:'🌌 はじまりの ほしあかり ─ いちばん つよい あいて',
+    line:'たもとの となりの あおい ほしあかり。九つめの しま「ほしのみなもと」へ つづく。\nいままでで いちばん つよい あいてが まっておる。',at:{x:10,y:10}});
+  if(h.ch13a)out.push({id:'fune',label:'🚢 一座の ふね ─ ぶきを かう・きたえる・しまへ わたる',
+    line:'にしの きしの ふね。「ふなみせ」で ぶきと くすりを かい、かじで きたえられる。\nいちど わたった しまへは、ここから いつでも もどれる。',at:{x:1,y:6}});
+  return out;
+}
+async function gunshiTamesu(){
+  const list=tamesuList();
+  if(!list.length){await say('フクロ「いまは、めのまえの たびに あつまる ときじゃ。\nつぎの ゆきさきは 🧭で みたてよう。」');return;}
+  const c=await ask(list.map(e=>({id:e.id,label:e.label})).concat([{id:'no',label:'やめておく'}]),
+    'フクロ「いま そなたが ためせるのは、この あたりじゃ。\nえらべば、わしが そこまでの みちを ひらく。」');
+  if(!c||c==='no')return;
+  const e=list.find(x=>x.id===c);if(!e)return;
+  await say(e.line);
+  if(e.to){
+    await say('フクロ「では、いってくるが よい。」');
+    await transitMap({to:e.to.map,tx:e.to.tx,ty:e.to.ty,msg:(MAPNAME[e.to.map]||'')+'へ——'});
+    saveGame();return 'moved';
+  }
+  TAMESU_AT={x:e.at.x,y:e.at.y};TAMESU_GO=true;
+  await say('フクロ「きんいろの ひかりが、その ばしょを さしておる。\nあしを むけよ——わしが みちを てらしておく。」');
+  return 'moved';
+}
 async function gunshiNavi(){
   const d=questDest();
   await say('フクロ「いま なすべきは——\n'+d.exp+'」');
@@ -8125,6 +8177,7 @@ async function gunshiTalk(){
   }
   while(true){
     const c=await ask([
+      {id:'tamesu',label:'✨ いま ためせること'},
       {id:'navi',label:'🧭 つぎは どこへ いけばいい？'},
       {id:'gear',label:'⚔ そうびの みたて'},
       {id:'spell',label:'🔮 じゅもんと てきの みたて'},
@@ -8133,6 +8186,7 @@ async function gunshiTalk(){
       {id:'no',label:'たちさる'}
     ],'フクロ「なにを みたてる？ ぜんぶ ただ じゃ」');
     if(!c||c==='no'){await say('フクロ「ちえは つかってこそ。いっての ぶじを いのる。」');break;}
+    if(c==='tamesu'){if(await gunshiTamesu()==='moved')return;continue;}
     if(c==='navi'){await gunshiNavi();continue;}
     if(c==='omoi'){await gunshiMemory();continue;}
     if(c==='gear'){if(await gunshiPay('gear','gunshiFG')){h.gunshiN=(h.gunshiN||0)+1;await gunshiGear();saveGame();}continue;}
@@ -8358,6 +8412,9 @@ function questText(){
   return t;
 }
 function questTextCore(){
+  // 「いま ためせること」で 来た先では、その場で なにが できるかを 先に見せる(発注者「誘導がない」への対応)
+  if(Game.kodama)return Game.kodama.tired?'もくてき：こだまが とまった！ いまの うちに つかまえよう':'もくてき：はねる こだまを おいかけよう（あと '+(3-Game.kodama.jumps)+'はね）';
+  if(Game.mapId==='tani'&&Game.hidden.ch14c)return 'もくてき：ひかる「こだまのいし」に ふれると、こだまと おいかけっこが できる';
   if(Game.minigame&&Game.minigame.kind==='ch20')return '三艘の航海盤：さいごの舟まで 岩にふれない隊列を つなごう';
   if(Game.minigame)return 'スライムつかまえ！ のこり '+Math.max(0,Math.ceil(Game.minigame.t))+'びょう　つかまえた '+Game.minigame.got+'/3';
   if(Game.qChild===1)return Game.mapId==='cave'?'もくてき：どうくつの ひだりおくで ポポを さがせ':'もくてき：どうくつで まいごの ポポを さがせ';
@@ -8421,8 +8478,11 @@ function questTextCore(){
       {const b17=ch17IsleBar('ch17Key','ねむりの ほんだな');if(b17)return b17;}
       return 'もくてき：うたの もどった しまを あるこう。かえりの ふねは みなみの さんばし';
     }
+    if(Game.mapId==='grass'&&TAMESU_AT)return 'もくてき：フクロが さした きんいろの ひかりへ——そこで ためせる';
     if(Game.mapId==='tani'){
       const kmc=['km1','km2','km3'].filter(k=>Game.hidden[k]).length;
+      if(Game.kodama&&Game.kodama.replay)return Game.kodama.tired?'もくてき：こだまが とまった！ いまの うちに つかまえよう':'もくてき：はねる こだまを おいかけよう（あと '+(3-Game.kodama.jumps)+'はね）';
+      if(Game.hidden.ch14c)return 'もくてき：ひかる「こだまのいし」に ふれると、もういちど こだまと おいかけっこが できる';
       if(Game.kodama)return Game.kodama.tired?('もくてき：こだまが とまった！ いまの うちに つかまえよう（'+kmc+' / 3）'):('もくてき：はねる こだまを おいかけよう（'+kmc+' / 3・あと '+(3-Game.kodama.jumps)+'はね）');
       if(!Game.hidden.ch14w)return 'もくてき：たにの「こだまのいし」を ならそう（'+kmc+' / 3）';
       if(!Game.hidden.ch14d)return 'もくてき：がけの うえで めざめた ぬし「もとをただすもの」と むきあえ';
@@ -9024,6 +9084,12 @@ function updateField(dt){
     Game._qt=null; // のこり時間を まいフレーム こうしん
     if(mg.got>=3)endMiniGame(true);
     else if(mg.t<=0)endMiniGame(false);
+  }
+  // 「いま ためせること」: 会話が おわったら 足が ひとりでに むかい、着いたら 光を消す
+  if(TAMESU_AT&&Game.scene==='field'&&Game.mapId==='grass'&&!Game.talking&&!Game.battling&&!Game.transiting){
+    if(TAMESU_GO){TAMESU_GO=false;
+      if(Game.cam){const q=isoCtr(TAMESU_AT.x,TAMESU_AT.y);tapMove(q.x,q.y-Game.cam.TH*0.45);}}
+    if(Math.max(Math.abs(Game.p.tx-TAMESU_AT.x),Math.abs(Game.p.ty-TAMESU_AT.y))<=1){TAMESU_AT=null;Game._qt=null;}
   }
   // やまびこ おいかけ(章14): となりまで 行くと こだまは 谷の むこうへ ひとはね。三たび はねたら つかれて とどまる=かならず つかまる
   if(Game.kodama&&Game.scene==='field'&&Game.mapId==='tani'&&!Game.talking&&!Game.battling&&!Game.transiting){
@@ -13078,6 +13144,10 @@ function questBeaconTargets(){
       if(Game.kodama)push(Game.kodama.tx,Game.kodama.ty); // にげる こだまを 追う
       else for(const n of w.npcs)if(n.kmKey&&!h[n.kmKey])push(n.x,n.y);
     }
+    if(h.ch14c){ // クリア済み: もういちど あそべる いしを 指す
+      if(Game.kodama)push(Game.kodama.tx,Game.kodama.ty);
+      else for(const n of w.npcs)if(n.kmKey)push(n.x,n.y);
+    }
     if(h.ch14w&&!h.ch14d)foeB(e=>e.def===FOES.mototadasu);
     if(h.ch14d&&!h.ch14c)for(const n of w.npcs)if(n.hiroKey)push(n.x,n.y);
   }
@@ -13134,7 +13204,8 @@ function questBeaconTargets(){
     else for(const n of w.npcs)if(n.ch20Final)push(n.x,n.y);
   }
   if(Game.mapId==='hoshiumi'&&h.ch21a&&!h.ch21d)foeB(e=>e.def===FOES.sukuwarenu);
-  if(Game.mapId==='grass'&&h.ch21c&&w.npcs)for(const n of w.npcs)if(n.hoshibashi)push(n.x,n.y); // かんけつ後の めあて=たもと(2026-07-20「先に進めない」)
+  if(Game.mapId==='grass'&&TAMESU_AT)push(TAMESU_AT.x,TAMESU_AT.y); // フクロが さした ばしょ(いま ためせること)
+  else if(Game.mapId==='grass'&&h.ch21c&&w.npcs)for(const n of w.npcs)if(n.hoshibashi)push(n.x,n.y); // かんけつ後の めあて=たもと(2026-07-20「先に進めない」)
   if(Game.mapId==='hoshiumi'&&h.ch21d&&w.exits)for(const ex of w.exits)push(ex.x,ex.y);
   // 村: じいさん・こども(はなす用事が あるとき)
   if(Game.mapId==='grass'&&w.npcs)for(const n of w.npcs)if((n.msgElder||n.heir||n.hood)&&npcStoryPending(n))push(n.x,n.y);
@@ -15032,6 +15103,7 @@ const FINALE_QS=[
 // 正解ごとにボスの影が明るくほどけ(finTint)、★が灯る。被弾・MP消費・メニューなし。
 let CH21_REPLAY=false; // クリア後の再訪(セーブに書かない・ほしのうみ滞在中のみtrue)
 let URA_REPLAY=false; // 裏章の再訪(セーブに書かない・ほしのみなもと滞在中のみtrue)
+let TAMESU_AT=null,TAMESU_GO=false; // 「いま ためせること」でフクロが さした むらの ばしょ(保存しない)
 const CH21_TINTS=['rgba(40,44,80,0.92)','rgba(52,54,96,0.88)','rgba(66,64,112,0.84)','rgba(82,76,128,0.80)','rgba(100,90,144,0.75)','rgba(120,106,160,0.70)','rgba(142,124,176,0.63)','rgba(168,146,194,0.55)'];
 const CH21_THEME={satori:'しる ことから はじめる',kageharai:'かげを ほどいて かえす',uketome:'うけとめる こころ',watashi:'てから てへ わたす',mamori:'となりに いる',yobigoe:'なまえを よぶ',monogatari:'おわりを うけつぐ',nagiuta:'みおくりの うた',tomoshibimichi:'みちを てらす',futarigatari:'となりを あるく',hitotsunoumi:'うみを ひとつに つなぐ',minnanokoe:'ほんとうの こえ',hiraku:'とじた ものを ひらく',kodama:'うけて かえす こだま',horagai:'おおきな こえ',hajimari:'はじまりを おもいだす',minmono:'わけあう ものがたり',ashita:'あしたを えらぶ',toki:'ときを つなぐ',koemawasu:'こえを まわす'};
 const CH21_KAGE={
