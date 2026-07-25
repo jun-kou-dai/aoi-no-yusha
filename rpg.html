@@ -916,7 +916,7 @@ grass:{
   {x:15,y:11,kind:'musume',col:'#5f5a78',needKey:'ch4c',hood:1,msg:['フードの ひとかげは、こたえない。\nかぜの おとだけが、ふたりの あいだを すぎていく。']},
   {x:17,y:12,kind:'tent',troupeTent:1,needKey:'ch11c',col:'#d94b5b',msg:[]}, // 村の中心(12,10)から南東の隅へ(四方八方にバラす 2026-07-20)
   {x:1,y:6,kind:'ship',troupeShip:1,needKey:'ch11c',col:'#d8bd78',msg:[]}, // 南中央(8,12)から西の岸へ(四方八方にバラす 2026-07-20)
-  {x:8,y:10,kind:'hoshibashi',hoshibashi:1,needKey:'ch21c',col:'#cfe0ff',msg:[]}, {x:10,y:10,kind:'uraLight',uraLight:1,needKey:'uraTold',col:'#8ab4ff',msg:[]}], // 裏章の入口=はじまりの ほしあかり(ch21c後の案内uraToldで ともる)
+  {x:8,y:10,kind:'hoshibashi',hoshibashi:1,needKey:'ch21c',col:'#cfe0ff',msg:[]}, {x:9,y:10,kind:'uraLight',uraLight:1,needKey:'uraTold',col:'#8ab4ff',msg:[]}], // 裏章の入口=はじまりの ほしあかり(ch21c後の案内uraToldで ともる)
  king:{x:3,y:10}},
 forest:{
  song:'forest', bg:['#0a1f12','#13301d'],
@@ -1267,7 +1267,7 @@ icetown:{
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'しずんだ さとを あとに、みなれた そうげんへ もどってきた。'},
   {x:16,y:11,to:'umi',tx:10,ty:10,need:'ch11a',msg:'さとの きしから ふねを こぎだした——ひとつの うみへ！'}]},
  mistsea:{
- song:'sunken', bg:['#1a2030','#2c3a4e'], dark:true, darkR:5.0, darkCol:'56,72,92', darkA:0.66,
+ song:'sunken', bg:['#1a2030','#2c3a4e'], dark:true, darkR:7.0, darkCol:'56,72,92', darkA:0.50,
  spots:[
   {x:16,y:2,kind:'fire',msg:['きりの なかに たきびあと。ひは とうに きえたのに、\nだれかの ぬくもりだけが のこっている。']},
   {x:3,y:6,kind:'sign',msg:['きりに ぬれた たてふだ。「わすれても、あった ことは きえない」\n──おなじ もじを、なんども なぞった あとが ある。']}],
@@ -1382,7 +1382,7 @@ icetown:{
   {x:10,y:12,to:'grass',tx:4,ty:11,msg:'きんいろの ひかりを あとに、そうげんへ もどってきた。'},
   {x:4,y:12,to:'umi',tx:6,ty:8,need:'ch11a',msg:'もりの きしから ふねを こぎだした——ひとつの うみへ！'}]},
  kokoro:{ // 章5c『こころのにわ』: とざしびとの こころの なか(入口=とざしびとの まねき・でぐち=むらはずれ)
- song:'kotae', bg:['#0e0c20','#1c1834'], dark:true, darkR:4.2, darkCol:'44,36,72', darkA:0.7,
+ song:'kotae', bg:['#0e0c20','#1c1834'], dark:true, darkR:6.2, darkCol:'44,36,72', darkA:0.52,
  map:[
  'TTTTTTTTTTTTTTTTTTTT',
  'TTTTTTTGGGGGGTTTTTTT',
@@ -1404,7 +1404,7 @@ icetown:{
  exits:[{x:10,y:12,to:'grass',tx:14,ty:11,msg:'……きがつくと、むらはずれに たっていた。'}],
  npcs:[]},
  towa:{ // 裏ダンジョン『とわの ふち』：こたえを もつ ものだけが たどりつく、といの すみか
- song:'towa', bg:['#0c0616','#1e1030'], dark:true, darkR:4.5, darkCol:'40,20,70', darkA:0.72,
+ song:'towa', bg:['#0c0616','#1e1030'], dark:true, darkR:6.5, darkCol:'40,20,70', darkA:0.54,
  spots:[
   {x:9,y:1,kind:'fire',msg:['たきびあと…… この ふちに？ まだ あたたかい。\nじぶんより さきに、だれかが といに きた のだ。']},
   {x:14,y:8,kind:'sign',msg:['といの かけらで できた たてふだ。\n「こたえは もつ ものではなく、わたす ものだ」']}],
@@ -1460,7 +1460,7 @@ icetown:{
  start:{x:10,y:11},
  npcs:[
   {x:5,y:5,shop:true,kind:'musume',col:'#c8b8d8',msg:[]},
-  {x:12,y:6,kind:'ojii',needKey:'ch8c',col:'#b0a8c0',msgGeo:'ふなびとの おばあ「ここは みなみの おきの、きりの むこう。\nむかしは みおくりの ふねで にぎわった きしさ。」',msg:['ふなびとの おばあ「むすこを ここから みおくってねえ。\nナギさんの ふねが うごいたと きいて、わたって きたんだよ。」','ふなびとの おばあ「なまえを よんで もらえるって、いいねえ。\nうちの こも、うみの どこかで きいてる かしら。」']},
+  {x:14,y:6,kind:'ojii',needKey:'ch8c',col:'#b0a8c0',msgGeo:'ふなびとの おばあ「ここは みなみの おきの、きりの むこう。\nむかしは みおくりの ふねで にぎわった きしさ。」',msg:['ふなびとの おばあ「むすこを ここから みおくってねえ。\nナギさんの ふねが うごいたと きいて、わたって きたんだよ。」','ふなびとの おばあ「なまえを よんで もらえるって、いいねえ。\nうちの こも、うみの どこかで きいてる かしら。」']},
   {x:6,y:6,kind:'musume',small:true,needKey:'ch8c',col:'#a8d0c8',msg:['ふなのりみならい「おれ、ナギせんちょうに ひろって もらったんだ！\nいつか おれも、だれかを むこうぎしまで おくるんだ。」','ふなのりみならい「せんちょうが いってた。『ふねの しごとは はこぶ ことじゃ ない。\nちゃんと みおくる ことだ』って。かっこいい よなあ。」']}],
  spawns:[
   {id:'nagorikage',x:6,y:7},
@@ -1664,11 +1664,14 @@ icetown:{
   {x:5,y:11,kind:'musume',small:true,needKey:'ch17d',col:'#b89868',msg:['ほらふき「わしの ほらを『ほらふきの はなし』と よんだ。\n……なまえを つけて もらうと、こんなに うれしいもんかね。」']},
   {x:7,y:11,kind:'musume',small:true,needKey:'ch17d',col:'#8a94b8',msg:['サヨの しまの ひと「『サヨの うた』。\nそう よんで くれた。それだけで、じゅうぶんです。」']},
   {x:13,y:11,kind:'musume',small:true,needKey:'ch17d',col:'#8ab4d8',msg:['きゃくせきの こども「ものがたりって、だれの もの？\n——って きいたら、ざちょうさんが こたえて くれたんだ。」']}],
- spawns:[],chests:[],spots:[],
+ spawns:[],chests:[],
+ spots:[ // 便7(2026-07-25): 第3部の入口にも 読むものが0枚だった
+  {x:3,y:3,msg:['ぶたいの そでに、ふるい こうえんの びら。\n『ものがたりは、かたる ひとの ものです』——すみで けして ある。','けした あとに、べつの じで かきなおして ある。\n『ものがたりは、きいた ひとの ものです』']},
+  {x:16,y:6,msg:['だいどうぐの はこに、はりがみ。\n『こわれても すてない。なおして つかう。それが 一座の しごと』','はこの なかを のぞくと、なおした あとの ある つるぎが なんぼんも。\nどれも、まだ つかわれて いる。']}],
  exits:[{x:8,y:12,to:'grass',tx:16,ty:12,msg:'あかい まくを くぐり、そうげんの みなみの すみへ もどった。'},
         {x:11,y:12,to:'grass',tx:16,ty:12,msg:'あかい まくを くぐり、そうげんの みなみの すみへ もどった。'}]},
  kura:{ // 章13『しまいこまれた ものがたり』: こえの きえた 倉の島(一座の船で わたる)
- song:'tomoshibi', bg:['#141018','#2c2434'], dark:true, darkR:5.4, darkCol:'40,34,52', darkA:0.68,
+ song:'tomoshibi', bg:['#141018','#2c2434'], dark:true, darkR:7.4, darkCol:'40,34,52', darkA:0.50,
  map:[
   'CCCCCCCCCCCCCCCCCCCC',
   'CCFFFFFFFFFFFFFFFFCC',
@@ -1676,7 +1679,7 @@ icetown:{
   'CCFFCCFFFFFFFFCCFFCC',
   'CCFFFFFFFFFFFFFFFFCC',
   'CCCCFFCCCCCCCCFFCCCC',
-  'CCFFFFFFFFFFFFFFFFCC',
+  'CCFFFFFFFFFFFFFFFFEC',
   'CCFFCCFFFFFFFFCCFFCC',
   'CCFFCCFFFFFFFFCCFFCC',
   'CCFFFFFFFFFFFFFFFFCC',
@@ -1704,7 +1707,9 @@ icetown:{
  spots:[ // 便1: 第3部に0枚だった読むものを戻す(新規の位置=既存セーブの既読は不変)
   {x:2,y:6,msg:['くらの かべに ふるい はりがみ——\n「あずかりもの、うけとりに こられたし。もちぬしの なは、もう よめない」','はりがみの すみに、あとから ちいさく かきたして ある。\n「よめなくても、あずかって おく。それが しごとだ」']},
   {x:17,y:3,msg:['つみあげた はこの かげに、こわれた はかりが おちている。\nかたほうの さらに、ちいさな いしが ひとつ のったまま。','はかりの うらに きざみ——\n「おもさで きめては いけない。かるい こえほど、とおくから きた」']}],
- exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'いちざの こぶねで、むらの きしへ もどった。'}]},
+ exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'いちざの こぶねで、むらの きしへ もどった。'},
+  // 便8(2026-07-25): 島⇄島の開通(章クリアで ひらく)
+  {x:18,y:6,to:'tani',tx:2,ty:6,need:'ch14c',msg:'しおの ひいた いわばに わたし木道が かかっている——やまびこの たにへ。'}]},
  tani:{ // 章14『かたちを かえる ものがたり』: こだまが「ちがう」と しかる 谷(一座の船で わたる)
  song:'oka', bg:['#2a2038','#4a3348'],
  map:[
@@ -1714,7 +1719,7 @@ icetown:{
   'CCGGGGGGGGGGGGGGGGCC',
   'CCCCTGGCCGGCCGGTCCCC',
   'CCGGGGGGGGGGGGGGGGCC',
-  'CCGTGGWWGGGGWWGGTGCC',
+  'CEGTGGWWGGGGWWGGTGCC',
   'CCGGGWWGGGGGGWWGGGCC',
   'CCGGGGGGGTTGGGGGGGCC',
   'CCGTGGGGGGGGGGGGTGCC',
@@ -1740,7 +1745,8 @@ icetown:{
  spots:[ // 便2: 読むもの2枚(新規の位置=既存セーブの既読は不変)
   {x:2,y:3,msg:['がけの ねもとに、ふるい いしぶみ。\n「ここで こえを あげた ものの かずだけ、たには ふかく なった」','うらがわに、あとから ほられた ちいさな もじ——\n「かえって こない こえも、たには おぼえて いる」']},
   {x:17,y:3,msg:['たてふだが かたむいて いる。\n「おおごえを あげるな。こだまが おこる」','ふだの したに、だれかが すみで かきたした。\n「おこらない。ただ、まちがえずに かえしたいだけだ」']}],
- exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'一座の こぶねで、むらの きしへ もどった。'}]},
+ exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'一座の こぶねで、むらの きしへ もどった。'},
+  {x:1,y:6,to:'kura',tx:17,ty:6,need:'ch14c',msg:'わたし木道を もどる——くらの しまへ。'}]}, // 便8
  hora:{ // 章15『うそと よばれた ものがたり』: 「うそつき」の札に とざされた ほらふきの島
  song:'umi', bg:['#4a90b8','#7ec8e8'],
  map:[
@@ -1751,7 +1757,7 @@ icetown:{
   'WWWGGWWGGGGGGWWGGWWW',
   'WWGGGGGGGGGGGGGGGGWW',
   'WWGTGGGWWGGWWGGGTGWW',
-  'WWGGGGGGGGGGGGGGGGWW',
+  'WWGGGGGGGGGGGGGGGGEW',
   'WWGGWWGGGTTGGGWWGGWW',
   'WWGGGGGGGGGGGGGGGGWW',
   'WWWGGGGGGGGGGGGGGWWW',
@@ -1765,15 +1771,22 @@ icetown:{
   {x:7,y:9,kind:'conch',hrKey:'hr3',col:'#e8c8a0',msg:['ほらがいの こえ『かぜと かけっこして かった！ しょうひんは この ぼうしさ』\n……あしの おそい こは、じぶんの かぜを もらいに まいにち いえに かよったと いう。']},
   {x:10,y:2,kind:'huda',horaKey:1,col:'#c8b088',msg:[]},
   {x:9,y:2,kind:'musume',small:true,needKey:'ch15c',col:'#b89868',msg:['ほらふき「つぎの ほらは、うみより おおきいぞ。\nまた ききに くるかい？」']},
-  {x:13,y:9,kind:'musume',small:true,col:'#9aa4a8',msg:['しまの ひと「……ほらふきの いえに「うそつき」の ふだが はられてから、\nだれも つくりばなしを しなくなったの。しまが、しずかすぎるわ」']}],
+  {x:13,y:9,kind:'musume',small:true,col:'#9aa4a8',msg:['しまの ひと「……ほらふきの いえに「うそつき」の ふだが はられてから、\nだれも つくりばなしを しなくなったの。しまが、しずかすぎるわ」']},
+  {x:13,y:11,shop:true,kind:'ojii',col:'#d8b478',msg:[]}], // 便3(2026-07-25): ほらふきの ろてん
  spawns:[
   {id:'yadokari',x:5,y:5},
   {id:'kazesarai',x:15,y:3},
   {id:'yadokari',x:14,y:7},
   {id:'usofuda',x:6,y:8},
+  {id:'hudanomure',x:12,y:7}, // 便3: 追ってくる強敵
   {id:'makoto',x:10,y:4,need:'ch15w',gone:'ch15d'}],
  chests:[{x:3,y:7,item:'hoshitetsu'},{x:17,y:9,item:'inochi'}],
- exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'一座の こぶねで、むらの きしへ もどった。しおの かおりが なごりおしい。'}]},
+ inn:{x:6,y:11}, innCost:30, // 便3: おかの ふもとの やど
+ spots:[ // 便3: 読むもの2枚
+  {x:3,y:3,msg:['おかの いしに、ふるい らくがき。\n「ここから みなみへ ななつめの なみが、くじらの せなか」','その したに、あとから ちいさく——\n「みてきた ものは いない。でも、みんな みなみを むいて わらった」']},
+  {x:16,y:10,msg:['さんばしの ふだ。「ほらは ふねの ように あつかうこと。\nのりたい ものだけが のる」','ふだの うらがわ。「しずむ ほらは ない。\nおろす ひとが いなくなるだけだ」']}],
+ exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'一座の こぶねで、むらの きしへ もどった。しおの かおりが なごりおしい。'},
+  {x:18,y:7,to:'uta',tx:2,ty:7,need:'ch16c',msg:'しおが ひいて すなすが あらわれた——わすれうたの しまへ わたれる。'}]},
  uta:{ // 章16『はじまりを わすれた ものがたり』: 歌のはじまりの島(作り手サヨの名が忘れられ、歌い出しが消えていく)
  song:'misaki', bg:['#3a3454','#8aa890'],
  map:[
@@ -1784,7 +1797,7 @@ icetown:{
   'CCCGGWWGGGGGGWWGGCCC',
   'CCGGGGGGGGGGGGGGGGCC',
   'CCGTGGGGGTTGGGGGTGCC',
-  'CCGGGGGGGGGGGGGGGGCC',
+  'CEGGGGGGGGGGGGGGGGCC',
   'CCGGWWGGGGGGGGWWGGCC',
   'CCGGGGGGGGGGGGGGGGCC',
   'CCCGGGGGGGGGGGGGGCCC',
@@ -1797,7 +1810,8 @@ icetown:{
   {x:16,y:4,kind:'note',utKey:'ut2',col:'#9ab0d8',msg:['うたのかけら『かぜよ かぜよ、ほを あげろ——』\n……ふなでの あさに みなで うたう ほかけうた。こわがりの ふなのりの ために\nサヨが つくった うた。もう だれも、その なまえを うたわない。']},
   {x:10,y:9,kind:'note',utKey:'ut3',col:'#9ab0d8',msg:['うたのかけら『あめよ あめよ、はたけに おちろ——』\n……ひでりの なつの あめごいうた。これも サヨが つくったと、\nもう だれひとり おぼえて いなかった。']},
   {x:10,y:2,kind:'utaishi',utaishiKey:1,col:'#8a94a8',msg:[]},
-  {x:13,y:9,kind:'musume',small:true,col:'#9aa49a',msg:['しまの ひと「うたいだしを わすれちまってねえ。\nのどまで でて いるのに、どうしても おもいだせないの」']}],
+  {x:13,y:9,kind:'musume',small:true,col:'#9aa49a',msg:['しまの ひと「うたいだしを わすれちまってねえ。\nのどまで でて いるのに、どうしても おもいだせないの」']},
+  {x:7,y:11,shop:true,kind:'musume',col:'#a8b8d8',msg:[]}], // 便4(2026-07-25): うたひの ろてん
  spawns:[
   {id:'utawasure',x:5,y:5},
   {id:'otomodoki',x:14,y:5},
@@ -1805,7 +1819,12 @@ icetown:{
   {id:'wasureishi',x:15,y:7},
   {id:'wasurare',x:10,y:4,need:'ch16w',gone:'ch16d'}],
  chests:[{x:3,y:7,item:'hoshitetsu'},{x:17,y:9,item:'hoshikake'}],
- exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'一座の こぶねで、むらの きしへ もどった。くちびるが こもりうたを おぼえている。'}]},
+ spring:{x:4,y:4}, // 便4: きたの おかの わきみず
+ spots:[ // 便4: 読むもの2枚
+  {x:2,y:3,msg:['ちいさな いしぶみ。ほられた なまえは、なんども なぞられて\nすりへり、いまは よめない。','よこに、あたらしい きずが ひとつ。\n——だれかが いま、おもいだそうとして なぞった あと。']},
+  {x:17,y:6,msg:['いどばたの いた。「うたいだしを わすれたら、\nみずを くんで まちなさい。のどが おぼえて いる」','いたの すみに、ちいさく——\n「のどが おぼえて いるのは、つくった ひとの こきゅう だから」']}],
+ exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'一座の こぶねで、むらの きしへ もどった。くちびるが こもりうたを おぼえている。'},
+  {x:1,y:7,to:'hora',tx:17,ty:7,need:'ch16c',msg:'すなすを もどる——ほらふきじまへ。'}]},
  // 章17『わけあう ものがたり』: あつめのやかた=3区画。4島の品で くさりが 1本ずつ ほどけ、やかたが あかるくなる
  yakata1:{ // 第1区画: はこの へや
  song:'kage', bg:['#181410','#2c2418'], dark:true, darkR:5.2, darkCol:'44,34,20', darkAF:()=>yakataDarkA(),
@@ -1831,6 +1850,8 @@ icetown:{
   {x:16,y:8,kind:'box',col:'#7a5a34',msg:['はこの やま。ふたには 一座の じるしと、\nざちょうの じで「あずかりもの」と かいてある。']}],
  spawns:[{id:'yokubarite',x:5,y:6},{id:'yokubarite',x:15,y:5},{id:'kaginomure',x:5,y:9}],
  chests:[{x:17,y:3,item:'hoshitetsu'}],
+ spots:[ // 便7: 読むもの(はこのへや)
+  {x:16,y:3,msg:['うけとり ちょうめん。なまえの らんが、ぜんぶ おなじ じで\n「あずかりぬし」と うめられて いる。','さいごの ページだけ しろい。\n——だれの てにも わたって いない、という しるし。']}],
  exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'一座の こぶねで、むらの きしへ もどった。'},
         {x:10,y:1,to:'yakata2',tx:10,ty:11,need:'cn1',msg:'ほどけた くさりの さきへ——くさりの かいろうだ。'}]},
  yakata2:{ // 第2区画: くさりの かいろう
@@ -1884,6 +1905,8 @@ icetown:{
  spawns:[{id:'tsumibako',x:5,y:9},{id:'tsumibako',x:15,y:9},{id:'yokubarite',x:5,y:3},
          {id:'hitorijime',x:10,y:3,need:'ch17w2',gone:'ch17d'}],
  chests:[{x:2,y:9,item:'hoshikake'}],
+ spots:[ // 便7: 読むもの(おおひろま)
+  {x:3,y:10,msg:['おおひろまの はしらに、ちいさな て の あとが いくつも。\nどれも、そとへ むかって のばされて いる。','ゆかに おちた いちまいの ふだ。\n「かえしたい」——そう かいて、まだ わたせて いない。']}],
  exits:[{x:10,y:12,to:'yakata2',tx:10,ty:2,msg:'くさりの かいろうへ もどった。'}]},
  // 章18『はじめる しま』: 読んで選んだ二施設が、その場で地図と防衛戦を変える
  kazemachi:{
@@ -1894,7 +1917,7 @@ icetown:{
  'WWGGTGGGGGGGGGGTGGWW',
  'WWGGGGGGGPPGGGGGGGWW',
  'WWWGGWWGGPPGGWWGGWWW',
- 'WWGGGGGGGPPGGGGGGGWW',
+ 'WWGGGGGGGPPGGGGGGGEW',
  'WWGTGGGWWPPWWGGGTGWW',
  'WWGGGGGGGPPGGGGGGGWW',
  'WWGGWWGGGPPGGGWWGGWW',
@@ -1911,10 +1934,15 @@ icetown:{
   {x:8,y:9,kind:'rebuild',ch18Site:'Beacon',col:'#b7c7d8',msg:[]},
   {x:6,y:3,kind:'ojii',needKey:'ch18BuiltPier',col:'#547b8e',msg:['りょうし「さんばしが もどった。これで、かえってくる ふねを うけとめられる。」']},
   {x:13,y:6,kind:'musume',small:true,needKey:'ch18BuiltShelter',col:'#c58f6a',msg:['しまの こ「かぜの おとが ちいさく なったよ。ここなら、よるを こわがらなくて いいね。」']},
-  {x:9,y:8,kind:'hood',needKey:'ch18BuiltBeacon',col:'#7186a4',msg:['みはり「かぜみばたが ひがしを さしたら、あらしは すぐ そこだ。もう おくれない。」']}],
- spawns:[{id:'nagaregi',x:7,y:1},{id:'tobiyane',x:17,y:3},{id:'kuzureishi',x:4,y:10}],chests:[],
- spots:[],
- exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'}]},
+  {x:9,y:8,kind:'hood',needKey:'ch18BuiltBeacon',col:'#7186a4',msg:['みはり「かぜみばたが ひがしを さしたら、あらしは すぐ そこだ。もう おくれない。」']},
+  {x:13,y:11,shop:true,kind:'ojii',col:'#8fb8c8',msg:[]}], // 便5(2026-07-25): みなとの みせ
+ spawns:[{id:'nagaregi',x:7,y:1},{id:'tobiyane',x:17,y:3},{id:'kuzureishi',x:4,y:10},{id:'shionokiba',x:14,y:9}],chests:[], // 便5: 追ってくる強敵
+ inn:{x:6,y:11}, innCost:30, // 便5: たてなおした ふなつきばの やど
+ spots:[ // 便5: 読むもの2枚
+  {x:3,y:2,msg:['かざみの はしらに、いくつも きずが きざんで ある。\nおおきい きずほど、ふるい あらしだ。','いちばん あたらしい きずの したに ひとこと——\n「かぞえるのは、こわがる ためじゃ ない」']},
+  {x:16,y:2,msg:['ながれついた いたに、よその しまの もじ。\n「ぶじに ついたら しらせて」——あとは しおで きえている。','いたの うらに、この しまの じで かきたして ある。\n「ついた。かえりの ふねを つくって いる」']}],
+ exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'},
+  {x:18,y:5,to:'tokikasanedusk',tx:2,ty:5,need:'ch19c',msg:'なおした さんばしが ひがしへ のびている——ときかさねじまへ。'}]}, // 便8
  kazemachiNight:{
  song:'kage',bg:['#071426','#17354e'],dark:true,darkR:6.5,darkCol:'20,42,64',darkA:0.62,
  map:[
@@ -1944,7 +1972,7 @@ icetown:{
  song:'umi',bg:['#b95f54','#f0b56b'],
  map:[
  'WWWWWWWWWWWWWWWWWWWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
- 'WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
+ 'WWGGGGGGGGGGGGGGGGWW','WEGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
  'WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
  'WWWWWWWWWEGGWWWWWWWW','WWWWWWWWWWWWWWWWWWWW'],
  start:{x:10,y:11},
@@ -1956,13 +1984,17 @@ icetown:{
   {x:15,y:2,kind:'ch19scene',ch19Scene:'light',col:'#ffe5a0',msg:[]},
   {x:4,y:9,kind:'ch19scene',ch19Scene:'boat',col:'#7ab0c0',msg:[]},
   {x:8,y:3,kind:'ch19scene',ch19Scene:'bird',col:'#d5dbea',msg:[]}],
- spawns:[{id:'kirinuki',x:4,y:2},{id:'tomaribari',x:14,y:11}],chests:[],spots:[],
- exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'}]},
+ spawns:[{id:'kirinuki',x:4,y:2},{id:'tomaribari',x:14,y:11}],chests:[],
+ inn:{x:14,y:10}, innCost:30, // 便6(2026-07-25): ゆうぐれの やど(大時計(10,7)から4マス・本線x=10をふさがない)
+ spots:[ // 便6: 読むもの(ゆうぐれ側)
+  {x:3,y:7,msg:['ひどけいの あと。はりは とうに おれ、\nゆうぐれの かげだけが、まだ ただしい ばしょを さして いる。','だいの ふちに きざみ——\n「かげが ながいのは、ひが おわるから では ない」']}],
+ exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'},
+  {x:1,y:5,to:'kazemachi',tx:17,ty:5,need:'ch19c',msg:'なおした さんばしを にしへ——かぜまちじまへ もどる。'}]},
  tokikasanebell:{
  song:'kage',bg:['#101b42','#435b86'],dark:true,darkR:7,darkCol:'25,35,70',darkA:0.34,
  map:[
  'WWWWWWWWWWWWWWWWWWWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
- 'WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
+ 'WWGGGGGGGGGGGGGGGGWW','WEGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
  'WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
  'WWWWWWWWWEGGWWWWWWWW','WWWWWWWWWWWWWWWWWWWW'],
  start:{x:10,y:11},
@@ -1974,13 +2006,14 @@ icetown:{
   {x:15,y:2,kind:'ch19scene',ch19Scene:'light',col:'#7b86a8',msg:[]},
   {x:4,y:9,kind:'ch19scene',ch19Scene:'boat',col:'#526b86',msg:[]},
   {x:8,y:3,kind:'ch19scene',ch19Scene:'bird',col:'#d5dbea',msg:[]}],
- spawns:[{id:'kirinuki',x:3,y:3},{id:'hitokomadori',x:6,y:11},{id:'kiritoru',x:10,y:3,need:'ch19Solved',gone:'ch19d'}],chests:[],spots:[],
- exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'}]},
+ spawns:[{id:'kirinuki',x:3,y:3},{id:'hitokomadori',x:6,y:11},{id:'tomaridokei',x:5,y:10},{id:'kiritoru',x:10,y:3,need:'ch19Solved',gone:'ch19d'}],chests:[],spots:[], // 便6: 追ってくる強敵(かねの時・大時計から5マス)
+ exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'},
+  {x:1,y:5,to:'kazemachi',tx:17,ty:5,need:'ch19c',msg:'なおした さんばしを にしへ——かぜまちじまへ もどる。'}]},
  tokikasanerain:{
  song:'umi',bg:['#536d83','#a8bac2'],dark:true,darkR:8,darkCol:'45,62,75',darkA:0.20,
  map:[
  'WWWWWWWWWWWWWWWWWWWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
- 'WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
+ 'WWGGGGGGGGGGGGGGGGWW','WEGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
  'WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW','WWGGGGGGGGGGGGGGGGWW',
  'WWWWWWWWWEGGWWWWWWWW','WWWWWWWWWWWWWWWWWWWW'],
  start:{x:10,y:11},
@@ -1992,8 +2025,12 @@ icetown:{
   {x:15,y:2,kind:'ch19scene',ch19Scene:'light',col:'#f6d98a',msg:[]},
   {x:4,y:9,kind:'ch19scene',ch19Scene:'boat',col:'#7ab0c0',msg:[]},
  {x:8,y:3,kind:'ch19scene',ch19Scene:'bird',col:'#d5dbea',msg:[]}],
- spawns:[{id:'tomaribari',x:3,y:4},{id:'hitokomadori',x:14,y:11}],chests:[],spots:[],
- exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'}]},
+ spawns:[{id:'tomaribari',x:3,y:4},{id:'hitokomadori',x:14,y:11}],chests:[],
+ spring:{x:6,y:9}, // 便6: 雨あがりの あまだまり
+ spots:[ // 便6: 読むもの(雨あがり側)
+  {x:15,y:10,msg:['あまだまりの そばの いし。おもてに、みずで にじんだ もじ。\n「ここで まって いれば、かならず やむ」','いしの したがわ。かわいた ままの もじ——\n「やんだ あとを、だれと みるかが たいせつ」']}],
+ exits:[{x:9,y:12,to:'grass',tx:8,ty:11,msg:'一座の ふねで、むらの きしへ もどった。'},
+  {x:1,y:5,to:'kazemachi',tx:17,ty:5,need:'ch19c',msg:'なおした さんばしを にしへ——かぜまちじまへ もどる。'}]},
  // 裏章『ほしのみなもと』(2026-07-23): クリア済みセーブから のぼる 星の泉。関門3体→ボス かたられなかった はじまり
  hoshiminamoto:{
  song:'tomoshibi', bg:['#0a0e22','#1a2348'], dark:true, darkR:6.2, darkCol:'12,18,44', darkA:0.5,
@@ -2946,6 +2983,10 @@ const FOES={
   namigarasu:{name:'なみがらす', hp:520, atk:136, def:52, exp:270, g:135, coward:true, col:'#8fb8d8', draw:'crow', v:'snow', tint:'rgba(110,150,190,0.72)', dodge:0.3, physMul:1, fireMul:1.2, iceMul:0.8, winMsg:'とりは しぶきに とけて、なみまに きえた。'},
   shiouzu:{name:'しおのうず', hp:600, atk:139, def:56, exp:320, g:160, col:'#4a7ab0', draw:'slime', v:'dark', tint:'rgba(60,100,150,0.8)', physMul:0.7, fireMul:0.6, iceMul:1.5, winMsg:'うずは ほどけ、しずかな なみに もどった。'},
   uminohebi:{name:'おおうみへび', hp:680, atk:142, def:54, exp:360, g:180, col:'#3a8a7a', draw:'golem', v:'ent', tint:'rgba(50,120,105,0.8)', physMul:1, fireMul:1.2, iceMul:1.2, dodge:0.1, winMsg:'うみへびは ふかみへ しずんで いった。'},
+  // 便3/6/7(2026-07-25): 第3部の「徘徊する強敵」枠。便1の oisugaru(くら900) に続く段
+  hudanomure:{name:'ふだの むれ', hp:950, atk:152, def:62, exp:560, g:320, col:'#d8cfae', draw:'golem', v:'iron', tint:'rgba(206,196,160,0.85)', hunter:true, huge:true, physMul:0.85, fireMul:1.6, iceMul:0.9, dodge:0, winMsg:'ふだの むれは いちまいずつ はがれ、\nかぜに のって しまの そとへ ながれて いった。'},
+  tomaridokei:{name:'とまり どけい', hp:1000, atk:156, def:64, exp:600, g:340, col:'#c9a94e', draw:'golem', v:'iron', tint:'rgba(190,160,80,0.85)', hunter:true, huge:true, physMul:0.9, fireMul:0.9, iceMul:1.4, dodge:0, winMsg:'とまり どけいの はりが ひとつ すすんだ。\nとまって いた ときが、また うごきはじめる。'},
+  shionokiba:{name:'しおの きば', hp:1000, atk:160, def:66, exp:640, g:360, col:'#5f9ec4', draw:'golem', v:'frost', tint:'rgba(80,150,196,0.85)', hunter:true, huge:true, physMul:0.8, fireMul:1.3, iceMul:0.7, dodge:0, winMsg:'しおの きばは くだけ、\nかいきょうの なみが ひとつづきに もどった。'},
   hedatsu:{charge:true, name:'へだつもの', hp:1400, atk:144, def:62, exp:2600, g:2000, col:'#2c4a6e', draw:'boss2', tint:'rgba(40,66,98,0.9)', mboss:true, hunter:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'へだつものは しぶきに ほどけ、\nうみが ひとつづきに ひかった。'},
   wasuredori:{name:'わすれどり', hp:500, atk:134, def:52, exp:260, g:130, coward:true, col:'#c8a86a', draw:'crow', v:'owl', tint:'rgba(170,135,90,0.72)', dodge:0.25, physMul:1, fireMul:1.2, iceMul:1.2, winMsg:'とりは はねを ひとひら のこして、ゆうやけに とけた。'},
   katarikuzushi:{name:'かたりくずし', hp:560, atk:138, def:56, exp:300, g:150, col:'#8a7a9a', draw:'golem', tint:'rgba(112,96,132,0.82)', physMul:0.7, fireMul:1.3, iceMul:1.1, winMsg:'くずれた かたりは、ことばの こなに かえっていった。'},
@@ -3023,7 +3064,16 @@ const SHOP=[
   // 便1(2026-07-25): くらのしまの みせ。第3部に店が1軒(おみやげ)しか無かったため戻す
   // やくそう/いいやくそう/どくけしそう は town無し＝どの店にも並ぶので、ここでは足さない(二重表示になる)
   {id:'seisui_k',label:'まほうのせいすい',cost:80,item:'seisui',town:'kura'},
-  {id:'tokusen_k',label:'とくせんやくそう',cost:250,item:'tokusen',town:'kura'}];
+  {id:'tokusen_k',label:'とくせんやくそう',cost:250,item:'tokusen',town:'kura'},
+  // 便3/4/5(2026-07-25): 島の みせ。装備は 便2の「島の贈り物」のハシゴが担うので、
+  // ここは 消耗品と 鍛冶の材料だけ=島で かせいだ金の つかい道を その島に作る
+  // ばくだんいし/やくそう類は town無し=全店に並ぶので ここには足さない(二重表示になる)
+  {id:'inazuma_h',label:'いなずまだま',cost:400,item:'inazuma',town:'hora'},
+  {id:'inochi_h',label:'いのちのしずく',cost:600,item:'inochi',town:'hora'},
+  {id:'seisui_u',label:'まほうのせいすい',cost:80,item:'seisui',town:'uta'},
+  {id:'hoshikake_u',label:'ほしのかけら',cost:1200,item:'hoshikake',town:'uta'},
+  {id:'tetsu_z',label:'ほしのてつ',cost:500,item:'hoshitetsu',town:'kazemachi'},
+  {id:'inochi_z',label:'いのちのしずく',cost:600,item:'inochi',town:'kazemachi'}];
 // ふなみせ(一座のふねの移動武具店 2026-07-21): 既存SHOP品のidを並べるだけ(定義の追加なし)。順=ぶき→よろい→くすり
 const FUNAMISE=['w8u','wtsukikage','w7','a8u','a7h','atsukikage','yakuso','iyakuso','tokusen','seisui2','inochi','hoshikake'];
 // でんせつのぶき: weaponAtkの値が武器の同一性(全武器で一意)。効果はここで引く
@@ -4508,11 +4558,11 @@ const BOOK_ISLES=[
   ['こころのにわ',['tozakage','tozasu']],
   ['くらのしま',['kagimushi','hakomori','shiorikage','oisugaru','shimaikomu']],
   ['やまびこのたに',['manebi','yamabiko','kuchibue','mototadasu']],
-  ['ほらふきじま',['yadokari','kazesarai','usofuda','makoto']],
+  ['ほらふきじま',['yadokari','kazesarai','usofuda','hudanomure','makoto']],
   ['わすれうたのしま',['utawasure','otomodoki','wasureishi','wasurare']],
   ['あつめのやかた',['yokubarite','kaginomure','tsumibako','hitorijime']],
-  ['かぜまちじま',['nagaregi','tobiyane','kuzureishi','shioarashi']],
-  ['ときかさねじま',['kirinuki','hitokomadori','tomaribari','kiritoru']],
+  ['かぜまちじま',['nagaregi','tobiyane','kuzureishi','shionokiba','shioarashi']],
+  ['ときかさねじま',['kirinuki','hitokomadori','tomaribari','tomaridokei','kiritoru']],
   ['しおわかれの海峡',['kajiu']],
   ['ほしのうみ',['sukuwarenu']],
   ['ほしのみなもと',['johikage','hakage','kyukage','hajimarazu']],
@@ -4607,6 +4657,10 @@ const BOOK_LORE={
   kirinokage:'きりの なかで みちに まよった たましい。ひかりの ほうへ あるきたがっている。',
   gslime:'おうごんの からだは おまもりがわり。おかねもちほど にげあしが はやい。',
   metal:'はがねの からだに けいけんの かたまり。であえた ひは うんが いい。',
+  oisugaru:'ぬしが めざめた ときに ころがりおちた、いちばん おおきな はこ。うけとりての なまえが かかれた まま、いまも あるく ひとの あとを ついて まわる。',
+  hudanomure:'「うそつき」と かかれた ふだが、はられすぎて かたまりに なった もの。はがそうと する ものを、いちまいずつ おいかけて くる。',
+  tomaridokei:'とまった ままの おおきな どけい。まわりの ときが うごくのを きらい、うごく ものを おいかけて とめようと する。',
+  shionokiba:'あらしの よるに ふなつきばを かみくだいた しおが、かたまった もの。なおされる そばから、また かじろうと あるいて くる。',
   nagaregi:'あらしが はこんできた ながれぎ。どこかの いえの はしらだった かもしれない——それを おぼえて いるのは、この きだけ。',
   tobiyane:'かぜに さらわれた やね。もどる いえを さがして、まだ そらを まわって いる。',
   kuzureishi:'まもるはずの かべが くずれ、まもる ものを うしなった。だれかが つみなおすまで、ここに いる。',
@@ -4638,6 +4692,10 @@ const BOOK_TRAITS={
   tsumibako:['きばこの やまは ほのおで もえあがる——ほのおが ばつぐん','こおりには すこし つよい'],
   sukuwarenu:['こうげきも じゅもんの ほのおも とどかない——7つの といに、章の じゅもんで こたえよ','こたえは だい1・2・3・5・6・7・17しょうの ものがたりの なかに ある'],
   hitorijime:['4つの すがたに かわる——とじた はこ／ただしさの こだま／うそを おそれる みみ／はじまりを わすれる やみ','それぞれに、13〜16しょうの 章じゅもんが 一つずつ 刺さる'],
+  oisugaru:['あるくと どこまでも ついて くる','ほのおが やや とおる。ぶつりは かたい'],
+  hudanomure:['かみの かたまり。ちかづくと おいかけて くる','ほのおが ばつぐん。こおりは ききにくい'],
+  tomaridokei:['はりが とまった まま おいかけて くる','こおりが よく とおる。ほのおは ききにくい'],
+  shionokiba:['しおに のって おいかけて くる','ほのおが とおる。こおりは ほとんど きかない'],
   nagaregi:['ながれぎの やま。うごきは おそい','ほのおが ばつぐん。こおりには すこし つよい'],
   tobiyane:['かぜに のって ひらりと かわす——じゅもんなら はずさない','ほのおが よく きく'],
   kuzureishi:['いしがきの からだは こうげきを はんぶんに','こおりで ひびを いれろ'],
@@ -7608,6 +7666,7 @@ function kodamaSpot(dmin,dmax,fromX,fromY){ // 勇者から dmin〜dmax マス �
   const spots=[];
   for(let y=1;y<MH-1;y++)for(let x=1;x<MW-1;x++){
     if(!walkable(x,y)||tileAt(x,y)==='R')continue;
+    if(tileAt(x,y)==='E')continue; // 2026-07-25: でぐちに とまると 追いかけの とちゅうで マップの そとへ とばされる
     if(npcAt(x,y))continue;
     const d=Math.max(Math.abs(x-Game.p.tx),Math.abs(y-Game.p.ty));
     if(d<dmin||d>dmax)continue;
@@ -8251,6 +8310,12 @@ async function runShop(funamise){
     ?'ほりびとの あきんど「ちそこの いちへ ようこそ。\nほりびとが のこした さいごの しごと——ほしの てつの そうびだ。」'
     :Game.mapId==='kura'
     ?'くらの ばんにん「あずかりものの しまへ ようこそ。\nくらの すみに たまった くすりを、たびの ひとに ゆずって いるよ。」'
+    :Game.mapId==='hora'
+    ?'ほらふきの でし「よく きたな！ うちの しなものは ぜんぶ ほんとうだ。\nどかんと いく やつを そろえて ある——ほらじゃ ないぞ。」'
+    :Game.mapId==='uta'
+    ?'うたひ「のどが かわいたら よって いって。\nうたを おもいだす には、まず いきが つづかないと ね。」'
+    :Game.mapId==='kazemachi'
+    ?'みなとの あきんど「たてなおしの しまへ ようこそ。\nあらしが はこんできた ほしの てつも、ここで さばいて いるよ。」'
     :Game.mapId==='misaki'
     ?'みさきの あきんど「ようこそ、ゆうなぎの みさきへ。\nながい ふなたびに きく くすりを あきなって いるよ。」'
     :(Game.mbossDown
