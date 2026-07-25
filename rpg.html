@@ -8844,7 +8844,8 @@ function tapMove(cx,cy){
    }}
   if(tx<0||ty<0||tx>=MW||ty>=MH)return;
   const stillFoeAt=(x,y)=>!!(Game.enemies&&Game.enemies.find(e=>e.def&&e.def.still&&e.tx===x&&e.ty===y));
-  const isTalkT=(x,y)=>!!(npcAt(x,y)||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y)||spotAt(x,y)||stillFoeAt(x,y));
+  // しらべるポイントは とおりぬけられる=経路を ふさがない(踏んだら よむ)
+  const isTalkT=(x,y)=>!!(npcAt(x,y)||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y)||stillFoeAt(x,y));
   const goalDoor=(Game.mapId==='cave2'&&tileAt(tx,ty)==='D'&&!Game.hidden.gate1); // とざされた とびらも タップで あけられる（となりまで あるいて たいあたり）
   const goalTalk=isTalkT(tx,ty)||goalDoor;
   if(!goalTalk&&!walkable(tx,ty))return;
@@ -8941,7 +8942,8 @@ function updateField(dt){
       };
       let acted=false;
       // NPC・おうさま・やどの マスは とおれない（すべりこみ先から じょがい）
-      const occ=(nx,ny)=>!!npcAt(nx,ny)||!!(w.king&&w.king.x===nx&&w.king.y===ny)||!!(w.inn&&w.inn.x===nx&&w.inn.y===ny)||!!spotAt(nx,ny);
+      // しらべるポイントは とおりぬけられる(2026-07-25 実機バグ: 幅1マスの通路を ふさいで 先へ進めなかった)
+      const occ=(nx,ny)=>!!npcAt(nx,ny)||!!(w.king&&w.king.x===nx&&w.king.y===ny)||!!(w.inn&&w.inn.x===nx&&w.inn.y===ny);
       // 1) はなしかける（おした ほうこうの しょうめんだけ＝すべりこみで ひっかからない）
       {
         const nx=p.tx+d[0],ny=p.ty+d[1];
@@ -8950,7 +8952,6 @@ function updateField(dt){
         if(npc){if(!hush){talkNpc(npc);acted=true;}}
         else if(w.king&&w.king.x===nx&&w.king.y===ny){if(!hush){talkKing();acted=true;}}
         else if(w.inn&&w.inn.x===nx&&w.inn.y===ny){if(!hush){runInn();acted=true;}}
-        else if(spotAt(nx,ny)){if(!hush){spotTalk(spotAt(nx,ny));acted=true;}}
         // ちそこの とざされた とびら: 宝箱・出入口と同じ「となり3マス」判定にする(2026-07-25 実機バグ修理)
         // 旧: 押した正面1マスだけ=ひし形移動では 扉の真上/真下から 絶対に開かず、脇へ すり抜けていた
         else if(Game.mapId==='cave2'&&!Game.hidden.gate1&&tileAt(16,8)==='D'
@@ -9154,6 +9155,9 @@ function updateField(dt){
   if(!p.moving&&!Game.battling){
     for(const c of CHESTS)
       if(c.x===p.tx&&c.y===p.ty&&!Game.chestsOpen.includes(c))openChest(c);
+    {const sp=spotAt(p.tx,p.ty); // しらべるポイント: ふんだら よむ(未読のときだけ)。よんだ あとは ただの みちに なる
+     if(!sp)Game._spotLast=null;
+     else if(!(Game.spotsRead||[]).includes(sp)&&Game._spotLast!==sp&&!Game.talking&&!Game.transiting){Game._spotLast=sp;spotTalk(sp);}}
     if(SPRING&&SPRING.x===p.tx&&SPRING.y===p.ty&&!Game.springUsed[Game.mapId]){
       Game.springUsed[Game.mapId]=true;
       p.hp=p.mhp;p.mp=p.mmp;p.poison=false;Game.cloakSteps=CLOAK_MAX;if(Game.nkOn){const stn=nkStats();Game.nkHp=stn.mhp;Game.nkMp=stn.mmp;}updateBars();
