@@ -3332,7 +3332,9 @@ function loadMap(id){
   if(id!=='grass'){TAMESU_AT=null;TAMESU_GO=false;} // フクロが さした ばしょは むらの中だけ
   if(id!=='hoshiumi')CH21_REPLAY=false; // 再訪はほしのうみ滞在中だけ有効(2026-07-20)
   if(id!=='hoshiminamoto')URA_REPLAY=false; // 裏章の再戦はほしのみなもと滞在中だけ有効(2026-07-23)
-  Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!(Game.hidden[s.need]||(s.id==='sukuwarenu'&&CH21_REPLAY)||(s.id==='hajimarazu'&&URA_REPLAY)))&&!(s.gone&&Game.hidden[s.gone]&&!(s.id==='sukuwarenu'&&CH21_REPLAY)&&!(s.id==='hajimarazu'&&URA_REPLAY))&&!(s.shinpan&&Game.diff!==7)&&!(id==='grass'&&Game.hidden.ch21c)).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
+  if(NUSHI_REPLAY&&id!==NUSHI_REPLAY.map)NUSHI_REPLAY=null; // 島のぬしの再戦は その島に居るあいだだけ(2026-07-25)
+  const nrep=NUSHI_REPLAY?NUSHI_REPLAY.id:null;
+  Game.enemies=SPAWNS.filter(s=>!(s.id==='mboss'&&Game.mbossDown)&&!(s.ng&&!(Game.ng>=1))&&!(s.need&&!(Game.hidden[s.need]||(s.id==='sukuwarenu'&&CH21_REPLAY)||(s.id==='hajimarazu'&&URA_REPLAY)||s.id===nrep))&&!(s.gone&&Game.hidden[s.gone]&&!(s.id==='sukuwarenu'&&CH21_REPLAY)&&!(s.id==='hajimarazu'&&URA_REPLAY)&&s.id!==nrep)&&!(s.shinpan&&Game.diff!==7)&&!(id==='grass'&&Game.hidden.ch21c)).map(s=>({id:s.id,sp:s,def:FOES[s.id],tx:s.x,ty:s.y,px:s.x,py:s.y,hx:s.x,hy:s.y,
     seed:rnd(9),timer:rnd(0.5,1.5),moving:null}));
   Game.respawnQ=[];
   Game.birds=null; // とりの むれは マップを またがない
@@ -8210,6 +8212,9 @@ function tamesuList(){
     line:'むらの おかに のこった ひかりの わ。ほしのうみへ なんども のぼれる。',at:{x:8,y:10}});
   if(h.uraTold)out.push({id:'ura',label:'🌌 はじまりの ほしあかり ─ いちばん つよい あいて',
     line:'たもとの となりの あおい ほしあかり。九つめの しま「ほしのみなもと」へ つづく。\nいままでで いちばん つよい あいてが まっておる。',at:{x:10,y:10}});
+  if(h.ch13d)out.push({id:'nushiAgain',label:'⚔ しまの ぬしと もういちど 立ちあう',
+    line:'たおした ぬしの すがたは、しまの きおくに のこっておる。わしが よびもどそう。\nぬしの「ちからを ためる 一げき」は、よろいでは かるく ならぬ——\nみを まもるか、章の じゅもんで こたえよ。ふつうの 一げきは よろいで かるくなる。',
+    nushi:true}); // 2026-07-25: クリア済みは ch*d で ぬしが全員消えるため、ためせる道が無かった
   if(h.ch13a)out.push({id:'fune',label:'🚢 一座の ふね ─ ぶきを かう・きたえる・しまへ わたる',
     line:'にしの きしの ふね。「ふなみせ」で ぶきと くすりを かい、かじで きたえられる。\nいちど わたった しまへは、ここから いつでも もどれる。',at:{x:1,y:6}});
   return out;
@@ -8222,6 +8227,18 @@ async function gunshiTamesu(){
   if(!c||c==='no')return;
   const e=list.find(x=>x.id===c);if(!e)return;
   await say(e.line);
+  if(e.nushi){ // 島のぬしの再戦: たおした ぬしだけ ならぶ。NUSHI_REPLAY は保存しない一時状態
+    const av=NUSHI_AGAIN.filter(n=>Game.hidden['ch'+n.no+'d']);
+    if(!av.length){await say('フクロ「まだ ぬしを たおしておらぬ。\nまずは 目の前の しまじゃ。」');return;}
+    const p=await ask(av.map(n=>({id:n.id,label:'章'+n.no+' '+n.label})).concat([{id:'no',label:'やめておく'}]),
+      'フクロ「どの ぬしと 立ちあう？\nしまの おくで まっておる——ちかづけば はじまる。」');
+    if(!p||p==='no')return;
+    const n=NUSHI_AGAIN.find(x=>x.id===p);if(!n)return;
+    NUSHI_REPLAY={id:n.id,map:n.map};
+    await say('フクロ「よかろう。……こころして ゆけ。\nめのまえに おる。ひとあし ふめば はじまる。」');
+    await transitMap({to:n.map,tx:n.tx,ty:n.ty,msg:(MAPNAME[n.map]||'')+'へ——'});
+    return 'moved';
+  }
   if(e.to){
     await say('フクロ「では、いってくるが よい。」');
     await transitMap({to:e.to.map,tx:e.to.tx,ty:e.to.ty,msg:(MAPNAME[e.to.map]||'')+'へ——'});
@@ -15236,6 +15253,22 @@ const FINALE_QS=[
 // 正解ごとにボスの影が明るくほどけ(finTint)、★が灯る。被弾・MP消費・メニューなし。
 let CH21_REPLAY=false; // クリア後の再訪(セーブに書かない・ほしのうみ滞在中のみtrue)
 let URA_REPLAY=false; // 裏章の再訪(セーブに書かない・ほしのみなもと滞在中のみtrue)
+// 島のぬしの再戦(2026-07-25): クリア済みセーブは ch*d で ぬし8体が全員 消えるため、
+// v20260725_1855 の「ため一撃×3・よろいが効くふつうの こうげき」に触れる道が どこにも無かった。
+// {id,map} を入れると その島に居るあいだだけ そのぬしが立つ。セーブに書かない。
+// 勝っても章の結び(ch*d ガードの内側)は再演しない=報酬・フラグ・蒼珠は動かない。
+let NUSHI_REPLAY=null;
+// 着地は ぬしの ひとマス下。島の入口に降ろすと 便1の「追ってくる強敵」に何度も捕まって
+// ぬしまで たどりつけない(2026-07-25 実機で2回 実際に捕まった)。ここは ためす場であって 島めぐりではない。
+const NUSHI_AGAIN=[
+  {id:'shimaikomu', map:'kura',           tx:10,ty:4, no:13, label:'しまいこむもの ─ くらのしま'},
+  {id:'mototadasu', map:'tani',           tx:10,ty:4, no:14, label:'もとをただすもの ─ やまびこのたに'},
+  {id:'makoto',     map:'hora',           tx:10,ty:5, no:15, label:'まことをせまるもの ─ ほらふきじま'},
+  {id:'wasurare',   map:'uta',            tx:10,ty:5, no:16, label:'わすれられしもの ─ うたわすれじま'},
+  {id:'hitorijime', map:'yakata3',        tx:10,ty:4, no:17, label:'ひとりじめのもの ─ あつめのやかた おく'},
+  {id:'shioarashi', map:'kazemachiNight', tx:10,ty:6, no:18, label:'しおあらしの むれ ─ あらしの よる'},
+  {id:'kiritoru',   map:'tokikasanebell', tx:10,ty:4, no:19, label:'きりとるもの ─ かねの とき'}
+]; // 章20 かじをうばうものは 海の一枚絵(CH20_SEA)を通ってしか始まらないため ここには置かない
 let TAMESU_AT=null,TAMESU_GO=false; // 「いま ためせること」でフクロが さした むらの ばしょ(保存しない)
 const CH21_TINTS=['rgba(40,44,80,0.92)','rgba(52,54,96,0.88)','rgba(66,64,112,0.84)','rgba(82,76,128,0.80)','rgba(100,90,144,0.75)','rgba(120,106,160,0.70)','rgba(142,124,176,0.63)','rgba(168,146,194,0.55)'];
 const CH21_THEME={satori:'しる ことから はじめる',kageharai:'かげを ほどいて かえす',uketome:'うけとめる こころ',watashi:'てから てへ わたす',mamori:'となりに いる',yobigoe:'なまえを よぶ',monogatari:'おわりを うけつぐ',nagiuta:'みおくりの うた',tomoshibimichi:'みちを てらす',futarigatari:'となりを あるく',hitotsunoumi:'うみを ひとつに つなぐ',minnanokoe:'ほんとうの こえ',hiraku:'とじた ものを ひらく',kodama:'うけて かえす こだま',horagai:'おおきな こえ',hajimari:'はじまりを おもいだす',minmono:'わけあう ものがたり',ashita:'あしたを えらぶ',toki:'ときを つなぐ',koemawasu:'こえを まわす'};
