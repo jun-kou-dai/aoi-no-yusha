@@ -1688,6 +1688,7 @@ icetown:{
  npcs:[
   {x:3,y:1,kind:'box',kaKey:'ka1',col:'#7a5a34',msg:['しまわれたこえ『……うみの むこうの ともだちへ、まいとし てがみを かいた。\nへんじが なくても、かくのが すきだった』']},
   {x:16,y:1,kind:'box',kaKey:'ka2',col:'#7a5a34',msg:['しまわれたこえ『はたけの すみの ちいさな はな。なまえは しらないけど、\nまいあさ あいさつ してたんだ』']},
+  {x:13,y:11,shop:true,kind:'ojii',col:'#c8b090',msg:[]}, // 便1: くらのしまの みせ
   {x:3,y:8,kind:'box',kaKey:'ka3',col:'#7a5a34',msg:['しまわれたこえ『じいちゃんの ほらばなしは うそっぱちだけど、\nあれを きく よるが いちばん すきだった』']},
   {x:10,y:1,kind:'stone',shelfKey:1,col:'#8a7a5a',msg:[]},
   {x:14,y:9,kind:'musume',small:true,col:'#9a9a8a',msg:['しまの ひと「……。」\n（くちは うごいて いるのに、こえが きこえない）']}],
@@ -1696,8 +1697,13 @@ icetown:{
   {id:'shiorikage',x:14,y:6},
   {id:'hakomori',x:5,y:9},
   {id:'kagimushi',x:14,y:9},
+  {id:'oisugaru',x:10,y:7}, // 便1: 追ってくる強敵(第3部で0体だった)
   {id:'shimaikomu',x:10,y:3,need:'ch13a',gone:'ch13d'}], // 島に着いた時から 見えている(2026-07-25: 備えて挑む)
  chests:[{x:16,y:8,item:'hoshitetsu'},{x:3,y:4,item:'inochi'}],
+ inn:{x:7,y:11}, innCost:30, // 便1: 第3部に1軒も無かった宿を戻す
+ spots:[ // 便1: 第3部に0枚だった読むものを戻す(新規の位置=既存セーブの既読は不変)
+  {x:2,y:6,msg:['くらの かべに ふるい はりがみ——\n「あずかりもの、うけとりに こられたし。もちぬしの なは、もう よめない」','はりがみの すみに、あとから ちいさく かきたして ある。\n「よめなくても、あずかって おく。それが しごとだ」']},
+  {x:17,y:3,msg:['つみあげた はこの かげに、こわれた はかりが おちている。\nかたほうの さらに、ちいさな いしが ひとつ のったまま。','はかりの うらに きざみ——\n「おもさで きめては いけない。かるい こえほど、とおくから きた」']}],
  exits:[{x:10,y:12,to:'grass',tx:8,ty:11,msg:'いちざの こぶねで、むらの きしへ もどった。'}]},
  tani:{ // 章14『かたちを かえる ものがたり』: こだまが「ちがう」と しかる 谷(一座の船で わたる)
  song:'oka', bg:['#2a2038','#4a3348'],
@@ -2895,6 +2901,7 @@ const FOES={
   kobamu:{charge:true, name:'おわりを こばむもの', hp:1050, atk:100, def:40, exp:1800, g:1500, col:'#b06a48', draw:'boss2', tint:'rgba(122,74,52,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'おわりを こばむものは ゆうやけの いろに ほどけ、\nせきひが しずかに ひかった。'},
   meguri:{charge:true, name:'めぐりのけしん', hp:3000, atk:160, def:70, exp:5000, g:5000, col:'#c8a84a', draw:'boss2', tint:'rgba(160,132,58,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:1, fireMul:0.75, iceMul:0.75, winMsg:'めぐりのけしんは きんいろの こなに ほどけ、\nふちの そらに ほしの わが かかった。'},
   kagimushi:{name:'かぎむし', hp:600, atk:140, def:52, exp:300, g:150, col:'#8a7444', draw:'slime', v:'iron', tint:'rgba(120,100,60,0.8)', physMul:1, fireMul:1.2, iceMul:1, winMsg:'かぎむしは ほどけて、ちいさな かぎに もどった。'},
+  oisugaru:{name:'おいすがる はこ', hp:900, atk:150, def:60, exp:520, g:300, col:'#7a6248', draw:'golem', v:'iron', tint:'rgba(120,96,64,0.9)', hunter:true, huge:true, physMul:0.7, fireMul:1.4, iceMul:1.0, dodge:0, winMsg:'おいすがる はこは ふたを ひらいたまま とまり、\nなかから ほこりと、だれかの こえが こぼれた。'}, // 便1(2026-07-25): 第3部に1体も居なかった「徘徊する強敵」を くらのしまへ戻す
   hakomori:{name:'はこもり', hp:720, atk:144, def:58, exp:340, g:170, col:'#6a5a40', draw:'golem', v:'iron', tint:'rgba(96,82,56,0.85)', physMul:0.5, fireMul:1.3, iceMul:1.1, winMsg:'はこもりは くずれ、なかから ふるい ほんの においが した。'},
   shiorikage:{name:'しおりのかげ', hp:560, atk:138, def:50, exp:280, g:140, col:'#5a5468', draw:'crow', v:'bat', tint:'rgba(80,74,100,0.85)', dodge:0.22, physMul:1, fireMul:1.2, iceMul:0.9, winMsg:'しおりのかげは ぱらりと おち、ページの すきまに きえた。'},
   shimaikomu:{charge:true, name:'しまいこむもの', hp:1500, atk:148, def:64, exp:2200, g:1800, col:'#8a6a3a', draw:'boss2', tint:'rgba(120,92,50,0.88)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:0.6, fireMul:1.2, iceMul:0.9, winMsg:'しまいこむものは ほどけ、\nとじられていた こえたちが いっせいに あふれだした！'},
@@ -3008,7 +3015,11 @@ const SHOP=[
   {id:'door',label:'どこでもドア',cost:150,key:'door',hint:'フィールドの「🚪」ボタンで いつでも つかえる！'},
   {id:'cloak',label:'とうめいマント',cost:180,key:'cloak',hint:'フィールドの「👻」ボタンで ON/OFFできる！'},
   {id:'book',label:'冒険の書',cost:100,key:'book',hint:'フィールドの「📕」ボタンで モンスター図鑑を ひらける！'},
-  {id:'mkey',label:'まほうのかぎ',cost:300,key:'mkey',town:'icetown',hint:'ちそこの とざされた とびらが ひらく！'}];
+  {id:'mkey',label:'まほうのかぎ',cost:300,key:'mkey',town:'icetown',hint:'ちそこの とざされた とびらが ひらく！'},
+  // 便1(2026-07-25): くらのしまの みせ。第3部に店が1軒(おみやげ)しか無かったため戻す
+  // やくそう/いいやくそう/どくけしそう は town無し＝どの店にも並ぶので、ここでは足さない(二重表示になる)
+  {id:'seisui_k',label:'まほうのせいすい',cost:80,item:'seisui',town:'kura'},
+  {id:'tokusen_k',label:'とくせんやくそう',cost:250,item:'tokusen',town:'kura'}];
 // ふなみせ(一座のふねの移動武具店 2026-07-21): 既存SHOP品のidを並べるだけ(定義の追加なし)。順=ぶき→よろい→くすり
 const FUNAMISE=['w8u','wtsukikage','w7','a8u','a7h','atsukikage','yakuso','iyakuso','tokusen','seisui2','inochi','hoshikake'];
 // でんせつのぶき: weaponAtkの値が武器の同一性(全武器で一意)。効果はここで引く
@@ -4488,7 +4499,7 @@ const BOOK_ISLES=[
   ['みなもとの もり',['komari','kodamadori','hikabake','hikarinokodama','koborebi']],
   ['とわの ふち',['towakage','jigencho','mugenslime','toikeshin','meguri']],
   ['こころのにわ',['tozakage','tozasu']],
-  ['くらのしま',['kagimushi','hakomori','shiorikage','shimaikomu']],
+  ['くらのしま',['kagimushi','hakomori','shiorikage','oisugaru','shimaikomu']],
   ['やまびこのたに',['manebi','yamabiko','kuchibue','mototadasu']],
   ['ほらふきじま',['yadokari','kazesarai','usofuda','makoto']],
   ['わすれうたのしま',['utawasure','otomodoki','wasureishi','wasurare']],
@@ -8231,6 +8242,8 @@ async function runShop(funamise){
     ?'うきみせの あきんど「おおっ、ふねの おきゃくさん！ なかうみの うきみせへ ようこそ。\nうみわたりの みちぐさに、めずらしい ものを そろえて いるよ。」'
     :Game.mapId==='cave2'
     ?'ほりびとの あきんど「ちそこの いちへ ようこそ。\nほりびとが のこした さいごの しごと——ほしの てつの そうびだ。」'
+    :Game.mapId==='kura'
+    ?'くらの ばんにん「あずかりものの しまへ ようこそ。\nくらの すみに たまった くすりを、たびの ひとに ゆずって いるよ。」'
     :Game.mapId==='misaki'
     ?'みさきの あきんど「ようこそ、ゆうなぎの みさきへ。\nながい ふなたびに きく くすりを あきなって いるよ。」'
     :(Game.mbossDown
