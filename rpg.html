@@ -2870,10 +2870,14 @@ function bzoneAlive(){return !!(BZONE&&(Game.enemies||[]).length);}
 function nushiReplayAlive(){
   return !!(NUSHI_REPLAY&&(Game.enemies||[]).some(e=>e.id===NUSHI_REPLAY.id));
 }
-// いまの島から むらへ もどる でぐち(なければ null)
+// いまの島から 出る でぐち。むら行きが あれば それ、無ければ どれでも(なければ null)。
+// ★2026-07-26 夕 実測: ぬし再戦の行き先7つのうち yakata3 は yakata2 へだけ、
+//   kazemachiNight は **でぐちが1つも無い**、towa は edge へだけ。
+//   「むら行きだけ」を さがす作りだと この3つで また 光柱0本＝袋小路になる。
 function exitToVillage(){
-  const w=WORLDS[Game.mapId];if(!w||!w.exits)return null;
-  return w.exits.find(e=>e.to==='grass'&&(!e.need||(Game.hidden&&Game.hidden[e.need])))||null;
+  const w=WORLDS[Game.mapId];if(!w||!w.exits||!w.exits.length)return null;
+  const ok=e=>(!e.need||(Game.hidden&&Game.hidden[e.need]));
+  return w.exits.find(e=>e.to==='grass'&&ok(e))||w.exits.find(ok)||null;
 }
 // いやしの いずみ: 旅の途中は 1マップ1回きり。ものがたりを 終えたセーブでは 何度でも わく(2026-07-26)。
 // 一度つかうと 水の絵は のこったまま 二度と こたえない＝「泉＝回復」の約束を やぶる置物に なっていた。
@@ -8916,11 +8920,15 @@ function questTextCore(){
         const n=NUSHI_AGAIN.find(x=>x.id===NUSHI_REPLAY.id);
         const nm=(n&&String(n.label).split(' ─ ')[0])||'しまの ぬし';
         if(nushiReplayAlive())return 'もくてき：'+nm+'と もういちど 立ちあう（しまの おくに いる）';
-        // 倒したあと: ここに もう用は ない。むらへ もどる道を 指す(2026-07-26 夕)
-        return 'もくてき：'+nm+'を たおした——ひかる でぐちから むらへ もどれる（フクロに つぎを きこう）';}
+        // 倒したあと: ここに もう用は ない。出る道を 指す(2026-07-26 夕)
+        // でぐちが 1つも 無い島(あらしのよる)も ある＝その時は どこでもドアを 案内する
+        {const ex=exitToVillage();
+         if(!ex)return 'もくてき：'+nm+'を たおした——☰メニューの「どこでもドア」で むらへ もどれる';
+         return 'もくてき：'+nm+'を たおした——ひかる でぐち（'+(MAPNAME[ex.to]||'')+'）から もどれる（フクロに つぎを きこう）';}}
       if(CH21_REPLAY&&Game.mapId==='hoshiumi')return 'もくてき：ほしのみちの おくの「すくわれなかったもの」と もういちど もんどうする';
       // なんいど7だけの一体。旧: この ch21c の分岐で 先に return され、案内が 1行も 出なかった
       if(Game.mapId==='towa'&&Game.diff===7&&!Game.hidden.meguriDown)return 'もくてき：とわの ふちの「めぐりのけしん」と むきあおう';
+      if(Game.mapId==='towa')return 'もくてき：ここに もう用は ない——みなみの でぐちから はてのしまへ もどれる';
       if(Game.mapId==='hoshiminamoto')return Game.hidden.uraCleared?'もくてき：はじまりを かたりおえた——でぐちから むらへ もどれる':'もくてき：ほしのみなもとの おくで「かたられなかった はじまり」と むきあえ';
       // 2026-07-26: クリア済みの めあては ずっと「たもと=終わった最終章の再演」だけを指しており、
       // あとから足したもの(したく・ぬし再戦・島の店…)へ 道が1本も通っていなかった。
@@ -13469,6 +13477,8 @@ function questDest(){
       return {map:'grass',exp:nm+'を たおした。ひかる でぐちから むらの きしへ もどろう。つぎに できることは、きたの おかの フクロが ならべて くれる。'};}
     if(CH21_REPLAY&&Game.mapId==='hoshiumi')return {map:'hoshiumi',exp:'ほしのみちの おくで「すくわれなかったもの」が まっている。7つの といに 章じゅもんで こたえよう。'};
     if(Game.mapId==='towa'&&Game.diff===7&&!h.meguriDown)return {map:'towa',exp:'とわの ふちに「めぐりのけしん」が かたちを もった。すべての といを こえた ものへ、もうひとつの しれんだ。'};
+    // めぐりを たおした あとの とわのふち: でぐちは はてのしま行きだけ＝案内が 消えていた(2026-07-26 夕)
+    if(Game.mapId==='towa')return {map:'towa',exp:'とわの ふちに もう用は ない。みなみの でぐちから はてのしまへ——そこから むらへ もどれる。'};
     if(Game.mapId==='hoshiminamoto')return {map:'hoshiminamoto',exp:h.uraCleared?'はじまりを かたりおえた。でぐちから むらへ もどろう。':'ほしのみなもとの おくで「かたられなかった はじまり」が まっている。かきかけの 三体（序・破・急）を こえて いどめ。'};
     if(h.uraTold&&!h.uraCleared)return {map:'grass',exp:'むらの おかの たもとの となりに ✨はじまりの ひかり——ふれると ほしのみなもとへ のぼれる。すべての ものがたりの みなもとだ。'};
     return {map:'grass',exp:'たびは ひととおり おわった。ここからは、きたの おかの わしの\n「✨いま できること」に ならべた '+tamesuList().length+'つ から えらぶ——\nぬしと もういちど 立ちあうも、⚒したくを ととのえるも、そなた しだい じゃ。'}; // 2026-07-26: たもと1本だけを指していた案内を 台帳へ
@@ -13729,6 +13739,8 @@ function questBeaconTargets(){
     {const ex=exitToVillage();if(ex){push(ex.x,ex.y);return out;}}}
   if(CH21_REPLAY&&Game.mapId==='hoshiumi'){for(const e of Game.enemies)if(e.id==='sukuwarenu')push(Math.round(e.px),Math.round(e.py));if(out.length)return out;}
   if(Game.mapId==='towa'&&Game.diff===7&&!h.meguriDown){for(const e of Game.enemies)if(e.id==='meguri')push(Math.round(e.px),Math.round(e.py));if(out.length)return out;}
+  // めぐりを たおした あとは でぐちを 指す(旧: 光柱0本で 何も指さなかった 2026-07-26 夕)
+  if(Game.mapId==='towa'&&h.ch21c&&h.meguriDown){const ex=exitToVillage();if(ex){push(ex.x,ex.y);return out;}}
   if(Game.mapId==='grass'&&TAMESU_AT)push(TAMESU_AT.x,TAMESU_AT.y); // フクロが さした ばしょ(いま ためせること)
   else if(Game.mapId==='grass'&&h.ch21c&&w.npcs)for(const n of w.npcs){if(n.gunshi)push(n.x,n.y);} // かんけつ後の めあて=フクロ(2026-07-26「めあてが別のとこ指してるんで気づかなかった」=たもとを指したままで、あとから足したものへ道が無かった。たもとは台帳の中にある)
   if(Game.mapId==='hoshiumi'&&h.ch21d&&w.exits)for(const ex of w.exits)push(ex.x,ex.y);
