@@ -2864,6 +2864,17 @@ const spotAt=(x,y)=>SPOTS&&SPOTS.find(sp=>sp.x===x&&sp.y===y); // しらべる�
 // まものは 台地の そとへも さまよう＝「いま台地の上に居るか」で 出し分けると もやが ちらつく。
 // 「この盤に まものが 1体も 湧かない」ときだけ 消す(かんけつ後の そうげんが これ)。
 function bzoneAlive(){return !!(BZONE&&(Game.enemies||[]).length);}
+// 再戦の相手が まだ盤に 居るか。倒したあとに「もういちど 立ちあう」と 言いつづけるのを止める。
+// ★2026-07-26 夕: 発注者の iPad で「くらの島で倒したが 次が わからない」＝案内が 倒した相手を
+//   指したまま、金の光柱が 0本 になる 袋小路を 実測した(こちらが 勝った時点で 確認を やめていた)。
+function nushiReplayAlive(){
+  return !!(NUSHI_REPLAY&&(Game.enemies||[]).some(e=>e.id===NUSHI_REPLAY.id));
+}
+// いまの島から むらへ もどる でぐち(なければ null)
+function exitToVillage(){
+  const w=WORLDS[Game.mapId];if(!w||!w.exits)return null;
+  return w.exits.find(e=>e.to==='grass'&&(!e.need||(Game.hidden&&Game.hidden[e.need])))||null;
+}
 // いやしの いずみ: 旅の途中は 1マップ1回きり。ものがたりを 終えたセーブでは 何度でも わく(2026-07-26)。
 // 一度つかうと 水の絵は のこったまま 二度と こたえない＝「泉＝回復」の約束を やぶる置物に なっていた。
 const springReady=()=>(Game.hidden&&Game.hidden.ch21c)?true:!Game.springUsed[Game.mapId];
@@ -8903,7 +8914,10 @@ function questTextCore(){
       //   いま なにを しに ここへ 来たのかを、その場で 言う(NUSHI_REPLAY/CH21_REPLAY は保存しない一時状態)。
       if(NUSHI_REPLAY&&Game.mapId===NUSHI_REPLAY.map){
         const n=NUSHI_AGAIN.find(x=>x.id===NUSHI_REPLAY.id);
-        return 'もくてき：'+((n&&String(n.label).split(' ─ ')[0])||'しまの ぬし')+'と もういちど 立ちあう（しまの おくに いる）';}
+        const nm=(n&&String(n.label).split(' ─ ')[0])||'しまの ぬし';
+        if(nushiReplayAlive())return 'もくてき：'+nm+'と もういちど 立ちあう（しまの おくに いる）';
+        // 倒したあと: ここに もう用は ない。むらへ もどる道を 指す(2026-07-26 夕)
+        return 'もくてき：'+nm+'を たおした——ひかる でぐちから むらへ もどれる（フクロに つぎを きこう）';}
       if(CH21_REPLAY&&Game.mapId==='hoshiumi')return 'もくてき：ほしのみちの おくの「すくわれなかったもの」と もういちど もんどうする';
       // なんいど7だけの一体。旧: この ch21c の分岐で 先に return され、案内が 1行も 出なかった
       if(Game.mapId==='towa'&&Game.diff===7&&!Game.hidden.meguriDown)return 'もくてき：とわの ふちの「めぐりのけしん」と むきあおう';
@@ -9471,7 +9485,11 @@ function updateField(dt){
     Game.mateNotice=null;
   }
   // 物語イベントの自動発火（会話・戦闘・遷移中は発火しない）
-  if(!Game.talking&&!Game.battling&&!Game.transiting&&Game.scene==='field'){
+  // ★2026-07-26 夕: **みちびきの あんない中も 発火しない**。もくてきバーを タップすると
+  //   自動で 歩きだすが、その途中で 一回きりの演出が 割り込むと、演出を 読むための タップが
+  //   自動歩行を 打ち消し、目的地(フクロ)に 着けないまま 止まっていた。
+  //   ＝発注者の「フクロも会話しない」の直接の原因(実測)。演出は 着いて 止まってから 出す。
+  if(!Game.talking&&!Game.battling&&!Game.transiting&&Game.scene==='field'&&!(Game.autoPath&&Game.autoPath.length)){
     if(Game.mapId==='ice'&&Game.mbossDown&&!Game.hidden.k1)kidnapScene();
     else if(Game.inVillage&&Game.hidden.k2&&!Game.hidden.k3)thanksScene();
     else if(Game.mapId==='grass'&&Game.hidden.cleared&&!Game.hidden.elderTold&&!Game.hidden.cwelc&&!Game.minigame)clearedWelcomeScene();
@@ -13446,7 +13464,9 @@ function questDest(){
   if(h.ch21c){
     if(NUSHI_REPLAY&&Game.mapId===NUSHI_REPLAY.map){ // 再戦中は「いま来た用事」を指す(2026-07-26)
       const n=NUSHI_AGAIN.find(x=>x.id===NUSHI_REPLAY.id);
-      return {map:NUSHI_REPLAY.map,exp:'しまの おくで '+((n&&String(n.label).split(' ─ ')[0])||'しまの ぬし')+'が まっている。ちからを ためる 一げきは よろいでは かるく ならぬ——ぼうぎょか 章じゅもんで こたえよう。'};}
+      const nm=(n&&String(n.label).split(' ─ ')[0])||'しまの ぬし';
+      if(nushiReplayAlive())return {map:NUSHI_REPLAY.map,exp:'しまの おくで '+nm+'が まっている。ちからを ためる 一げきは よろいでは かるく ならぬ——ぼうぎょか 章じゅもんで こたえよう。'};
+      return {map:'grass',exp:nm+'を たおした。ひかる でぐちから むらの きしへ もどろう。つぎに できることは、きたの おかの フクロが ならべて くれる。'};}
     if(CH21_REPLAY&&Game.mapId==='hoshiumi')return {map:'hoshiumi',exp:'ほしのみちの おくで「すくわれなかったもの」が まっている。7つの といに 章じゅもんで こたえよう。'};
     if(Game.mapId==='towa'&&Game.diff===7&&!h.meguriDown)return {map:'towa',exp:'とわの ふちに「めぐりのけしん」が かたちを もった。すべての といを こえた ものへ、もうひとつの しれんだ。'};
     if(Game.mapId==='hoshiminamoto')return {map:'hoshiminamoto',exp:h.uraCleared?'はじまりを かたりおえた。でぐちから むらへ もどろう。':'ほしのみなもとの おくで「かたられなかった はじまり」が まっている。かきかけの 三体（序・破・急）を こえて いどめ。'};
@@ -13704,7 +13724,9 @@ function questBeaconTargets(){
   // 再戦中は その一体を 指す(2026-07-26)。旧: 島に降りても 光柱は 村の たもとを 指したままだった
   if(NUSHI_REPLAY&&Game.mapId===NUSHI_REPLAY.map){
     for(const e of Game.enemies)if(e.id===NUSHI_REPLAY.id)push(Math.round(e.px),Math.round(e.py));
-    if(out.length)return out;}
+    if(out.length)return out;
+    // 倒したあとは でぐちを 指す＝光柱が 0本になって 詰むのを 止める(2026-07-26 夕)
+    {const ex=exitToVillage();if(ex){push(ex.x,ex.y);return out;}}}
   if(CH21_REPLAY&&Game.mapId==='hoshiumi'){for(const e of Game.enemies)if(e.id==='sukuwarenu')push(Math.round(e.px),Math.round(e.py));if(out.length)return out;}
   if(Game.mapId==='towa'&&Game.diff===7&&!h.meguriDown){for(const e of Game.enemies)if(e.id==='meguri')push(Math.round(e.px),Math.round(e.py));if(out.length)return out;}
   if(Game.mapId==='grass'&&TAMESU_AT)push(TAMESU_AT.x,TAMESU_AT.y); // フクロが さした ばしょ(いま ためせること)
