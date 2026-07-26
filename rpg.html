@@ -8879,7 +8879,7 @@ function questText(){
 function questTextCore(){
   // 「いま ためせること」で 来た先では、その場で なにが できるかを 先に見せる(発注者「誘導がない」への対応)
   if(Game.kodama)return Game.kodama.tired?'もくてき：こだまが とまった！ いまの うちに つかまえよう':'もくてき：はねる こだまを おいかけよう（あと '+(3-Game.kodama.jumps)+'はね）';
-  if(Game.mapId==='tani'&&Game.hidden.ch14c)return 'もくてき：ひかる「こだまのいし」に ふれると、こだまと おいかけっこが できる';
+  if(Game.mapId==='tani'&&Game.hidden.ch14c&&!NUSHI_REPLAY)return 'もくてき：ひかる「こだまのいし」に ふれると、こだまと おいかけっこが できる'; // ぬし再戦中は 再戦の案内が先(2026-07-26 夜: 勝ったあとも こだまが バーを横取りしていた)
   if(Game.minigame&&Game.minigame.kind==='ch20')return '三艘の航海盤：さいごの舟まで 岩にふれない隊列を つなごう';
   if(Game.minigame)return 'スライムつかまえ！ のこり '+Math.max(0,Math.ceil(Game.minigame.t))+'びょう　つかまえた '+Game.minigame.got+'/3';
   if(Game.qChild===1)return Game.mapId==='cave'?'もくてき：どうくつの ひだりおくで ポポを さがせ':'もくてき：どうくつで まいごの ポポを さがせ';
@@ -8935,7 +8935,8 @@ function questTextCore(){
       // むらに居るあいだは フクロ(=いま できることの台帳)を 唯一の入口にする。
       if(Game.mapId==='grass')return 'もくてき：きたの おかの フクロへ——✨いま できること が '+tamesuList().length+'こ ある';
       if(Game.hidden.uraTold&&!Game.hidden.uraCleared)return 'さいしゅうしょう、かんけつ——たもとの となりの ✨はじまりの ひかり から ほしのみなもとへ のぼれる';
-      return 'さいしゅうしょう、かんけつ——✨ほしのはしの たもとから ほしのうみへ もういちど のぼれる';
+      // むら以外では 帰り道と 台帳を指す(2026-07-26 夜: やかたの帰り道・章18/19再戦の送還先で「たもと」=済んだ用事を指したまま 金柱0本だった)
+      return 'さいしゅうしょう、かんけつ——ひかる でぐちから むらへ もどれる（フクロに つぎを きこう）';
     }
     if(Game.hidden.ch21d&&!Game.hidden.ch21c)return 'もくてき：むらへ かえろう——ひろばで みんなが まっている';
     if(Game.hidden.ch21a&&!Game.hidden.ch21d)return Game.mapId==='hoshiumi'?'もくてき：ほしのうみの おくへ——すくわれなかったものの といに こたえよ':'もくてき：むらの こどもと ほしのはしで ほしのうみへ';
@@ -13671,7 +13672,7 @@ function questBeaconTargets(){
       if(Game.kodama)push(Game.kodama.tx,Game.kodama.ty); // にげる こだまを 追う
       else for(const n of w.npcs)if(n.kmKey&&!h[n.kmKey])push(n.x,n.y);
     }
-    if(h.ch14c){ // クリア済み: もういちど あそべる いしを 指す
+    if(h.ch14c&&!NUSHI_REPLAY){ // クリア済み: もういちど あそべる いしを 指す(ぬし再戦中は 再戦の柱が先 2026-07-26 夜)
       if(Game.kodama)push(Game.kodama.tx,Game.kodama.ty);
       else for(const n of w.npcs)if(n.kmKey)push(n.x,n.y);
     }
@@ -13801,6 +13802,9 @@ function questBeaconTargets(){
   if(Game.mapId==='edge'&&h.ch3d&&!h.towaGate)foeB(e=>e.def===FOES.kotae);
   // とわのふち: といの けしん
   if(Game.mapId==='towa'&&!h.towaDown)foeB(e=>e.def===FOES.toikeshin);
+  // かんけつ後・むら以外で 用事がひとつも無いときは むらへの でぐちを 指す
+  // (2026-07-26 夜: やかたの帰り道・章18/19再戦の送還先で 金柱0本の空白が出ていた)
+  if(!out.length&&h.ch21c&&Game.mapId!=='grass'){const ex=exitToVillage();if(ex)push(ex.x,ex.y);}
   return out;
 }
 function drawQuestBeacons(){
@@ -16292,6 +16296,7 @@ async function victory(){
 }
 async function leaveBattle(won){
   const bt=Game.bt;
+  const nushiRep=!!NUSHI_REPLAY; // 再戦かどうかは transitMap で消える前に 控える(2026-07-26 夜)
   const ch18Return=!!(bt&&bt.foe===FOES.shioarashi);
   const ch19Return=!!(bt&&bt.foe===FOES.kiritoru);
   const ch20Return=!!(bt&&bt.foe===FOES.kajiu);
@@ -16323,11 +16328,11 @@ async function leaveBattle(won){
   if(ch18Return){
     Game.hidden.ch18Night=false;
     await transitMap({to:'kazemachi',tx:10,ty:11,msg:won?'ながい あらしが ほどけ、かぜまちじまに 朝の ひかりが さした。':'あらしの そとへ いったん ひきあげた。船大工カイと じゅんびを たてなおそう。'});
-    toast(won?'朝の 船大工カイに こえを かけよう':'船大工カイから、よるへ もういちど いどめる');
+    toast(won?(nushiRep?'むらへは ひかる でぐちから——つぎは フクロに きこう':'朝の 船大工カイに こえを かけよう'):(nushiRep?'もういちど いどむなら、むらの フクロから':'船大工カイから、よるへ もういちど いどめる')); // 再戦では カイに 用は ない(2026-07-26 夜)
   }
   if(ch19Return&&won){
     await transitMap({to:'tokikasanedusk',tx:10,ty:11,msg:'三つの時が一本の朝へ かさなり、灯台・時計・救助舟が いっせいに うごきだした。'});
-    toast('朝の 大時計で、時守ミナに こえを かけよう');
+    toast(nushiRep?'むらへは ひかる でぐちから——つぎは フクロに きこう':'朝の 大時計で、時守ミナに こえを かけよう'); // 再戦では ミナに 用は ない(2026-07-26 夜)
   }
   if(ch20Return&&won){
     await transitMap({to:'shiowakare',tx:10,ty:7,msg:'黒い舵輪がほどけ、海峡の夜が明ける。三艘の帆が 北の港へ ならんだ——'});
