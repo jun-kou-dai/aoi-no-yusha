@@ -402,6 +402,9 @@ body{
 .invcard .invname{ min-width:0; line-height:1.4; font-size:.9em; overflow-wrap:anywhere; }
 .invcard .invname small{ display:block; color:#8f9bc0; font-size:.72em; }
 .invcard .invcount{ color:#ffe6a8; font-weight:800; white-space:nowrap; font-variant-numeric:tabular-nums; }
+/* 2026-07-26: そうびの立ちば(「しまの おくりもの（うれない）」など)は 数の欄より 長い。
+   nowrap のままだと 品名を おしつぶすので、長いものだけ 小さく 折り返す。 */
+.invcard.tag .invcount{ font-size:.76em; font-weight:700; white-space:normal; text-align:right; max-width:46%; line-height:1.35; }
 .invcard.equipped{ border-color:rgba(255,226,150,.55); background:rgba(255,226,150,.08); }
 .inv-empty{ color:#687292; padding:8px 4px; font-size:.86em; }
 #inventoryuse{ display:block; margin:14px auto 2px; padding:10px 20px; width:min(100%,320px); text-align:center; font-size:.92em; }
@@ -522,8 +525,8 @@ body{
 .strow.qstack{ display:block; }
 .qstack .qtop{ display:flex; justify-content:space-between; align-items:baseline; }
 .qstack .qsub{ font-size:.78em; color:#9aa6cc; margin-top:3px; line-height:1.65; }
-.strow{ display:flex; justify-content:space-between; align-items:baseline; padding:7px 4px; border-bottom:1px dashed rgba(160,170,210,.18); font-size:.95em; }
-.strow .stlabel{ color:#cdd5ef; }
+.strow{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:7px 4px; border-bottom:1px dashed rgba(160,170,210,.18); font-size:.95em; }
+.strow .stlabel{ color:#cdd5ef; white-space:nowrap; flex:0 0 auto; } /* 値が長い行(そうびの ふくろ)で 見出しが 1文字ずつ たてに つぶれていた 2026-07-26 */
 .strow .stval{ font-weight:700; letter-spacing:.04em; }
 .strow .stsub{ font-size:.78em; color:#9aa6cc; font-weight:400; margin-left:8px; }
 .bisle{ margin:18px 0 8px; font-size:1.05em; color:#ffe6a8; letter-spacing:.08em;
@@ -610,9 +613,13 @@ body{
   #ui-battle.talk.menu-only .b-bottom{ align-items:stretch; }
   #ui-battle.talk.menu-only #cmdwin{ width:100%; max-width:520px; }
   #mlist{ display:grid; grid-template-columns:repeat(2,1fr); gap:4px; }
+  /* 2026-07-26: 長い行(みせ・そうび・案内)は 半分の幅では 読めず、見出し行が 左上のセルに うもれていた。
+     ask() が ラベルの長さを見て #mlist に .one を付ける＝そのときだけ 1列へ もどす。 */
+  #mlist.one{ display:flex; flex-direction:column; gap:2px; }
+  #mlist.one .mi{ justify-content:space-between; padding:10px 12px; text-align:left; }
   .mi{ justify-content:center; padding:13px 4px; }
   .mi::before{ margin-right:5px; }
-  .mi .mcost{ display:none; }
+  .mi .mcost{ font-size:.68em; } /* 旧 display:none＝せまい画面では じゅもんの MPが 読めなかった */
   #msgwin{ min-height:84px; }
   #mface{ width:52px; height:52px; border-radius:11px; }
   /* 戦闘の上段は縦積みにしない。敵名→操作→2人の状態を3段へ圧縮し、敵の顔と剣先を隠さない。 */
@@ -3119,6 +3126,20 @@ const SHITAKU_W=new Set(SHITAKU.map(id=>SHOP.find(s=>s.id===id)).filter(o=>o&&o.
 const SHITAKU_A=new Set(SHITAKU.map(id=>SHOP.find(s=>s.id===id)).filter(o=>o&&o.armor).map(o=>o.armor));
 // ふなみせ(一座のふねの移動武具店 2026-07-21): 既存SHOP品のidを並べるだけ(定義の追加なし)。順=ぶき→よろい→くすり
 const FUNAMISE=['w8u','wtsukikage','w7','a8u','a7h','atsukikage','yakuso','iyakuso','tokusen','seisui2','inochi','hoshikake'];
+// その品が どこで買えるか(フクロの みたてと みせの案内で 同じ言い方を つかう 2026-07-26)
+function shopWhereOf(it){
+  return it.town==='funamise'?'いちざの ふねの「⚒ いちざの したく」'
+    :(it.town?((MAPNAME[it.town]||'まち')+'の みせ'):'どの まちの みせでも');
+}
+// いまより 上の そうびで、まだ 持っておらず、物語の条件を みたした いちばん安い品(なければ null)
+function nextUpGear(kind){
+  const cur=kind==='w'?(Game.weaponAtk||0):(Game.armorDef||0);
+  const cand=SHOP.filter(it=>(!it.need||(Game.hidden&&Game.hidden[it.need]))
+    &&(kind==='w'?(it.atk&&it.atk>cur&&!(Game.ownW||[]).includes(it.atk))
+                 :(it.armor&&it.armor>cur&&!(Game.ownA||[]).includes(it.armor))));
+  cand.sort((x,y)=>x.cost-y.cost);
+  return cand[0]||null;
+}
 // でんせつのぶき: weaponAtkの値が武器の同一性(全武器で一意)。効果はここで引く
 const WEAPONFX={16:{twice:true},44:{vsKage:1.5},52:{critUp:0.05},54:{critUp:0.10},56:{critUp:0.08},58:{venom:0.4,critUp:0.10},64:{critUp:0.06},70:{drain:0.25},78:{critUp:0.12},82:{critUp:0.10},88:{critUp:0.10},94:{critUp:0.12},100:{critUp:0.14},60:{critUp:0.06},104:{critUp:0.14},112:{critUp:0.14,venom:0.4},120:{critUp:0.15,venom:0.4,drain:0.25},128:{critUp:0.18,venom:0.4,drain:0.25},136:{critUp:0.20,venom:0.5,drain:0.30},108:{critUp:0.16},24:{critUp:0.12},30:{twice:true},34:{venom:0.4},42:{drain:0.25},46:{vsGiant:1.6},76:{drain:0.2,critUp:0.08},102:{twice:true,critUp:0.06},110:{vsGiant:1.6},118:{drain:0.40,critUp:0.08},126:{critUp:0.28,drain:0.22}};
 const WNAME={5:'どうのつるぎ',12:'はがねのつるぎ',16:'はやぶさのつるぎ',20:'ほのおのつるぎ',26:'ゆうしゃのつるぎ',36:'ふぶきのつるぎ',44:'かげぬいの たち',48:'らいめいのつるぎ',52:'おうじゃのけん',54:'ひらきのつるぎ',56:'とわのつるぎ',58:'ほらがいのやいば',60:'うみなりのつるぎ',64:'ちそこのつるぎ',70:'わけあいのつるぎ',76:'つきかげのつるぎ',78:'みつどきのこだち',82:'ほしくだきのつるぎ',88:'ほしくだきのつるぎ＋1',94:'ほしくだきのつるぎ＋2',100:'ほしくだきのつるぎ＋3',104:'ひらきのつるぎ',112:'ほらがいのやいば',120:'わけあいのつるぎ',128:'みつどきのこだち',136:'ほしのはしのつるぎ',108:'ほしのはしのつるぎ',24:'みきりのこだち',30:'しっぷうのつるぎ',34:'まだらのやいば',42:'きゅうけつのやいば',46:'きょじんごろし',102:'あけはなちの やいば',110:'おおぼらの ほこさき',118:'わけへだてぬ やいば',126:'ひとこまの こだち'};
@@ -3127,6 +3148,28 @@ const ANAME={4:'かわのよろい',9:'くさりかたびら',16:'はがねの�
 const ARMORFX={9:{poisonGuard:0.5},16:{critGuard:0.75},20:{elemGuard:0.7},24:{mindGuard:0.5},28:{dodge:0.08},34:{regen:3},40:{regen:4,dodge:0.05},42:{dodge:0.10,regen:2},44:{regen:4,mindGuard:0.6},46:{regen:5},48:{regen:4,mindGuard:0.6},52:{elemGuard:0.6,critGuard:0.6},54:{regen:4,dodge:0.05},60:{regen:6,critGuard:0.6},64:{regen:6,critGuard:0.6},66:{regen:7,critGuard:0.6},68:{dodge:0.12,regen:6},72:{regen:8,critGuard:0.55},78:{regen:9,critGuard:0.5},82:{regen:9,dodge:0.10,critGuard:0.5},88:{regen:10,dodge:0.10,mindGuard:0.6,critGuard:0.5},94:{regen:11,dodge:0.12,mindGuard:0.6,critGuard:0.48},100:{regen:12,dodge:0.12,mindGuard:0.55,critGuard:0.45},108:{regen:14,dodge:0.14,mindGuard:0.5,critGuard:0.40},84:{regen:10,critGuard:0.45},12:{dodge:0.10},18:{poisonGuard:1},30:{elemGuard:0.5},80:{heavyGuard:0.80,regen:8,dodge:0.08},86:{heavyGuard:0.76,dodge:0.20,regen:9},92:{heavyGuard:0.72,elemGuard:0.5,critGuard:0.4,regen:10},98:{heavyGuard:0.66,regen:12,critGuard:0.45,mindGuard:0.55}};
 const WFXDESC={16:'1ターンに 2かい きる',44:'かげに 1.5ばい',52:'かいしんの いちげき +5%',54:'かいしんの いちげき +10%',56:'かいしんの いちげき +8%',58:'40%で どく・かいしん +10%',60:'かいしんの いちげき +6%',64:'かいしんの いちげき +6%',70:'あたえた ダメージの 25% HPを すう',76:'ダメージの 20%を すい、かいしん +8%',78:'かいしんの いちげき +12%',82:'かいしんの いちげき +10%',88:'かいしんの いちげき +10%',94:'かいしんの いちげき +12%',100:'かいしんの いちげき +14%',108:'かいしんの いちげき +16%',104:'かいしんの いちげき +14%',112:'かいしん +14%・40%で どく',120:'かいしん +15%・どく・ダメージの 25%を すう',128:'かいしん +18%・どく・ダメージの 25%を すう',136:'かいしん +20%・どく・ダメージの 30%を すう',24:'かいしんの いちげき +12%',30:'1ターンに 2かい きる',34:'40%で てきを どくに おかす',42:'あたえた ダメージの 25% HPを すう',46:'きょじん・ぬしのたぐいに 1.6ばい',102:'1ターンに 2かい きる・かいしん +6%',110:'きょじん・ぬしのたぐいに 1.6ばい',118:'あたえた ダメージの 40% HPを すう・かいしん +8%',126:'かいしん +28%・ダメージの 22%を すう'};
 const AFXDESC={9:'どくの きばを 5わり ふせぐ',16:'つうこんの いちげきを 25% へらす',20:'ほのお・ひかりの いきを 3わり へらす',24:'ねむり・まひを 5わり ふせぐ',28:'8%で こうげきを ひらりと かわす',34:'ターンの おわりに HPが 3 もどる',40:'ターンおわりに HP4・5%で こうげきを かわす',42:'ターンおわりに HP2・10%で こうげきを かわす',44:'ターンおわりに HP4・ねむり まひを 6わり ふせぐ',46:'ターンの おわりに HPが 5 もどる',48:'ターンおわりに HP4・ねむり まひを 6わり ふせぐ',52:'いきを 4わり・つうこんを 4わり へらす',54:'ターンおわりに HP4・5%で こうげきを かわす',60:'ターンおわりに HP6・つうこんを 4わり へらす',64:'ターンおわりに HP6・つうこんを 4わり へらす',66:'ターンおわりに HP7・つうこんを 4わり へらす',68:'12%で かわし、ターンおわりに HP6',72:'ターンおわりに HP8・つうこん 45%減',78:'ターンおわりに HP9・つうこんを 5わり へらす',84:'ターンおわりに HP10・つうこんを 55% へらす',82:'ターンおわりに HP9・10%で かわし、つうこん 5わり減',88:'HP10・10%で かわし、ねむり まひ 6わり・つうこん 5わり減',94:'HP11・12%で かわし、ねむり まひ 6わり・つうこん 52%減',100:'HP12・12%で かわし、ねむり まひ 45%・つうこん 55%減',108:'HP14・14%で かわし、ねむり まひ 5わり・つうこん 6わり減',12:'10%で こうげきを ひらりと かわす',18:'どくの きばを かんぜんに ふせぐ',30:'ほのお・ひかりの いきを 5わり へらす',80:'大きな いちげきを 2わり やわらげる・HP8・8%で かわす',86:'大きな いちげきを 24% やわらげる・20%で かわす・HP9',92:'大きな いちげきを 28% やわらげ、いき5わり・つうこん6わり減・HP10',98:'大きな いちげきを 34% やわらげる・つうこん55%減・HP12'};
+// ============================================================
+// そうびの見え方を 全画面で そろえる(2026-07-26)
+// 旧: 旅支度のカードは WFXDESC[v]||('こうげき +'+v) ＝ こせいの ある そうびは 数が消えていた。
+//     「どうぐ」の そうびする行と つよさの「そうびの ふくろ」は 名前だけ。
+//     同じ名前で 数だけ ちがう そうび(⚔78 も ⚔128 も みつどきのこだち)が 見わけられなかった。
+// 新: 数 → こせい の順で いつも 両方出す。✦は「数のほかに こうかが ある」しるし。
+// ============================================================
+function wDesc(v){return 'こうげき +'+v+(WFXDESC[v]?'　✦'+WFXDESC[v]:'');}
+function aDesc(v){return 'しゅび +'+v+(AFXDESC[v]?'　✦'+AFXDESC[v]:'');}
+const FXNOTE='✦ ＝ こせい。数の ほかに とくべつな こうかが ある そうび';
+// 袋の1行に出す「この そうびの 立ちば」。うれない品を「うりね 0G」と 書かない(旧表示の うそ)
+function gearTag(kind,v){
+  const eq=(kind==='w'?Game.weaponAtk:Game.armorDef)||0;
+  if(v===eq)return '● そうび中';
+  if(kind==='w'?SHITAKU_W.has(v):SHITAKU_A.has(v))return 'いちざの したく（うれない）';
+  if(kind==='w'?ISLAND_REWARD_W.has(v):ISLAND_REWARD_A.has(v))return 'しまの おくりもの（うれない）';
+  const sell=(kind==='w'?SELL_W:SELL_A)[v];
+  if(sell==null)return 'ひとしなもの（うれない）'; // 旧: SELL表に無い品が「うりね 0G」と出ていた
+  if(kind==='w'?WEAPONFX[v]:ARMORFX[v])return 'こせい・うりね '+sell+'G';
+  if(v<eq)return 'うってOK・うりね '+sell+'G';
+  return 'もっている';
+}
 // そうびの袋: 買った/授かった装備は消えず ここに残る(付け替え・売却可)。weaponAtk値=同一性
 function ownGear(){
   Game.ownW=Game.ownW||[];Game.ownA=Game.ownA||[];
@@ -3311,7 +3354,8 @@ function renderInventory(){
     yakuso:['🌿','やくそう','HPを すこし かいふく'],iyakuso:['🌿','いいやくそう','HPを おおきく かいふく'],tokusen:['🌿','とくせんやくそう','HPを とても おおきく かいふく'],
     seisui:['💧','まほうのせいすい','MPを かいふく'],dokukesi:['🍃','どくけしそう','どくを なおす'],bakudan:['💣','ばくだんいし','たたかいで ダメージ'],inazuma:['⚡','いなずまだま','たたかいで 大ダメージ'],
     inochi:['💚','いのちのしずく','HPを ぜんかいふく'],hoshikake:['✦','ほしのかけら','MPを ぜんかいふく'],hoshitetsu:['⭐','ほしのてつ','ほしの そうびを きたえる'],tane:['🌱','ちからのたね','こうげきの ちから']};
-  const card=(icon,name,count,sub,cls)=>'<div class="invcard'+(cls?' '+cls:'')+'"><span class="invname">'+icon+' '+name+(sub?'<small>'+sub+'</small>':'')+'</span><span class="invcount">'+count+'</span></div>';
+  // count が 長い(そうびの立ちば)ときだけ .tag を付ける＝品名が おしつぶされない(2026-07-26)
+  const card=(icon,name,count,sub,cls)=>'<div class="invcard'+(cls?' '+cls:'')+(String(count).length>6?' tag':'')+'"><span class="invname">'+icon+' '+name+(sub?'<small>'+sub+'</small>':'')+'</span><span class="invcount">'+count+'</span></div>';
   const itemOrder=['yakuso','iyakuso','tokusen','seisui','dokukesi','bakudan','inazuma','inochi','hoshikake'];
   const matOrder=['hoshitetsu','tane'];let h='';
   const positive=Object.keys(Game.items||{}).filter(k=>(Game.items[k]||0)>0).length;
@@ -3322,10 +3366,11 @@ function renderInventory(){
   for(const k of Object.keys(Game.items||{}))if(!meta[k]&&(Game.items[k]||0)>0)h+=card('・',(ITEMS[k]&&ITEMS[k].name)||k,'×'+Game.items[k],'');h+='</div>';
   const ow=[...new Set([...(Game.ownW||[]),...(Game.weaponAtk?[Game.weaponAtk]:[])])].sort((a,b)=>a-b);
   const oa=[...new Set([...(Game.ownA||[]),...(Game.armorDef?[Game.armorDef]:[])])].sort((a,b)=>a-b);
+  if(ow.some(v=>WEAPONFX[v])||oa.some(v=>ARMORFX[v]))h+='<div class="inv-summary">'+FXNOTE+'</div>'; // ✦の凡例がどこにも無かった(2026-07-26)
   h+='<h3 class="bisle">武器（'+ow.length+'）</h3><div class="inventory-grid">';
-  if(!ow.length)h+='<div class="inv-empty">なし</div>';for(const v of ow)h+=card('⚔',WNAME[v]||'ぶき',v===Game.weaponAtk?'● そうび中':(SHITAKU_W.has(v)?'いちざの したく':(ISLAND_REWARD_W.has(v)?'しまの おくりもの':(WEAPONFX[v]?'こせい・うりね '+(SELL_W[v]||0)+'G':(v<Game.weaponAtk?'うってOK・うりね '+(SELL_W[v]||0)+'G':'もっている')))),WFXDESC[v]||('こうげき +'+v),v===Game.weaponAtk?'equipped':'');h+='</div>';
+  if(!ow.length)h+='<div class="inv-empty">なし</div>';for(const v of ow)h+=card('⚔',WNAME[v]||'ぶき',gearTag('w',v),wDesc(v),v===Game.weaponAtk?'equipped':'');h+='</div>';
   h+='<h3 class="bisle">防具（'+oa.length+'）</h3><div class="inventory-grid">';
-  if(!oa.length)h+='<div class="inv-empty">よろい なし</div>';for(const v of oa)h+=card('🛡',ANAME[v]||'よろい',v===Game.armorDef?'● そうび中':(SHITAKU_A.has(v)?'いちざの したく':(ISLAND_REWARD_A.has(v)?'しまの おくりもの':(ARMORFX[v]?'こせい・うりね '+(SELL_A[v]||0)+'G':(v<(Game.armorDef||0)?'うってOK・うりね '+(SELL_A[v]||0)+'G':'もっている')))),AFXDESC[v]||('しゅび +'+v),v===Game.armorDef?'equipped':'');
+  if(!oa.length)h+='<div class="inv-empty">よろい なし</div>';for(const v of oa)h+=card('🛡',ANAME[v]||'よろい',gearTag('a',v),aDesc(v),v===Game.armorDef?'equipped':'');
   if(Game.shield)h+=card('🛡','てつのたて',Game.shield2?'もっている':'● そうび中','しゅび +6',Game.shield2?'':'equipped');
   if(Game.shield2)h+=card('🛡','ひかりのたて','● そうび中','しゅび +12','equipped');h+='</div>';
   const keys=[['🚪','どこでもドア',Game.door],['👻','とうめいマント',Game.cloak],['📕','冒険の書',Game.book],['🔑','まほうのかぎ',Game.mkey],['🗺','うみのちず',Game.hidden&&Game.hidden.umichizu],['🎵','ふなうたのふえ',Game.hidden&&Game.hidden.funautaOwn],['🎟','一座の はんけん',Game.hidden&&Game.hidden.troupeTicket],['🎭','にせもの勇者の おめん',Game.hidden&&Game.hidden.troupeMask],['📜','ほんとうのこえの だいほん',Game.hidden&&Game.hidden.troupeScript],
@@ -4854,7 +4899,8 @@ function renderBook(){
 }
 function renderStatus(){
   const p=Game.p,lv=p.lv;
-  const row=(l,v,sub)=>'<div class="strow"><span class="stlabel">'+l+'</span><span class="stval">'+v+(sub?'<span class="stsub">'+sub+'</span>':'')+'</span></div>';
+  // cls: 値が長い行は 'qstack'(見出しを上・値を下)で 積む。既存の呼び出しは そのまま
+  const row=(l,v,sub,cls)=>'<div class="strow'+(cls?' '+cls:'')+'"><span class="stlabel">'+l+'</span><span class="stval">'+v+(sub?'<span class="stsub">'+sub+'</span>':'')+'</span></div>';
   const wname=(WNAME[Game.weaponAtk]||(Game.weaponAtk?'ふしぎな ぶき':'すで'))+(WEAPONFX[Game.weaponAtk]?'✦':'');
   const aname=(ANAME[Game.armorDef||0]||((Game.armorDef||0)?'ふしぎな よろい':'ぬのの ふく'))+(ARMORFX[Game.armorDef||0]?'✦':'');
   const nextExp=lv<MAXLV?(LEVELS[lv+1].exp-p.exp):null;
@@ -4864,15 +4910,16 @@ function renderStatus(){
   h+=row('HP',p.hp+' / '+p.mhp);
   h+=row('MP',p.mp+' / '+p.mmp);
   h+=row('こうげき',p.atk,'Lv'+LEVELS[lv].atk+(Game.weaponAtk?' + ぶき'+Game.weaponAtk:'')+(p.bonusAtk?' + たね'+p.bonusAtk:'')+(kkOn('shinpan')?' + かかげ5%':''));
-  h+=row('しゅび',p.def,'Lv'+LEVELS[lv].def+((Game.armorDef||0)?' + よろい'+Game.armorDef:'')+(Game.shield?' + たて6':'')+((Game.bonusDef||0)?' + まもり'+Game.bonusDef:''));
+  h+=row('しゅび',p.def,'Lv'+LEVELS[lv].def+((Game.armorDef||0)?' + よろい'+Game.armorDef:'')+(Game.shield2?' + たて12':(Game.shield?' + たて6':''))+((Game.bonusDef||0)?' + まもり'+Game.bonusDef:'')); // 旧: ひかりのたて(12)を もっていても「たて6」と 書いていた
   h+='<h3 class="bisle">そうび</h3>';
-  h+=row('ぶき',wname,Game.weaponAtk?('こうげき +'+Game.weaponAtk+(WFXDESC[Game.weaponAtk]?'・'+WFXDESC[Game.weaponAtk]:'')):'');
-  h+=row('よろい',aname,(Game.armorDef||0)?('しゅび +'+Game.armorDef+(AFXDESC[Game.armorDef]?'・'+AFXDESC[Game.armorDef]:'')):'');
-  h+=row('たて',Game.shield?'てつのたて':'なし',Game.shield?'しゅび +6':'');
+  h+=row('ぶき',wname,Game.weaponAtk?wDesc(Game.weaponAtk):'');
+  h+=row('よろい',aname,(Game.armorDef||0)?aDesc(Game.armorDef):'');
+  h+=row('たて',Game.shield2?'ひかりのたて':(Game.shield?'てつのたて':'なし'),Game.shield2?'しゅび +12':(Game.shield?'しゅび +6':''));
   {ownGear();
-   const bag=[...Game.ownW.map(v=>(WNAME[v]||'ぶき')+(v===Game.weaponAtk?'●':'')),
-              ...Game.ownA.map(v=>(ANAME[v]||'よろい')+(v===Game.armorDef?'●':''))];
-   h+=row('そうびの ふくろ',bag.join('　'),'●=そうびちゅう。つけかえは どうぐ から');}
+   // 旧: 名前の羅列だけ＝⚔78も⚔128も「みつどきのこだち」で、どちらが 強いか わからなかった(2026-07-26)
+   const bag=[...Game.ownW.map(v=>(v===Game.weaponAtk?'●':'')+'⚔'+(WNAME[v]||'ぶき')+' +'+v+(WEAPONFX[v]?'✦':'')),
+              ...Game.ownA.map(v=>(v===Game.armorDef?'●':'')+'🛡'+(ANAME[v]||'よろい')+' +'+v+(ARMORFX[v]?'✦':''))];
+   h+=row('そうびの ふくろ','<div style="margin-top:4px">'+bag.join('　')+'</div>','●=そうびちゅう ／ '+FXNOTE+'。つけかえは ☰メニューの「どうぐ」から','qstack');}
   {const dj=[];if(Game.door)dj.push('どこでもドア');if(Game.cloak)dj.push('とうめいマント');if(Game.book)dj.push('冒険の書');if(Game.mkey)dj.push('まほうのかぎ');if(Game.hidden&&Game.hidden.troupeTicket)dj.push('一座の はんけん');if(Game.hidden&&Game.hidden.troupeMask)dj.push('にせもの勇者の おめん');if(Game.hidden&&Game.hidden.troupeScript)dj.push('ほんとうのこえの だいほん');
    if(Game.hidden&&Game.hidden.ch17Key)dj.push('こえの はこの かぎ');if(Game.hidden&&Game.hidden.ch17Stone)dj.push('こだまの いしへん');
    if(Game.hidden&&Game.hidden.ch17Fuda)dj.push('はがされた しろい ふだ');if(Game.hidden&&Game.hidden.ch17Score)dj.push('サヨの がくふ');
@@ -4897,7 +4944,7 @@ function renderStatus(){
    h+=row('せきひ',sk+' / 5');
    h+=row('きょじんのこころ',(Game.gheart||0)+' / 5');
    if(Game.hidden&&Game.hidden.ch2)h+=row('じょうか',(Game.purified||0)+'にん の かげを ときはなった');if(Game.hidden&&Game.hidden.mate1){const Mm=MATES[mateKind()];h+=row('みちづれ',Mm.name+'（'+Mm.act+'）');}
-   {const tt=[],H=Game.hidden||{};if(H.zkomp)tt.push('まものはかせ');if(H.slcatch||H.slcatchEver)tt.push('スライムキャッチャー');if(H.towaDown||H.fuchiEver)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal())tt.push('かたりべ');if(H.ch4b||H.wataseEver)tt.push('ひかりを わたせしもの');if(H.ch5c||H.ch5cEver)tt.push('となりびと');if(H.ch6c||H.ch6cEver)tt.push('なまえを よぶもの');if(H.ch7c||H.ch7cEver)tt.push('ものがたりを つぐもの');if(H.ch8c||H.ch8cEver)tt.push('みおくりびと');if(H.ch9c||H.ch9cEver)tt.push('ともしびを つぐもの');if(H.ch10c||H.ch10cEver)tt.push('ふたりの かたりべ');if(H.ch11c||H.ch11cEver)tt.push('うみを つなぐもの');if(H.meguriDown||H.meguriEver)tt.push('しんぱんを こえしもの');
+   {const tt=[],H=Game.hidden||{};if(H.zkomp)tt.push('まものはかせ');if(H.slcatch||H.slcatchEver)tt.push('スライムキャッチャー');if(H.towaDown||H.fuchiEver)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal()||H.kataribeEver)tt.push('かたりべ');if(H.ch4b||H.wataseEver)tt.push('ひかりを わたせしもの');if(H.ch5c||H.ch5cEver)tt.push('となりびと');if(H.ch6c||H.ch6cEver)tt.push('なまえを よぶもの');if(H.ch7c||H.ch7cEver)tt.push('ものがたりを つぐもの');if(H.ch8c||H.ch8cEver)tt.push('みおくりびと');if(H.ch9c||H.ch9cEver)tt.push('ともしびを つぐもの');if(H.ch10c||H.ch10cEver)tt.push('ふたりの かたりべ');if(H.ch11c||H.ch11cEver)tt.push('うみを つなぐもの');if(H.meguriDown||H.meguriEver)tt.push('しんぱんを こえしもの');
     h+=row('しょうごう',tt.length?tt.join('　'):'──');}}
   if(Game.hidden&&Game.hidden.mate1){
     h+='<h3 class="bisle">みちづれを えらぶ<span class="stsub">　じょうかが すすむほど つよくなる</span></h3><div class="mateswap">';
@@ -5002,7 +5049,8 @@ function renderQuest(){
      const sub=own?((L.t==='w'?WFXDESC[L.v]:AFXDESC[L.v])||''):L.hint;
      h+=row(nm,own?'てにいれた！':'',sub);
    }
-   h=h.replace('でんせつのそうび</h3>','でんせつのそうび（'+got+' / '+LEG.length+'）</h3>');}
+   h=h.replace('でんせつのそうび</h3>','でんせつのそうび（'+got+' / '+LEG.length+'）</h3>');
+   if(got)h+='<div class="qsub">'+FXNOTE+'</div>';} // ✦の凡例がどこにも無かった(2026-07-26)
   h+='<h3 class="bisle">やりのこし</h3>';
   if(Game.hidden&&Game.hidden.ch12a&&!Game.hidden.ch12c)
     h+=row('ほんとうのこえ',ch12VoiceCount()+' / 3',Game.hidden.ch12w?'三つ そろった——旅芸人の ぶたいへ':'ソラ・ナギ・ほりびとのまご');
@@ -5385,6 +5433,9 @@ function ask(items,title){
     let first=items.findIndex(it=>!it.dis);if(first<0)first=0;
     MENU={items,idx:first,res};
     mtitleEl.textContent=title||'コマンド';
+    // せまい画面(≤640px)の 2列ならびは、たたかいの みじかい コマンド用。
+    // みせ・そうび・案内のように 長い行が まざるリストは 1列へ もどす(2026-07-26)
+    mlistEl.classList.toggle('one',items.some(it=>String(it.label||'').length>10));
     mlistEl.innerHTML='';mexitEl.innerHTML='';
     items.forEach((it,i)=>{
       const d=document.createElement('div');
@@ -5785,9 +5836,16 @@ async function useFieldItem(){
   while(true){
     ownGear();
     const usable=USABLE_ITEM_KEYS.filter(k=>(Game.items[k]||0)>0);
+    // そうびの つけかえ(2026-07-26 作り直し): 旧は「⚔なまえ（そうびする）」だけで、
+    // 数も こせいも 出ず、消耗品の うしろに まぎれていた＝つけかえる 手がかりが 画面に 無かった。
     const gearRows=[];
-    for(const v of Game.ownW)if(v!==Game.weaponAtk)gearRows.push({id:'gw_'+v,label:'⚔ '+(WNAME[v]||'ぶき')+'（そうびする）'});
-    for(const v of Game.ownA)if(v!==Game.armorDef)gearRows.push({id:'ga_'+v,label:'🛡 '+(ANAME[v]||'よろい')+'（そうびする）'});
+    {const w=Game.weaponAtk||0,a=Game.armorDef||0,dif=(v,now)=>v===now?'±0':(v>now?'＋'+(v-now):'−'+(now-v));
+     const gw=Game.ownW.filter(v=>v!==Game.weaponAtk).sort((x,y)=>y-x); // つよい順=いま つけかえる 意味の ある品が 上
+     const ga=Game.ownA.filter(v=>v!==Game.armorDef).sort((x,y)=>y-x);
+     if(gw.length||ga.length)gearRows.push({id:'gearhead',label:'── そうびを つけかえる（いま ⚔'+w+'／🛡'+a+'）──',dis:true});
+     for(const v of gw)gearRows.push({id:'gw_'+v,label:'⚔ '+(WNAME[v]||'ぶき')+' +'+v+'（いま '+w+'／'+dif(v,w)+'）'+(WEAPONFX[v]?'✦':'')});
+     for(const v of ga)gearRows.push({id:'ga_'+v,label:'🛡 '+(ANAME[v]||'よろい')+' +'+v+'（いま '+a+'／'+dif(v,a)+'）'+(ARMORFX[v]?'✦':'')});
+     if(gw.some(v=>WEAPONFX[v])||ga.some(v=>ARMORFX[v]))gearRows.push({id:'fxnote',label:FXNOTE,dis:true});}
     if(!usable.length&&!gearRows.length){await say('つかえる どうぐを もっていない。\nおみせで やくそうを かっておこう。');break;}
     const list=usable.map(k=>({id:k,label:(k==='seisui'?'せいすい':ITEMS[k].name)+' ×'+Game.items[k]})).concat(gearRows);
     list.push({id:'back',label:'もどる'});
@@ -5796,13 +5854,13 @@ async function useFieldItem(){
     if(c.startsWith&&c.startsWith('gw_')){
       const v=+c.slice(3);
       Game.weaponAtk=v;recalcStats();updateBars();sfxOk();
-      await say((WNAME[v]||'ぶき')+'を そうびした！（こうげき '+Game.p.atk+'）');
+      await say((WNAME[v]||'ぶき')+' +'+v+'を そうびした！（こうげき '+Game.p.atk+'）'+(WFXDESC[v]?'\n✦'+WFXDESC[v]:''));
       continue;
     }
     if(c.startsWith&&c.startsWith('ga_')){
       const v=+c.slice(3);
       Game.armorDef=v;recalcStats();updateBars();sfxOk();
-      await say((ANAME[v]||'よろい')+'を そうびした！（しゅび '+Game.p.def+'）');
+      await say((ANAME[v]||'よろい')+' +'+v+'を そうびした！（しゅび '+Game.p.def+'）'+(AFXDESC[v]?'\n✦'+AFXDESC[v]:''));
       continue;
     }
     if(c==='inochi'){
@@ -5962,7 +6020,7 @@ async function spotTalk(sp){
   endTalk();
   Game.spotsRead=Game.spotsRead||[];
   if(!Game.spotsRead.includes(sp)){Game.spotsRead.push(sp);
-    if(Game.spotsRead.length>=spotTotal()){sfxLevel();flash('#ffe9b0',0.3,0.7);toast('すべての よみものを よんだ！ しょうごう「かたりべ」を えた！');}
+    if(Game.spotsRead.length>=spotTotal()){Game.hidden.kataribeEver=true;sfxLevel();flash('#ffe9b0',0.3,0.7);toast('すべての よみものを よんだ！ しょうごう「かたりべ」を えた！');}
     else toast('よみものを みつけた！（🗺メモの「よみものちょう」で いつでも よみかえせる）');
     saveGame();}
 }
@@ -8213,28 +8271,34 @@ async function gunshiPay(kind,freeKey){
   Game.hidden[freeKey]=true;
   return true;
 }
+// 2026-07-26: 中身は変えず 窓の数だけ 14→5 へ。旧は 1つの みたてに 14回 タップさせており、
+// 「そうびの みたて」を さいごまで 聞く人が いなくなる長さだった(交代文書 D群16)。
 async function gunshiGear(){
   const w=Game.weaponAtk||0,a=Game.armorDef||0;
-  await say('フクロ「いまの そなえは ⚔'+(WNAME[w]||'すで')+'（こうげき+'+w+'）\n🛡'+(ANAME[a]||'ぬのの ふく')+'（しゅび+'+a+'）じゃな。」');
-  if(WFXDESC[w])await say('フクロ「その ぶきの こせいは——'+WFXDESC[w]+'。\nいかして おるか？」');
-  if(AFXDESC[a])await say('フクロ「よろいの こせいは——'+AFXDESC[a]+'。」');
   const canBuy=it=>(!it.need||(Game.hidden&&Game.hidden[it.need]));
-  const shopWhere=it=>it.town==='funamise'?'いちざの ふねの「⚒ いちざの したく」'
-    :(it.town?((MAPNAME[it.town]||'まち')+'の みせ'):'どの まちの みせでも'); // したくの品は 町の店には ならばない／town無しは どこでも買える品
+  const shopWhere=shopWhereOf; // したくの品は 町の店には ならばない／town無しは どこでも買える品
+  {const L=['フクロ「いまの そなえは——',
+    '⚔'+(WNAME[w]||'すで')+'（こうげき+'+w+'）'+(WFXDESC[w]?'\n　✦'+WFXDESC[w]:''),
+    '🛡'+(ANAME[a]||'ぬのの ふく')+'（しゅび+'+a+'）'+(AFXDESC[a]?'\n　✦'+AFXDESC[a]:'')];
+   await say(L.join('\n')+'\nじゃな。いかして おるか？」');}
   const candW=SHOP.filter(it=>it.atk&&it.atk>w&&!(Game.ownW||[]).includes(it.atk)&&canBuy(it)).sort((x,y)=>x.cost-y.cost);
   const candA=SHOP.filter(it=>it.armor&&it.armor>a&&!(Game.ownA||[]).includes(it.armor)&&canBuy(it)).sort((x,y)=>x.cost-y.cost);
-  if(candW.length){
-    const n=candW[0];
-    await say('フクロ「ぶきの つぎの いっては『'+n.label+'』（こうげき+'+n.atk+'）。\n'+shopWhere(n)+'で '+n.cost+'G。'+(Game.gold>=n.cost?'いま かえるぞ。':'あと '+(n.cost-Game.gold)+'G ためよ。')+'」');
-    if(WFXDESC[n.atk])await say('フクロ「こせいは——'+WFXDESC[n.atk]+'。」');
-    const top=candW[candW.length-1];
-    if(top!==n&&top.cost<=Math.max(Game.gold*3,n.cost*5))await say('フクロ「さらに うえを のぞむなら『'+top.label+'』（こうげき+'+top.atk+'）。\n'+shopWhere(top)+'で '+top.cost+'G じゃ。」'); // 手のとどく はんいだけ かたる
-  }else await say('フクロ「ぶきは、いま みせに ならぶ なかでは さいきょう じゃ。みごと。」');
-  if(candA.length){
-    const n=candA[0];
-    await say('フクロ「よろいの つぎの いっては『'+n.label+'』（しゅび+'+n.armor+'）。\n'+shopWhere(n)+'で '+n.cost+'G。'+(Game.gold>=n.cost?'いま かえるぞ。':'あと '+(n.cost-Game.gold)+'G ためよ。')+'」');
-    if(AFXDESC[n.armor])await say('フクロ「こせいは——'+AFXDESC[n.armor]+'。」');
-  }else await say('フクロ「よろいも、いま みせに ならぶ なかでは さいきょう じゃ。」');
+  {const L=[];
+   if(candW.length){
+     const n=candW[0];
+     L.push('⚔ つぎの いっては『'+n.label+'』（こうげき+'+n.atk+'／いま '+w+'）'
+       +(WFXDESC[n.atk]?'\n　✦'+WFXDESC[n.atk]:'')
+       +'\n　'+shopWhere(n)+'で '+n.cost+'G。'+(Game.gold>=n.cost?'いま かえるぞ。':'あと '+(n.cost-Game.gold)+'G ためよ。'));
+     const top=candW[candW.length-1];
+     if(top!==n&&top.cost<=Math.max(Game.gold*3,n.cost*5))L.push('　さらに うえは『'+top.label+'』（こうげき+'+top.atk+'）——'+shopWhere(top)+'で '+top.cost+'G。'); // 手のとどく はんいだけ かたる
+   }else L.push('⚔ ぶきは、いま みせに ならぶ なかでは さいきょう じゃ。みごと。');
+   if(candA.length){
+     const n=candA[0];
+     L.push('🛡 つぎの いっては『'+n.label+'』（しゅび+'+n.armor+'／いま '+a+'）'
+       +(AFXDESC[n.armor]?'\n　✦'+AFXDESC[n.armor]:'')
+       +'\n　'+shopWhere(n)+'で '+n.cost+'G。'+(Game.gold>=n.cost?'いま かえるぞ。':'あと '+(n.cost-Game.gold)+'G ためよ。'));
+   }else L.push('🛡 よろいも、いま みせに ならぶ なかでは さいきょう じゃ。');
+   await say('フクロ「'+L.join('\n')+'」');}
   // こせいで えらぶ そうび(2026-07-26 作り直し)。
   // 旧: 値段の安い順に2点 ＝ ⚔128の旅人に 420Gの みきりのこだち・240Gの かぜのマント を薦めていた。
   //     さらに「つぎの いって」は 数が上の品しか見ないので、数が下の「いちざの したく」8点は 構造上 一件も出なかった。
@@ -8245,16 +8309,17 @@ async function gunshiGear(){
    fx.sort((x,y)=>{const sx=(x.town==='funamise')?1:0,sy=(y.town==='funamise')?1:0;return sx!==sy?sy-sx:y.cost-x.cost;});
    const pw=fx.filter(it=>it.atk).slice(0,2),pa=fx.filter(it=>it.armor).slice(0,2);
    if(pw.length||pa.length){
-     await say('フクロ「つよさ だけでなく、こせいで えらぶ そうびも あるぞ。\n数が いまより 下でも、こせいで うわまわる ことが ある。」');
-     for(const it of pw)await say('フクロ「⚔『'+it.label+'』（こうげき+'+it.atk+'／いま '+w+'）——'+(WFXDESC[it.atk]||'')+'。\n'+shopWhere(it)+'で '+it.cost+'G じゃ。」');
-     for(const it of pa)await say('フクロ「🛡『'+it.label+'』（しゅび+'+it.armor+'／いま '+a+'）——'+(AFXDESC[it.armor]||'')+'。\n'+shopWhere(it)+'で '+it.cost+'G じゃ。」');
-     const where=[...new Set([...pw,...pa].map(shopWhere))];
-     await say('フクロ「✦じるしの そうびが それじゃ。\n'+where.join('・')+'に ならんでおる。」'); // 旧: 3つの町を べた書き＝ふねと島の店を無視していた
+     const L=['つよさ だけでなく、こせいで えらぶ そうびも あるぞ。','数が いまより 下でも、こせいで うわまわる ことが ある。'];
+     for(const it of pw)L.push('⚔『'+it.label+'』（こうげき+'+it.atk+'／いま '+w+'）\n　✦'+(WFXDESC[it.atk]||'')+'\n　'+shopWhere(it)+'で '+it.cost+'G');
+     for(const it of pa)L.push('🛡『'+it.label+'』（しゅび+'+it.armor+'／いま '+a+'）\n　✦'+(AFXDESC[it.armor]||'')+'\n　'+shopWhere(it)+'で '+it.cost+'G');
+     await say('フクロ「'+L.join('\n')+'」');
    }}
-  {const sh=(!Game.shield&&SHOP.find(it=>it.def))||(!Game.shield2&&SHOP.find(it=>it.def2)); // 旧: def2の品を拾っても直後の if(sh.def) で落ちて 永久に何も言わなかった
-   if(sh)await say('フクロ「たてを もっておらんな。'+shopWhere(sh)+'で『'+sh.label+'』（'+sh.cost+'G）じゃ。」');}
-  const oldW=(Game.ownW||[]).filter(v=>v!==Game.weaponAtk&&v<Game.weaponAtk&&!WEAPONFX[v]).length+(Game.ownA||[]).filter(v=>v!==Game.armorDef&&v<(Game.armorDef||0)&&!ARMORFX[v]).length;
-  if(oldW>=2)await say('フクロ「ふくろに よわい そうびが '+oldW+'つ ねむっておる。\nみせの「うる」で まとめて かねに かえよ。」');
+  {const L=[];
+   const sh=(!Game.shield&&SHOP.find(it=>it.def))||(!Game.shield2&&SHOP.find(it=>it.def2)); // 旧: def2の品を拾っても直後の if(sh.def) で落ちて 永久に何も言わなかった
+   if(sh)L.push('たてを もっておらんな。'+shopWhere(sh)+'で『'+sh.label+'』（'+sh.cost+'G）じゃ。');
+   const oldW=(Game.ownW||[]).filter(v=>v!==Game.weaponAtk&&v<Game.weaponAtk&&!WEAPONFX[v]).length+(Game.ownA||[]).filter(v=>v!==Game.armorDef&&v<(Game.armorDef||0)&&!ARMORFX[v]).length;
+   if(oldW>=2)L.push('ふくろに よわい そうびが '+oldW+'つ ねむっておる。みせの「うる」で まとめて かねに かえよ。');
+   if(L.length)await say('フクロ「'+L.join('\n')+'」');}
 }
 async function gunshiSpell(){
   // 自分の呪文の話を先に(旧: 最後の1窓だけで、ラベルの約束を果たしていなかった)
@@ -8319,6 +8384,33 @@ async function gunshiMemory(){
 // 「いま できること」の台帳(2026-07-26 作り直し)。
 // ★これが クリア済みの唯一の道しるべ。めあての金柱も もくてきバーも フクロを指すので、
 //   これから なにを足すときも「ここへ1行 足す」だけで 必ず 遊ぶ人に届く。順は 備える→臨む→そのほか。
+// 「しまに なにが あるか」の中身は WORLDS を そのまま数える。
+// 手で書いた一覧は かならず 実物と ずれる(2026-07-26 の棚卸しで 11か所 ずれていた)。
+function islandFacilityLines(){
+  const byName={},rows=[];
+  for(const id in WORLDS){
+    if(id==='grass')continue; // むらは 台帳の ほかの行が 案内する
+    if(!(Game.visited&&Game.visited[id]))continue;
+    const w=WORLDS[id],name=String(MAPNAME[id]||'').split('・')[0];
+    if(!name)continue;
+    const p=[];
+    let solid=false; // みせ/やど/いずみ/おってくる のどれかが ある場所だけ ならべる
+    if((w.npcs||[]).some(n=>n.shop&&(!n.needKey||(Game.hidden&&Game.hidden[n.needKey])))){p.push('みせ');solid=true;}
+    if(w.inn){p.push('やど'+(w.innCost||0)+'G');solid=true;}
+    if(w.spring){p.push('いやしの いずみ');solid=true;}
+    const hunt=[...new Set((w.spawns||[]).filter(s=>spawnAlive(s,id)&&FOES[s.id]&&FOES[s.id].hunter&&!FOES[s.id].mboss&&!FOES[s.id].boss).map(s=>FOES[s.id].name))];
+    if(hunt.length){p.push('おってくる '+hunt.join('・'));solid=true;}
+    if((w.spots||[]).length){
+      const rd=(w.spots||[]).filter(s=>(Game.spotsRead||[]).includes(s)).length;
+      p.push('よみもの '+rd+'/'+w.spots.length);
+    }
+    // 読みものしか無い場所は 出さない=たびのメモの「やりのこし」が すでに 全部 かぞえている(2026-07-26)
+    if(!solid)continue;
+    if(byName[name]){byName[name].p=[...new Set(byName[name].p.concat(p))];continue;} // 同じ島の 三つの時などを 1行に まとめる
+    byName[name]={name,p};rows.push(byName[name]);
+  }
+  return rows.map(r=>'◆ '+r.name+'\n　'+r.p.join('／'));
+}
 function tamesuList(){
   const h=Game.hidden,out=[];
   if(h.ch13d)out.push({id:'nushiAgain',label:'⚔ しまの ぬしと もういちど 立ちあう',
@@ -8330,8 +8422,17 @@ function tamesuList(){
     line:'ひろばの みせに、たびの おわりを こえた 二品が ならんでおる——\n⚔ほしのはしのつるぎ と 🛡よあけのよろい。\nいまの そなたの 数を、まっすぐ 上へ こえる ただ二つの しなじゃ。',at:{x:5,y:9}});
   if(h.uraTold)out.push({id:'ura',label:'🌌 はじまりの ほしあかり ─ いちばん つよい あいて',
     line:'たもとの となりの あおい ほしあかり。九つめの しま「ほしのみなもと」へ つづく。\nいままでで いちばん つよい あいてが まっておる。',at:{x:9,y:10}}); // 2026-07-26: (10,10)は こどもの立ち位置だった＝柱が こどもを指し、ミニゲームの さそいが開いていた
+  // なんいど「しんぱん」だけに 立つ一体。旧: questTextCore も questDest も ch21c の分岐で
+  // 先に return していたため、クリア済みセーブでは 案内が 1行も 出ない 死にコードだった(2026-07-26)
+  if(h.ch12c&&Game.diff===7&&!h.meguriDown)out.push({id:'meguri',label:'👁 めぐりのけしん ─ しんぱんの ふちに 立つ もの',
+    line:'なんいど「しんぱん」の あいだだけ、とわの ふちに きんいろの めぐりが かたちを もつ。\nすべての といを こえた ものだけが あいまみえる——たおせば さいだいHPが 20 ふえ、\nしょうごう「しんぱんを こえしもの」（こうげき +5%）が つく。',
+    to:{map:'towa',tx:10,ty:7}});
   if(h.ch21c)out.push({id:'tamoto',label:'✨ ほしのはしの たもと ─ さいしゅうしょうを もういちど',
     line:'むらの おかに のこった ひかりの わ。ほしのうみへ なんども のぼれる。',at:{x:8,y:10}});
+  // 便1〜8で しまへ戻した みせ・やど・いずみ・よみもの・おってくる まもの は、
+  // ふねの行に ひとまとめで 書いてあるだけで、どの島に なにが あるかは どこにも 出ていなかった
+  if(h.ch13a)out.push({id:'shimameguri',label:'🏝 みせ・やど・いずみが どこに あるか みる',
+    line:'いままでに わたった ところで、たびに つかえる ものを かぞえて みよう。\nふねの ゆきさきを えらぶ まえに、ここで たしかめると よい。',islands:true});
   if(h.ch12c)out.push({id:'butai',label:'🎭 いちざの ぶたい ─ こだまと けいこする',
     line:'みなみひがしの あかい テントから ぶたいへ。だんちょうに たのめば、\n「ものがたりの こだま」と なんども けいこできる——きずも ついえも のこらぬ 手あわせじゃ。',at:{x:17,y:12}});
   if(h.ch14c)out.push({id:'tani',label:'🌿 やまびこのたに ─ にげる こだまを おいかける',
@@ -8349,6 +8450,13 @@ async function gunshiTamesu(){
   if(!c||c==='no')return;
   const e=list.find(x=>x.id===c);if(!e)return;
   await say(e.line);
+  if(e.islands){ // 行き先を もたない「みる」だけの行。3島ずつ 見せて フクロの前へ もどる
+    const rows=islandFacilityLines();
+    if(!rows.length)await say('フクロ「まだ どの しまにも わたって おらぬ。\nにしの きしの ふねが、さいしょの ゆきさきを もっておる。」');
+    for(let i=0;i<rows.length;i+=3)await say(rows.slice(i,i+3).join('\n'));
+    await say('フクロ「ゆきさきは ふねが きめる。したの もくてきに したがって わたるが よい。\nよみものの のこりは、☰メニューの「たびのメモ」の やりのこしに ぜんぶ でておる。」');
+    return;
+  }
   if(e.nushi){ // 島のぬしの再戦: たおした ぬしだけ ならぶ。NUSHI_REPLAY は保存しない一時状態
     const av=NUSHI_AGAIN.filter(n=>Game.hidden['ch'+n.no+'d']);
     if(!av.length){await say('フクロ「まだ ぬしを たおしておらぬ。\nまずは 目の前の しまじゃ。」');return;}
@@ -8370,18 +8478,20 @@ async function gunshiTamesu(){
   await say('フクロ「きんいろの ひかりが、その ばしょを さしておる。\nあしを むけよ——わしが みちを てらしておく。」');
   return 'moved';
 }
+// 2026-07-26: 3窓 → 1窓。行き先の名と 行き方は「いま なすべきは」と 同じ 一息で 読めるほうが 早い
 async function gunshiNavi(){
   const d=questDest();
-  await say('フクロ「いま なすべきは——\n'+d.exp+'」');
+  const L=['いま なすべきは——','　'+d.exp];
   if(d.map&&d.map!==Game.mapId){
     const nm=(ISLE.find(([id])=>id===d.map)||[])[1]||MAPNAME[d.map]||'';
-    if(nm)await say('フクロ「いくさきは『'+nm+'』じゃ。'+(Game.door?'\n☰メニューの「どこでもドア」なら ひとっとび じゃぞ。':'\nひかる でぐちには いきさきの なが でておる。')+'」');
+    if(nm)L.push('いくさきは『'+nm+'』じゃ。'+(Game.door?'☰メニューの「どこでもドア」なら ひとっとび じゃぞ。':'ひかる でぐちには いきさきの なが でておる。'));
   }else if(d.map===Game.mapId){
-    await say('フクロ「めあては この しまの なかに ある。\nしたの「もくてき」の おびを タップすれば、きんいろの ひかりが みちを てらす。」');
+    L.push('めあては この しまの なかに ある。したの「もくてき」の おびを タップすれば、きんいろの ひかりが みちを てらす。');
   }
   // 旧: ここで「たもと」を もう一度 言っていたが、1窓目と同じ場所＝重複だった。
   //     たもとは「✨いま できること」の台帳の中にあるので、そちらへ案内する(2026-07-26)
-  if(Game.hidden.ch21c)await say('フクロ「たびの さきは、わしの「✨いま できること」に '+tamesuList().length+'つ ならべてある。\nどれから 手を つけても よいぞ。」');
+  if(Game.hidden.ch21c)L.push('たびの さきは、わしの「✨いま できること」に '+tamesuList().length+'つ ならべてある。どれから 手を つけても よいぞ。');
+  await say('フクロ「'+L.join('\n')+'」');
 }
 async function gunshiTalk(){
   const h=Game.hidden;
@@ -8496,7 +8606,10 @@ async function runShop(funamise,shitaku){
     if(mode==='sell'){await runSell();continue;}
     while(true){
     const list=[];
-    let soldW=false,hadW=false,soldA=false,hadA=false;
+    let soldW=false,hadW=false,soldA=false,hadA=false,upW=false,upA=false,anyFx=false;
+    // ほしのてつを 支払いに まわせる分(したく専用)。旧: dis を「所持金 < 定価」で決めていたため、
+    // てつを 3つ 持っていても 定価に とどかなければ 行が えらべず、割引の たしかめ窓へ 永久に 行けなかった。
+    const ironOff=it=>{const iron=Game.items.hoshitetsu||0;return (it.town==='funamise'&&iron>0)?Math.min(3,iron,Math.floor(it.cost/3000))*3000:0;};
     const stock=shitaku?SHITAKU.map(id=>SHOP.find(s=>s.id===id)).filter(Boolean)
                :funamise?FUNAMISE.map(id=>SHOP.find(s=>s.id===id)).filter(Boolean):SHOP;
     for(const it of stock){ // ふなみせ/したくは 積み荷リストの順・町の店は従来どおり
@@ -8511,26 +8624,32 @@ async function runShop(funamise,shitaku){
       if(owned){list.push({id:'ownx_'+it.id,label:'✓ '+it.label+'　もっている',dis:true});continue;} // 所持品を隠さない(なにを持っているか店頭で見える 2026-07-20)
       if(it.atk)hadW=true;
       if(it.armor)hadA=true;
+      if(it.atk&&it.atk>(Game.weaponAtk||0))upW=true;
+      if(it.armor&&it.armor>(Game.armorDef||0))upA=true;
       const sp=it.atk?' ⚔+'+it.atk:(it.armor?' 🛡+'+it.armor:(it.def?' 🛡+'+it.def:(it.def2?' 🛡+'+it.def2:(it.nk==='w'?' ⚔+12(こども)':(it.nk==='a'?' 🛡+14(こども)':''))))); // 性能を そのばで くらべられるように
       const fx=((it.atk&&WEAPONFX[it.atk])||(it.armor&&ARMORFX[it.armor]))?'✦':''; // 効果持ちの しるし（かうと 効果文が でる）
+      if(fx)anyFx=true;
       // 2026-07-26: いまの そうびより 数が下の品が、理由もなく ならんで見えていた。行に そのまま書く。
       const low=(it.atk&&it.atk<(Game.weaponAtk||0))||(it.armor&&it.armor<(Game.armorDef||0))?'　↓いまより よわい':'';
-      list.push({id:it.id,label:it.label+fx+sp+'  '+it.cost+'G'+low,dis:Game.gold<it.cost});
+      // 灰色の行に 理由を書く(2026-07-26)。旧は ただ 薄いだけで、なぜ えらべないのか どこにも 出ていなかった
+      const pay=it.cost-ironOff(it),short=Game.gold<pay?'　（あと '+(pay-Game.gold)+'G）':'';
+      list.push({id:it.id,label:it.label+fx+sp+'  '+it.cost+'G'+low+short,dis:Game.gold<pay});
     }
-    if(!shitaku&&soldA&&!hadA)list.unshift({id:'infoA',label:'よろい：いまが この みせの さいきょう',dis:true}); // したくは「その島に効く一点もの」＝つよさの順に ならばない
-    if(!shitaku&&soldW&&!hadW)list.unshift({id:'infoW',label:'ぶき：いまが この みせの さいきょう',dis:true});
-    list.unshift({id:'eqinfo',label:'そうび中 ⚔'+(WNAME[Game.weaponAtk]||'すで')+'　🛡'+(ANAME[Game.armorDef||0]||'ぬのの ふく'),dis:true});
+    // 案内の行(2026-07-26 作り直し)。旧は dis:true の行なのに 押したときの台詞に 中身を書いていた＝
+    // その台詞は ぜったいに 出ない 死にコードだった。いまは 行の ことばだけで 用が すむ。
+    {const upLine=kind=>{const up=nextUpGear(kind);return up?'　→ うえは '+shopWhereOf(up)+'の『'+up.label+'』'+(kind==='w'?'（⚔+'+up.atk+'）':'（🛡+'+up.armor+'）'):'　→ そなたの そうびが せかいいち';};
+     if(!shitaku&&soldA&&!hadA)list.unshift({id:'infoA',label:'よろい：この みせの しなは ぜんぶ もっている'+upLine('a'),dis:true}); // したくは「その島に効く一点もの」＝つよさの順に ならばない
+     else if(!shitaku&&soldA&&!upA)list.unshift({id:'infoA',label:'よろい：ここの しなは いまより よわい'+upLine('a'),dis:true}); // ふなみせの武具が 第3部で 全部 格下だった件
+     if(!shitaku&&soldW&&!hadW)list.unshift({id:'infoW',label:'ぶき：この みせの しなは ぜんぶ もっている'+upLine('w'),dis:true});
+     else if(!shitaku&&soldW&&!upW)list.unshift({id:'infoW',label:'ぶき：ここの しなは いまより よわい'+upLine('w'),dis:true});}
+    if(anyFx)list.unshift({id:'fxnote',label:FXNOTE,dis:true}); // ✦の意味が どこにも 書いていなかった
+    list.unshift({id:'eqinfo',label:'そうび中 ⚔'+(WNAME[Game.weaponAtk]||'すで')+' +'+(Game.weaponAtk||0)+'　🛡'+(ANAME[Game.armorDef||0]||'ぬのの ふく')+' +'+(Game.armorDef||0),dis:true});
     list.push({id:'back',label:'もどる'});
     const c=await ask(list,'かいもの（'+Game.gold+'G）');
     if(c==='back'||!c)break;
-    if(c==='infoW'||c==='infoA'){
-      const better=SHOP.some(it=>c==='infoW'?(it.atk&&it.atk>Game.weaponAtk):(it.armor&&it.armor>Game.armorDef));
-      await say(funamise?'いちざの うりこ「それより うえは、⚒かじで きたえるか、\nものがたりの さきで であう しなだよ。」'
-               :better?'しょうにん「ゆきのまちの みせなら もっと つよい そうびを あつかって いるよ。」'
-                      :'しょうにん「あんたの そうびは せかいいちだ！\nうちに それいじょうの しなは ないね。」');
-      continue;}
     const it=SHOP.find(s=>s.id===c);
-    if(Game.gold<it.cost){await say((funamise?'いちざの うりこ':'しょうにん')+'「おっと、おかねが たりないよ！」');continue;}
+    if(!it)continue; // 案内の行(dis)は そもそも えらべない。念のため
+    if(Game.gold<it.cost-ironOff(it)){await say((funamise?'いちざの うりこ':'しょうにん')+'「おっと、おかねが たりないよ！」');continue;}
     let payAmount=it.cost; // ほしのてつを つかうと ここが へる
     { // 買う前の たしかめ(2026-07-26): ①指が すべって ふれただけで 買わされるのを止める
       //                              ②いままで 買ったあとにしか 読めなかった「効果」と「いまの そうびとの 差」を ここで見せる
@@ -8546,14 +8665,14 @@ async function runShop(funamise,shitaku){
       else if(it.def)lines.push('🛡 しゅび ＋'+it.def);
       else if(it.def2)lines.push('🛡 しゅび ＋'+it.def2);
       else if(it.hint)lines.push(it.hint.split('\n')[0]);
-      if((it.atk&&SELL_W[it.atk]==null)||(it.armor&&SELL_A[it.armor]==null))lines.push('※ この そうびは うれません。');
+      if((it.atk&&SELL_W[it.atk]==null)||(it.armor&&SELL_A[it.armor]==null))lines.push('※ この そうびは うれません（ひとしなもの＝手ばなすと もどりません）。');
       // ほしのてつ を したくの 支払いに つかえる(2026-07-26)。
       // ⚔100/🛡78 を こえた旅人は かじの表から外れ、島の宝箱で拾う ほしのてつ の使い道が
       // 「250Gで売る」しか無くなっていた。したくの品は 一つ3,000G分として うけとる。
       const iron=Game.items.hoshitetsu||0;
       const useN=(it.town==='funamise'&&iron>0)?Math.min(3,iron,Math.floor(it.cost/3000)):0;
       const disc=useN*3000;
-      const opts=[{id:'yes',label:'⭕ かう（'+it.cost+'G）'}];
+      const opts=[{id:'yes',label:'⭕ かう（'+it.cost+'G）'+(Game.gold<it.cost?'　※ おかねが たりない':''),dis:Game.gold<it.cost}];
       if(useN>0)opts.push({id:'iron',label:'⭐ ほしのてつ×'+useN+' と '+(it.cost-disc)+'G で かう'});
       opts.push({id:'no',label:'やめる'});
       if(useN>0)lines.push('⭐ ほしのてつを '+useN+'つ まで、1つ 3000G ぶんとして つかえます。（もっている '+iron+'）');
@@ -8733,6 +8852,14 @@ function questTextCore(){
       return 'もくてき：大時計で 三つの時を かさね、あの夜の 行動の意味を つなごう';
     }
     if(Game.hidden.ch21c){
+      // 2026-07-26: 再戦中に バーが「たもとから のぼれる」＝もう済んだ用事を 指したままだった。
+      //   いま なにを しに ここへ 来たのかを、その場で 言う(NUSHI_REPLAY/CH21_REPLAY は保存しない一時状態)。
+      if(NUSHI_REPLAY&&Game.mapId===NUSHI_REPLAY.map){
+        const n=NUSHI_AGAIN.find(x=>x.id===NUSHI_REPLAY.id);
+        return 'もくてき：'+((n&&String(n.label).split(' ─ ')[0])||'しまの ぬし')+'と もういちど 立ちあう（しまの おくに いる）';}
+      if(CH21_REPLAY&&Game.mapId==='hoshiumi')return 'もくてき：ほしのみちの おくの「すくわれなかったもの」と もういちど もんどうする';
+      // なんいど7だけの一体。旧: この ch21c の分岐で 先に return され、案内が 1行も 出なかった
+      if(Game.mapId==='towa'&&Game.diff===7&&!Game.hidden.meguriDown)return 'もくてき：とわの ふちの「めぐりのけしん」と むきあおう';
       if(Game.mapId==='hoshiminamoto')return Game.hidden.uraCleared?'もくてき：はじまりを かたりおえた——でぐちから むらへ もどれる':'もくてき：ほしのみなもとの おくで「かたられなかった はじまり」と むきあえ';
       // 2026-07-26: クリア済みの めあては ずっと「たもと=終わった最終章の再演」だけを指しており、
       // あとから足したもの(したく・ぬし再戦・島の店…)へ 道が1本も通っていなかった。
@@ -13268,6 +13395,11 @@ function questDest(){
     return {map:Game.mapId,exp:'三つの時は見えた。大時計の「三つの時をかさねる」で、三人の行動が 何へつながったかを 選ぼう。'};
   }
   if(h.ch21c){
+    if(NUSHI_REPLAY&&Game.mapId===NUSHI_REPLAY.map){ // 再戦中は「いま来た用事」を指す(2026-07-26)
+      const n=NUSHI_AGAIN.find(x=>x.id===NUSHI_REPLAY.id);
+      return {map:NUSHI_REPLAY.map,exp:'しまの おくで '+((n&&String(n.label).split(' ─ ')[0])||'しまの ぬし')+'が まっている。ちからを ためる 一げきは よろいでは かるく ならぬ——ぼうぎょか 章じゅもんで こたえよう。'};}
+    if(CH21_REPLAY&&Game.mapId==='hoshiumi')return {map:'hoshiumi',exp:'ほしのみちの おくで「すくわれなかったもの」が まっている。7つの といに 章じゅもんで こたえよう。'};
+    if(Game.mapId==='towa'&&Game.diff===7&&!h.meguriDown)return {map:'towa',exp:'とわの ふちに「めぐりのけしん」が かたちを もった。すべての といを こえた ものへ、もうひとつの しれんだ。'};
     if(Game.mapId==='hoshiminamoto')return {map:'hoshiminamoto',exp:h.uraCleared?'はじまりを かたりおえた。でぐちから むらへ もどろう。':'ほしのみなもとの おくで「かたられなかった はじまり」が まっている。かきかけの 三体（序・破・急）を こえて いどめ。'};
     if(h.uraTold&&!h.uraCleared)return {map:'grass',exp:'むらの おかの たもとの となりに ✨はじまりの ひかり——ふれると ほしのみなもとへ のぼれる。すべての ものがたりの みなもとだ。'};
     return {map:'grass',exp:'たびは ひととおり おわった。ここからは、きたの おかの わしの\n「✨いま できること」に ならべた '+tamesuList().length+'つ から えらぶ——\nぬしと もういちど 立ちあうも、⚒したくを ととのえるも、そなた しだい じゃ。'}; // 2026-07-26: たもと1本だけを指していた案内を 台帳へ
@@ -13520,6 +13652,12 @@ function questBeaconTargets(){
     else for(const n of w.npcs)if(n.ch20Final)push(n.x,n.y);
   }
   if(Game.mapId==='hoshiumi'&&h.ch21a&&!h.ch21d)foeB(e=>e.def===FOES.sukuwarenu);
+  // 再戦中は その一体を 指す(2026-07-26)。旧: 島に降りても 光柱は 村の たもとを 指したままだった
+  if(NUSHI_REPLAY&&Game.mapId===NUSHI_REPLAY.map){
+    for(const e of Game.enemies)if(e.id===NUSHI_REPLAY.id)push(Math.round(e.px),Math.round(e.py));
+    if(out.length)return out;}
+  if(CH21_REPLAY&&Game.mapId==='hoshiumi'){for(const e of Game.enemies)if(e.id==='sukuwarenu')push(Math.round(e.px),Math.round(e.py));if(out.length)return out;}
+  if(Game.mapId==='towa'&&Game.diff===7&&!h.meguriDown){for(const e of Game.enemies)if(e.id==='meguri')push(Math.round(e.px),Math.round(e.py));if(out.length)return out;}
   if(Game.mapId==='grass'&&TAMESU_AT)push(TAMESU_AT.x,TAMESU_AT.y); // フクロが さした ばしょ(いま ためせること)
   else if(Game.mapId==='grass'&&h.ch21c&&w.npcs)for(const n of w.npcs){if(n.gunshi)push(n.x,n.y);} // かんけつ後の めあて=フクロ(2026-07-26「めあてが別のとこ指してるんで気づかなかった」=たもとを指したままで、あとから足したものへ道が無かった。たもとは台帳の中にある)
   if(Game.mapId==='hoshiumi'&&h.ch21d&&w.exits)for(const ex of w.exits)push(ex.x,ex.y);
@@ -14039,7 +14177,9 @@ const KAKAGE=[
  {k:'zkomp',name:'まものはかせ',desc:'じゅもんの いりょく +10%',own:()=>!!(Game.hidden&&Game.hidden.zkomp)},
  {k:'slcatch',name:'スライムキャッチャー',desc:'にげる かならず せいこう・メタル/きんスラが にげだしにくい',own:()=>!!(Game.hidden&&(Game.hidden.slcatch||Game.hidden.slcatchEver))},
  {k:'fuchi',name:'ふちを こえしもの',desc:'いき・つうこんの 被ダメージ -12%',own:()=>!!(Game.hidden&&(Game.hidden.towaDown||Game.hidden.fuchiEver))},
- {k:'kataribe',name:'かたりべ',desc:'けいけんち +10%',own:()=>(Game.spotsRead||[]).length>=spotTotal()},
+ // 2026-07-26: ほかの称号と ちがい Ever の ひかえが 無く、便7で よみものが 16まい ふえた瞬間に
+ // 「ぜんぶ よんだ」旅人から だまって 称号(けいけんち+10%)が 消えていた。一度 えた ものは とりあげない。
+ {k:'kataribe',name:'かたりべ',desc:'けいけんち +10%',own:()=>(Game.spotsRead||[]).length>=spotTotal()||!!(Game.hidden&&Game.hidden.kataribeEver)},
  {k:'watase',name:'ひかりを わたせしもの',desc:'かいふくじゅもんの かいふく +25%',own:()=>!!(Game.hidden&&(Game.hidden.ch4b||Game.hidden.wataseEver))},
  {k:'tonari',name:'となりびと',desc:'みちづれの いやし・ついげき +50%',own:()=>!!(Game.hidden&&(Game.hidden.ch5c||Game.hidden.ch5cEver))},
  {k:'yobu',name:'なまえを よぶもの',desc:'たたかいに かつと MPが 8% もどる',own:()=>!!(Game.hidden&&(Game.hidden.ch6c||Game.hidden.ch6cEver))},
@@ -18732,7 +18872,7 @@ async function ngNewGame(fromKing){
     bonusDef:Game.bonusDef,bonusHp:Game.bonusHp,bonusMp:(Game.bonusMp||0),gheart:(Game.gheart||0),
     door:Game.door,mkey:!!Game.mkey,cloak:Game.cloak,book:Game.book,talkOff:!!Game.talkOff,seen:JSON.parse(JSON.stringify(Game.seen||{})),
     zkomp:!!(Game.hidden&&Game.hidden.zkomp),ch3dEver:!!(Game.hidden&&(Game.hidden.ch3d||Game.hidden.ch3dEver)),
-    fuchiEver:!!(Game.hidden&&(Game.hidden.towaDown||Game.hidden.fuchiEver)),slcatchEver:!!(Game.hidden&&(Game.hidden.slcatch||Game.hidden.slcatchEver)),wataseEver:!!(Game.hidden&&(Game.hidden.ch4b||Game.hidden.wataseEver)),ch4cEver:!!(Game.hidden&&(Game.hidden.ch4c||Game.hidden.ch4cEver)),ch5cEver:!!(Game.hidden&&(Game.hidden.ch5c||Game.hidden.ch5cEver)),ch6cEver:!!(Game.hidden&&(Game.hidden.ch6c||Game.hidden.ch6cEver)),ch7cEver:!!(Game.hidden&&(Game.hidden.ch7c||Game.hidden.ch7cEver)),ch8cEver:!!(Game.hidden&&(Game.hidden.ch8c||Game.hidden.ch8cEver)),ch9cEver:!!(Game.hidden&&(Game.hidden.ch9c||Game.hidden.ch9cEver)),ch10cEver:!!(Game.hidden&&(Game.hidden.ch10c||Game.hidden.ch10cEver)),ch11cEver:!!(Game.hidden&&(Game.hidden.ch11c||Game.hidden.ch11cEver)),meguriEver:!!(Game.hidden&&(Game.hidden.meguriDown||Game.hidden.meguriEver)),kakage:Game.kakage||'',nkW:Game.nkW||0,nkA:Game.nkA||0,bagMig:!!(Game.hidden&&Game.hidden.bagMig), // 称号と章の答えは周回で消えない(進行フラグ本体はリセット=再挑戦可)。bagMig=袋補填済み印(装備ごと持ち越すため)
+    fuchiEver:!!(Game.hidden&&(Game.hidden.towaDown||Game.hidden.fuchiEver)),slcatchEver:!!(Game.hidden&&(Game.hidden.slcatch||Game.hidden.slcatchEver)),wataseEver:!!(Game.hidden&&(Game.hidden.ch4b||Game.hidden.wataseEver)),ch4cEver:!!(Game.hidden&&(Game.hidden.ch4c||Game.hidden.ch4cEver)),ch5cEver:!!(Game.hidden&&(Game.hidden.ch5c||Game.hidden.ch5cEver)),ch6cEver:!!(Game.hidden&&(Game.hidden.ch6c||Game.hidden.ch6cEver)),ch7cEver:!!(Game.hidden&&(Game.hidden.ch7c||Game.hidden.ch7cEver)),ch8cEver:!!(Game.hidden&&(Game.hidden.ch8c||Game.hidden.ch8cEver)),ch9cEver:!!(Game.hidden&&(Game.hidden.ch9c||Game.hidden.ch9cEver)),ch10cEver:!!(Game.hidden&&(Game.hidden.ch10c||Game.hidden.ch10cEver)),ch11cEver:!!(Game.hidden&&(Game.hidden.ch11c||Game.hidden.ch11cEver)),meguriEver:!!(Game.hidden&&(Game.hidden.meguriDown||Game.hidden.meguriEver)),kataribeEver:!!(Game.hidden&&Game.hidden.kataribeEver),kakage:Game.kakage||'',nkW:Game.nkW||0,nkA:Game.nkA||0,bagMig:!!(Game.hidden&&Game.hidden.bagMig), // 称号と章の答えは周回で消えない(進行フラグ本体はリセット=再挑戦可)。bagMig=袋補填済み印(装備ごと持ち越すため)
     spotsRead:(Game.spotsRead||[]).slice(),ng:(Game.ng||0)+1};
   fadeColor('#070b1e');
   await fadeTo(1,0.8);
@@ -18744,7 +18884,7 @@ async function ngNewGame(fromKing){
   Game.door=keep.door;Game.mkey=keep.mkey;Game.cloak=keep.cloak;Game.book=keep.book;Game.talkOff=keep.talkOff;Game.seen=keep.seen;Game.spotsRead=keep.spotsRead;
   if(keep.zkomp)Game.hidden.zkomp=true;
   if(keep.ch3dEver)Game.hidden.ch3dEver=true; // 章3の こたえは 周回でも きえない(EDの ことばに かかる)
-  if(keep.fuchiEver)Game.hidden.fuchiEver=true;if(keep.slcatchEver)Game.hidden.slcatchEver=true;if(keep.wataseEver)Game.hidden.wataseEver=true;if(keep.ch4cEver)Game.hidden.ch4cEver=true;if(keep.ch5cEver)Game.hidden.ch5cEver=true;if(keep.ch6cEver)Game.hidden.ch6cEver=true;if(keep.ch7cEver)Game.hidden.ch7cEver=true;if(keep.ch8cEver)Game.hidden.ch8cEver=true;if(keep.ch9cEver)Game.hidden.ch9cEver=true;if(keep.ch10cEver)Game.hidden.ch10cEver=true;if(keep.ch11cEver)Game.hidden.ch11cEver=true;if(keep.meguriEver)Game.hidden.meguriEver=true;Game.kakage=keep.kakage||'';Game.nkW=keep.nkW||0;Game.nkA=keep.nkA||0;if(keep.bagMig)Game.hidden.bagMig=true;
+  if(keep.fuchiEver)Game.hidden.fuchiEver=true;if(keep.slcatchEver)Game.hidden.slcatchEver=true;if(keep.wataseEver)Game.hidden.wataseEver=true;if(keep.ch4cEver)Game.hidden.ch4cEver=true;if(keep.ch5cEver)Game.hidden.ch5cEver=true;if(keep.ch6cEver)Game.hidden.ch6cEver=true;if(keep.ch7cEver)Game.hidden.ch7cEver=true;if(keep.ch8cEver)Game.hidden.ch8cEver=true;if(keep.ch9cEver)Game.hidden.ch9cEver=true;if(keep.ch10cEver)Game.hidden.ch10cEver=true;if(keep.ch11cEver)Game.hidden.ch11cEver=true;if(keep.meguriEver)Game.hidden.meguriEver=true;if(keep.kataribeEver)Game.hidden.kataribeEver=true;Game.kakage=keep.kakage||'';Game.nkW=keep.nkW||0;Game.nkA=keep.nkA||0;if(keep.bagMig)Game.hidden.bagMig=true;
   Game.ng=keep.ng;
   const L=LEVELS[p.lv];p.mhp=L.hp+Game.bonusHp;p.mmp=L.mp+Game.bonusMp;recalcStats();p.hp=p.mhp;p.mp=p.mmp;
   updateBars();updateBadge();
