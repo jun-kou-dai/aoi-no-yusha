@@ -217,9 +217,9 @@ body{
 @keyframes vgl{ from{ transform:translateX(0); opacity:.2; } 50%{ opacity:1; } to{ transform:translateX(260%); opacity:.2; } }
 #quest{ position:absolute; bottom:max(10px, env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
   max-width:min(92vw,560px); white-space:normal; text-align:center; line-height:1.5;
-  font-size:clamp(11px,1.8vmin,13px); letter-spacing:.12em; color:#d8ddf0;
-  background:rgba(7,9,19,.8); border:1.5px solid rgba(236,229,207,.55); border-radius:6px;
-  padding:5px 16px; pointer-events:auto; cursor:pointer; }
+  font-size:clamp(11px,1.8vmin,13px); letter-spacing:.12em; color:#f4ead0;
+  background:rgba(34,26,10,.88); border:2px solid rgba(255,215,120,.8); border-radius:8px;
+  box-shadow:0 0 14px rgba(255,215,120,.28); padding:5px 16px; pointer-events:auto; cursor:pointer; }
 #quest:active{ transform:translateX(-50%) scale(.97); }
 
 /* ---------- エンディング ---------- */
@@ -8001,6 +8001,16 @@ async function tamotoScene(){
   endTalk();
   saveGame();
 }
+// かんけつ後、たもと・ほしあかりの案内が済んだ つぎの一回だけ: フクロウ自身が「おびをタップ」と教える
+// (2026-07-27「使い方がわからない」: 一回きりの説明は もう二度と出ず、toastは3秒で消えていた)
+async function howToScene(){
+  Game.hidden.howToTold=true;
+  startTalk();
+  await say('きたの おかから、フクロウの こえが とどいた——');
+  await say('フクロ「できることは ぜんぶ、わしが ならべておる。\nがめんの したの きんいろの おびを タップして、わしの ところへ おいで。」');
+  endTalk();
+  saveGame();
+}
 async function wazaCatchupScene(){
   Game.hidden.wazaCatchup=true;
   startTalk();
@@ -8453,6 +8463,10 @@ function islandFacilityLines(){
 }
 function tamesuList(){
   const h=Game.hidden,out=[];
+  // 2026-07-27「使い方がわからない」: あそびかたの説明は toast(3秒で消える)と 一回きり演出にしか
+  // 無かった＝ゲーム内の常設の説明がゼロだった。台帳の先頭に いつでも読める1行を置く。
+  out.push({id:'howto',label:'❓ あそびかた ─ まよったら まず これ',
+    line:'あるきかたは 三つだけ じゃ。よく きくが よい。',howto:true});
   if(h.ch13d)out.push({id:'nushiAgain',label:'⚔ しまの ぬしと もういちど 立ちあう',
     line:'たおした ぬしの すがたは、しまの きおくに のこっておる。わしが よびもどそう。\nぬしの「ちからを ためる 一げき」は、よろいでは かるく ならぬ——\nみを まもるか、章の じゅもんで こたえよ。ふつうの 一げきは よろいで かるくなる。',
     nushi:true}); // 2026-07-25: クリア済みは ch*d で ぬしが全員消えるため、ためせる道が無かった
@@ -8490,6 +8504,12 @@ async function gunshiTamesu(){
   if(!c||c==='no')return;
   const e=list.find(x=>x.id===c);if(!e)return;
   await say(e.line);
+  if(e.howto){ // あそびかた: 三つの きほんを いつでも 読み直せる(2026-07-27)
+    await say('フクロ「一つ。がめんの したの きんいろの おび（もくてき）を タップ——\nあしが かってに うごいて、つぎの ばしょへ つれていく。」');
+    await say('フクロ「二つ。きんいろの ひかりの はしらが、いま いくべき ばしょ。\nあおい はしらは、しまの でぐちじゃ。」');
+    await say('フクロ「三つ。わしの「✨いま できること」から えらべば、そのばへ つれていく。\nまよったら、いつでも わしの ところへ もどって くるが よい。」');
+    return;
+  }
   if(e.islands){ // 行き先を もたない「みる」だけの行。3島ずつ 見せて フクロの前へ もどる
     const rows=islandFacilityLines();
     if(!rows.length)await say('フクロ「まだ どの しまにも わたって おらぬ。\nにしの きしの ふねが、さいしょの ゆきさきを もっておる。」');
@@ -9381,7 +9401,7 @@ function updateField(dt){
   if(!Game.talking)Game.dayT+=dt; // かいわちゅうは ときが とまる
   if(Game.grace>0)Game.grace-=dt;
   const qt=questText();
-  const qloc='【'+(MAPNAME[Game.mapId]||'')+'】';if(qloc+qt!==Game._qt){Game._qt=qloc+qt;questEl.textContent=qloc+qt+'　▶';
+  const qloc='【'+(MAPNAME[Game.mapId]||'')+'】';if(qloc+qt!==Game._qt){Game._qt=qloc+qt;questEl.textContent='👆 '+qloc+qt+'　▶'; // 押せると分かる見た目に(2026-07-27「使い方がわからない」)
     const db=document.getElementById('doorbtn');if(db)db.classList.toggle('quest',qt.indexOf('どこでもドア')>=0);
     const mb=document.getElementById('menubtn');if(mb)mb.classList.toggle('quest',qt.indexOf('どこでもドア')>=0);}
   if(Game.minigame&&Game.minigame.kind==='ch20')return; // 航海盤のうしろで歩行・出口・敵接触を進めない
@@ -9513,6 +9533,7 @@ function updateField(dt){
     else if(Game.hidden.ch2&&!Game.hidden.mate1&&(Game.purified||0)>=5)mateJoinScene();
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&!Game.hidden.tamotoTold)tamotoScene();
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&Game.hidden.tamotoTold&&!Game.hidden.uraTold)uraToldScene();
+    else if(Game.mapId==='grass'&&Game.hidden.ch21c&&Game.hidden.tamotoTold&&Game.hidden.uraTold&&!Game.hidden.howToTold)howToScene();
     else if(shimaIhenPending())shimaIhenScene();
     else if(shimaYokanPending())shimaYokanScene();
     else if(shimaSakiPending())shimaSakiScene();
