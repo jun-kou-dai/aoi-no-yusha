@@ -8497,6 +8497,109 @@ function tamesuList(){
     line:'ひろばの おうさま。HPと MPを ただで まんたんに してくれる。\n「きびしさ」を 7だんまで あげられ、いちばん上の「しんぱん」でだけ\nとわのふちに 一体だけ あらわれる あいてが おる。',at:{x:3,y:10}});
   return out;
 }
+// ── きょうの ひとすじ(2026-07-27 一本道化): クリア後の入口を「一覧」から「一本道」へ ──
+// 発注者「フクロの選択肢が多すぎて何をすべきかわからない」「なんも変わっていない」への正面対応。
+// フクロが今日の1つだけを物語の言葉で推し、「▶つれていって」でそのまま連れて行く。
+// 保存しない一時フラグ2つだけ(CONT_BOOT/OSUSUME_GREETED)＝セーブ形式・進行フラグ・戦闘式・報酬は不変。
+let CONT_BOOT=false,OSUSUME_GREETED=false;
+function osusumeNow(){
+  const h=Game.hidden||{};
+  if(!h.ch21c)return null;
+  // 1) ふねの したく: 章順で最初の未所持1点。いま買える時だけ(買えない時は こえで かせがせる)
+  if(h.ch13a)for(const id of SHITAKU){
+    const it=SHOP.find(s=>s.id===id);if(!it)continue;
+    if(it.need&&!h[it.need])continue;
+    const own=(it.atk&&(Game.ownW||[]).includes(it.atk))||(it.armor&&(Game.ownA||[]).includes(it.armor));
+    if(own)continue;
+    if(Game.gold<it.cost)break;
+    const tk=SHITAKU_TALK.find(t=>t.id===id)||{};
+    const nOwn=SHITAKU.filter(sid=>{const s2=SHOP.find(s=>s.id===sid);return s2&&((s2.atk&&(Game.ownW||[]).includes(s2.atk))||(s2.armor&&(Game.ownA||[]).includes(s2.armor)));}).length;
+    return {id:'shitaku',bar:'⚒ ふねで いちざの したく（'+nOwn+'/8）',
+      head:'フクロ「きょうの ひとすじは これじゃ——にしの きしの ふねで、いちざの したく。\n'+(tk.foe||'しまの ぬし')+'は ためて うつ——『'+it.label+'』は それに こたえる ひとしなじゃ。\n'+it.cost+'Gで かえる（いま '+Game.gold+'G・したく '+nOwn+'／8）」',
+      at:{x:1,y:6},line:'フクロ「あしは わしが すすめる。きしに ついたら ふねに ふれ、\n⚒いちざの したくを ひらくのじゃ。」'};
+  }
+  // 2) ななつの こえ: 章順で まだ きいていない ぬし
+  {const av=NUSHI_AGAIN.filter(n=>h['ch'+n.no+'d']);
+   const nx=av.find(n=>!h['koe'+n.no]);
+   if(nx){const heard=['koe13','koe14','koe15','koe16','koe17','koe18','koe19'].filter(k=>h[k]).length;
+     const nm=String(nx.label).split(' ─ ')[0];
+     return {id:'koe',bar:'⚔ '+nm+'の こえを きく（'+heard+'/7）',
+       head:'フクロ「きょうの ひとすじは これじゃ——'+(MAPNAME[nx.map]||'')+'の ぬし『'+nm+'』。\nほどけた ぬしだけが、ものがたりの はじまる まえを しっておる。\nもういちど かちを しめせば、はじまりの ひとことが きける。（こえ '+heard+'／7）」',
+       nushi:nx};}}
+  // 3) はじまりの ほしあかり
+  if(h.uraTold&&!h.uraCleared){
+    const all7=['koe13','koe14','koe15','koe16','koe17','koe18','koe19'].every(k=>h[k]);
+    return {id:'ura',bar:'🌌 はじまりの ほしあかりへ',
+      head:all7?'フクロ「ななつの こえが そろった——たもとの となりの あおい ほしあかりじゃ。\nかたられなかった はじまりが、ほんとうの こえで こたえる。\nものがたりの いちばん ふるい ページを、めくって くるが よい。」'
+              :'フクロ「きょうの ひとすじは これじゃ——たもとの となりの あおい ほしあかり。\n九つめの しま「ほしのみなもと」へ つづいておる。\nいままでで いちばん つよい あいてが まっておるぞ。」',
+      at:{x:9,y:10},line:'フクロ「あしは わしが すすめる。あおい ひかりに ふれるのじゃ。」'};
+  }
+  // 4) めぐりのけしん(なんいど「しんぱん」だけ)
+  if(h.ch12c&&Game.diff===7&&!h.meguriDown)return {id:'meguri',bar:'👁 めぐりのけしんと むきあう',
+    head:'フクロ「きょうの ひとすじは これじゃ——とわの ふちの『めぐりのけしん』。\nすべての といを こえた ものだけが あいまみえる、きんいろの めぐりじゃ。\nたおせば さいだいHPが 20 ふえ、しょうごうも つく。」',
+    to:{map:'towa',tx:10,ty:7}};
+  return null; // ぜんぶ あるききった=自由
+}
+async function gunshiOsusumeFlow(){
+  OSUSUME_GREETED=true; // どの入口から見ても その起動の出迎えは済み扱い(二重に すすめない)
+  const o=osusumeNow();
+  if(!o){await say('フクロ「ひとすじの みちは、みな あるききった。きょうは すきに あるくが よい。\nたもとから のぼりなおすも、しまを めぐるも そなたの ままじゃ。\nこまかい ことは 📜に ぜんぶ ならべてある。」');
+    const c=await ask([{id:'list',label:'📜 ほかの ことも みる'},{id:'no',label:'やめておく'}],'どう する？');
+    return c==='list'?'list':'no';}
+  await say(o.head);
+  const c=await ask([{id:'go',label:'▶ つれていって'},{id:'list',label:'📜 ほかの ことも みる'},{id:'no',label:'きょうは じぶんで あるく'}],'どう する？');
+  if(c==='list')return 'list';
+  if(!c||c==='no'){await say('フクロ「うむ。きが むいたら、したの きんいろの おびから いつでも よべる。」');return 'no';}
+  if(o.nushi){const n=o.nushi;
+    NUSHI_REPLAY={id:n.id,map:n.map};
+    await say('フクロ「よかろう。……こころして ゆけ。\nめのまえに おる。ひとあし ふめば はじまる。」');
+    await transitMap({to:n.map,tx:n.tx,ty:n.ty,msg:(MAPNAME[n.map]||'')+'へ——'});
+    return 'moved';}
+  if(o.to){await say('フクロ「では、いってくるが よい。」');
+    await transitMap({to:o.to.map,tx:o.to.tx,ty:o.to.ty,msg:(MAPNAME[o.to.map]||'')+'へ——'});
+    saveGame();return 'moved';}
+  if(Game.mapId!=='grass'){ // フクロの さした むらの ばしょへは、まず むらへ(自動歩きは むらの中だけ=3440行)
+    await say('フクロ「まず むらへ もどるぞ。ついて まいれ。」');
+    await transitMap({to:'grass',tx:8,ty:11,msg:'そうげんへ——'});saveGame();}
+  TAMESU_AT={x:o.at.x,y:o.at.y};TAMESU_GO=true;
+  await say(o.line);
+  return 'moved';
+}
+// つづきからで むらに 立った直後、フクロウの ほうから 1回だけ むかえに くる(その起動で1回・保存しない)
+async function gunshiGreetScene(){
+  OSUSUME_GREETED=true;
+  startTalk();
+  // むらでは フクロウが ほんとうに となりの マスへ まいおりる。よそでは こえだけ届く
+  const w=WORLDS[Game.mapId];
+  const owl=(Game.mapId==='grass'&&w&&w.npcs)?w.npcs.find(n=>n.gunshi):null;
+  const home=owl?{x:owl.x,y:owl.y}:null;
+  let flew=false;
+  if(owl){
+    const p=Game.p;
+    const occ=(x,y)=>(w.npcs||[]).some(n=>n!==owl&&n.x===x&&n.y===y&&!npcGone(n))
+      ||(w.spots||[]).some(s2=>s2.x===x&&s2.y===y)
+      ||(w.king&&w.king.x===x&&w.king.y===y)||(w.inn&&w.inn.x===x&&w.inn.y===y)
+      ||tileAt(x,y)==='E';
+    const cand=[[1,0],[-1,0],[0,-1],[0,1],[1,-1],[-1,1],[1,1],[-1,-1]]
+      .map(d=>({x:p.tx+d[0],y:p.ty+d[1]}))
+      .find(t=>walkable(t.x,t.y)&&!occ(t.x,t.y));
+    if(cand){
+      owl.x=cand.x;owl.y=cand.y;flew=true;
+      if(Game.cam){const q=isoCtr(cand.x,cand.y);puff(q.x,q.y-14,'rgba(240,225,190,.95)',24,130,1.0,{up:true,s0:2,s1:4});}
+      sfxSel();
+    }
+  }
+  try{
+    await say(flew?'ばさり——きたの おかから フクロウが まいおりて、\nそなたの となりに とまった。'
+                  :'どこからか、フクロウの はばたきが きこえてきた——');
+    const r=await gunshiOsusumeFlow();
+    if(r==='list')await gunshiMenu();
+  }finally{
+    if(owl&&home){owl.x=home.x;owl.y=home.y; // 丘へ 必ず 戻す(セーブは npc位置を 持たないが、同席のままだと むらの見た目が 崩れる)
+      if(flew&&Game.cam&&Game.mapId==='grass'){const q=isoCtr(Game.p.tx,Game.p.ty);puff(q.x,q.y-26,'rgba(240,225,190,.8)',14,110,0.8,{up:true,s0:1.5,s1:3});}}
+    endTalk();
+  }
+}
 async function gunshiTamesu(){
   const list=tamesuList();
   if(!list.length){await say('フクロ「いまは、めのまえの たびに あつまる ときじゃ。\nつぎの ゆきさきは 🧭で みたてよう。」');return;}
@@ -8568,6 +8671,15 @@ async function gunshiTalk(){
     await say('フクロ「たまを めぐる たたかいを つづける そなたに、\nわしの ちえは いつでも ただで かす。えんりょは いらん。」');
     saveGame();
   }
+  // クリア後は まず「きょうの ひとすじ」(2026-07-27 一本道化)。📜で 従来の一覧へ
+  if(h.ch21c){
+    const r=await gunshiOsusumeFlow();
+    if(r!=='list')return;
+  }
+  await gunshiMenu();
+}
+async function gunshiMenu(){
+  const h=Game.hidden;
   while(true){
     const c=await ask([
       {id:'tamesu',label:'✨ いま できること（'+tamesuList().length+'）'}, // 2026-07-26「ためせる」は開発語だった＝用件の言葉へ。数を出して 中身があると分かるように
@@ -8958,7 +9070,9 @@ function questTextCore(){
       // 2026-07-26: クリア済みの めあては ずっと「たもと=終わった最終章の再演」だけを指しており、
       // あとから足したもの(したく・ぬし再戦・島の店…)へ 道が1本も通っていなかった。
       // むらに居るあいだは フクロ(=いま できることの台帳)を 唯一の入口にする。
-      if(Game.mapId==='grass')return 'もくてき：きたの おかの フクロへ——✨いま できること が '+tamesuList().length+'こ ある';
+      if(Game.mapId==='grass'){const o=osusumeNow();
+        if(o)return 'きょうの ひとすじ：'+o.bar+'——タップで フクロが みちびく';
+        return 'もくてき：きたの おかの フクロへ——✨いま できること が '+tamesuList().length+'こ ある';}
       if(Game.hidden.uraTold&&!Game.hidden.uraCleared)return 'さいしゅうしょう、かんけつ——たもとの となりの ✨はじまりの ひかり から ほしのみなもとへ のぼれる';
       // むら以外では 帰り道と 台帳を指す(2026-07-26 夜: やかたの帰り道・章18/19再戦の送還先で「たもと」=済んだ用事を指したまま 金柱0本だった)
       return 'さいしゅうしょう、かんけつ——ひかる でぐちから むらへ もどれる（フクロに つぎを きこう）';
@@ -9539,6 +9653,7 @@ function updateField(dt){
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&!Game.hidden.tamotoTold)tamotoScene();
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&Game.hidden.tamotoTold&&!Game.hidden.uraTold)uraToldScene();
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&Game.hidden.tamotoTold&&Game.hidden.uraTold&&!Game.hidden.howToTold)howToScene();
+    else if(Game.hidden.ch21c&&Game.hidden.tamotoTold&&Game.hidden.uraTold&&Game.hidden.howToTold&&CONT_BOOT&&!OSUSUME_GREETED&&!Game.minigame)gunshiGreetScene(); // どの地で ひらいても むかえに くる(2026-07-27 一本道)
     else if(shimaIhenPending())shimaIhenScene();
     else if(shimaYokanPending())shimaYokanScene();
     else if(shimaSakiPending())shimaSakiScene();
@@ -13618,6 +13733,13 @@ function questDest(){
 }
 async function questGuide(){
   if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
+  // クリア後のむら: バーのタップは「きょうの ひとすじ」を その場で ひらく(2026-07-27 一本道化)
+  if(Game.hidden.ch21c&&Game.mapId==='grass'&&osusumeNow()){
+    startTalk();sfxSel();
+    const r=await gunshiOsusumeFlow();
+    if(r==='list')await gunshiMenu();
+    endTalk();return;
+  }
   const d=questDest();
   startTalk();sfxSel();
   await say('みちびきの こえ「'+d.exp+'」');
@@ -19089,6 +19211,7 @@ async function continueGame(){
   showUI('ui-field');
   playSong(fieldSong());
   await fadeTo(0,0.6);
+  CONT_BOOT=true; // つづきから起動のしるし(保存しない)=むらに立った直後のフクロウの出迎えに使う
   const giftN=Game._islandRewardCatchup||0;if(giftN)saveGame();
   toast(giftN?'ぼうけんのしょを よみこんだ！ しまじまから おくりもの '+giftN+'点が とどいた！':'ぼうけんのしょを よみこんだ！ たびの つづきだ！');
   Game.started=false;
