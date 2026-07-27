@@ -8467,14 +8467,15 @@ function tamesuList(){
   // 無かった＝ゲーム内の常設の説明がゼロだった。台帳の先頭に いつでも読める1行を置く。
   out.push({id:'howto',label:'❓ あそびかた ─ まよったら まず これ',
     line:'あるきかたは 三つだけ じゃ。よく きくが よい。',howto:true});
-  if(h.ch13d)out.push({id:'nushiAgain',label:'⚔ しまの ぬしと もういちど 立ちあう',
-    line:'たおした ぬしの すがたは、しまの きおくに のこっておる。わしが よびもどそう。\nぬしの「ちからを ためる 一げき」は、よろいでは かるく ならぬ——\nみを まもるか、章の じゅもんで こたえよ。ふつうの 一げきは よろいで かるくなる。',
-    nushi:true}); // 2026-07-25: クリア済みは ch*d で ぬしが全員消えるため、ためせる道が無かった
+  if(h.ch13d){const _heard=['koe13','koe14','koe15','koe16','koe17','koe18','koe19'].filter(k=>h[k]).length;
+  out.push({id:'nushiAgain',label:'⚔ ぬしの こえを ききなおす（いま '+_heard+'/7）',
+    line:'ほどけた ぬしたちは、しまの きおくの なかで しずかに ねむっておる。\nあの ものたちだけが しっている ことが ある——ものがたりが はじまる まえの ことじゃ。\nもういちど 立ちあい、ちからを しめせば、はじまりの ひとことを かたって くれよう。\nななつ そろえば、ほしあかりの おくの「はじまり」が、ほんとうの こえで こたえる。',
+    nushi:true});} // 2026-07-27: 再戦に物語の意味を通す=「こえを ききなおす たび」(発注者「1回戦った相手と なぜ また戦う。意味がわからない」への正面対応)
   if(h.ch13a)out.push({id:'fune',label:'🚢 一座の ふね ─ ⚒したくを かう・しまへ わたる',
     line:'にしの きしの ふね。メニューの「⚒ いちざの したく」に、\nしまごとの ひとしなものが 1つずつ ならぶ——ぬしの いちげきに こたえる そうびじゃ。\nしまへ わたれば、みせ・やど・いずみ・よみもの・あるく つよい まものも まっておる。',at:{x:1,y:6}});
   if(h.ch21c)out.push({id:'mise',label:'🛒 むらの みせ ─ かんけつ後だけ ならぶ 二品',
     line:'ひろばの みせに、たびの おわりを こえた 二品が ならんでおる——\n⚔ほしのはしのつるぎ と 🛡よあけのよろい。\nいまの そなたの 数を、まっすぐ 上へ こえる ただ二つの しなじゃ。',at:{x:5,y:9}});
-  if(h.uraTold)out.push({id:'ura',label:'🌌 はじまりの ほしあかり ─ いちばん つよい あいて',
+  if(h.uraTold)out.push({id:'ura',label:['koe13','koe14','koe15','koe16','koe17','koe18','koe19'].every(k=>h[k])?'🌌 はじまりの ほしあかり ─ ななつの こえが みちびく':'🌌 はじまりの ほしあかり ─ いちばん つよい あいて',
     line:'たもとの となりの あおい ほしあかり。九つめの しま「ほしのみなもと」へ つづく。\nいままでで いちばん つよい あいてが まっておる。',at:{x:9,y:10}}); // 2026-07-26: (10,10)は こどもの立ち位置だった＝柱が こどもを指し、ミニゲームの さそいが開いていた
   // なんいど「しんぱん」だけに 立つ一体。旧: questTextCore も questDest も ch21c の分岐で
   // 先に return していたため、クリア済みセーブでは 案内が 1行も 出ない 死にコードだった(2026-07-26)
@@ -8517,11 +8518,15 @@ async function gunshiTamesu(){
     await say('フクロ「ゆきさきは ふねが きめる。したの もくてきに したがって わたるが よい。\nよみものの のこりは、☰メニューの「たびのメモ」の やりのこしに ぜんぶ でておる。」');
     return;
   }
-  if(e.nushi){ // 島のぬしの再戦: たおした ぬしだけ ならぶ。NUSHI_REPLAY は保存しない一時状態
+  if(e.nushi){ // こえを ききなおす たび: 未聴取の さいしょの一体を「つぎ」として推す(2026-07-27)
     const av=NUSHI_AGAIN.filter(n=>Game.hidden['ch'+n.no+'d']);
-    if(!av.length){await say('フクロ「まだ ぬしを たおしておらぬ。\nまずは 目の前の しまじゃ。」');return;}
-    const p=await ask(av.map(n=>({id:n.id,label:'章'+n.no+' '+n.label})).concat([{id:'no',label:'やめておく'}]),
-      'フクロ「どの ぬしと 立ちあう？\nしまの おくで まっておる——ちかづけば はじまる。」');
+    if(!av.length){await say('フクロ「まだ ぬしを たおしておらぬ。\nまずは 目の前の たびじゃ。」');return;}
+    const _kd=n=>!!Game.hidden['koe'+n.no];
+    const _next=av.find(n=>!_kd(n));
+    const head=_next
+      ?'フクロ「つぎに きくべき こえは、章'+_next.no+'の '+String(_next.label).split(' ─ ')[0]+' じゃ。\nかちを しめせば、はじまりの ひとことを かたって くれる。」'
+      :'フクロ「ななつの こえは すべて きいた。\nはじまりの ほしあかりが、そなたを まっておる。」';
+    const p=await ask(av.map(n=>({id:n.id,label:(_kd(n)?'✓ ':(_next&&n.id===_next.id?'▶ ':''))+'章'+n.no+' '+n.label+(_kd(n)?'（きいた）':'')})).concat([{id:'no',label:'やめておく'}]),head);
     if(!p||p==='no')return;
     const n=NUSHI_AGAIN.find(x=>x.id===p);if(!n)return;
     NUSHI_REPLAY={id:n.id,map:n.map};
@@ -16135,6 +16140,30 @@ async function victory(){
     }
   }
   if(foe.winMsg)await say(foe.winMsg); // winMsgは ぜんての たいしょう（かげ雑魚の「ほどけ」も ここ）
+  // ぬし再戦=「こえを ききなおす たび」(2026-07-27): 勝ちに 物語の意味を通す。
+  // 進行フラグ・報酬・戦闘式は不変。断片は hidden.koe13..19（各一回きり）。
+  if(NUSHI_REPLAY&&foe===FOES[NUSHI_REPLAY.id]){
+    const KOE={
+      shimaikomu:['koe13','『……はじまりの ものがたりは、だれかが しまいこんだのでは ない。\nじぶんから かくれたのだ——きかれる ときを、まって。』'],
+      mototadasu:['koe14','『ただしい はじまりなど、どこにも なかった。\nさいしょの こえは、まちがいを おそれずに うたわれたのだ。』'],
+      makoto:['koe15','『まことか うそか、では ない。\nはじまりは、ねがいだった——そう あってほしい、という こえだった。』'],
+      wasurare:['koe16','『わすれられて きえたのでは ない。\nわすれられても のこった ものだけが、はじまりに なれたのだ。』'],
+      hitorijime:['koe17','『はじまりは、あつめられぬ。\nわけあった ときにだけ、ふえるのだ。』'],
+      shioarashi:['koe18','『ひとつの おおきな こえに きこえたものは、ちいさな こえの むれだった。\nはじまりも、そうだ。』'],
+      kiritoru:['koe19','『どこを きりとっても、はじまりには ならぬ。\nつづいている ことが、はじまりの しょうこ なのだ。』']
+    }[NUSHI_REPLAY.id];
+    if(KOE&&!Game.hidden[KOE[0]]){
+      Game.hidden[KOE[0]]=true;
+      const _n=['koe13','koe14','koe15','koe16','koe17','koe18','koe19'].filter(k=>Game.hidden[k]).length;
+      await say('たたかいの あとの しずけさの なか、ぬしが はじめて「はじまり」を かたった——');
+      await say(KOE[1]);
+      if(_n>=7){
+        await say('ななつの こえが、むねの なかで ひとつの わに なった——\nはじまりの ほしあかりの おくで、「はじまり」が こたえを まっている。');
+        toast('ななつの こえ、そろった——はじまりの ほしあかりへ');
+      }else toast('はじまりの こえ '+_n+'/7 …つぎは フクロに きこう');
+      saveGame();
+    }
+  }
   if(foe===FOES.shioarashi&&!Game.hidden.ch18d){
     Game.hidden.ch18d=true;Game.hidden.ch18Night=false;
     await say('できたばかりの 二つの場所から、島の ひとたちの こえが かさなった——\n「ここで、あしたを むかえよう！」');
@@ -16158,6 +16187,8 @@ async function victory(){
   if(foe===FOES.hajimarazu){ // 裏章: かたられなかった はじまり を むすぶ→みなもとのひかりを さずかる
     const already=!!Game.hidden.uraSpell;
     Game.hidden.uraCleared=true;
+    if(['koe13','koe14','koe15','koe16','koe17','koe18','koe19'].every(k=>Game.hidden[k]))
+      await say('そなたの むねで、ななつの ぬしの こえが いっせいに ひびきだした——\nかくれていた「はじまり」が、その わの まんなかで しずかに めを あけた。'); // こえを ききなおす たび の むすび(2026-07-27)
     await say('いずみの おくから、いままで だれにも かたられなかった こえが した——');
     await say('『……はじまりは、ずっと ここに あった。\nでも、かたって くれる ものが、いなかった。』');
     if(nkFollowing())await say('こども「もう だいじょうぶ。あなたの はじまりは、わたしが かたる。\nいちばん さいしょの ページに。」');
