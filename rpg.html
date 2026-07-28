@@ -222,6 +222,30 @@ body{
   box-shadow:0 0 14px rgba(255,215,120,.28); padding:5px 16px; pointer-events:auto; cursor:pointer; }
 #quest:active{ transform:translateX(-50%) scale(.97); }
 
+/* ---------- ななつへんげ: 変身カットイン(2026-07-28 引き継ぎ書§5-1・呼ばれるまで不使用) ---------- */
+#hengewrap{ position:fixed; inset:0; z-index:1150; display:none; background:#020308; overflow:hidden; }
+#hengewrap.on{ display:block; }
+#hengesil{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+  filter:drop-shadow(0 0 16px var(--hcol,#ffd97a)) drop-shadow(0 0 52px var(--hcol,#ffd97a));
+  transform:scale(1.12); transition:transform 1.9s ease-out; }
+#hengewrap.on #hengesil{ transform:scale(1.0); }
+#hengedark{ position:absolute; inset:0; background:radial-gradient(ellipse 90% 70% at 50% 46%, transparent 30%, rgba(2,3,8,.88) 100%); }
+#hengename{ position:absolute; left:50%; top:56%; width:100vw; transform:translate(-50%,-50%) scale(2.8); opacity:0;
+  font-weight:800; font-size:clamp(34px,8vmin,72px); letter-spacing:.14em; white-space:pre-line; line-height:1.16; text-align:center;
+  background:linear-gradient(180deg,#fff3c4,#e8b45f); -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 4px 0 rgba(40,20,0,.85)) drop-shadow(0 0 34px var(--hcol,#ffd97a)); }
+#hengewrap.named{ animation:uishake .32s linear; }
+#hengewrap.named #hengename{ animation:hslam .38s cubic-bezier(.15,.9,.2,1.2) forwards; }
+@keyframes hslam{ 0%{opacity:0; transform:translate(-50%,-50%) scale(2.8);} 55%{opacity:1; transform:translate(-50%,-50%) scale(0.94);} 100%{opacity:1; transform:translate(-50%,-50%) scale(1);} }
+#hengesub{ position:absolute; left:50%; top:70%; transform:translateX(-50%); opacity:0;
+  color:#f4ead0; font-size:clamp(15px,3vmin,24px); letter-spacing:.22em; white-space:nowrap;
+  text-shadow:0 2px 8px rgba(0,0,0,.9), 0 0 18px var(--hcol,#ffd97a); }
+#hengewrap.named #hengesub{ animation:hsub .5s ease .22s forwards; }
+@keyframes hsub{ from{opacity:0; transform:translateX(-50%) translateY(10px);} to{opacity:1; transform:translateX(-50%) translateY(0);} }
+#hengeflash{ position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; }
+#hengewrap.flash #hengeflash{ animation:hflash .42s ease-out forwards; }
+@keyframes hflash{ 0%{opacity:0;} 25%{opacity:1;} 100%{opacity:1;} }
+
 /* ---------- エンディング ---------- */
 #ui-ending{ flex-direction:column; align-items:center; justify-content:center; gap:clamp(12px,2.6vh,22px); text-align:center; padding:24px; }
 .eline{ opacity:0; transform:translateY(10px); transition:opacity 1.4s ease, transform 1.4s ease;
@@ -3009,6 +3033,7 @@ const FOES={
   sukuwarenu:{name:'すくわれなかったもの', hp:9999, atk:172, def:999, exp:0, g:0, col:'#3a3a5e', draw:'boss2', tint:'rgba(40,44,80,0.92)', mboss:true, still:true, huge:true, watch:true, physMul:1, fireMul:1, iceMul:1, dodge:0, winMsg:'すくわれなかったものは ほどけ、\nかぞえきれない ほしに なって よぞらへ かえっていった。'},
   shioarashi:{nushi:true, charge:true,chargeMsg:'つばさを そろえ、うみを もちあげはじめた',heavyName:'たかなみの ひとおし',name:'しおあらしの むれ',hp:2300,atk:166,def:68,exp:3500,g:2800,col:'#4d8eaa',draw:'stormflock',mboss:true,still:true,huge:true,watch:true,dodge:0.12,physMul:0.80,fireMul:1.6,iceMul:0.55,winMsg:'しおあらしの むれは あたたかい あめに ほどけ、\nうみへ かえる みちを みつけた。'},
   kiritoru:{nushi:true, charge:true,chargeMsg:'三つの文字ばんが かさなり、はりが とまった',heavyName:'きりとる 一分',name:'きりとるもの',hp:2700,atk:170,def:72,exp:3800,g:3200,col:'#7662a0',draw:'timefracture',mboss:true,still:true,huge:true,dodge:0.35,physMul:0.75,fireMul:0.85,iceMul:0.85,winMsg:'きりとるものは 三つの文字盤から 一本の金の針へ ほどけ、\n止まっていた島の一分が、朝へ うごきだした。'},
+  kagevolga:{nushi:true, charge:true, chargeMsg:'ななつの かげが ひとつに かさなっていく', heavyName:'ななかげの ひとふり', name:'ななつのかげを まとう ヴォルガ', hp:6800, atk:186, def:88, exp:0, g:4000, col:'#3a1440', draw:'boss2', tint:'rgba(34,12,44,0.92)', mboss:true, still:true, huge:true, watch:true, spell:true, physMul:0.8, fireMul:1, iceMul:1, winMsg:'ななつの かげは ひかりの こなに ほどけ、\nそらの あかい いろが すうっと ひいていった。'}, // ななつへんげ 場面5(2026-07-28)
   // 章18 かぜまちじま: あらしに ちらされ、これから 建て直す島の 歩く敵(2026-07-22 案6A)
   nagaregi:{name:'ながれぎ', hp:820, atk:160, def:62, exp:450, g:235, col:'#9a7a52', draw:'slime', tint:'rgba(154,122,82,0.82)', physMul:1, fireMul:1.4, iceMul:0.9, winMsg:'ながれぎは ぱらぱらと ほどけ、\nつかえそうな いたが 一まい、はまべに のこった。'},
   tobiyane:{name:'とびやね', hp:800, atk:162, def:62, exp:470, g:245, col:'#c8a86a', draw:'crow', v:'bat', tint:'rgba(200,168,106,0.8)', dodge:0.2, physMul:1, fireMul:1.2, iceMul:0.9, winMsg:'とびやねは かぜを うしなって おち、\nしずかに じめんへ よこたわった。'},
@@ -3165,6 +3190,8 @@ const WNAME={5:'どうのつるぎ',12:'はがねのつるぎ',16:'はやぶさ�
 const ANAME={4:'かわのよろい',9:'くさりかたびら',16:'はがねのよろい',20:'りゅうのうろこ',24:'まほうのよろい',28:'せいれいのころも',34:'ひかりのよろい',40:'しおかぜのころも',42:'こだまのマント',44:'いのりのころも',46:'ほりびとのころも',48:'こもりうたのころも',52:'りゅうきしのよろい',54:'かえりびのマント',60:'ほしのよろい',64:'みちわたしのよろい',66:'ほしのよろい＋1',68:'つきかげのころも',72:'ほしのよろい＋2',78:'ほしのよろい＋3',82:'こだまのマント',88:'こもりうたのころも',94:'かえりびのマント',100:'みちわたしのよろい',108:'よあけのよろい',84:'よあけのよろい',80:'こだまうつしの ころも',86:'ねむりうたの ころも',92:'あらしよけの ころも',98:'なぎわたりの ころも'};
 // よろい効果(armorDef値がキー): 9=くさり(どく5割減) / 16=はがね(つうこん25%減) / 20=りゅうのうろこ(炎と聖の息を3割減) / 24=まほう(ねむり・まひ5割減) / 28=せいれいのころも(8%で攻撃をかわす) / 34=ひかり(毎ターンHP+3)
 const ARMORFX={9:{poisonGuard:0.5},16:{critGuard:0.75},20:{elemGuard:0.7},24:{mindGuard:0.5},28:{dodge:0.08},34:{regen:3},40:{regen:4,dodge:0.05},42:{dodge:0.10,regen:2},44:{regen:4,mindGuard:0.6},46:{regen:5},48:{regen:4,mindGuard:0.6},52:{elemGuard:0.6,critGuard:0.6},54:{regen:4,dodge:0.05},60:{regen:6,critGuard:0.6},64:{regen:6,critGuard:0.6},66:{regen:7,critGuard:0.6},68:{dodge:0.12,regen:6},72:{regen:8,critGuard:0.55},78:{regen:9,critGuard:0.5},82:{regen:9,dodge:0.10,critGuard:0.5},88:{regen:10,dodge:0.10,mindGuard:0.6,critGuard:0.5},94:{regen:11,dodge:0.12,mindGuard:0.6,critGuard:0.48},100:{regen:12,dodge:0.12,mindGuard:0.55,critGuard:0.45},108:{regen:14,dodge:0.14,mindGuard:0.5,critGuard:0.40},84:{regen:10,critGuard:0.45},12:{dodge:0.10},18:{poisonGuard:1},30:{elemGuard:0.5},80:{heavyGuard:0.80,regen:8,dodge:0.08},86:{heavyGuard:0.76,dodge:0.20,regen:9},92:{heavyGuard:0.72,elemGuard:0.5,critGuard:0.4,regen:10},98:{heavyGuard:0.66,regen:12,critGuard:0.45,mindGuard:0.55}};
+// じゅもんの効果一行(2026-07-28 ななつへんげ§4:「呪文も全然わからない」への正面対応=たたかいの一覧で効果を言う)
+const SPELLFX={mera:'ほのお・小',gira:'ほのお・中',begirama:'ほのお・大',begiragon:'ほのお・特大',merazoma:'ほのお・さいだい',hyado:'こおり・小',hyadaruko:'こおり・中',mahyado:'こおり・大',mahyadedos:'こおり・特大',gigadein:'いかずち・あいしょうに よらない',minadein:'蒼珠の かずだけ つよくなる',urahikari:'まもり半分つらぬき＋じぶんも かいふく',hoimi:'HPを すこし かいふく',behoimi:'HPを おおきく かいふく',behoma:'HPを ぜんぶ かいふく',baikiruto:'こうげきが 2ばいに なる',rukani:'てきの まもりを はんぶんに',sukara:'じぶんの まもりを かためる',rariho:'てきを ねむらせる',kiari:'どくを なおす'};
 const WFXDESC={16:'1ターンに 2かい きる',44:'かげに 1.5ばい',52:'かいしんの いちげき +5%',54:'かいしんの いちげき +10%',56:'かいしんの いちげき +8%',58:'40%で どく・かいしん +10%',60:'かいしんの いちげき +6%',64:'かいしんの いちげき +6%',70:'あたえた ダメージの 25% HPを すう',76:'ダメージの 20%を すい、かいしん +8%',78:'かいしんの いちげき +12%',82:'かいしんの いちげき +10%',88:'かいしんの いちげき +10%',94:'かいしんの いちげき +12%',100:'かいしんの いちげき +14%',108:'かいしんの いちげき +16%',104:'かいしんの いちげき +14%',112:'かいしん +14%・40%で どく',120:'かいしん +15%・どく・ダメージの 25%を すう',128:'かいしん +18%・どく・ダメージの 25%を すう',136:'かいしん +20%・どく・ダメージの 30%を すう',24:'かいしんの いちげき +12%',30:'1ターンに 2かい きる',34:'40%で てきを どくに おかす',42:'あたえた ダメージの 25% HPを すう',46:'きょじん・ぬしのたぐいに 1.6ばい',102:'1ターンに 2かい きる・かいしん +6%',110:'きょじん・ぬしのたぐいに 1.6ばい',118:'あたえた ダメージの 40% HPを すう・かいしん +8%',126:'かいしん +28%・ダメージの 22%を すう'};
 const AFXDESC={9:'どくの きばを 5わり ふせぐ',16:'つうこんの いちげきを 25% へらす',20:'ほのお・ひかりの いきを 3わり へらす',24:'ねむり・まひを 5わり ふせぐ',28:'8%で こうげきを ひらりと かわす',34:'ターンの おわりに HPが 3 もどる',40:'ターンおわりに HP4・5%で こうげきを かわす',42:'ターンおわりに HP2・10%で こうげきを かわす',44:'ターンおわりに HP4・ねむり まひを 6わり ふせぐ',46:'ターンの おわりに HPが 5 もどる',48:'ターンおわりに HP4・ねむり まひを 6わり ふせぐ',52:'いきを 4わり・つうこんを 4わり へらす',54:'ターンおわりに HP4・5%で こうげきを かわす',60:'ターンおわりに HP6・つうこんを 4わり へらす',64:'ターンおわりに HP6・つうこんを 4わり へらす',66:'ターンおわりに HP7・つうこんを 4わり へらす',68:'12%で かわし、ターンおわりに HP6',72:'ターンおわりに HP8・つうこん 45%減',78:'ターンおわりに HP9・つうこんを 5わり へらす',84:'ターンおわりに HP10・つうこんを 55% へらす',82:'ターンおわりに HP9・10%で かわし、つうこん 5わり減',88:'HP10・10%で かわし、ねむり まひ 6わり・つうこん 5わり減',94:'HP11・12%で かわし、ねむり まひ 6わり・つうこん 52%減',100:'HP12・12%で かわし、ねむり まひ 45%・つうこん 55%減',108:'HP14・14%で かわし、ねむり まひ 5わり・つうこん 6わり減',12:'10%で こうげきを ひらりと かわす',18:'どくの きばを かんぜんに ふせぐ',30:'ほのお・ひかりの いきを 5わり へらす',80:'大きな いちげきを 2わり やわらげる・HP8・8%で かわす',86:'大きな いちげきを 24% やわらげる・20%で かわす・HP9',92:'大きな いちげきを 28% やわらげ、いき5わり・つうこん6わり減・HP10',98:'大きな いちげきを 34% やわらげる・つうこん55%減・HP12'};
 // ============================================================
@@ -4540,7 +4567,7 @@ function updateBars(){
    const an=(ANAME[Game.armorDef||0]||((Game.armorDef||0)?'よろい':'ぬのの ふく'))+((Game.armorDef||0)?' '+Game.armorDef:'');
    const _fw=$('#fweap');if(_fw)_fw.textContent='⚔ '+wn;
    const _fa=$('#farm');if(_fa)_fa.textContent='🛡 '+an;
-   const _bg=$('#bgear');if(_bg)_bg.textContent='⚔'+wn+'　🛡'+an;}
+   const _bg=$('#bgear');if(_bg)_bg.textContent=(typeof FUKAMI!=='undefined'&&FUKAMI?'🔥'+FUKAMI.floor+'かい ふくろ'+FUKAMI.bag.g+'G　':'')+(Game.bt&&Game.bt.henge?'👹へんげ『'+Game.bt.henge.name+'』　':'')+'⚔'+wn+'　🛡'+an;}
   setBar($('#fhp'),$('#fhpn'),p.hp,p.mhp);setBar($('#bhp'),$('#bhpn'),p.hp,p.mhp);
   setBar($('#fmp'),$('#fmpn'),p.mp,p.mmp);setBar($('#bmp'),$('#bmpn'),p.mp,p.mmp);
   {const on=!!(Game.nkOn&&!Game.nkRest);
@@ -4686,9 +4713,10 @@ const BOOK_ISLES=[
   ['かたりのおか',['wasuredori','katarikuzushi','kataranu']],
   ['ひとつの うみ',['namigarasu','shiouzu','uminohebi','hedatsu']],
   ['はての しま',['owarika','kobamu']]];
-const BOOK_SPECIAL=['gslime','metal','kotae','niseyusha','monoecho'];
+const BOOK_SPECIAL=['gslime','metal','kotae','niseyusha','monoecho','kagevolga']; // +ななつへんげ(2026-07-28)
 // ずかんの ものがたり行（よみものとしての 図鑑）
 const BOOK_LORE={
+  kagevolga:'ななつの ぬしから はがれた かげを まとって、そらへ かえってきた ヴォルガ。にくしみでは なく——じぶんを たおした ゆうしゃの ちからを、もういちど たしかめに きた。',
   komari:'いのりの しずくが まるく こごった もの。ふれると ほんのり あたたかい。',
   kodamadori:'よろこびの こえが とりの かたちを かりた もの。うたごえが ひびきあう。',
   hikarinokodama:'れきだいの いのりが かさなって うまれた ひかりの けしん。うけとめる うつわを ためしに くる。',
@@ -4784,6 +4812,7 @@ const BOOK_LORE={
   tomaribari:'とまったままの とけいの はり。ここで とめておけば、つらい つづきは こない——そう しんじて いる。',
   kotae:'とわに といつづける もの。こたえを もつ ものを、しずかに ためしに くる。'};
 const BOOK_TRAITS={
+  kagevolga:['ちからを ためて はなつ「ななかげの ひとふり」','HPが へるたび かげが 1まいずつ はがれる'],
   niseyusha:['ぶたいの たたかい。勝っても 負けても ものがたりは すすむ','ぬのと かみの よろい——ほのおが よく きく'],
   monoecho:['けいこ あいて。かっても まけても なにも うしなわない','📚 みんなのものがたり を ためす ための こだま'],
   kagimushi:['くらの かぎばん。うごきは おそい','ほのおが とおりやすい'],
@@ -6464,6 +6493,7 @@ async function talkNpc(n){
       if(Game.hidden.ch19a)opts.push({id:'tokikasane',label:'ときかさねじまへ'});
       if(Game.hidden.ch20a)opts.push({id:'shiowakare',label:'しおわかれの海峡へ'});
       opts.push({id:'mise',label:'🛒 ふなみせ（ぶき・くすり・かじ）'});opts.push({id:'shitaku',label:'⚒ いちざの したく（しまごとの ひとしなもの）'});
+      if(Game.hidden.kageOpening)opts.push({id:'fukami',label:'🔥 のこりびの ふかみ（さいこう '+(Game.hidden.fukamiBest||0)+'かい）'}); // 場面4の入口
       opts.push({id:'rec',label:'📖 ふねの きろくちょう'});
       opts.push({id:'gear',label:'⚒ ふなそうびを みる'});
       opts.push({id:'no',label:'やめておく'});
@@ -6479,6 +6509,7 @@ async function talkNpc(n){
       else if(Game.hidden.ch15c)shipPrompt='だんちょう「ほらふきじまの おおぼら、一座の えんもくに ほしいねえ。ふねを だすかい？」';
       else if(Game.hidden.ch14c)shipPrompt='だんちょう「たにの こだまも、いまじゃ すっかり うたいずきだ。ふねを だすかい？」';
       const gm=await ask(opts,shipPrompt);
+      if(gm==='fukami'){endTalk();await fukamiStart();return;}
       if(gm==='mise'){await runShop(true);endTalk();return;}
       if(gm==='shitaku'){await runShop(false,true);endTalk();return;}
       if(gm==='rec'){await shipRecord();endTalk();return;}
@@ -8471,6 +8502,13 @@ function tamesuList(){
   out.push({id:'nushiAgain',label:'⚔ ぬしの こえを ききなおす（いま '+_heard+'/7）',
     line:'ほどけた ぬしたちは、しまの きおくの なかで しずかに ねむっておる。\nあの ものたちだけが しっている ことが ある——ものがたりが はじまる まえの ことじゃ。\nもういちど 立ちあい、ちからを しめせば、はじまりの ひとことを かたって くれよう。\nななつ そろえば、ほしあかりの おくの「はじまり」が、ほんとうの こえで こたえる。',
     nushi:true});} // 2026-07-27: 再戦に物語の意味を通す=「こえを ききなおす たび」(発注者「1回戦った相手と なぜ また戦う。意味がわからない」への正面対応)
+  if(h.kageOpening){const _hn=hengeCount(); // ななつへんげ(2026-07-28)
+    out.push({id:'kage',label:'⚔ かげまとう ぬし——へんしん '+_hn+'/7',
+      line:'ヴォルガの かげが ななつの ぬしに とりついた。たおせば その ちからで へんしんできる。\nいちばんめは くらのしま——のこりは ふかみに あつまっておる。',kage:true});
+    out.push({id:'fukami',label:'🔥 のこりびの ふかみ（さいこう '+(h.fukamiBest||0)+'かい）',
+      line:'ふねの わきの ほらあな。かげぬしが つぎつぎに まちうけ、かつたび たからが ふえる。\n「2ばいか、もちかえるか」——まけたら ふくろだけ うみに おちる。',fukami:true});
+    if(_hn>=7&&!h.kageVolgaDown)out.push({id:'volga',label:'👑 ななつのかげを まとう ヴォルガと しょうぶ',
+      line:'ななつの へんしんが そろった。そらの おくで ヴォルガが まっておる。',volga:true});}
   if(h.ch13a)out.push({id:'fune',label:'🚢 一座の ふね ─ ⚒したくを かう・しまへ わたる',
     line:'にしの きしの ふね。メニューの「⚒ いちざの したく」に、\nしまごとの ひとしなものが 1つずつ ならぶ——ぬしの いちげきに こたえる そうびじゃ。\nしまへ わたれば、みせ・やど・いずみ・よみもの・あるく つよい まものも まっておる。',at:{x:1,y:6}});
   if(h.ch21c)out.push({id:'mise',label:'🛒 むらの みせ ─ かんけつ後だけ ならぶ 二品',
@@ -8497,6 +8535,242 @@ function tamesuList(){
     line:'ひろばの おうさま。HPと MPを ただで まんたんに してくれる。\n「きびしさ」を 7だんまで あげられ、いちばん上の「しんぱん」でだけ\nとわのふちに 一体だけ あらわれる あいてが おる。',at:{x:3,y:10}});
   return out;
 }
+// ── ななつへんげ『変身カットイン』(2026-07-28 引き継ぎ書§5-1)。
+//    絵の関門: これを発注者が判定するまで、勝利処理への配線・他6体は作らない。
+//    呼ばれない限り既存挙動への影響ゼロ(DOM要素も初回呼び出しまで作らない)。
+function hengeEls(){
+  let w=document.getElementById('hengewrap');
+  if(!w){
+    w=document.createElement('div');w.id='hengewrap';
+    w.innerHTML='<img id="hengesil" alt=""><div id="hengedark"></div><div id="hengename"></div><div id="hengesub"></div><div id="hengeflash"></div>';
+    document.body.appendChild(w);
+  }
+  return w;
+}
+const HENGE={ // 判定通過後に7体へ広げる。いまは くらおう だけ(§5-1)
+  kuraou:{foe:'shimaikomu',fx:'arms',kage:'ひゃっぽんうでの\nくらおう',tan:'くらおう',col:'#f0b45a',aura:'240,180,90'}
+};
+function hengeSilURL(foeKey,fx){ // ぬし本体を drawBoss2 で巨大レンダ→影絵化した透過PNG(絵は既存資産の再利用)
+  const def=FOES[foeKey];if(!def)return '';
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const c=document.createElement('canvas');
+  c.width=Math.max(2,Math.ceil(W*dpr));c.height=Math.max(2,Math.ceil(H*dpr));
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  const s=Math.max(0.5,H*0.84/300),t0=0.35,cx0=W/2,cy0=H*0.46+41*s;
+  const keep=ctx;ctx=g;
+  try{ctx.save();ctx.translate(cx0,cy0);drawBoss2(s,t0,null,def);
+    if(fx==='arms'){ // くらおう: かげを まとって「ひゃっぽんうで」が はえた(影絵の一部として描く)
+      ctx.fillStyle='#0a0810';
+      const arm=(x0,y0,cx,cy,x1,y1,w0,w1)=>{ctx.beginPath();
+        ctx.moveTo(x0,y0-w0);ctx.quadraticCurveTo(cx,cy-w0*0.6,x1,y1-w1);
+        ctx.lineTo(x1,y1+w1);ctx.quadraticCurveTo(cx,cy+w0*0.6,x0,y0+w0);
+        ctx.closePath();ctx.fill();
+        for(let k=-1;k<=1;k++){const dx=(x1-cx)||1,dn=Math.sign(dx); // つめ3本
+          ctx.beginPath();ctx.moveTo(x1,y1);
+          ctx.lineTo(x1+dn*17*s*(1-Math.abs(k)*0.22),y1+k*9*s-3*s);
+          ctx.lineTo(x1+dn*7*s,y1+k*5*s+3*s);ctx.closePath();ctx.fill();}};
+      for(const sd of[-1,1]){
+        for(let i=0;i<5;i++){
+          const y0=(-95+i*38)*s,len=(150+(i%3)*26)*s,cyo=((i%2)?34:-30)*s;
+          arm(sd*44*s,y0,sd*(44*s+len*0.55),y0+cyo,sd*(44*s+len),y0+cyo*0.5,(13-i)*s,4.5*s);
+        }
+        arm(sd*30*s,-95*s,sd*88*s,-140*s,sd*124*s,-168*s,10*s,4*s); // 頭上へ のびる 一対
+      }
+    }
+    ctx.restore();}
+  finally{ctx=keep;}
+  // 影絵化: オーラの淡い画素を落とし、体の画素だけ ほぼ黒へ(輪郭が立ち、CSSのグローが体の形に沿う)
+  try{
+    const im2=g.getImageData(0,0,c.width,c.height),d=im2.data;
+    for(let i=3;i<d.length;i+=4){
+      if(d[i]<110){d[i]=0;}
+      else{d[i]=255;d[i-3]=8;d[i-2]=7;d[i-1]=15;}
+    }
+    g.putImageData(im2,0,0);
+  }catch(e){}
+  // もえる りょうめ(影絵の中で ここだけ ひかる)
+  const lev=Math.sin(t0*1.8)*12*s,ex=11*s,ey=cy0+lev-72*s;
+  g.save();g.setTransform(dpr,0,0,dpr,0,0);g.globalCompositeOperation='lighter';
+  for(const sd of[-1,1]){
+    const eg=g.createRadialGradient(cx0+sd*ex,ey,1,cx0+sd*ex,ey,19*s);
+    eg.addColorStop(0,'rgba(255,246,225,0.95)');
+    eg.addColorStop(0.35,'rgba(255,210,120,0.8)');
+    eg.addColorStop(1,'rgba(255,180,80,0)');
+    g.fillStyle=eg;g.beginPath();g.arc(cx0+sd*ex,ey,19*s,0,Math.PI*2);g.fill();
+    g.fillStyle='rgba(255,252,240,0.98)';g.beginPath();g.ellipse(cx0+sd*ex,ey,6.4*s,3.2*s,sd*0.2,0,Math.PI*2);g.fill();
+  }
+  g.restore();
+  try{return c.toDataURL('image/png');}catch(e){return '';}
+}
+async function hengeCutin(o){
+  o=o||{};
+  const w=hengeEls(),im=document.getElementById('hengesil'),
+        nm=document.getElementById('hengename'),sb=document.getElementById('hengesub');
+  const url=o.foe?hengeSilURL(o.foe,o.fx):'';
+  if(url){im.src=url;im.style.display='block';}else im.style.display='none';
+  w.style.setProperty('--hcol',o.col||'#ffd97a');
+  nm.textContent=o.name||'';sb.textContent=o.sub||'';
+  w.classList.remove('on','named','flash');w.style.display='block';void w.offsetWidth;
+  w.classList.add('on');
+  try{sfxCrit();}catch(e){}
+  const wt=ms=>new Promise(r=>setTimeout(r,ms));
+  const T=o.quick?[260,650,320]:[480,1250,430]; // quick=へんしんコマンド用の短い版
+  await wt(T[0]);
+  w.classList.add('named');try{sfxLevel();}catch(e){}
+  if(o.still==='name')return 'held'; // 確認用: 名前ドンで静止(hengeClose()で閉じる)
+  await wt(T[1]);
+  w.classList.add('flash');
+  if(o.still==='flash')return 'held';
+  await wt(T[2]);
+  hengeClose();
+  try{flash(o.col||'#ffd97a',0.5,1.0);}catch(e){}
+  return 'done';
+}
+function drawHengeAura(bt){ // bt.henge が立つ戦闘だけ呼ばれる(いまは consoleデモのみ が立てる)
+  const hp=bt.heroPos;if(!hp)return;
+  const t=bt.t,u=hp.u||1,col=(bt.henge&&bt.henge.aura)||'240,180,90';
+  const cx=hp.x,cy=hp.y-88*u;
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  const pulse=0.72+0.24*Math.sin(t*5.2);
+  const g=ctx.createRadialGradient(cx,cy,6,cx,cy,165*u);
+  g.addColorStop(0,'rgba('+col+','+(0.62*pulse).toFixed(3)+')');
+  g.addColorStop(0.55,'rgba('+col+','+(0.30*pulse).toFixed(3)+')');
+  g.addColorStop(1,'rgba('+col+',0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,165*u,0,Math.PI*2);ctx.fill();
+  const rk=(t%1.1)/1.1; // 足もとから ひろがる 光輪(二重)
+  ctx.strokeStyle='rgba('+col+','+(0.75*(1-rk)).toFixed(3)+')';ctx.lineWidth=4*u;
+  ctx.beginPath();ctx.ellipse(cx,hp.y+4*u,(30+rk*100)*u,(8+rk*25)*u,0,0,Math.PI*2);ctx.stroke();
+  const rk2=((t+0.55)%1.1)/1.1;
+  ctx.strokeStyle='rgba('+col+','+(0.45*(1-rk2)).toFixed(3)+')';ctx.lineWidth=2.6*u;
+  ctx.beginPath();ctx.ellipse(cx,hp.y+4*u,(30+rk2*100)*u,(8+rk2*25)*u,0,0,Math.PI*2);ctx.stroke();
+  for(let i=0;i<16;i++){ // たちのぼる 光の つぶ(Math.randomを使わない=ダメージ乱数列に触れない)
+    const ph=(t*0.85+i*0.27)%1;
+    const px=cx+Math.sin(i*2.4+t*1.4)*(24+(i%4)*14)*u;
+    const py=hp.y-2*u-ph*205*u;
+    const a=(1-ph)*(0.6+0.3*Math.sin(i*5.1+t*6.5));
+    if(a<=0.02)continue;
+    ctx.fillStyle='rgba('+col+','+Math.min(1,a).toFixed(3)+')';
+    ctx.beginPath();ctx.arc(px,py,(3+(i%3)*1.4)*u*(1-ph*0.45),0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+async function hengeDemo(k,still){ // 検証console専用(§5-1 絵の関門)。本編からは未配線=勝利処理・セーブに触れない
+  const hg=HENGE[k||'kuraou'];if(!hg||!Game.bt)return 'no-battle';
+  const r=await hengeCutin({foe:hg.foe,fx:hg.fx,name:hg.kage,sub:'へんしんを おぼえた！',col:hg.col,still:still});
+  if(r==='done'){Game.bt.henge={name:hg.tan,col:hg.col,aura:hg.aura};updateBars();}
+  return r;
+}
+function hengeClose(){const w=document.getElementById('hengewrap');if(w){w.style.display='none';w.classList.remove('on','named','flash');}}
+// ── 場面1: 開幕(こたえ回収後の さいしょの むら・一回きり) ──
+async function kageOpeningScene(){
+  if(Game.talking||Game.battling||Game.transiting||Game.minigame)return;
+  Game.hidden.kageOpening=true; // 先に立てる=多重発火防止
+  startTalk();
+  sfxEnc();flash('#3a0a12',0.8,1.6);Game.fieldShake=10;
+  await say('——そらが きゅうに あかぐろく そまった。');
+  await hengeCutin({name:'——ヴォルガ。\nかえってきたぞ',sub:'そらの おくから、わらいごえが ふってくる',col:'#e83a3a'});
+  if(nkFollowing())await say('こども「ちょうめんに、かってに あたらしい しょうが かきはじめられてる…！」');
+  else await say('むらの ちょうめんに、あたらしい しょうが かってに かきはじめられている——');
+  await say('フクロ「かげが ぬしたちに とりついた。\n……じゃが たおせば、その ちからは そなたの ものに なる。」');
+  await say('フクロ「いちばんめは くらのしまの『ひゃっぽんうでの くらおう』。\nしたの きんいろの おびを タップすれば、いつでも つれてゆくぞ。」');
+  endTalk();saveGame();
+}
+// ── 潜り『のこりびの ふかみ』(場面4): 7かいの かげぬしを つらぬく賭け。ラン状態は保存しない ──
+const FUKAMI_HINT={
+  shimaikomu:'くらおうの 2はつめは ぼうぎょでは ふせげん。ころも（したくの よろい）と HPで うけよ。',
+  mototadasu:'おおやまびこには ルカニで まもりを くだき、ためられる まえに おしきるのじゃ。',
+  makoto:'しばりぬしは ほのおに よわい。メラゾーマで ふだごと やきはらえ。',
+  wasurare:'おおぐちは よく かわす。じゅもんなら かわされぬ。',
+  hitorijime:'ひとりじめおうの ためは ふかい。HPを たかく たもって うけよ。',
+  shioarashi:'だいしおあらしは ほのおに よわい。それと、二はつめを わすれるな。',
+  kiritoru:'おおはさみは はやい。とわのまもりと へんしんで きりかえすのじゃ。'
+};
+async function fukamiStart(){
+  FUKAMI={floor:1,bag:{g:0,tetsu:0,seedw:0,seeda:0},used:0};
+  startTalk();
+  await say('ふねの わきの ふるい ほらあなから、のこりびの あかりが ゆれて みえる——');
+  await say('だんちょう「ふかみは 七かい。やども いずみも ない。どうぐは 3かいまで。\nかげぬしを たおすたび たから——すすむか もどるかは、おまえが きめな」');
+  endTalk();
+  await fukamiNextBattle();
+}
+async function fukamiNextBattle(){
+  const id=FUKAMI_ORDER[FUKAMI.floor-1];
+  toast('🔥 ふかみ '+FUKAMI.floor+'かいめ——'+KAGE[id].kname);
+  await startEncounter({def:FOES[id],fukami:true});
+}
+function fukamiBagStr(){const b=FUKAMI.bag;return '💰'+b.g+'G　⭐てつ×'+b.tetsu+'　🌱たね×'+(b.seedw+b.seeda)+'　どうぐ のこり'+Math.max(0,3-FUKAMI.used);}
+function fukamiCarry(){
+  const b=FUKAMI.bag;
+  Game.gold+=b.g;Game.items.hoshitetsu=(Game.items.hoshitetsu||0)+b.tetsu;
+  if(b.seedw)Game.p.bonusAtk+=3*b.seedw;   // ⚒かじの たねと同じ幅(こうげき+3/こ)
+  if(b.seeda)Game.bonusDef=(Game.bonusDef||0)+2*b.seeda; // まもり+2/こ
+  recalcStats();updateBars();
+  toast('もちかえった: '+b.g+'G・ほしのてつ×'+b.tetsu+'・たね×'+(b.seedw+b.seeda));
+  FUKAMI=null;
+}
+async function fukamiAfterFloor(){
+  const f=FUKAMI.floor,b=FUKAMI.bag;
+  b.g+=fukamiRewardG(f);b.tetsu+=1;if(f%2)b.seedw+=1;else b.seeda+=1;
+  if((Game.hidden.fukamiBest||0)<f)Game.hidden.fukamiBest=f;
+  startTalk();
+  await say('🔥 '+f+'かいめ、せいは！ ふくろが おもくなった——\n'+fukamiBagStr());
+  if(f>=7){
+    await say('ふかみの そこに ついた！ のこりびが いっせいに ともる——\nふくろの たからは ぜんぶ もちかえりじゃ！');
+    fukamiCarry();endTalk();saveGame();return;
+  }
+  const nid=FUKAMI_ORDER[f];
+  const c=await ask([{id:'go',label:'🔥 ふかく すすむ（つぎの ほうびは 2ばい）'},{id:'back',label:'💰 たからを もちかえる'}],
+    'つぎは '+(f+1)+'かいめ「'+KAGE[nid].kname+'」。まけたら ふくろは うみに おちる。');
+  if(c==='go'){FUKAMI.floor++;endTalk();await fukamiNextBattle();return;}
+  await say('「かしこい ひきぎわだ。また おいで」——のこりびが かえりみちを てらした。');
+  fukamiCarry();endTalk();saveGame();
+}
+async function fukamiDefeat(){
+  const btF=Game.bt,kidF=btF?foeId(btF.foe):null;
+  const lostG=FUKAMI.bag.g,floorF=FUKAMI.floor;
+  FUKAMI=null;
+  Game.stats.deaths++;
+  stopSong();
+  await say('ゆうしゃは ちからつきた——ふくろが くらい みずに おちていく…！');
+  sfxOver();
+  await fadeTo(1,1.4);
+  Game.bt=null;P.length=0;
+  MSG=null;msgtextEl.textContent='';msgwinEl.classList.remove('done');msgwinEl.classList.remove('hasface');
+  loadMap('grass');
+  const p=Game.p;
+  Game.invisible=false;Game.cloakSteps=CLOAK_MAX;
+  p.tx=4;p.ty=11;p.px=4;p.py=11;p.moving=null;p.bump=null;p.face=1;p.dir='D';
+  if(Game.qChild===2){Game.popo={px:p.px,py:p.py};Game.popoT={x:p.tx,y:p.ty};}
+  if(Game.hidden.mate1){Game.mate={px:p.px,py:p.py};Game.mateT={x:p.tx,y:p.ty};}
+  if(Game.nkOn){const stn=nkStats();Game.nkHp=Game.nkRest?Game.nkHp:stn.mhp;Game.nkMp=Game.nkRest?Game.nkMp:stn.mmp;}
+  nkSpawnFollower();
+  p.hp=p.mhp;p.mp=p.mmp;p.poison=false;
+  updateBars();
+  Game.scene='field';Game.battling=false;Game.grace=2;
+  showUI('ui-field');playSong(fieldSong());
+  await fadeTo(0,0.8);
+  startTalk();
+  await say('フクロ「'+(FUKAMI_HINT[kidF]||'ふかみの かげは ようしゃせん。そなえて もどるのじゃ。')+'」');
+  const cR=await ask([{id:'go',label:'🔥 もう一回！'},{id:'no',label:'こんかいは やめておく'}],
+    'フクロ「ふくろ（'+lostG+'Gぶん・'+floorF+'かいめ）は うみに おちた。だが うでは のこっておる。」');
+  endTalk();
+  saveGame();
+  if(cR==='go')await fukamiStart();
+}
+// ── 最終戦『ななつのかげを まとう ヴォルガ』(場面5) ──
+async function volgaFight(){
+  startTalk();
+  await say('そらの あかい かげが うずを まき、むらの うえに おりてきた——');
+  endTalk();
+  await startEncounter({def:FOES.kagevolga});
+}
+async function volgaEpilogue(){ // 「なにを おえて、なにが のこっているか」を フクロが ぜんぶ言う(場面5)
+  startTalk();
+  await say('フクロ「……みたぞ、ぜんぶ。ちょうめんを よみあげる。」');
+  await say('フクロ「✔ ななつの こえ　✔ はじまりの こたえ　✔ へんしん 7／7\n✔ ななつのかげを まとう ヴォルガ——ぜんぶ おわった！」');
+  await say('フクロ「のこっておるのは あそびじゃ。🔥ふかみの きろく（いま '+(Game.hidden.fukamiBest||0)+'かい）と たからあつめ。\nへんしんは これからも つかえる——すきに あばれるが よい！」');
+  endTalk();
+}
 // ── きょうの ひとすじ(2026-07-27 一本道化): クリア後の入口を「一覧」から「一本道」へ ──
 // 発注者「フクロの選択肢が多すぎて何をすべきかわからない」「なんも変わっていない」への正面対応。
 // フクロが今日の1つだけを物語の言葉で推し、「▶つれていって」でそのまま連れて行く。
@@ -8505,6 +8779,25 @@ let CONT_BOOT=false,OSUSUME_GREETED=false;
 function osusumeNow(){
   const h=Game.hidden||{};
   if(!h.ch21c)return null;
+  // ── ななつへんげ(2026-07-28): あたらしい ひとすじ。こたえ→開幕→かげ7→ヴォルガ→ふかみ ──
+  {const all7=['koe13','koe14','koe15','koe16','koe17','koe18','koe19'].every(k=>h[k]);
+   if(all7&&h.uraCleared&&!h.koeAnswered)return {id:'kotae',bar:'🌌 ななつのこえの「こたえ」を きく',
+     head:'フクロ「ななつの こえは そろった。だが まだ きいておらぬ ものが ある——こたえじゃ。\nほしあかりの おくの「はじまり」に、もういちど かちを しめすが よい。」',
+     at:{x:9,y:10},line:'フクロ「あおい ほしあかりに ふれるのじゃ。「はじまり」が まっておる。」'};}
+  if(h.koeAnswered&&!h.kageOpening&&Game.mapId!=='grass')return {id:'kagehome',bar:'❗ むらへ——そらの ようすが おかしい',
+    head:'フクロ「……そらが あかい。むらへ もどるぞ。いそぐのじゃ！」',to:{map:'grass',tx:8,ty:11}};
+  if(h.kageOpening){const hn=hengeCount();
+   if(hn===0)return {id:'kage1',bar:'⚔ かげまとう ぬし——へんしん '+hengeMarks(),
+     head:'フクロ「たいへんじゃ！ ぬしが 七たい、かげを まとって もどってきた！ かてば その ちからは そなたのものじゃ。\nいちばんめは くらのしまの『ひゃっぽんうでの くらおう』——ついてこい！」',
+     nushi:{id:'shimaikomu',map:'kura',tx:10,ty:4},shin:true};
+   if(hn<7)return {id:'kagefukami',bar:'⚔ かげまとう ぬし——へんしん '+hengeMarks()+'　つぎは ふかみ',
+     head:'フクロ「のこりの かげぬしは、ふねの わきの『のこりびの ふかみ』に あつまっておる。\nかつたび たからは 2ばい——まけたら ふくろごと うみに おちる。ゆくか？」',
+     fukami:true};
+   if(!h.kageVolgaDown)return {id:'volga',bar:'👑 ヴォルガと しょうぶ——へんしん ●●●●●●●',
+     head:'フクロ「ななつの へんしんが そろった。……きこえるじゃろう、そらの おくの こえが。\nヴォルガが そなたを まっておる。——しょうぶじゃ！」',volga:true};
+   if(!(Game.diff===7&&!h.meguriDown))return {id:'fukamiRec',bar:'🔥 ふかみで きろくと たからを のばす（さいこう '+(h.fukamiBest||0)+'かい）',
+     head:'フクロ「ヴォルガは たおれた。だが ふかみは まだ たからで みちておる。\nへんしんを ふるって、きろくを のばすが よい。」',fukami:true};
+   } // しんぱん未消化なら 下の めぐり推しへ 流す(2026-07-28)
   // 1) ふねの したく: 章順で最初の未所持1点。いま買える時だけ(買えない時は こえで かせがせる)
   if(h.ch13a)for(const id of SHITAKU){
     const it=SHOP.find(s=>s.id===id);if(!it)continue;
@@ -8550,8 +8843,14 @@ async function gunshiOsusumeFlow(){
   const c=await ask([{id:'go',label:'▶ つれていって'},{id:'list',label:'📜 ほかの ことも みる'},{id:'no',label:'きょうは じぶんで あるく'}],'どう する？');
   if(c==='list')return 'list';
   if(!c||c==='no'){await say('フクロ「うむ。きが むいたら、したの きんいろの おびから いつでも よべる。」');return 'no';}
+  if(o.fukami){FUKAMI_GO=true; // 会話が とじてから ふかみが はじまる(TAMESU_GOと同じ後発火)
+    await say('フクロ「よし、ふかみの くちへ あんないする。ふくろを おとすでないぞ。」');
+    return 'moved';}
+  if(o.volga){VOLGA_GO=true;
+    await say('フクロ「……ぶじで もどるのじゃぞ。ゆけ、しんの ゆうしゃよ！」');
+    return 'moved';}
   if(o.nushi){const n=o.nushi;
-    NUSHI_REPLAY={id:n.id,map:n.map};
+    NUSHI_REPLAY={id:n.id,map:n.map,shin:!!o.shin};
     await say('フクロ「よかろう。……こころして ゆけ。\nめのまえに おる。ひとあし ふめば はじまる。」');
     await transitMap({to:n.map,tx:n.tx,ty:n.ty,msg:(MAPNAME[n.map]||'')+'へ——'});
     return 'moved';}
@@ -8621,6 +8920,20 @@ async function gunshiTamesu(){
     await say('フクロ「ゆきさきは ふねが きめる。したの もくてきに したがって わたるが よい。\nよみものの のこりは、☰メニューの「たびのメモ」の やりのこしに ぜんぶ でておる。」');
     return;
   }
+  if(e.kage){ // ななつへんげ: 台帳からも かげ狩りへ(推しと同じ入口)
+    if(hengeCount()===0){NUSHI_REPLAY={id:'shimaikomu',map:'kura',shin:true};
+      await say('フクロ「いちばんめは くらのしまの『ひゃっぽんうでの くらおう』じゃ。ついてこい！」');
+      await transitMap({to:'kura',tx:10,ty:4,msg:'くらのしまへ——'});
+      return 'moved';}
+    FUKAMI_GO=true;
+    await say('フクロ「のこりの かげは ふかみに おる。ふくろを おとすでないぞ。」');
+    return 'moved';}
+  if(e.fukami){FUKAMI_GO=true;
+    await say('フクロ「よし、ふかみの くちへ あんないする。」');
+    return 'moved';}
+  if(e.volga){VOLGA_GO=true;
+    await say('フクロ「……ぶじで もどるのじゃぞ。ゆけ！」');
+    return 'moved';}
   if(e.nushi){ // こえを ききなおす たび: 未聴取の さいしょの一体を「つぎ」として推す(2026-07-27)
     const av=NUSHI_AGAIN.filter(n=>Game.hidden['ch'+n.no+'d']);
     if(!av.length){await say('フクロ「まだ ぬしを たおしておらぬ。\nまずは 目の前の たびじゃ。」');return;}
@@ -9055,8 +9368,8 @@ function questTextCore(){
       //   いま なにを しに ここへ 来たのかを、その場で 言う(NUSHI_REPLAY/CH21_REPLAY は保存しない一時状態)。
       if(NUSHI_REPLAY&&Game.mapId===NUSHI_REPLAY.map){
         const n=NUSHI_AGAIN.find(x=>x.id===NUSHI_REPLAY.id);
-        const nm=(n&&String(n.label).split(' ─ ')[0])||'しまの ぬし';
-        if(nushiReplayAlive())return 'もくてき：'+nm+'と もういちど 立ちあう（しまの おくに いる）';
+        const nm=NUSHI_REPLAY.shin?((KAGE[NUSHI_REPLAY.id]&&KAGE[NUSHI_REPLAY.id].kname)||'かげまとう ぬし'):((n&&String(n.label).split(' ─ ')[0])||'しまの ぬし');
+        if(nushiReplayAlive())return 'もくてき：'+nm+'と '+(NUSHI_REPLAY.shin?'':'もういちど ')+'立ちあう（しまの おくに いる）';
         // 倒したあと: ここに もう用は ない。出る道を 指す(2026-07-26 夕)
         // でぐちが 1つも 無い島(あらしのよる)も ある＝その時は どこでもドアを 案内する
         {const ex=exitToVillage();
@@ -9654,6 +9967,9 @@ function updateField(dt){
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&Game.hidden.tamotoTold&&!Game.hidden.uraTold)uraToldScene();
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&Game.hidden.tamotoTold&&Game.hidden.uraTold&&!Game.hidden.howToTold)howToScene();
     else if(Game.hidden.ch21c&&Game.hidden.tamotoTold&&Game.hidden.uraTold&&Game.hidden.howToTold&&CONT_BOOT&&!OSUSUME_GREETED&&!Game.minigame)gunshiGreetScene(); // どの地で ひらいても むかえに くる(2026-07-27 一本道)
+    else if(Game.mapId==='grass'&&Game.hidden.koeAnswered&&!Game.hidden.kageOpening)kageOpeningScene(); // ななつへんげ 場面1(一回きり)
+    else if(FUKAMI_GO){FUKAMI_GO=false;fukamiStart();}   // フクロ/台帳の「つれていって」の後発火(TAMESU_GOと同じ流儀)
+    else if(VOLGA_GO){VOLGA_GO=false;volgaFight();}
     else if(shimaIhenPending())shimaIhenScene();
     else if(shimaYokanPending())shimaYokanScene();
     else if(shimaSakiPending())shimaSakiScene();
@@ -14122,6 +14438,11 @@ async function runBattle(ref){
   const nhp=Math.round(foe.hp*(night?1.35:1)*diffEnemyHP(foe)); // なんいど：敵HP係数
   Game.bt={foe,ref,night,hp:nhp,mhp:nhp,t:0,flash:0,lunge:0,enemyStrike:null,heroHit:0,heroGuardHit:0,heroDodge:0,nkHit:0,mateHit:0,shakeT:0,shakeP:0,dodgeRngHold:0,dodgeRngT:0,hitStop:0,recoil:0,blink:0,slash:null,cast:null,dying:null,half:false,
     turn:0,soar:false,soarK:0,charge:false,guard:false,sleep:0,para:0,pflash:0,boltT:0,bolt:null,critShock:null,bossShock:null,awakenT:0,ghosts:null,stageSnap};
+  // ななつへんげ: かげを まとった ぬし(NUSHI_REPLAY.shin=島直行 / FUKAMI=ふかみの階)
+  if(KAGE[foeId(foe)]&&((NUSHI_REPLAY&&NUSHI_REPLAY.shin&&foe===FOES[NUSHI_REPLAY.id])||FUKAMI)){
+    Game.bt.shin=true;Game.bt.kage=KAGE[foeId(foe)];Game.bt.shinVolley=0;
+    Game.bt.hp=Game.bt.mhp=Math.round(nhp*(Game.bt.kage.hpMul||1.7)); // 係数はKAGE表(一律×1.5→7%・×1.7→19%が実測=かげ毎に致死ラインへ 2026-07-28)
+  }
   if(foe===FOES.shioarashi){
     Game.bt.ch18Pier=!!Game.hidden.ch18BuiltPier;
     Game.bt.ch18Shelter=!!Game.hidden.ch18BuiltShelter;
@@ -14144,7 +14465,7 @@ async function runBattle(ref){
   updateBadge();
   P.length=0;
   showUI('ui-battle');
-  enameEl.textContent=foe.name;
+  enameEl.textContent=(Game.bt.kage?Game.bt.kage.kname:foe.name);
   msgtextEl.textContent='';
   updateBars();
   renderBattleWeakness();
@@ -14153,7 +14474,10 @@ async function runBattle(ref){
   Game.bt.intro=1; // とうじょうスライド
   await wait(0.03);
   if(foe.boss)await bossEntrance();
-  await say(foe.name+'が あらわれた！');
+  if(Game.bt.shin&&Game.bt.kage){ // 場面2の名前ドン: 暗転→巨大シルエット→名前ドン→shake+flash
+    await hengeCutin({foe:foeId(foe),fx:Game.bt.kage.fx,name:Game.bt.kage.kname.replace(' ','\n'),sub:Game.bt.kage.taunt,col:Game.bt.kage.col});
+  }
+  await say((Game.bt.kage?Game.bt.kage.kname:foe.name)+'が あらわれた！');
   if(foe===FOES.kajiu)await ch20BattlePrelude();
   if(Game.bt.night&&!Game.nightHintB){
     Game.nightHintB=true;
@@ -14643,16 +14967,22 @@ async function commandPhase(){
   const p=Game.p;
   while(true){
     if(Game.autoBattle)return autoDecide();
-    const c=await ask([
-      {id:'fight',label:'たたかう'},
-      {id:'spell',label:'じゅもん'},
-      {id:'item',label:'どうぐ'},
-      {id:'guard',label:'ぼうぎょ'},
-      {id:'run',label:'にげる'}],'コマンド');
+    const cmds=[{id:'fight',label:'たたかう'}]; // ななつへんげ: へんげを 1つでも おぼえたら コマンドに 立つ
+    if(hengeCount()>0)cmds.push({id:'henge',label:'👹へんしん'+(Game.bt&&Game.bt.hengeUsed?'（つかった）':''),dis:!!(Game.bt&&Game.bt.hengeUsed)});
+    cmds.push({id:'spell',label:'じゅもん'},{id:'item',label:'どうぐ'},{id:'guard',label:'ぼうぎょ'},{id:'run',label:'にげる'});
+    const c=await ask(cmds,'コマンド');
     if(c==='__auto__')continue;
     if(c==='fight')return{kind:'fight'};
     if(c==='guard')return{kind:'guard'};
     if(c==='run')return{kind:'run'};
+    if(c==='henge'){ // 1戦1回・そのぬしの必殺技1本(場面3)
+      const owned=FUKAMI_ORDER.filter(k=>Game.hidden['henge'+KAGE[k].no]);
+      const hl=owned.map(k=>({id:k,label:'👹'+KAGE[k].tan+' — '+(FOES[k].heavyName||'ひっさつ')}));
+      hl.push({id:'back',label:'もどる'});
+      const hg=await ask(hl,'どの ちからで へんしんする？');
+      if(hg==='back'||!hg)continue;
+      return{kind:'henge',kid:hg};
+    }
     if(c==='spell'){
       // じゅもんは 3つに わける(1がめんに おさめる=「もどる」まで タップできる)
       const storyList=CHAPTER_PROOF.filter(ss=>hasStorySpell(ss.no));
@@ -14687,6 +15017,7 @@ async function commandPhase(){
         if(p.lv>=15)list.push({id:'rariho',label:'ラリホー',cost:8,dis:p.mp<8});
         if(p.lv>=2)list.push({id:'kiari',label:'キアリー',cost:2,dis:p.mp<2});
       }
+      list=list.map(oo=>SPELLFX[oo.id]?Object.assign(oo,{label:oo.label+'\n　'+SPELLFX[oo.id]}):oo); // 効果を その場で言う(2026-07-28)
       let s;
       if(cat==='sto'){
         // ものがたり: 全部を1本のリストに(ページ式を廃止=どのメニューも▲▼ボタンとドラッグで送る 2026-07-20「下へのスクロールがついていない」)
@@ -14718,8 +15049,9 @@ async function commandPhase(){
     if(!have.length){await say('どうぐを もっていない！');continue;}
     const ilist=have.map(k=>({id:k,label:(k==='seisui'?'せいすい':ITEMS[k].name)+' ×'+Game.items[k]}));
     ilist.push({id:'back',label:'もどる'});
-    const it=await ask(ilist,'どうぐ');
+    const it=await ask(ilist,'どうぐ'+(FUKAMI?'（ふかみ のこり '+Math.max(0,3-FUKAMI.used)+'かい）':''));
     if(it==='back')continue;
+    if(FUKAMI&&FUKAMI.used>=3){await say('ふかみでは どうぐは 3かいまで——もう つかえない！');continue;}
     if(HP_RECOVERY_ITEM_KEYS.includes(it)&&p.hp>=p.mhp){await say('HPは まんたんだ！');continue;}
     if(it==='hoshikake'&&p.mp>=p.mmp){await say('MPは まんたんだ！');continue;}
     if(it==='seisui'&&p.mp>=p.mmp){await say('MPは まんたんだ！');continue;}
@@ -15142,6 +15474,29 @@ async function playerAction(act){
     await wait(0.18);
     if(BOSO){sfxCrit();flash('#ffe9b0',0.35,0.5);await say('まほうが ぼうそうした！');}
     await say('みなもとの ひかりの いちげき！\n'+bt.foe.name+'に '+dU+'の ダメージ！　じぶんも HP+'+heal+'！');
+  }else if(act.kind==='henge'){ // ななつへんげ: 1戦1回。数値骨格は7体共通1本+名前/色/係数・小さな癖の差分(場面3)
+    const kgH=KAGE[act.kid],kfH=FOES[act.kid];
+    bt.hengeUsed=true;
+    bt.henge={name:kgH.tan,col:kgH.col,aura:kgH.aura};
+    updateBars();
+    await hengeCutin({foe:act.kid,fx:kgH.fx,name:kgH.kname.replace(' ','\n'),sub:'ゆうしゃは へんしんした！',col:kgH.col,quick:true});
+    await say('ゆうしゃは 『'+kgH.tan+'』に へんしんした！\nぬしの ちからが、うでに あふれる——');
+    bt.cast={t:0};await wait(0.12);bt.cast=null;
+    sfxCrit();sfxGira();bt.flash=1;bt.hitStop=0.17;bt.recoil=1.5;bt.blink=1;shakeBattle(28,0.9);
+    flash(kgH.col,0.65,0.95);
+    let dHg=spellDmg(Math.round((p.atk*1.15+240-foeDefNow(bt)*0.5)*(kgH.mul||1))+ri(0,20),1);
+    bt.hp=Math.max(0,bt.hp-dHg);
+    if(dHg>0){popup(ep.x,ep.y-ep.s*70,dHg,'crit');
+      puff(ep.x,ep.y-ep.s*40,'rgba('+kgH.aura+',.95)',90,420,1.1,{s0:3,s1:10});
+      puff(ep.x,ep.y-ep.s*40,'rgba(255,250,220,.9)',34,220,0.8,{s0:2,s1:6});}
+    await wait(0.16);
+    let ridH='';
+    if(kgH.echo)ridH='\nこだまが 二どめの いちげきを かさねた！';
+    if(kgH.bind&&bt.hp>0){bt.foeBind=Math.max(bt.foeBind||0,1);ridH='\nしろい ふだが てきを しばった——うごけない！';}
+    if(kgH.cut&&bt.hp>0){bt.foeSleep=Math.max(bt.foeSleep||0,1);ridH='\nてきの つぎの 一ターンを きりとった！';}
+    if(kgH.drain){const hlH=Math.round(dHg*0.4);p.hp=Math.min(p.mhp,p.hp+hlH);updateBars();ridH='\nのみこんだ ちからで HPが '+hlH+' もどった！';}
+    if(kgH.gold){const ggH=Math.round(dHg*1.2);if(FUKAMI)FUKAMI.bag.g+=ggH;else Game.gold+=ggH;updateBars();ridH='\nついでに '+ggH+'Gを ぶんどった！';}
+    await say('『'+(kfH.heavyName||'ひっさつ')+'』！　'+((bt.kage&&bt.kage.kname)||bt.foe.name)+'に '+dHg+'の ダメージ！'+ridH);
   }else if(act.kind==='rukani'){
     if(bt.rukani){await say('てきの まもりは もう くだけている！');return;}
     p.mp-=4;updateBars();
@@ -15176,10 +15531,12 @@ async function playerAction(act){
     else if(Math.random()<0.65){bt.foeSleep=2;popup(ep.x,ep.y-ep.s*70,'ねむり','sp');await say(bt.foe.name+'は すやすやと ねむって しまった！');}
     else await say(bt.foe.name+'は ねむらない！');
   }else if(act.kind==='item'){
+    if(FUKAMI&&FUKAMI.used>=3){await say('ふかみでは どうぐは 3かいまで——もう つかえない！');return;} // オートの経路もここを通る(2026-07-28)
     if(!USABLE_ITEM_KEYS.includes(act.item)||(Game.items[act.item]||0)<=0){
       await say('その どうぐは たたかいでは つかえない！');
       return;
     }
+    if(FUKAMI)FUKAMI.used++;
     if(HP_RECOVERY_ITEM_KEYS.includes(act.item)&&p.hp>=p.mhp){await say('HPは まんたんだ！');return;}
     if((act.item==='seisui'||act.item==='hoshikake')&&p.mp>=p.mmp){await say('MPは まんたんだ！');return;}
     if(act.item==='dokukesi'&&!p.poison){await say('どくに かかっていない！');return;}
@@ -15613,20 +15970,31 @@ async function enemyAction(){
   // 何も起きない「ようすを みている」が9回→16回へ。重くした通常こうげき(37)が出番を失って
   // 二つの直しが打ち消し合っていた。詰めた理由「戦いが5ターンで短い」も ため×3で7〜8ターンに
   // 伸びた時点で消えている。手ごたえは 周期ではなく ため×3 と bossMinFrac が担う)
-  if(foe.charge&&!bt.charge&&bt.turn%3===2){
+  if(foe===FOES.kagevolga){ // 場面5: HPが 1/7 へるごとに かげが 1まい はがれる(絵=tint・こえ=1行)
+    const vstage=Math.min(6,Math.floor((1-bt.hp/Math.max(1,bt.mhp))*7));
+    if(vstage>(bt.volgaPeel||0)){bt.volgaPeel=vstage;bt.finTint=VOLGA_TINTS[vstage];
+      sfxLevel();flash('#e8d0ff',0.3,0.6);
+      await say(VOLGA_PEEL[vstage-1]);}
+  }
+  {const fname2=(bt.kage&&bt.kage.kname)||foe.name;
+  if(((foe.charge||bt.shin)&&!bt.charge&&bt.turn%3===2)||(bt.shin&&bt.shinVolley===1&&!bt.charge)){
+    const second=bt.shin&&bt.shinVolley===1; // 二連ため(§2): 予告2回め→2発目は ぼうぎょ貫通(bt.shinの戦いだけ)
     bt.charge=true;
+    if(second)bt.shinVolley=2;
     sfxCharge();
     shakeBattle(4,0.4);
-    await say(foe.name+'は '+(foe.chargeMsg||'ちからを ためている')+'…！'); // ぬしは 島ごとに ためる かたちが ちがう(2026-07-25・数値は不変)
+    await say(second?fname2+'は まだ ためている——二はつめが くる！\n（ぼうぎょでは ふせげない。ころもや HPで そなえよ）'
+      :fname2+'は '+(foe.chargeMsg||'ちからを ためている')+'…！'); // ぬしは 島ごとに ためる かたちが ちがう(2026-07-25・数値は不変)
     return;
-  }
+  }}
   if(foe.boss&&!bt.half&&bt.hp<=bt.mhp/2){
     bt.half=true;
     await bossAwaken();
   }
   let fadMul=1; if(bt.foeAtkDown&&bt.foeAtkDown.t>0){fadMul=bt.foeAtkDown.mul;bt.foeAtkDown.t--;} // ナギのうた: こうげき3回を3わり減
-  let atk=Math.round(foe.atk*(bt.night?1.3:1)*diffEnemyAtk(foe)*fadMul),label=foe.name+'の こうげき！',fire=false,holy=false,heavy=false,spel=false,ecrit=false,ch20DmgMul=1;
+  let atk=Math.round(foe.atk*(bt.night?1.3:1)*diffEnemyAtk(foe)*fadMul),label=((bt.kage&&bt.kage.kname)||foe.name)+'の こうげき！',fire=false,holy=false,heavy=false,spel=false,ecrit=false,ch20DmgMul=1;
   if(foe===FOES.sukuwarenu)atk=Math.round(atk*(1-0.1*Math.min(6,bt.finQ||0))); // なんいど：敵こうげき係数
+  if(bt.shin)atk=Math.round(atk*((bt.kage&&bt.kage.atkMul)||1.5)); // かげ補正はKAGE表(§4の罠: atkPlainの前=ふつう1.45にも ため×3にも かかる)
   const atkPlain=atk; // どの分岐も こうげき力を いじらなかった場合＝ふつうの こうげき(と メラ)の目印
   if(foe===FOES.kajiu){
     const hz=CH20_HAZARDS[(bt.ch20Hazard||0)%CH20_HAZARDS.length];let correct=false;
@@ -15650,11 +16018,12 @@ async function enemyAction(){
     heavy=true;
   }else if(bt.charge){
     bt.charge=false;
+    if(bt.shin){if(bt.shinVolley===2){bt.shinVolley=0;bt.shinPierce=true;}else{bt.shinVolley=1;bt.shinPierce=false;}} // 二連ための進行
     // 島のぬしだけ ため一撃を ×3 へ(2026-07-25 実測: ×2では38〜47%で、予告を無視して殴りつづけて576戦0敗だった)。
     // ×3で 大技の上限 capHeavy に張りつく＝2発つづけて素で受けたら たおれる。予告は1ターン前に必ず出るので不意打ちにはならない。
     // 答えは全部すでに手の中にある: ぼうぎょ/とわのまもり/こだまがえし/ナギのうた/ほらがいのこえ/かげのきし。
     atk=atk*(foe.nushi?3:2);
-    label=foe.name+'の '+(foe.heavyName||'すさまじい いちげき')+'！'; // ぬし8体が 同じ「すさまじい いちげき」だったのを 島ごとの名へ(数値は不変)
+    label=((bt.kage&&bt.kage.kname)||foe.name)+'の '+(foe.heavyName||'すさまじい いちげき')+'！'; // ぬし8体が 同じ「すさまじい いちげき」だったのを 島ごとの名へ(数値は不変)
     heavy=true;
   }else if(!foe.boss&&Math.random()<curDiff().crit){
     atk=Math.round(atk*1.8);
@@ -15755,9 +16124,10 @@ async function enemyAction(){
   let horaSoftHit=false;
   if(bt.horaSoft>0){d=Math.max(1,Math.round(d*0.65));bt.horaSoft--;horaSoftHit=true;} // ほらがいのこえ: きき入った てきの いちげきが にぶる
   let kabau=false;
-  if(bt.guard)d=Math.max(1,Math.ceil(d*0.45)); // ぼうぎょで 55%カット
+  const shinPierced=!!(heavy&&bt.shinPierce);bt.shinPierce=false; // 二連ための2発目=ぼうぎょ貫通(bt.shinの戦いだけ・capHeavy天井とheavyGuardは生きる)
+  if(bt.guard&&!shinPierced)d=Math.max(1,Math.ceil(d*0.45)); // ぼうぎょで 55%カット
   else if(mateOn()&&mateKind()==='kagekishi'&&Math.random()<mateGuardP()){kabau=true;d=Math.max(1,Math.ceil(d*0.55));} // かげのきしが かばう
-  const impactResult=bt.guard?'guard':(kabau?'cover':'hit');
+  const impactResult=(bt.guard&&!shinPierced)?'guard':(kabau?'cover':'hit');
   if(foe.boss&&impactResult!=='hit')hideParticlesFrom(bloodStart);
   if(physical)markEnemyStrikeImpact(bt,impactResult);
   enemyImpactFeedback(bt,impactResult,heavy,physical,fire||holy);
@@ -15771,6 +16141,7 @@ async function enemyAction(){
   await wait(0.12);
   if(p.hp>0&&bt.sleep>0&&Math.random()<0.5){bt.sleep=0;updateBadge();await say('いたみで ゆうしゃの めが さめた！');} // ねむりは いたみで 50%かくせい(本家準拠)。ねむりハメ=寝たまま2〜4発ノーガードが しんぱん帯で構造的な詰みだった(v1240実測)
   if(kabau){flash('#9fb6ff',0.2,0.45);await say('かげのきしが たてと なって かばった！\nうけた ダメージは '+d+'！');}
+  else if(bt.guard&&shinPierced)await say('二はつめは ぼうぎょを つらぬいた！ うけた ダメージは '+d+'！');
   else if(bt.guard)await say('みを まもって しのいだ！ うけた ダメージは '+d+'！');
   else await say('ゆうしゃは '+d+'の ダメージを うけた！');
   if(ukMp>0)await say('うけとめた いたみが ひかりに かわり、MPが '+ukMp+' もどった！');
@@ -15837,6 +16208,35 @@ const NUSHI_AGAIN=[
   {id:'shioarashi', map:'kazemachiNight', tx:10,ty:6, no:18, label:'しおあらしの むれ ─ あらしの よる'},
   {id:'kiritoru',   map:'tokikasanebell', tx:10,ty:4, no:19, label:'きりとるもの ─ かねの とき'}
 ]; // 章20 かじをうばうものは 海の一枚絵(CH20_SEA)を通ってしか始まらないため ここには置かない
+// ── ななつへんげ(2026-07-28 HANDOVER_20260728_NANATSUHENGE.md) ──
+// かげを まとった ぬし7体。入場は NUSHI_REPLAY.shin(島直行) / FUKAMI(ふかみ)=どちらも保存しない。
+// 獲得は hidden.henge13〜19 のみ(セーブ形式は不変・hiddenキー追加だけ)。
+const KAGE={
+  shimaikomu:{no:13,kname:'ひゃっぽんうでの くらおう',tan:'くらおう',fx:'arms',taunt:'「こんどは しまごと、しまってやる！」',col:'#f0b45a',aura:'240,180,90',mul:1.3,hpMul:3.6,atkMul:1.7},
+  mototadasu:{no:14,kname:'ひとつごえの おおやまびこ',tan:'おおやまびこ',taunt:'「たにの こえは、ぜんぶ わしに なった！」',col:'#8fa8e8',aura:'150,175,235',mul:1.5,echo:true,hpMul:3.9,atkMul:1.7},
+  makoto:{no:15,kname:'せんまいふだの しばりぬし',tan:'しばりぬし',taunt:'「にげみちは、ぜんぶ ふうじた！」',col:'#e8e2d0',aura:'230,225,205',mul:0.9,bind:true,hpMul:3.8,atkMul:1.7},
+  wasurare:{no:16,kname:'うたまるのみの おおぐち',tan:'おおぐち',taunt:'「つぎは おまえの なまえを のむ」',col:'#b89fd8',aura:'185,160,215',mul:1.0,drain:true,hpMul:3.4,atkMul:1.65},
+  hitorijime:{no:17,kname:'こがねの ひとりじめおう',tan:'ひとりじめおう',taunt:'「おまえの けんも たても、わしの ものだ！」',col:'#ffd23e',aura:'255,210,62',mul:1.0,gold:true,hpMul:2.5,atkMul:1.6},
+  shioarashi:{no:18,kname:'くろつばさの だいしおあらし',tan:'だいしおあらし',taunt:'「うみよ、たて！ そらよ、おちろ！」',col:'#5ad2e8',aura:'90,210,230',mul:1.25,hpMul:2.7,atkMul:1.6},
+  kiritoru:{no:19,kname:'ときとめの おおはさみ',tan:'おおはさみ',taunt:'「おまえの つぎの 一ターン、きりとった！」',col:'#e87ab0',aura:'230,122,176',mul:0.85,cut:true,hpMul:2.0,atkMul:1.6}
+};
+const HENGE_KEYS=['henge13','henge14','henge15','henge16','henge17','henge18','henge19'];
+function hengeCount(){return HENGE_KEYS.filter(k=>Game.hidden&&Game.hidden[k]).length;}
+function hengeMarks(){const n=hengeCount();return '●'.repeat(n)+'○'.repeat(7-n);}
+// 潜り『のこりびの ふかみ』: ラン状態はセーブしない(CH21_REPLAYと同じ一時変数方式)
+let FUKAMI=null,FUKAMI_GO=false,VOLGA_GO=false;
+const FUKAMI_ORDER=['shimaikomu','mototadasu','makoto','wasurare','hitorijime','shioarashi','kiritoru'];
+function fukamiRewardG(f){return 150*Math.pow(2,f-1);}
+// 場面5: HPが 1/7 へるたび かげが 1まい はがれる(tint段階+こえ1行=CH21_TINTS同型の縮小版)
+const VOLGA_TINTS=['rgba(34,12,44,0.92)','rgba(52,20,60,0.88)','rgba(70,30,76,0.84)','rgba(90,42,92,0.79)','rgba(112,58,108,0.73)','rgba(136,78,124,0.66)','rgba(162,100,140,0.58)'];
+const VOLGA_PEEL=[
+ 'くらおうの かげが はがれおちた！',
+ 'おおやまびこの かげが はがれおちた！',
+ 'しばりぬしの かげが はがれおちた！',
+ 'おおぐちの かげが はがれおちた！',
+ 'ひとりじめおうの かげが はがれおちた！',
+ 'だいしおあらしの かげも はがれた——のこりは ヴォルガ じしんだ！'
+];
 let TAMESU_AT=null,TAMESU_GO=false; // 「いま ためせること」でフクロが さした むらの ばしょ(保存しない)
 const CH21_TINTS=['rgba(40,44,80,0.92)','rgba(52,54,96,0.88)','rgba(66,64,112,0.84)','rgba(82,76,128,0.80)','rgba(100,90,144,0.75)','rgba(120,106,160,0.70)','rgba(142,124,176,0.63)','rgba(168,146,194,0.55)'];
 const CH21_THEME={satori:'しる ことから はじめる',kageharai:'かげを ほどいて かえす',uketome:'うけとめる こころ',watashi:'てから てへ わたす',mamori:'となりに いる',yobigoe:'なまえを よぶ',monogatari:'おわりを うけつぐ',nagiuta:'みおくりの うた',tomoshibimichi:'みちを てらす',futarigatari:'となりを あるく',hitotsunoumi:'うみを ひとつに つなぐ',minnanokoe:'ほんとうの こえ',hiraku:'とじた ものを ひらく',kodama:'うけて かえす こだま',horagai:'おおきな こえ',hajimari:'はじまりを おもいだす',minmono:'わけあう ものがたり',ashita:'あしたを えらぶ',toki:'ときを つなぐ',koemawasu:'こえを まわす'};
@@ -16136,7 +16536,7 @@ async function victory(){
   await wait(0.5);
   sfxWin();
   flash('#ffe9b0',0.20,0.55);
-  await say(foe.name+'を たおした！');
+  await say(((bt.kage&&bt.kage.kname)||foe.name)+'を たおした！');
   Game.kills++;
   const Dr=curDiff();
   const mgk=1+0.6*(bt.merged||0); // かさなった スライムは ほうびも ふえる
@@ -16156,7 +16556,11 @@ async function victory(){
     await say('けいけんち '+gexp+'を かくとく！'+(bt.night?'\n（よるの ボーナス！）':''));
   }
   p.exp+=gexp;
-  if(ggold){
+  if(ggold&&FUKAMI&&bt.shin){ // ふかみ: 金は ふくろへ(もちかえるまで じぶんの ものではない=賭けの核・場面4)
+    FUKAMI.bag.g+=ggold;
+    popup(ep.x,ep.y+ep.s*14,'+'+ggold+' G','sp');
+    await say(ggold+'ゴールドは ふくろへ——もちかえれば そなたの もの！');
+  }else if(ggold){
     Game.gold+=ggold;updateBars();
     popup(ep.x,ep.y+ep.s*14,'+'+ggold+' G','sp');
     await say(ggold+'ゴールドを てにいれた！');
@@ -16286,6 +16690,22 @@ async function victory(){
       saveGame();
     }
   }
+  // ななつへんげ 場面3(2026-07-28): かげぬしを たおした——かげが はがれ、へんしんを おぼえる
+  if(bt.shin&&bt.kage){
+    const kgV=bt.kage,kidV=foeId(foe);
+    if(!Game.hidden['henge'+kgV.no]){
+      await say('かげが ばりばりと はがれ、ぬしの すがたに ひかりが もどっていく——');
+      await say(foe.name+'『わしの ちからを もっていけ』');
+      Game.hidden['henge'+kgV.no]=true;
+      await hengeCutin({foe:kidV,fx:kgV.fx,name:kgV.kname.replace(' ','\n'),sub:'へんしんを おぼえた！',col:kgV.col});
+      const hnV=hengeCount();
+      toast('へんしん '+hnV+'/7'+(hnV>=7?' ——そろった！':''));
+      if(hnV>=7)await say('ななつめの かげが きえた——そのとき、そらの おくで こえが した。\nヴォルガ『……そろえたか。ならば、わしの ところへ こい』');
+      saveGame();
+    }else{
+      await say('かげは はがれた。ぬしは しずかに うなずいて、ねむりに かえっていく。');
+    }
+  }
   if(foe===FOES.shioarashi&&!Game.hidden.ch18d){
     Game.hidden.ch18d=true;Game.hidden.ch18Night=false;
     await say('できたばかりの 二つの場所から、島の ひとたちの こえが かさなった——\n「ここで、あしたを むかえよう！」');
@@ -16309,8 +16729,11 @@ async function victory(){
   if(foe===FOES.hajimarazu){ // 裏章: かたられなかった はじまり を むすぶ→みなもとのひかりを さずかる
     const already=!!Game.hidden.uraSpell;
     Game.hidden.uraCleared=true;
-    if(['koe13','koe14','koe15','koe16','koe17','koe18','koe19'].every(k=>Game.hidden[k]))
+    if(['koe13','koe14','koe15','koe16','koe17','koe18','koe19'].every(k=>Game.hidden[k])){
       await say('そなたの むねで、ななつの ぬしの こえが いっせいに ひびきだした——\nかくれていた「はじまり」が、その わの まんなかで しずかに めを あけた。'); // こえを ききなおす たび の むすび(2026-07-27)
+      if(!Game.hidden.koeAnswered){Game.hidden.koeAnswered=true; // ななつへんげ 場面0:「こたえ」を きいた(約束の回収)
+        await say('「はじまり」は こたえおわると、そらを 見あげて つぶやいた——\n『……とおくで、ふるい かげが めを さました』');}
+    }
     await say('いずみの おくから、いままで だれにも かたられなかった こえが した——');
     await say('『……はじまりは、ずっと ここに あった。\nでも、かたって くれる ものが、いなかった。』');
     if(nkFollowing())await say('こども「もう だいじょうぶ。あなたの はじまりは、わたしが かたる。\nいちばん さいしょの ページに。」');
@@ -16324,6 +16747,15 @@ async function victory(){
       await say('みなもとの ひかりが、もういちど むねに ともった。');
     }
     toast('はじまりの ものがたりが、かたられた——ほしあかりで むらへ かえる');
+  }
+  if(foe===FOES.kagevolga){ // 場面5: ななつのかげを まとう ヴォルガ
+    Game.hidden.kageVolgaDown=true;
+    await say('さいごの かげが ほどけ——ヴォルガが しずかに わらった。\n『……みごとじゃ。ななつの ちからは、もう そなたの ものよ』');
+    sfxLevel();flash('#ffe9b0',0.7,1.3);
+    Game.bonusHp=(Game.bonusHp||0)+30;Game.p.mhp+=30;Game.p.hp=Math.min(Game.p.mhp,Game.p.hp+30);recalcStats();updateBars();
+    Game.hidden.shinYusha=true;
+    await say('きょじんのこころが むねに ともり、さいだいHPが 30 あがった！\nしょうごう『しんのゆうしゃ』を えた！');
+    saveGame();
   }
   if(foe===FOES.satonushi){
     Game.hidden.sn1=true; // 章2b: さとぬし解放→フィールドで核心開示
@@ -16471,8 +16903,11 @@ async function victory(){
 async function leaveBattle(won){
   const bt=Game.bt;
   const nushiRep=!!NUSHI_REPLAY; // 再戦かどうかは transitMap で消える前に 控える(2026-07-26 夜)
-  const ch18Return=!!(bt&&bt.foe===FOES.shioarashi);
-  const ch19Return=!!(bt&&bt.foe===FOES.kiritoru);
+  const ch18Return=!!(bt&&bt.foe===FOES.shioarashi&&!FUKAMI); // ふかみの階では 島へ送還しない(2026-07-28)
+  const ch19Return=!!(bt&&bt.foe===FOES.kiritoru&&!FUKAMI);
+  const fukamiGo=!!(FUKAMI&&won&&bt&&KAGE[foeId(bt.foe)]);
+  const fukamiRan=!!(FUKAMI&&!won&&bt&&KAGE[foeId(bt.foe)]); // にげた=ふくろを おとして ランを おりる
+  const volgaWin=!!(bt&&bt.foe===FOES.kagevolga&&won);
   const ch20Return=!!(bt&&bt.foe===FOES.kajiu);
   const uraReturn=!!(bt&&bt.foe===FOES.hajimarazu&&won);
   await fadeTo(1,0.25);
@@ -16517,6 +16952,9 @@ async function leaveBattle(won){
     toast('はじまりを かたりおえた——むらの そうげんへ');
   }
   saveGame();
+  if(fukamiRan){const lostG=FUKAMI.bag.g;FUKAMI=null;toast('にげた——ふくろ（'+lostG+'Gぶん）は ふかみに おちた');}
+  if(fukamiGo)await fukamiAfterFloor();   // つぎの階の窓(場面4)。saveGameの後=ふくろは保存しない
+  if(volgaWin)await volgaEpilogue();      // フクロの帳面よみあげ(場面5)
 }
 async function transformPhase2(){
   const bt=Game.bt,ep=enemyPos();
@@ -16660,6 +17098,7 @@ function edStatsText(sec){
 async function defeat(){
   if(Game.bt&&Game.bt.foe&&Game.bt.foe===FOES.monoecho){await finishEchoBattle(false);return;}
   if(Game.bt&&Game.bt.foe&&Game.bt.foe.stage){await finishStageBattle(false);return;}
+  if(FUKAMI){await fukamiDefeat();return;} // ふかみ: まけても うしなうのは ふくろだけ(場面4)
   const ch18Defeat=!!(Game.bt&&Game.bt.foe===FOES.shioarashi);
   Game.stats.deaths++;
   stopSong();
@@ -17106,7 +17545,7 @@ function drawBattleScene(){
   drawEnemyStrikeFx(bt,ep,'trail');
   if(bt.critShock)drawCritShock(bt.critShock.t,ep); // 大リングは勇者の後ろ、剣先の衝突光は前へ
   if(!(bt.mateHit>0))drawMateBattle(bt);
-  drawNkBattle(bt);drawHeroBack(bt,ep);
+  drawNkBattle(bt);if(bt.henge&&bt.heroPos)drawHengeAura(bt);drawHeroBack(bt,ep);
   if(bt.mateHit>0)drawMateBattle(bt); // かばう瞬間だけ勇者の前へ割り込む
   drawEnemyStrikeFx(bt,ep,'impact');
   if(bt.slash)drawSlash(bt.slash,ep,bt.heroBlade);
@@ -17543,6 +17982,7 @@ function drawHeroBack(bt,ep){
     const headTop=hy+breathe*u*0.7+crouch-178*u;
     if(headTop<hudBottom+5)hy+=hudBottom+5-headTop;
   }
+  bt.heroPos={x:hx,y:hy,u:u}; // ななつへんげ: オーラ描画用に現在位置を控えるだけ(挙動不変)
   const bodyY=hy+breathe*u*0.7+crouch,cs=Math.cos(lean),sn=Math.sin(lean);
   const handWX=hx+cs*handX-sn*handY,handWY=bodyY+sn*handX+cs*handY;
   const contactRot=clamp(Math.atan2(strikeTarget.y-handWY,strikeTarget.x-handWX)+Math.PI/2-lean,-0.25,1.05);
