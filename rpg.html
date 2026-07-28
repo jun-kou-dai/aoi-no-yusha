@@ -9379,7 +9379,10 @@ function questTextCore(){
       // なんいど7だけの一体。旧: この ch21c の分岐で 先に return され、案内が 1行も 出なかった
       if(Game.mapId==='towa'&&Game.diff===7&&!Game.hidden.meguriDown)return 'もくてき：とわの ふちの「めぐりのけしん」と むきあおう';
       if(Game.mapId==='towa')return 'もくてき：ここに もう用は ない——みなみの でぐちから はてのしまへ もどれる';
-      if(Game.mapId==='hoshiminamoto')return Game.hidden.uraCleared?'もくてき：はじまりを かたりおえた——でぐちから むらへ もどれる':'もくてき：ほしのみなもとの おくで「かたられなかった はじまり」と むきあえ';
+      if(Game.mapId==='hoshiminamoto'){
+        if(URA_REPLAY&&(Game.enemies||[]).some(e=>e.id==='hajimarazu')) // こたえの回収/再戦: めあては 戦う相手(2026-07-29 発注者「出口が目当てになっている」)
+          return Game.hidden.koeAnswered?'もくてき：おくの「かたられなかった はじまり」と もういちど 立ちあう':'もくてき：おくの「はじまり」に かちを しめし、ななつのこえの「こたえ」を きこう';
+        return Game.hidden.uraCleared?'もくてき：はじまりを かたりおえた——でぐちから むらへ もどれる':'もくてき：ほしのみなもとの おくで「かたられなかった はじまり」と むきあえ';}
       // 2026-07-26: クリア済みの めあては ずっと「たもと=終わった最終章の再演」だけを指しており、
       // あとから足したもの(したく・ぬし再戦・島の店…)へ 道が1本も通っていなかった。
       // むらに居るあいだは フクロ(=いま できることの台帳)を 唯一の入口にする。
@@ -14202,6 +14205,7 @@ function questBeaconTargets(){
     if(out.length)return out;
     // 倒したあとは でぐちを 指す＝光柱が 0本になって 詰むのを 止める(2026-07-26 夕)
     {const ex=exitToVillage();if(ex){push(ex.x,ex.y);return out;}}}
+  if(URA_REPLAY&&Game.mapId==='hoshiminamoto'){for(const e of Game.enemies)if(e.id==='hajimarazu')push(Math.round(e.px),Math.round(e.py));if(out.length)return out;} // こたえの回収/再戦の金柱=はじまり(2026-07-29)
   if(CH21_REPLAY&&Game.mapId==='hoshiumi'){for(const e of Game.enemies)if(e.id==='sukuwarenu')push(Math.round(e.px),Math.round(e.py));if(out.length)return out;}
   if(Game.mapId==='towa'&&Game.diff===7&&!h.meguriDown){for(const e of Game.enemies)if(e.id==='meguri')push(Math.round(e.px),Math.round(e.py));if(out.length)return out;}
   // めぐりを たおした あとは でぐちを 指す(旧: 光柱0本で 何も指さなかった 2026-07-26 夕)
