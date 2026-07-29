@@ -8546,8 +8546,10 @@ function tamesuList(){
       line:'ヴォルガの かげが ななつの ぬしに とりついた。たおせば その ちからで へんしんできる。\nいちばんめは くらのしま——のこりは ふかみに あつまっておる。',kage:true});
     out.push({id:'fukami',label:'🔥 のこりびの ふかみ（さいこう '+(h.fukamiBest||0)+'かい）',
       line:'ふねの わきの ほらあな。かげぬしが つぎつぎに まちうけ、かつたび たからが ふえる。\n「2ばいか、もちかえるか」——まけたら ふくろだけ うみに おちる。',fukami:true});
-    if(_hn>=7&&!h.kageVolgaDown)out.push({id:'volga',label:'👑 ななつのかげを まとう ヴォルガと しょうぶ',
-      line:'ななつの へんしんが そろった。そらの おくで ヴォルガが まっておる。',volga:true});}
+    // 2026-07-29: 倒すと この行が 消えていた=締め(むらの あさ+へいわの一枚)を 二度と 見られなかった。
+    // ぬし・最終章・裏章と同じく もういちど 立ちあえる。ほうび(HP+30・称号)は 初回だけ(victory側でガード)。
+    if(_hn>=7)out.push({id:'volga',label:h.kageVolgaDown?'👑 ヴォルガと もういちど しょうぶ':'👑 ななつのかげを まとう ヴォルガと しょうぶ',
+      line:h.kageVolgaDown?'そらの おくの こえは、いまも まっておる。\nかてば あの よあけを、もういちど 見られる。':'ななつの へんしんが そろった。そらの おくで ヴォルガが まっておる。',volga:true});}
   if(h.ch13a)out.push({id:'fune',label:'🚢 一座の ふね ─ ⚒したくを かう・しまへ わたる',
     line:'にしの きしの ふね。メニューの「⚒ いちざの したく」に、\nしまごとの ひとしなものが 1つずつ ならぶ——ぬしの いちげきに こたえる そうびじゃ。\nしまへ わたれば、みせ・やど・いずみ・よみもの・あるく つよい まものも まっておる。',at:{x:1,y:6}});
   if(h.ch21c)out.push({id:'mise',label:'🛒 むらの みせ ─ かんけつ後だけ ならぶ 二品',
@@ -16959,12 +16961,17 @@ async function victory(){
     toast('はじまりの ものがたりが、かたられた——ほしあかりで むらへ かえる');
   }
   if(foe===FOES.kagevolga){ // 場面5: ななつのかげを まとう ヴォルガ
+    const firstVolga=!Game.hidden.kageVolgaDown; // もういちど しょうぶ しても ほうびは 二重に つかない(2026-07-29)
     Game.hidden.kageVolgaDown=true;
     await say('さいごの かげが ほどけ——ヴォルガが しずかに わらった。\n『……みごとじゃ。ななつの ちからは、もう そなたの ものよ』');
     sfxLevel();flash('#ffe9b0',0.7,1.3);
-    Game.bonusHp=(Game.bonusHp||0)+30;Game.p.mhp+=30;Game.p.hp=Math.min(Game.p.mhp,Game.p.hp+30);recalcStats();updateBars();
-    Game.hidden.shinYusha=true;
-    await say('ななつの かげの ちからが むねに ともり、さいだいHPが 30 あがった！\nしょうごう『しんのゆうしゃ』を えた！'); // 「きょじんのこころ」(別の品・N/5表示)と紛れる名を使わない(2026-07-29棚卸し)
+    if(firstVolga){
+      Game.bonusHp=(Game.bonusHp||0)+30;Game.p.mhp+=30;Game.p.hp=Math.min(Game.p.mhp,Game.p.hp+30);recalcStats();updateBars();
+      Game.hidden.shinYusha=true;
+      await say('ななつの かげの ちからが むねに ともり、さいだいHPが 30 あがった！\nしょうごう『しんのゆうしゃ』を えた！'); // 「きょじんのこころ」(別の品・N/5表示)と紛れる名を使わない(2026-07-29棚卸し)
+    }else{
+      await say('ヴォルガ『なんども たしかめに くるとはな。\n……よかろう。あの よあけを、もういちど 見せてやる』');
+    }
     saveGame();
   }
   if(foe===FOES.satonushi){
