@@ -9183,7 +9183,12 @@ async function forgeRun(atSea){
        if(own)continue;
        const nm=kind==='w'?WNAME[v]:ANAME[v];
        list.push({id,label:(kind==='w'?'⚔ ':'🛡 ')+nm+' を うちだす（'+(kind==='w'?'こうげき':'しゅび')+v+'）　'+g+'G・かげいし'+ki+(Game.gold<g?'　（あと '+(g-Game.gold)+'G）':(KI<ki?'　（かげいしが あと '+(ki-KI)+'つ）':'')),dis:Game.gold<g||KI<ki});
-     }}
+     }
+     // 2026-07-29: ふかみは 一かい＝かげいし1つ。かじの そうびは 4点で 合わせて 12こ＝
+     // 二周で そろい、三周目からは 潜るたび まるごと 余っていた。たねへ 通す(ほしのてつと同じ形)。
+     {const KSG=2000,KSI=2,ksh=()=>Game.gold<KSG?'　（あと '+(KSG-Game.gold)+'G）':(KI<KSI?'　（かげいしが あと '+(KSI-KI)+'つ）':'');
+      list.push({id:'kseedw',label:'🌱 ちからのたね を うちだす（こうげき +3）　'+KSG+'G・かげいし'+KSI+ksh(),dis:Game.gold<KSG||KI<KSI});
+      list.push({id:'kseeda',label:'🌱 まもりのたね を うちだす（しゅび +2）　'+KSG+'G・かげいし'+KSI+ksh(),dis:Game.gold<KSG||KI<KSI});}}
     list.push({id:'no',label:'やめる'});
     const c=await ask(list,'かじ（'+Game.gold+'G　ほしのてつ×'+(Game.items.hoshitetsu||0)+'）');
     if(c==='no'||!c)break;
@@ -9197,6 +9202,18 @@ async function forgeRun(atSea){
       if(kind==='w'){gainWeapon(v);Game.weaponAtk=v;}else{gainArmor(v);Game.armorDef=v;}
       recalcStats();updateBars();sfxLevel();
       await say((kind==='w'?WNAME[v]:ANAME[v])+'が できあがった！\n（'+(kind==='w'?('こうげき '+Game.p.atk):('しゅび '+Game.p.def))+'）');
+      saveGame();continue;
+    }
+    if(c==='kseedw'||c==='kseeda'){ // かげいしから たねを うちだす(2026-07-29・余った かげいしの ゆきさき)
+      const SG=2000,SI=2;
+      if(Game.gold<SG||(Game.items.kageishi||0)<SI){await say('かじの こえ「かねか かげいしが たりないよ。」');continue;}
+      Game.gold-=SG;Game.items.kageishi-=SI;
+      sfxCrit();flash('#9fe8b0',0.4,0.7);
+      await say('カン、カン——かげいしが ほどけて ちいさな つぶに なり、\nてのひらの うえで みどりに ひかった。');
+      if(c==='kseedw'){Game.p.bonusAtk+=3;recalcStats();updateBars();sfxLevel();
+        await say('ちからのたね が できあがった！ そのまま のみこむ——\nこうげきりょくが 3 あがった！（いま '+Game.p.atk+'）');}
+      else{Game.bonusDef+=2;recalcStats();updateBars();sfxLevel();
+        await say('まもりのたね が できあがった！ そのまま のみこむ——\nしゅびりょくが 2 あがった！（いま '+Game.p.def+'）');}
       saveGame();continue;
     }
     if(c==='seedw'||c==='seeda'){ // たねを うちだす(2026-07-26)
@@ -9893,7 +9910,10 @@ function updateHunter(e,p,dt){
     return;
   }
   const pd=Math.abs(p.tx-e.tx)+Math.abs(p.ty-e.ty);
-  if(!e.alert&&pd<6)e.alert=true; else if(e.alert&&pd>9)e.alert=false;
+  // 勝った あとの ひといき(2026-07-29): 追ってくる まものは 6マス先から 寄ってくるので、
+  // 戦いの すぐあと 出口へ 歩く あいだに また つかまっていた。数歩ぶんだけ 追わない。
+  if(Game.huntCalm>0)e.alert=false;
+  else if(!e.alert&&pd<6)e.alert=true; else if(e.alert&&pd>9)e.alert=false;
   if(e.alert){
     const sx=Math.sign(p.tx-e.tx), sy=Math.sign(p.ty-e.ty);
     const prim=(Math.abs(p.tx-e.tx)>=Math.abs(p.ty-e.ty))?[sx,0]:[0,sy];
@@ -10137,7 +10157,9 @@ function updateField(dt){
     const k=Math.min(1,p.moving.t/p.moving.dur);
     p.px=lerp(p.moving.fx,p.tx,k);
     p.py=lerp(p.moving.fy,p.ty,k);
-    if(k>=1){p.overT=Math.min(0.03,p.moving.t-p.moving.dur);p.moving=null;p.px=p.tx;p.py=p.ty;stepFx();if(Game.invisible){Game.cloakSteps--;if(Game.cloakSteps<=0){Game.invisible=false;Game.grace=Math.max(Game.grace,0.6);toast('とうめいマントの ちからが きれた！');}updateCloakBtn();}}
+    if(k>=1){p.overT=Math.min(0.03,p.moving.t-p.moving.dur);p.moving=null;p.px=p.tx;p.py=p.ty;stepFx();
+      if(Game.huntCalm>0)Game.huntCalm--; // 勝ったあとの ひといき(歩数でかぞえる=秒だと 端末の はやさで 変わる)
+      if(Game.invisible){Game.cloakSteps--;if(Game.cloakSteps<=0){Game.invisible=false;Game.grace=Math.max(Game.grace,0.6);toast('とうめいマントの ちからが きれた！');}updateCloakBtn();}}
   }
   // でいりぐちを ふんだら マップいどう
   if(!p.moving&&!Game.battling&&!Game.talking&&!Game.transiting){
@@ -17225,6 +17247,7 @@ async function leaveBattle(won){
   playSong(fieldSong());
   await fadeTo(0,0.25);
   Game.grace=1.2;
+  if(won)Game.huntCalm=6; // 勝ったら 6歩ぶんは 追ってくる まものが 寄ってこない(保存しない=graceと同じ扱い)
   Game.battling=false;
   if(won&&Game.p&&Game.p.hp>0){
     if(kkOn('miokuri')&&Game.p.hp<Game.p.mhp){Game.p.hp=Math.min(Game.p.mhp,Game.p.hp+Math.max(1,Math.round(Game.p.mhp*0.08)));updateBars();}
