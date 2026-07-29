@@ -8870,6 +8870,33 @@ async function volgaEpilogue(){ // 「なにを おえて、なにが のこっ�
 // フクロが今日の1つだけを物語の言葉で推し、「▶つれていって」でそのまま連れて行く。
 // 保存しない一時フラグ2つだけ(CONT_BOOT/OSUSUME_GREETED)＝セーブ形式・進行フラグ・戦闘式・報酬は不変。
 let CONT_BOOT=false,OSUSUME_GREETED=false;
+// ── みせの みちびき(2026-07-29) ──────────────────────────────
+// 発注者「武器屋の紹介もない」「とにかく読んでもらおうと思っていないよね。子どもが遊ぶんだよ」。
+// 一覧を読ませる「紹介」は作らない——**フクロが みせの前まで つれて行き、そこで こたえが 出る**。
+// えらび方は みせの最上段の 👑 と同じ(いま買えて・未所持・数が上のうち 上がり幅が最大、同じなら安い方)。
+function bestBuyInTown(){
+  let best=null;
+  for(const it of SHOP){
+    if(it.town&&it.town!=='grass')continue;        // むらの みせに ならぶ品だけ
+    if(!it.atk&&!it.armor)continue;                // そうびだけ(くすりは 推さない)
+    if(it.need&&!(Game.hidden&&Game.hidden[it.need]))continue;
+    if((it.atk&&(Game.ownW||[]).includes(it.atk))||(it.armor&&(Game.ownA||[]).includes(it.armor)))continue;
+    const v=it.atk||it.armor,cur=it.atk?(Game.weaponAtk||0):(Game.armorDef||0);
+    if(v<=cur)continue;                            // 数が 上の品だけ
+    if(Game.gold<it.cost)continue;                 // いま はらえる分だけ(足りない品を すすめない)
+    const d=v-cur;
+    if(!best||d>best.d||(d===best.d&&it.cost<best.it.cost))best={it,d,v,cur};
+  }
+  return best;
+}
+function osusumeBuy(){
+  const b=bestBuyInTown();if(!b)return null;
+  const sn=(WORLDS.grass.npcs||[]).find(n=>n.shop&&n.kind==='shop');if(!sn)return null;
+  const ic=b.it.atk?'⚔':'🛡';
+  return {id:'kaimono',bar:'⚒ みせで '+ic+b.it.label+'（＋'+b.d+'）',
+    head:'フクロ「みせに、いまより つよい そうびが あるぞ。\n'+ic+b.it.label+'——'+b.it.cost+'G（もっておるのは '+Game.gold+'G）。」',
+    at:{x:sn.x,y:sn.y},line:'フクロ「ここじゃ。ふれて「かう」——いちばん うえが それじゃ。」'};
+}
 function osusumeNow(){
   const h=Game.hidden||{};
   if(!h.ch21c)return null;
@@ -8893,20 +8920,19 @@ function osusumeNow(){
      // 2026-07-29: 発注者「次のレベルを紹介とか、まだいろんな楽しみがあれば教えるとか」。
      // ヴォルガの あとは「きろくを のばす」一本で、なぜ もぐるのかが 画面に 無かった。
      // 出す材料は すべて 実装から ひく(⚒かじの表・SPELL_LEARN・maxLvNow)。
+     // ★台詞は 2行まで(2026-07-29 夜・発注者「子どもが遊ぶんだよ」)——ならべて 読ませない。つぎの1つだけ言う。
+     const buy=osusumeBuy();if(buy)return buy; // かえる そうびが あるなら まず みせ(押すだけで つよくなる)
      const KG=[[142,'w',8000,2],[150,'w',14000,4],[114,'a',9000,2],[120,'a',15000,4]]; // forgeRun の かげの そうびと同じ表
      const yet=KG.filter(g=>!((g[1]==='w'?(Game.ownW||[]):(Game.ownA||[])).includes(g[0])));
      const sp=SPELL_LEARN.find(sl=>sl[1]>Game.p.lv&&sl[1]<=maxLvNow()); // 上限の むこうの 呪文は「つぎ」と 言わない
-     const ki=Game.items.kageishi||0,joy=[];
-     if(sp)joy.push('・レベル'+sp[1]+'で じゅもん『'+sp[0]+'』を おぼえる（いま レベル'+Game.p.lv+'／上は '+maxLvNow()+'）');
-     if(yet.length){const [v,k,g,n]=yet[0];
-       joy.push('・⚒かじで '+(k==='w'?'⚔'+WNAME[v]+'（こうげき'+v+'）':'🛡'+ANAME[v]+'（しゅび'+v+'）')+'——'+g+'Gと かげいし'+n+'つ（いま '+ki+'つ）');}
+     const ki=Game.items.kageishi||0;
      return {id:'fukamiRec',
        bar:sp?'🔥 ふかみへ——つぎは レベル'+sp[1]+'の『'+sp[0]+'』'
           :yet.length?'🔥 ふかみへ——かげいしを あつめて ⚒かじへ'
           :'🔥 ふかみで きろくを のばす（さいこう '+(h.fukamiBest||0)+'かい）',
-       head:'フクロ「ヴォルガは たおれた。だが たびは まだ おわらぬ——のこって おるのは これじゃ。\n'
-         +(joy.length?joy.join('\n')+'\n':'')
-         +'ふかみは けいけんちと かげいしで みちておる（さいこう '+(h.fukamiBest||0)+'かい）。ゆくか？」',fukami:true};
+       head:sp?'フクロ「つぎは レベル'+sp[1]+'で じゅもん『'+sp[0]+'』を おぼえる。\nふかみに もぐれば はやいぞ。ゆくか？」'
+          :yet.length?(([v,k,g,n])=>'フクロ「かげいしが '+n+'つ たまれば、⚒かじで '+(k==='w'?'⚔'+WNAME[v]:'🛡'+ANAME[v])+'が うてる（いま '+ki+'つ）。\nふかみで あつまるぞ。ゆくか？」')(yet[0])
+          :'フクロ「ふかみの きろくは さいこう '+(h.fukamiBest||0)+'かい。\nそれを こえに ゆくか？」',fukami:true};
    }
    } // しんぱん未消化なら 下の めぐり推しへ 流す(2026-07-28)
   // 1) ふねの したく: 章順で最初の未所持1点。いま買える時だけ(買えない時は こえで かせがせる)
@@ -8942,6 +8968,7 @@ function osusumeNow(){
   if(h.ch12c&&Game.diff===7&&!h.meguriDown)return {id:'meguri',bar:'👁 めぐりのけしんと むきあう',
     head:'フクロ「きょうの ひとすじは これじゃ——とわの ふちの『めぐりのけしん』。\nすべての といを こえた ものだけが あいまみえる、きんいろの めぐりじゃ。\nたおせば さいだいHPが 20 ふえ、しょうごうも つく。」',
     to:{map:'towa',tx:10,ty:7}};
+  {const buy=osusumeBuy();if(buy)return buy;} // ほかに 用が 無くても、かえる そうびが あるなら みせへ つれて行く
   return null; // ぜんぶ あるききった=自由
 }
 async function gunshiOsusumeFlow(){
