@@ -8729,10 +8729,21 @@ const FUKAMI_HINT={
   kiritoru:'おおはさみは はやい。とわのまもりと へんしんで きりかえすのじゃ。'
 };
 async function fukamiStart(){
-  FUKAMI={floor:1,bag:{g:0,tetsu:0,seedw:0,seeda:0},used:0};
   startTalk();
   await say('ふねの わきの ふるい ほらあなから、のこりびの あかりが ゆれて みえる——');
   await say('だんちょう「ふかみは 七かい。やども いずみも ない。どうぐは 3かいまで。\nかげぬしを たおすたび たから——すすむか もどるかは、おまえが きめな」');
+  // つづきから もぐれる(2026-07-29 発注者「途中で、いつも最初からやり直しになる。せめて、途中からできるなら」)。
+  // とどいた いちばん ふかい階(fukamiBest)の つぎから。ふくろは 0から=1かいめから もぐる値うちは のこる。
+  let from=1;
+  const best=Game.hidden.fukamiBest||0;
+  if(best>0){
+    const nx=Math.min(FUKAMI_ORDER.length,best+1);
+    const c=await ask([{id:'cont',label:'▶ '+nx+'かいめから もぐる（'+KAGE[FUKAMI_ORDER[nx-1]].kname+'）'},
+                       {id:'top',label:'🔥 1かいめから もぐる（ふくろが いちばん おもくなる）'}],
+      'だんちょう「まえは '+best+'かいめまで とどいたな。どこから もぐる？」');
+    if(c!=='top')from=nx;
+  }
+  FUKAMI={floor:from,bag:{g:0,tetsu:0,seedw:0,seeda:0},used:0};
   endTalk();
   await fukamiNextBattle();
 }
@@ -15052,7 +15063,16 @@ async function commandPhase(){
     if(c==='__auto__')continue;
     if(c==='fight')return{kind:'fight'};
     if(c==='guard')return{kind:'guard'};
-    if(c==='run')return{kind:'run'};
+    if(c==='run'){
+      // ふかみ: にげる=ふくろを ぜんぶ おいて ランを おりる。押しまちがい 一つで 台なしに なっていた
+      // (2026-07-29 発注者「間違って、逃げるを押しても、最初からになる。マジムカつく」)
+      if(FUKAMI){
+        const y=await ask([{id:'no',label:'もどって たたかう'},{id:'yes',label:'それでも ふかみを おりる'}],
+          '⚠ にげると ふくろは ふかみに おちる（'+fukamiBagStr()+'）');
+        if(y!=='yes')continue;
+      }
+      return{kind:'run'};
+    }
     if(c==='henge'){ // 1戦1回・そのぬしの必殺技1本(場面3)
       const owned=FUKAMI_ORDER.filter(k=>Game.hidden['henge'+KAGE[k].no]);
       const hl=owned.map(k=>({id:k,label:'👹'+KAGE[k].tan+' — '+(FOES[k].heavyName||'ひっさつ')}));
