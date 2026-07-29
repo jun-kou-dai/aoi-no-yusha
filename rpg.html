@@ -3329,25 +3329,23 @@ function hasStorySpell(no){
   return hasChapterProof(no);
 }
 function storySpellById(id){return CHAPTER_PROOF.find(x=>x.id===id);}
-function storySpellDisabled(s){
+// つかえない わけ(2026-07-29): たたかいの メニューで 灰色の行に 理由を出すため。
+// storySpellDisabled は これを そのまま 使う＝「つかえない」と「その わけ」が ぜったいに 食い違わない。
+function storySpellWhy(s){
   const bt=Game.bt;
-  if(s.id==='satori'&&bt&&bt.satoriUsed)return true;
-  if(s.id==='uketome'&&bt&&bt.uketomeUsed)return true;
-  if(s.id==='watashi'&&bt&&bt.watashiEcho)return true;
-  if(s.id==='tomoshibimichi'&&bt&&bt.tomoshibi>0)return true;
-  if(s.id==='futarigatari'&&(!nkFollowing()||Game.nkHp<=0))return true;
-  if(s.id==='hitotsunoumi'&&bt&&bt.umiPath&&(bt.umiPath.mask||0)!==7)return true;
-  if(s.id==='minnanokoe'&&bt&&bt.minnaUsed)return true;
-  if(s.id==='hiraku'&&bt&&bt.hirakuOn)return true;
-  if(s.id==='kodama'&&bt&&(bt.kodamaOn||bt.kodamaUsed))return true;
-  if(s.id==='horagai'&&bt&&bt.horaUsed)return true;
-  if(s.id==='hajimari'&&bt&&bt.hajimariUsed)return true;
-  if(s.id==='minmono'&&bt&&bt.minmonoUsed)return true;
-  if(s.id==='ashita'&&bt&&bt.ashitaUsed)return true;
-  if(s.id==='toki'&&bt&&bt.tokiUsed)return true;
-  if(s.id==='koemawasu'&&bt&&bt.ch20Used)return true;
-  return false;
+  if(s.id==='futarigatari'&&(!nkFollowing()||Game.nkHp<=0))return 'なかまが いない';
+  if(s.id==='hitotsunoumi'&&bt&&bt.umiPath&&(bt.umiPath.mask||0)!==7)return 'みっつの みちが そろっていない';
+  if(s.id==='tomoshibimichi'&&bt&&bt.tomoshibi>0)return 'いま きいている';
+  if(s.id==='watashi'&&bt&&bt.watashiEcho)return 'いま きいている';
+  if(s.id==='hiraku'&&bt&&bt.hirakuOn)return 'いま きいている';
+  if(s.id==='kodama'&&bt&&bt.kodamaOn)return 'いま きいている';
+  const used={satori:'satoriUsed',uketome:'uketomeUsed',minnanokoe:'minnaUsed',kodama:'kodamaUsed',
+    horagai:'horaUsed',hajimari:'hajimariUsed',minmono:'minmonoUsed',
+    ashita:'ashitaUsed',toki:'tokiUsed',koemawasu:'ch20Used'}[s.id];
+  if(used&&bt&&bt[used])return 'この たたかいでは もう つかった';
+  return '';
 }
+function storySpellDisabled(s){return !!storySpellWhy(s);}
 function chapterProofMask(){let m=0;for(const c of CHAPTER_PROOF)if(hasChapterProof(c.no))m|=1<<(c.no-1);return m;}
 function proofOrbsHTML(compact){
   const got=CHAPTER_PROOF.filter(c=>hasChapterProof(c.no)).length;
@@ -15275,7 +15273,12 @@ async function commandPhase(){
       let s;
       if(cat==='sto'){
         // ものがたり: 全部を1本のリストに(ページ式を廃止=どのメニューも▲▼ボタンとドラッグで送る 2026-07-20「下へのスクロールがついていない」)
-        const l2=storyList.map(ss=>({id:ss.id,label:'章'+ss.no+' '+ss.icon+' '+ss.spell,cost:ss.cost,dis:p.mp<ss.cost||storySpellDisabled(ss)}));
+        // 2026-07-29: 19本が 名前と MPだけで ならび、なにが おきるか 画面に 一行も なかった
+        // (こうげき11本・かいふく8本には SPELLFX で 出ている＝ものがたりだけ 抜けていた)。
+        // 効果は CHAPTER_PROOF.desc から、つかえない わけは storySpellWhy から ひく(手書きしない)。
+        const l2=storyList.map(ss=>{const why=storySpellWhy(ss),noMp=p.mp<ss.cost;
+          return {id:ss.id,cost:ss.cost,dis:noMp||!!why,
+            label:'章'+ss.no+' '+ss.icon+' '+ss.spell+'\n　'+ss.desc+(why?'（'+why+'）':(noMp?'（MPが たりない）':''))};});
         for(const [flag,no] of [['ch20SpellNew',20],['ch19SpellNew',19],['ch18SpellNew',18]]){
           if(Game.hidden&&Game.hidden[flag]&&hasStorySpell(no)){
             const i=storyList.findIndex(ss=>ss.no===no);
