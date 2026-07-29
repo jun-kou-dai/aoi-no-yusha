@@ -8818,6 +8818,43 @@ async function volgaFight(){
   endTalk();
   await startEncounter({def:FOES.kagevolga});
 }
+// ヴォルガの あとの むら(2026-07-29 発注者「倒したら、終わりのメッセージ、平和が訪れるとか、楽しい雰囲気は出したほうがいい」)
+async function kageFinale(){
+  startTalk();
+  await say('そらの あかい うずが ほどけ、かげが かぜに とけていく——\nよあけの ひかりが、むらの やねを ひとつずつ あたためた。');
+  await say('こども「ゆうしゃさま！ みて、そらが あおいよ！」');
+  await say('王さま「ながい よるが あけた。もう、かげに おびえる ものは おらぬ。」');
+  await say('ソラ「うばわれた こえも、ぜんぶ もどってきた。\n……しずかで、あたたかい あさだね。」');
+  await say('しまの ぬしたちが、かげの とれた すがたで ひろばに ならんだ。\nどの かおも、わらっている。');
+  await say('だんちょう「よし、こんやは まつりじゃ！ えんもくは きまっておる——\n『あおの勇者と ななつの かげ』！」');
+  endTalk();
+}
+// 締めの一枚。最終章のEDと同じ機構で、色は よあけ版(endMode!=='finale')
+async function startKageEnding(){
+  stopSong();
+  fadeColor('#ffe6c0');
+  await fadeTo(1,1.6);
+  Game.scene='ending';Game.endMode='kage';Game.endT=0;Game.endRankFx=false;
+  Game.bt=null;P.length=0;
+  MSG=null;msgtextEl.textContent='';
+  showUI('ui-ending');
+  $('#el1').textContent='そらの あかい かげが ほどけ、むらに あさの ひかりが もどった。';
+  $('#el2').textContent='ぬしたちは しまへ かえり、うばわれた こえは みんなの ものに もどった。';
+  $('#elans').textContent='——もう、こわい よるは こない。';
+  $('#el3').textContent='あおの勇者と ななつの かげの ものがたりも、かたりつがれて いく。';
+  $('#erank').textContent='へいわ';$('#erank').className='eline rank-s';
+  const _ek=edStatsFinale();
+  $('#estats').textContent=_ek[0];
+  $('#estats2').textContent=_ek[1];
+  $('#eend').textContent='− ものがたりは つづく −';
+  for(const id of['el1','el2','el3','elans','erank','estats','estats2','eend'])$('#'+id).classList.remove('show');
+  $('#btn-title2').classList.remove('shown');
+  $('#btn-ng').classList.remove('shown');
+  $('#btn-cont').classList.remove('shown');
+  playSong('ending');
+  await fadeTo(0,1.8);
+  fadeColor('#070b1e');
+}
 async function volgaEpilogue(){ // 「なにを おえて、なにが のこっているか」を フクロが ぜんぶ言う(場面5)
   startTalk();
   await say('フクロ「……みたぞ、ぜんぶ。ちょうめんを よみあげる。」');
@@ -15075,9 +15112,16 @@ async function commandPhase(){
     }
     if(c==='henge'){ // 1戦1回・そのぬしの必殺技1本(場面3)
       const owned=FUKAMI_ORDER.filter(k=>Game.hidden['henge'+KAGE[k].no]);
-      const hl=owned.map(k=>({id:k,label:'👹'+KAGE[k].tan+' — '+(FOES[k].heavyName||'ひっさつ')}));
+      // 2026-07-29 発注者「どれが どのくらいの強さなのか、取れば使えばいいのか よくわからない」
+      // 技名しか出ていなかった。KAGE表の mul と 癖(playerActionのhenge分岐)を そのまま 行に出す。
+      const hgNote=k=>{const g=KAGE[k];
+        return g.echo?'いちばん おもい いちげき':(g.bind?'てきを 1ターン しばる':(g.cut?'てきの つぎの 1ターンを きりとる':
+          (g.drain?'あたえた ダメージの 4わり HPが もどる':(g.gold?'あたえた ダメージの 1.2ばいの おかねが 手に入る':'おもい いちげき'))));};
+      const hgEst=k=>{const g=KAGE[k];let d=Math.round((Game.p.atk*1.15+240-foeDefNow(Game.bt)*0.5)*(g.mul||1));
+        if(kkOn('zkomp'))d=Math.round(d*1.1);return Math.max(1,d);};
+      const hl=owned.map(k=>({id:k,label:'👹'+KAGE[k].tan+'　⚔およそ'+hgEst(k)+'　'+hgNote(k)}));
       hl.push({id:'back',label:'もどる'});
-      const hg=await ask(hl,'どの ちからで へんしんする？');
+      const hg=await ask(hl,'どの ちからで へんしんする？（1戦に 1回・そのあと 3かい こうげきが 2ばい）');
       if(hg==='back'||!hg)continue;
       return{kind:'henge',kid:hg};
     }
@@ -15595,7 +15639,7 @@ async function playerAction(act){
       puff(ep.x,ep.y-ep.s*40,'rgba(255,250,220,.9)',34,220,0.8,{s0:2,s1:6});}
     await wait(0.16);
     let ridH='';
-    if(kgH.echo)ridH='\nこだまが 二どめの いちげきを かさねた！';
+    if(kgH.echo)ridH='\nこだまが かさなって、いちげきが いちばん おもく なった！'; // 実装は mul1.5=最大倍率。追加の一撃は 出ない(2026-07-29 文言を実装へ合わせる)
     if(kgH.bind&&bt.hp>0){bt.foeBind=Math.max(bt.foeBind||0,1);ridH='\nしろい ふだが てきを しばった——うごけない！';}
     if(kgH.cut&&bt.hp>0){bt.foeSleep=Math.max(bt.foeSleep||0,1);ridH='\nてきの つぎの 一ターンを きりとった！';}
     if(kgH.drain){const hlH=Math.round(dHg*0.4);p.hp=Math.min(p.mhp,p.hp+hlH);updateBars();ridH='\nのみこんだ ちからで HPが '+hlH+' もどった！';}
@@ -17120,7 +17164,7 @@ async function leaveBattle(won){
   saveGame();
   if(fukamiRan){const lostG=FUKAMI.bag.g;FUKAMI=null;toast('にげた——ふくろ（'+lostG+'Gぶん）は ふかみに おちた');}
   if(fukamiGo)await fukamiAfterFloor();   // つぎの階の窓(場面4)。saveGameの後=ふくろは保存しない
-  if(volgaWin)await volgaEpilogue();      // フクロの帳面よみあげ(場面5)
+  if(volgaWin){await volgaEpilogue();await kageFinale();await startKageEnding();} // 帳面→むらの あさ→締めの一枚(2026-07-29)
 }
 async function transformPhase2(){
   const bt=Game.bt,ep=enemyPos();
@@ -19511,7 +19555,7 @@ function updateEnding(dt){
   if(t>9.0+ad)$('#estats').classList.add('show');
   if(t>9.8+ad)$('#estats2').classList.add('show');
   if(t>11.2+ad)$('#eend').classList.add('show');
-  if(t>12.4+ad){$('#btn-title2').classList.add('shown');if(Game.endMode!=='finale')$('#btn-ng').classList.add('shown');$('#btn-cont').classList.add('shown');}
+  if(t>12.4+ad){$('#btn-title2').classList.add('shown');if(Game.endMode==='maou')$('#btn-ng').classList.add('shown');$('#btn-cont').classList.add('shown');}
   if(Math.random()<dt*(ans?20:14))
     puff(rnd(0,W),H+10,ans?'rgba(255,228,150,.8)':'rgba(255,240,200,.65)',1,rnd(18,42),rnd(3,6),{up:true,s0:1.2,s1:3,drag:1});
 }
