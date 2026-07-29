@@ -3393,8 +3393,9 @@ function openProof(){
   const w=document.getElementById('proofwin');if(!w)return;
   document.getElementById('proofbody').innerHTML=renderProof();w.classList.add('show');Game.proofOpen=true;Game._proofT=performance.now();
   if(w.firstElementChild)w.firstElementChild.scrollTop=0;Game.autoPath=null;held.length=0;swipeVec=null;ptr=null;if(typeof sfxSel==='function')sfxSel();
+  showPanScroll(document.getElementById('proofpanel'));
 }
-function closeProof(){const w=document.getElementById('proofwin');if(w)w.classList.remove('show');Game.proofOpen=false;}
+function closeProof(){const w=document.getElementById('proofwin');if(w)w.classList.remove('show');Game.proofOpen=false;hidePanScroll();}
 function showProofGain(no){
   const c=CHAPTER_PROOF[no-1],el=document.getElementById('proofgain');if(!c||!el)return;
   if(Game._proofGainOn){Game._proofGainQueue=Game._proofGainQueue||[];Game._proofGainQueue.push(no);return;}
@@ -5246,8 +5247,9 @@ function openQuest(){
   if(w.firstElementChild)w.firstElementChild.scrollTop=0;
   held.length=0;swipeVec=null;ptr=null;
   if(typeof sfxSel==='function')sfxSel();
+  showPanScroll(document.getElementById('questpanel')); // たびのメモは 4119px=画面4枚ぶん(2026-07-29実測)
 }
-function closeQuest(){const w=document.getElementById('questwin');if(w)w.classList.remove('show');Game.questOpen=false;}
+function closeQuest(){const w=document.getElementById('questwin');if(w)w.classList.remove('show');Game.questOpen=false;hidePanScroll();}
 function openBook(){
   if(Game.minigame)return; // minigame中は開かない(タイマーだけ進んで不利になるのを防ぐ)
   const w=document.getElementById('bookwin');if(!w)return;
@@ -5256,8 +5258,9 @@ function openBook(){
   if(w.firstElementChild)w.firstElementChild.scrollTop=0;
   held.length=0;swipeVec=null;ptr=null;
   if(typeof sfxSel==='function')sfxSel();
+  showPanScroll(document.getElementById('bookpanel')); // ずかんは 14507px=画面13枚ぶん(2026-07-29実測)
 }
-function closeBook(){const w=document.getElementById('bookwin');if(w)w.classList.remove('show');Game.bookOpen=false;}
+function closeBook(){const w=document.getElementById('bookwin');if(w)w.classList.remove('show');Game.bookOpen=false;hidePanScroll();}
 function popup(x,y,txt,cls){
   const d=document.createElement('div');
   d.className='dmg'+(cls?' '+cls:'');d.textContent=txt;
