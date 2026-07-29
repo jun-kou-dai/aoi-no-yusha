@@ -3287,6 +3287,11 @@ const ITEMS={
   tane:  {name:'ちからのたね'}};
 const USABLE_ITEM_KEYS=['yakuso','iyakuso','tokusen','seisui','dokukesi','bakudan','inazuma','inochi','hoshikake'];
 const HP_RECOVERY_ITEM_KEYS=['yakuso','iyakuso','tokusen','inochi'];
+// たたかいの「どうぐ」に なにが おきるかを 出す(2026-07-29)。じゅもんには 効果が 出ているのに
+// どうぐは「やくそう ×5」だけ だった。数は すべて playerAction の実装から(28+ri(0,6) など)。
+const ITEMUSE={yakuso:'HPが 28〜34 かいふく',iyakuso:'HPが 90〜110 かいふく',tokusen:'HPが 200〜240 かいふく',
+  seisui:'MPが 14〜18 かいふく',dokukesi:'どくを なおす',inochi:'HPが ぜんぶ かいふく',hoshikake:'MPが ぜんぶ かいふく',
+  bakudan:'てきに 80（ボス・ぬしには 40・メタルには 1）',inazuma:'てきに 160（ボス・ぬしには 80・メタルには 1）'};
 // 章の結びが「蒼珠」と「物語呪文」へ同時につながる。珠は現行の章完了だけ、既存4呪文は従来の解禁条件をそのまま使う
 const CHAPTER_PROOF=[
   {no:1,title:'ひかりのたまを とりもどす',spell:'ひかりのさとり',id:'satori',cost:4,icon:'✦',desc:'いちばん とどきそうな こうげきを よそうする'},
@@ -15304,7 +15309,18 @@ async function commandPhase(){
     }
     const have=USABLE_ITEM_KEYS.filter(k=>(Game.items[k]||0)>0);
     if(!have.length){await say('どうぐを もっていない！');continue;}
-    const ilist=have.map(k=>({id:k,label:(k==='seisui'?'せいすい':ITEMS[k].name)+' ×'+Game.items[k]}));
+    // 2026-07-29: 効果と、つかえない わけを 押す前に 出す(旧は 押してから say で ことわっていた)。
+    // わけの文言は 下の 実際に ことわる ところと 同じ言葉に そろえる。
+    const itemWhy=k=>{
+      if(FUKAMI&&FUKAMI.used>=3)return 'ふかみでは 3かいまで';
+      if(HP_RECOVERY_ITEM_KEYS.includes(k)&&p.hp>=p.mhp)return 'HPは まんたん';
+      if((k==='seisui'||k==='hoshikake')&&p.mp>=p.mmp)return 'MPは まんたん';
+      if(k==='dokukesi'&&!Game.p.poison)return 'どくに かかっていない';
+      return '';
+    };
+    const ilist=have.map(k=>{const w=itemWhy(k);
+      return {id:k,dis:!!w,
+        label:(k==='seisui'?'せいすい':ITEMS[k].name)+' ×'+Game.items[k]+'\n　'+(ITEMUSE[k]||'')+(w?'（'+w+'）':'')};});
     ilist.push({id:'back',label:'もどる'});
     const it=await ask(ilist,'どうぐ'+(FUKAMI?'（ふかみ のこり '+Math.max(0,3-FUKAMI.used)+'かい）':''));
     if(it==='back')continue;
