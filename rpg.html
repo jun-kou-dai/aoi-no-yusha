@@ -276,6 +276,13 @@ body{
 #mscroll .msbtn{ flex:1; text-align:center; padding:17px 0; border-radius:12px; font-size:18px; font-weight:700; letter-spacing:.14em; color:#2a1c06; background:linear-gradient(180deg,#ffe9a8,#f0c96a); border:2px solid rgba(255,240,190,.95); box-shadow:0 2px 0 rgba(0,0,0,.35); cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:manipulation; } /* 指で押す前提の大きさへ(2026-07-26「ボタンをつけろと言っている」=小さくて一覧に紛れ、ボタンだと分からなかった) */
 #mscroll .msbtn.dim{ opacity:.32; }
 #mscroll .msbtn:active{ transform:scale(.96); }
+/* パネル(つよさ/たびじたく)の ▲▼(2026-07-29): たたかいのメニューには あるのに ここには 無く、
+   下に つづくことに 気づけなかった。見た目は #mscroll と そろえる。 */
+#panscroll{ position:fixed; left:50%; transform:translateX(-50%); bottom:14px; z-index:260; display:none; gap:8px; width:min(520px,92vw); }
+#panscroll.on{ display:flex; }
+#panscroll .msbtn{ flex:1; text-align:center; padding:15px 0; border-radius:12px; font-size:17px; font-weight:700; letter-spacing:.14em; color:#2a1c06; background:linear-gradient(180deg,#ffe9a8,#f0c96a); border:2px solid rgba(255,240,190,.95); box-shadow:0 2px 0 rgba(0,0,0,.35); cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+#panscroll .msbtn.dim{ opacity:.32; }
+#panscroll .msbtn:active{ transform:scale(.96); }
 
 /* ---------- ミュート ---------- */
 #savebtn{ position:absolute; top:max(12px, env(safe-area-inset-top)); right:62px; z-index:70;
@@ -813,6 +820,7 @@ body{
     <div class="btn hidden" id="btn-title2">タイトルへ</div>
   </div>
 
+  <div id="panscroll"><div class="msbtn" id="panup">▲ うえへ</div><div class="msbtn" id="pandown">▼ したへ</div></div>
   <div id="bookwin"><div id="bookpanel" class="glass"><div id="bookhead"><span>📕 冒険の書</span><span id="bookclose">✕ とじる</span></div><div id="bookbody"></div></div></div>
   <div id="statuswin"><div id="statuspanel" class="glass"><div id="statushead"><span>💪 つよさ</span><span id="statusclose">✕ とじる</span></div><div id="statusbody"></div></div></div>
   <div id="proofwin"><div id="proofpanel" class="glass"><div id="proofhead"><span>🔵 蒼珠のきろく</span><span id="proofclose">✕ とじる</span></div><div id="proofbody"></div></div></div>
@@ -3453,8 +3461,33 @@ function openInventory(){
   if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
   const w=document.getElementById('inventorywin');if(!w)return;document.getElementById('inventorybody').innerHTML=renderInventory();w.classList.add('show');Game.inventoryOpen=true;Game._inventoryT=performance.now();
   if(w.firstElementChild)w.firstElementChild.scrollTop=0;Game.autoPath=null;held.length=0;swipeVec=null;ptr=null;if(typeof sfxSel==='function')sfxSel();
+  showPanScroll(document.getElementById('inventorypanel'));
 }
-function closeInventory(){const w=document.getElementById('inventorywin');if(w)w.classList.remove('show');Game.inventoryOpen=false;}
+function closeInventory(){const w=document.getElementById('inventorywin');if(w)w.classList.remove('show');Game.inventoryOpen=false;hidePanScroll();}
+// ============================================================
+// パネルの ▲▼(2026-07-29): つよさ／たびじたく は 画面2枚ぶんの ながさが あるのに、
+// たたかいのメニューのような ボタンが 無く、下に つづくことに 気づけなかった。
+// (たたかいの #mscroll と 同じ見た目・同じ押しごたえに そろえる)
+// ============================================================
+let PANSCROLL_EL=null;
+function panScrollUpdate(){
+  const ps=document.getElementById('panscroll');if(!ps)return;
+  const el=PANSCROLL_EL;
+  if(!el||el.scrollHeight-el.clientHeight<=1){ps.classList.remove('on');return;} // ぜんぶ入るなら 出さない
+  ps.classList.add('on');
+  const up=document.getElementById('panup'),dn=document.getElementById('pandown');
+  if(up)up.classList.toggle('dim',el.scrollTop<=4);
+  if(dn)dn.classList.toggle('dim',el.scrollHeight-el.clientHeight-el.scrollTop<=4);
+}
+function showPanScroll(el){PANSCROLL_EL=el;if(!el)return;el.onscroll=panScrollUpdate;panScrollUpdate();
+  // ▲▼は 画面の下に かさなるので、そのぶん パネルの下に 余白を つくる
+  // (足さないと いちばん下の 行が ボタンの うしろに 隠れる=実測して 気づいた)
+  el.style.paddingBottom=document.getElementById('panscroll').classList.contains('on')?'96px':'';}
+function hidePanScroll(){const el=PANSCROLL_EL;if(el)el.style.paddingBottom='';
+  PANSCROLL_EL=null;const ps=document.getElementById('panscroll');if(ps)ps.classList.remove('on');}
+function panScrollStep(dir){const el=PANSCROLL_EL;if(!el)return;
+  if(typeof sfxSel==='function')sfxSel();
+  el.scrollTop+=dir*Math.max(120,Math.round(el.clientHeight*0.8));panScrollUpdate();}
 // どこでもドアの 行き先（じゅんばん＝そうげん→…→しろ。表示名つき）
 const ISLE=[['grass','むらの そうげん'],['forest','ふかい もり'],['cave','どうくつ'],['ice','こおりの せかい'],['icetown','ゆきの まち'],['volcano','かざんの しま'],['castle','まおうの しろ'],['edge','はての しま'],['sunken','しずみの さと'],['mistsea','わすれの うみ'],['minamoto','みなもとの もり'],['towa','とわの ふち'],['misaki','みおくりの みさき'],['ohori','おおほりあと'],['oka','かたりのおか']];
 const CLOAK_MAX=60; // とうめいマントの 最大歩数（歩数制バッテリー）
@@ -5058,8 +5091,9 @@ function openStatus(){
   w.classList.add('show');Game.statusOpen=true;
   held.length=0;swipeVec=null;ptr=null;
   if(typeof sfxSel==='function')sfxSel();
+  showPanScroll(document.getElementById('statuspanel'));
 }
-function closeStatus(){const w=document.getElementById('statuswin');if(w)w.classList.remove('show');Game.statusOpen=false;}
+function closeStatus(){const w=document.getElementById('statuswin');if(w)w.classList.remove('show');Game.statusOpen=false;hidePanScroll();}
 // 海図(フェーズ1): 正典地理(MASTERPLAN§2)を一枚のSVGで見せる。解禁=ドアと同条件・未解禁=霧・現在地=金の輪
 function seaChartSVG(){
   const H=Game.hidden||{};
@@ -5717,6 +5751,9 @@ $('#menugrid').addEventListener('pointerdown',e=>{
   closeFieldMenu();
 },true);
 $('#menustatus').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openStatus();});
+// パネルの ▲▼(2026-07-29): たたかいの ▲▼と 同じ押しごたえ
+$('#panup').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();panScrollStep(-1);});
+$('#pandown').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();panScrollStep(1);});
 $('#menubag').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openInventory();});
 $('#proofhud').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openProof();});
 $('#proofclose').addEventListener('pointerdown',e=>{e.stopPropagation();closeProof();});
