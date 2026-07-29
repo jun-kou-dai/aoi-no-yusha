@@ -5519,8 +5519,11 @@ function ask(items,title){
      if(ms){const fitList=()=>{ // リスト高を実測でクランプ=窓が画面から下へはみ出さない(iPad Safariでリストが画面外へ・▲▼も出ない実機バグ 2026-07-20)
         mlistEl.style.maxHeight='';
         const lt=mlistEl.getBoundingClientRect().top;
-        const reserve=48+(mexitEl.offsetHeight||44)+20; // ▲▼ボタン+もどる+余白
-        mlistEl.style.maxHeight=Math.max(96,Math.floor(innerHeight-lt-reserve))+'px';};
+        const room=Math.floor(innerHeight-lt-((mexitEl.offsetHeight||44)+20)); // もどる+余白だけ よけた空き
+        // 2026-07-29: ▲▼のぶん(48px)を いつも 先に よけていたので、**ぜんぶ入るリストでも
+        // 1行だけ はみ出して 隠れていた**(たたかいの「ぼうぎょ」が 常に 画面の外＝
+        // 子どもは その手に 気づけない)。入るなら ▲▼は いらない＝1行も 隠さない。
+        mlistEl.style.maxHeight=Math.max(96,(mlistEl.scrollHeight<=room?room:room-48))+'px';};
       const upd=()=>{const over=mlistEl.scrollHeight-mlistEl.clientHeight>0;ms.classList.toggle('on',over); // 1pxでもはみ出せば出す(旧:14px超のときだけ=わずかに切れている幅でボタンが出ず、動かす手段が無くなった)
         mu.classList.toggle('dim',mlistEl.scrollTop<=4);
         md.classList.toggle('dim',mlistEl.scrollHeight-mlistEl.clientHeight-mlistEl.scrollTop<=4);};
