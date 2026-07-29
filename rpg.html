@@ -3165,15 +3165,16 @@ const SHOP=[
 // いちざの したく: ふねの「⚒ いちざの したく」に ならぶ順(SHOPのidを ならべるだけ・定義は上の1か所)
 const SHITAKU=['stk13','stk14','stk15','stk16','stk17','stk18','stk19','stk20'];
 // 「📖 ぬしの はなしを きく」の中身。ためて うつ いちげきの名は FOES.heavyName と そろえる(便B)
+// done = その島を こえた しるし。「つぎに わたる 島は どこか」を みせの推しで つかう(2026-07-29)
 const SHITAKU_TALK=[
-  {id:'stk13',island:'くらのしま',      foe:'しまいこむもの',  hit:'しまいこむ ひとしめ', kiku:'手かずを ふやす'},
-  {id:'stk14',island:'やまびこのたに',  foe:'もとをただすもの',hit:'もとへ もどす ひとこえ', kiku:'大きな いちげきを やわらげる'},
-  {id:'stk15',island:'ほらふきじま',    foe:'まことをせまるもの',hit:'にげ道を ふさぐ ひとこと', kiku:'きょじんや ぬしに よく きく 刃'},
-  {id:'stk16',island:'わすれうたのしま',foe:'わすれられしもの',hit:'わすれさせる ひとふり', kiku:'かわす・大技も やわらぐ'},
-  {id:'stk17',island:'あつめのやかた',  foe:'ひとりじめのもの',hit:'ひとりじめの ひとおし', kiku:'うちながら 立てなおす'},
-  {id:'stk18',island:'かぜまちじま',    foe:'しおあらしの むれ',hit:'たかなみの ひとおし', kiku:'いきと つうこん・大技も やわらぐ'},
-  {id:'stk19',island:'ときかさねじま',  foe:'きりとるもの',    hit:'きりとる 一分', kiku:'かいしんで かわしを つらぬく'},
-  {id:'stk20',island:'しおわかれの海峡',foe:'かじをうばうもの',hit:'三つの危険（いわま・よこなみ・うず）', kiku:'大きな いちげきを 34% やわらげる'}
+  {id:'stk13',island:'くらのしま',      done:'ch13c',foe:'しまいこむもの',  hit:'しまいこむ ひとしめ', kiku:'手かずを ふやす'},
+  {id:'stk14',island:'やまびこのたに',  done:'ch14c',foe:'もとをただすもの',hit:'もとへ もどす ひとこえ', kiku:'大きな いちげきを やわらげる'},
+  {id:'stk15',island:'ほらふきじま',    done:'ch15c',foe:'まことをせまるもの',hit:'にげ道を ふさぐ ひとこと', kiku:'きょじんや ぬしに よく きく 刃'},
+  {id:'stk16',island:'わすれうたのしま',done:'ch16c',foe:'わすれられしもの',hit:'わすれさせる ひとふり', kiku:'かわす・大技も やわらぐ'},
+  {id:'stk17',island:'あつめのやかた',  done:'ch17c',foe:'ひとりじめのもの',hit:'ひとりじめの ひとおし', kiku:'うちながら 立てなおす'},
+  {id:'stk18',island:'かぜまちじま',    done:'ch18c',foe:'しおあらしの むれ',hit:'たかなみの ひとおし', kiku:'いきと つうこん・大技も やわらぐ'},
+  {id:'stk19',island:'ときかさねじま',  done:'ch19c',foe:'きりとるもの',    hit:'きりとる 一分', kiku:'かいしんで かわしを つらぬく'},
+  {id:'stk20',island:'しおわかれの海峡',done:'ch20c',foe:'かじをうばうもの',hit:'三つの危険（いわま・よこなみ・うず）', kiku:'大きな いちげきを 34% やわらげる'}
 ];
 const SHITAKU_W=new Set(SHITAKU.map(id=>SHOP.find(s=>s.id===id)).filter(o=>o&&o.atk).map(o=>o.atk));
 const SHITAKU_A=new Set(SHITAKU.map(id=>SHOP.find(s=>s.id===id)).filter(o=>o&&o.armor).map(o=>o.armor));
@@ -8888,8 +8889,25 @@ function osusumeNow(){
      fukami:true};
    if(!h.kageVolgaDown)return {id:'volga',bar:'👑 ヴォルガと しょうぶ——へんしん ●●●●●●●',
      head:'フクロ「ななつの へんしんが そろった。……きこえるじゃろう、そらの おくの こえが。\nヴォルガが そなたを まっておる。——しょうぶじゃ！」',volga:true};
-   if(!(Game.diff===7&&!h.meguriDown))return {id:'fukamiRec',bar:'🔥 ふかみで きろくと たからを のばす（さいこう '+(h.fukamiBest||0)+'かい）',
-     head:'フクロ「ヴォルガは たおれた。だが ふかみは まだ たからで みちておる。\nへんしんを ふるって、きろくを のばすが よい。」',fukami:true};
+   if(!(Game.diff===7&&!h.meguriDown)){
+     // 2026-07-29: 発注者「次のレベルを紹介とか、まだいろんな楽しみがあれば教えるとか」。
+     // ヴォルガの あとは「きろくを のばす」一本で、なぜ もぐるのかが 画面に 無かった。
+     // 出す材料は すべて 実装から ひく(⚒かじの表・SPELL_LEARN・maxLvNow)。
+     const KG=[[142,'w',8000,2],[150,'w',14000,4],[114,'a',9000,2],[120,'a',15000,4]]; // forgeRun の かげの そうびと同じ表
+     const yet=KG.filter(g=>!((g[1]==='w'?(Game.ownW||[]):(Game.ownA||[])).includes(g[0])));
+     const sp=SPELL_LEARN.find(sl=>sl[1]>Game.p.lv&&sl[1]<=maxLvNow()); // 上限の むこうの 呪文は「つぎ」と 言わない
+     const ki=Game.items.kageishi||0,joy=[];
+     if(sp)joy.push('・レベル'+sp[1]+'で じゅもん『'+sp[0]+'』を おぼえる（いま レベル'+Game.p.lv+'／上は '+maxLvNow()+'）');
+     if(yet.length){const [v,k,g,n]=yet[0];
+       joy.push('・⚒かじで '+(k==='w'?'⚔'+WNAME[v]+'（こうげき'+v+'）':'🛡'+ANAME[v]+'（しゅび'+v+'）')+'——'+g+'Gと かげいし'+n+'つ（いま '+ki+'つ）');}
+     return {id:'fukamiRec',
+       bar:sp?'🔥 ふかみへ——つぎは レベル'+sp[1]+'の『'+sp[0]+'』'
+          :yet.length?'🔥 ふかみへ——かげいしを あつめて ⚒かじへ'
+          :'🔥 ふかみで きろくを のばす（さいこう '+(h.fukamiBest||0)+'かい）',
+       head:'フクロ「ヴォルガは たおれた。だが たびは まだ おわらぬ——のこって おるのは これじゃ。\n'
+         +(joy.length?joy.join('\n')+'\n':'')
+         +'ふかみは けいけんちと かげいしで みちておる（さいこう '+(h.fukamiBest||0)+'かい）。ゆくか？」',fukami:true};
+   }
    } // しんぱん未消化なら 下の めぐり推しへ 流す(2026-07-28)
   // 1) ふねの したく: 章順で最初の未所持1点。いま買える時だけ(買えない時は こえで かせがせる)
   if(h.ch13a)for(const id of SHITAKU){
@@ -9261,7 +9279,9 @@ async function runShop(funamise,shitaku){
       const low=(it.atk&&it.atk<(Game.weaponAtk||0))||(it.armor&&it.armor<(Game.armorDef||0))?'　↓いまより よわい':'';
       // 灰色の行に 理由を書く(2026-07-26)。旧は ただ 薄いだけで、なぜ えらべないのか どこにも 出ていなかった
       const pay=it.cost-ironOff(it),short=Game.gold<pay?(ironOff(it)>0?'　（⭐てつこみで あと '+(pay-Game.gold)+'G）':'　（あと '+(pay-Game.gold)+'G）'):''; // てつ割引後の額と明示(2026-07-29棚卸し)
-      list.push({id:it.id,label:it.label+fx+sp+'  '+it.cost+'G'+low+short,dis:Game.gold<pay});
+      // したくの品は「その島の ぬしに 効く 一点もの」＝数の順に ならばない。どの島の ためかを 行に出す(2026-07-29)
+      const isle=shitaku?'　'+((SHITAKU_TALK.find(t=>t.id===it.id)||{}).island||''):'';
+      list.push({id:it.id,label:it.label+fx+sp+'  '+it.cost+'G'+isle+low+short,dis:Game.gold<pay});
     }
     // 2026-07-26(交代文書B群6): ふなみせの武具6点は 第3部の旅人には 全部 格下で、棚の先頭が
     // 「↓いまより よわい」で 埋まっていた。品は 1つも 減らさない——こせいで えらぶ余地を
@@ -9277,6 +9297,43 @@ async function runShop(funamise,shitaku){
      else if(!shitaku&&soldW&&!upW)list.unshift({id:'infoW',label:'ぶき：ここの しなは いまより よわい'+upLine('w'),dis:true});}
     if(anyFx)list.unshift({id:'fxnote',label:FXNOTE,dis:true}); // ✦の意味が どこにも 書いていなかった
     list.unshift({id:'eqinfo',label:'そうび中 ⚔'+(WNAME[Game.weaponAtk]||'すで')+' +'+(Game.weaponAtk||0)+'　🛡'+(ANAME[Game.armorDef||0]||'ぬのの ふく')+' +'+(Game.armorDef||0),dis:true});
+    // ============================================================
+    // 「いま かうなら これ」(2026-07-29): 発注者「今、何を買うべきなのかもない」。
+    // 案内の行を いくら 足しても 読まれない——最上段に こたえを 1つだけ 置き、
+    // そのまま 押せば 買える(id は 実在の 商品id。ask() は 番号で ひくので 同じ idが
+    // 2行 あっても かまわない。買う前の たしかめ窓も そのまま 通る)。
+    // ============================================================
+    {let osu=null;
+     if(shitaku){ // したくは「その島の ぬしに 効く 一点もの」＝つよさの順に ならばない。つぎに わたる島で えらぶ
+       const t=SHITAKU_TALK.find(t=>!(Game.hidden&&Game.hidden[t.done]));
+       const it=t&&stock.find(s=>s.id===t.id&&(!s.need||(Game.hidden&&Game.hidden[s.need])));
+       if(it){
+         const have=(it.atk&&(Game.ownW||[]).includes(it.atk))||(it.armor&&(Game.ownA||[]).includes(it.armor));
+         const pay=it.cost-ironOff(it); // 値段は 定価で言う(下の 商品行と そろえる)。買えるかの 判定だけ てつ割引こみ
+         const yet=ironOff(it)>0?'　（⭐てつこみで あと '+(pay-Game.gold)+'G）':'　あと '+(pay-Game.gold)+'G';
+         osu=have?{id:'osu',label:'👑 つぎは '+t.island+'——したくは できている',dis:true}
+            :Game.gold>=pay?{id:it.id,label:'👑 つぎは '+t.island+'：'+it.label+'（'+t.kiku+'）　'+it.cost+'G'+(Game.gold<it.cost?'（⭐ほしのてつで まかなえる）':'')}
+            :{id:'osu',label:'👑 つぎは '+t.island+'：'+it.label+'（'+t.kiku+'）'+yet,dis:true};
+       }else if(!t)osu={id:'osu',label:'👑 しまは ぜんぶ まわった——のこるは こせいで えらぶ 品（📖で 効きめが きける）',dis:true}; // クリア済みは 数では 上がらない＝だまらずに そう言う
+     }else if(soldW||soldA){ // 装備を おいている みせだけ(島の くすり屋では 出さない)
+       const cand=[];
+       for(const it of stock){
+         if(!it.atk&&!it.armor)continue;
+         if(!funamise&&Game.mapId==='theater'&&it.town!=='theater')continue;
+         if(!funamise&&it.town&&Game.mapId!==it.town)continue;
+         if(it.need&&!(Game.hidden&&Game.hidden[it.need]))continue;
+         if((it.atk&&(Game.ownW||[]).includes(it.atk))||(it.armor&&(Game.ownA||[]).includes(it.armor)))continue;
+         const cur=it.atk?(Game.weaponAtk||0):(Game.armorDef||0),v=it.atk||it.armor;
+         if(v<=cur)continue; // 数が 上の品だけ。下の品は こせいで えらぶもの＝こたえには しない
+         cand.push({it,d:v-cur,v,cur,pay:it.cost-ironOff(it)});
+       }
+       const pick=a=>{a.sort((x,y)=>y.d-x.d||x.pay-y.pay);return a[0]||null;}; // 上がり幅の大きい順・同じなら 安い方
+       const now=pick(cand.filter(c=>Game.gold>=c.pay)),soon=pick(cand);
+       const nm=c=>(c.it.atk?'⚔':'🛡')+c.it.label+'（'+(c.it.atk?'こうげき ':'しゅび ')+c.v+'／いま '+c.cur+'・＋'+c.d+'）';
+       if(now)osu={id:now.it.id,label:'👑 いま かうなら これ：'+nm(now)+'　'+now.it.cost+'G'}; // 値段は 定価(下の 商品行と そろえる)
+       else if(soon)osu={id:'osu',label:'👑 つぎの めあて：'+nm(soon)+(ironOff(soon.it)>0?'　（⭐てつこみで あと ':'　あと ')+(soon.pay-Game.gold)+'G'+(ironOff(soon.it)>0?'）':''),dis:true};
+     }
+     if(osu)list.unshift(osu);}
     list.push({id:'back',label:'もどる'});
     const c=await ask(list,'かいもの（'+Game.gold+'G）');
     if(c==='back'||!c)break;
