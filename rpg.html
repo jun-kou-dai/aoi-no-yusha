@@ -20178,9 +20178,30 @@ function drawGrade(){
 }
 window.addEventListener('resize',resize);
 stage.addEventListener('scroll',()=>{stage.scrollTop=0;stage.scrollLeft=0;});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){if(actx)actx.suspend();}else resumeAudio();});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){if(actx)actx.suspend();return;}
+  resumeAudio();
+  // ほかの タブから もどったとき、ループが 止まったままだと 画面が こおって見える(2026-07-30)。
+  // 400ms たっても 1フレームも 進んでいなければ 起こす(進んでいれば なにも しない=二重に 走らせない)
+  const t0=LAST_TICK;
+  setTimeout(()=>{ if(LAST_TICK===t0)requestAnimationFrame(loop); },400);
+});
 let last=performance.now();
+// ============================================================
+// ゲームループ(2026-07-30): loopBody の どこかで 例外が 出ると、末尾の
+// requestAnimationFrame に とどかず **画面が 二度と 動かなくなる**(会話の文字も
+// 出ない・絵も 止まる)。何が おきても つぎの フレームは かならず よぶ。
+// ============================================================
+let LAST_TICK=0;
 function loop(ts){
+  LAST_TICK=performance.now();
+  try{ loopBody(ts); }
+  catch(e){
+    if(!Game._loopErr){Game._loopErr=String((e&&e.message)||e);try{console.error('loop',e);}catch(_){}}
+    requestAnimationFrame(loop); // 例外でも 止めない
+  }
+}
+function loopBody(ts){
   // 60fps上限：120Hz端末(iPad Pro等)で仕事量を半減させ発熱/電池を抑える。60Hz環境では素通り＝見た目不変
   if(ts-(Game._lastFrame||0)<15.5){requestAnimationFrame(loop);return;}
   Game._lastFrame=ts;
