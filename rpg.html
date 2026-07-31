@@ -2354,7 +2354,7 @@ function ch19NpcPos(n){return Game&&Game.hidden&&Game.hidden.ch19d&&Game.mapId==
 function ch19Time(){return CH19_TIME[Game&&Game.mapId]||CH19_TIME.tokikasanedusk;}
 function ch19AllSeen(){const h=(Game&&Game.hidden)||{};return !!(h.ch19SeenDusk&&h.ch19SeenBell&&h.ch19SeenRain);}
 function ch19SeenSummary(){const h=(Game&&Game.hidden)||{};return Object.values(CH19_TIME).map(t=>(h[t.key]?'●':'○')+t.name).join('　');}
-function ch19MarkSeen(id){const t=CH19_TIME[id],h=Game.hidden;if(!t)return;h[t.key]=true;saveGame();}
+function ch19MarkSeen(id){const t=CH19_TIME[id],h=Game.hidden;if(!t)return;h[t.key]=true;if(typeof horaFxStart==='function')horaFxStart(t.key);saveGame();} // その ときの できごとが しまに あらわれる
 async function ch19Switch(id){
   const t=CH19_TIME[id];if(!t)return;
   ch19MarkSeen(id);
@@ -2659,6 +2659,7 @@ async function ch20TalkGuide(){
   if(h.ch20Ready){await say('ナギ「あの黒い舵輪が、みんなの向きを うばおうとしている。\n危険のこえを 三艘へ まわして、正しい隊列で うけよう。」');return;}
   if(!h.ch20Intro){
     h.ch20Intro=true;
+    if(typeof horaFxStart==='function')horaFxStart('ch20Intro'); // 三そうを むすぶ こえの あみ
     await say('かぜまちじまの南西。しおわかれの海峡で、三艘の舟が 暗礁のあいだに とりのこされている。');
     await say('ナギ「先の舟だけなら、ぬけられる。でも後ろの二艘を おいていく道は、航路とは よべない。」');
     await say('ナギ「金の舵輪に あいずを おくって。\nかじは わたしが とる。三艘まとめて 北へ ぬけるよ。」');
@@ -8070,6 +8071,7 @@ async function catchKodama(){
     endTalk();return;
   }
   Game.hidden[ko.key]=true;
+  horaFxStart(ko.key); // かたられた はしが たにに かかる
   const kmc=['km1','km2','km3'].filter(k=>Game.hidden[k]).length;
   await say('おなじ はしの はなしなのに、こえごとに かたちが ちがう。\nどの こえも あたたかい——こだまは 三たび はねて、てのひらで しずかに ひかった。');
   toast('こだまを つかまえた（'+kmc+' / 3）');
@@ -11792,7 +11794,15 @@ const HORA_FX={
   ch18BuiltBeacon :{m:'kazemachi',k:'hata',  s:['ch18BuiltPier','ch18BuiltShelter','ch18BuiltBeacon']},
   // 章17 やかた: くさりが ほどけるたび、しまいこまれた ものが めざめる
   cn1:{m:'yakata1',k:'koe',   s:['cn1']}, cn2:{m:'yakata2',k:'page',  s:['cn2']},
-  cn3:{m:'yakata3',k:'hikari',s:['cn3','cn4']}, cn4:{m:'yakata3',k:'genpon',s:['cn3','cn4']}
+  cn3:{m:'yakata3',k:'hikari',s:['cn3','cn4']}, cn4:{m:'yakata3',k:'genpon',s:['cn3','cn4']},
+  // 章19 ときかさね: その ときの できごとが しまに あらわれる
+  ch19SeenDusk:{m:'tokikasanedusk',k:'yodori', s:['ch19SeenDusk','ch19SeenBell','ch19SeenRain']},
+  ch19SeenBell:{m:'tokikasanebell',k:'kane',   s:['ch19SeenDusk','ch19SeenBell','ch19SeenRain']},
+  ch19SeenRain:{m:'tokikasanerain',k:'modoru', s:['ch19SeenDusk','ch19SeenBell','ch19SeenRain']},
+  // 章14 たに: つかまえた こだまが かたる はしが、たににも かかる
+  km1:{m:'tani',k:'ishibashi',s:['km1','km2','km3']}, km2:{m:'tani',k:'iwabashi',s:['km1','km2','km3']}, km3:{m:'tani',k:'hobashira',s:['km1','km2','km3']},
+  // 章20 しおわかれ: 三艘の こえが つながる
+  ch20Intro:{m:'shiowakare',k:'koeami',s:['ch20Intro']}
 };
 function smMapPtAbs(cam,u,v){return{x:cam.ox+(u-v)*cam.TW/2,y:cam.oy+(u+v)*cam.TH/2};}
 function horaFxStart(key){
@@ -12001,6 +12011,98 @@ function horaFxOne(cam,f){
       const sa=a*(1-ph)*0.7;if(sa<=0.02)continue;
       ctx.fillStyle='rgba(255,238,190,'+sa.toFixed(3)+')';
       ctx.beginPath();ctx.arc(q.x+Math.cos(ang)*r*0.5*ph,q.y-cam.TH*0.8+Math.sin(ang)*r*0.28*ph-ph*cam.TH*1.6,Math.max(1.5,cam.TW*0.04*(1-ph)),0,Math.PI*2);ctx.fill();
+    }
+  }else if(f.kind==='yodori'){ // ゆうぐれ: よどりが とうへ／だれも のらない ふねが うみへ
+    ctx.globalCompositeOperation='source-over';
+    for(let i=0;i<9;i++){ // よどりの むれ
+      const ph=(f.t*0.20+i*0.11)%1;
+      const q=smMapPtAbs(cam,2+ph*15,2.2+((i*3)%5)*0.9-ph*2.4);
+      const sa=a*Math.sin(ph*Math.PI)*0.9;if(sa<=0.02)continue;
+      const wsp=Math.sin(f.t*7+i*1.3)*cam.TH*0.34, r=cam.TW*0.20;
+      ctx.strokeStyle='rgba(24,22,36,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(2,cam.TW*0.042);
+      ctx.beginPath();ctx.moveTo(q.x-r,q.y+wsp*0.5);ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.16,q.x,q.y);
+      ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.16,q.x+r,q.y+wsp*0.5);ctx.stroke();
+    }
+    { // だれも のらない ふねが うみへ でていく
+      const ph=Math.min(1,f.t*0.10), q=smMapPtAbs(cam,9.5+ph*8.5,12.4);
+      const sc=cam.TW*0.40;
+      ctx.fillStyle='rgba(64,50,38,'+a.toFixed(3)+')';
+      ctx.beginPath();ctx.moveTo(q.x-sc*0.5,q.y);ctx.quadraticCurveTo(q.x,q.y+sc*0.26,q.x+sc*0.5,q.y);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(80,62,44,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(1.5,sc*0.06);
+      ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(q.x,q.y-sc*0.8);ctx.stroke();
+    }
+  }else if(f.kind==='kane'){ // かねの時: ひが おおわれ、なべの おとの わが ひろがる
+    ctx.globalCompositeOperation='lighter';
+    const q=smMapPtAbs(cam,10,7);
+    for(let i=0;i<4;i++){
+      const ph=(f.t*0.42+i*0.25)%1, r=cam.TW*(0.5+ph*5.2);
+      const sa=a*(1-ph)*0.5;if(sa<=0.02)continue;
+      ctx.strokeStyle='rgba(255,226,168,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(2,cam.TW*0.05*(1-ph));
+      ctx.beginPath();ctx.ellipse(q.x,q.y,r,r*0.5,0,0,Math.PI*2);ctx.stroke();
+    }
+    ctx.globalCompositeOperation='source-over'; // ひを おおう かげ
+    const dg=ctx.createRadialGradient(q.x,q.y,cam.TW*0.4,q.x,q.y,cam.TW*5.4);
+    dg.addColorStop(0,'rgba(10,12,26,0)');dg.addColorStop(1,'rgba(10,12,26,'+(a*0.34).toFixed(3)+')');
+    ctx.fillStyle=dg;ctx.fillRect(0,0,W,H);
+  }else if(f.kind==='modoru'){ // あめあがり: そらの ふねが ひとを のせて もどり、よどりは とうを こえる
+    ctx.globalCompositeOperation='source-over';
+    { const ph=Math.min(1,f.t*0.10), q=smMapPtAbs(cam,17.4-ph*9.4,12.7);
+      const sc=cam.TW*0.52;
+      ctx.fillStyle='rgba(64,50,38,'+a.toFixed(3)+')';
+      ctx.beginPath();ctx.moveTo(q.x-sc*0.5,q.y);ctx.quadraticCurveTo(q.x,q.y+sc*0.26,q.x+sc*0.5,q.y);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(80,62,44,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(1.5,sc*0.06);
+      ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(q.x,q.y-sc*0.8);ctx.stroke();
+      ctx.fillStyle='rgba(226,214,190,'+a.toFixed(3)+')'; // のっている ひと
+      ctx.beginPath();ctx.arc(q.x-sc*0.16,q.y-sc*0.16,sc*0.10,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(q.x+sc*0.14,q.y-sc*0.13,sc*0.09,0,Math.PI*2);ctx.fill();
+    }
+    for(let i=0;i<11;i++){ // よどりは とうを こえていく
+      const ph=(f.t*0.17+i*0.09)%1;
+      const q=smMapPtAbs(cam,3+ph*14,7.5-ph*7.2+((i*3)%4)*0.6);
+      const sa=a*Math.sin(ph*Math.PI)*0.85;if(sa<=0.02)continue;
+      const wsp=Math.sin(f.t*7+i*1.1)*cam.TH*0.34, r=cam.TW*0.20;
+      ctx.strokeStyle='rgba(28,26,40,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(2,cam.TW*0.042);
+      ctx.beginPath();ctx.moveTo(q.x-r,q.y+wsp*0.5);ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.16,q.x,q.y);
+      ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.16,q.x+r,q.y+wsp*0.5);ctx.stroke();
+    }
+  }else if(f.kind==='ishibashi'||f.kind==='iwabashi'||f.kind==='hobashira'){ // たに: かたられた はしが たにに かかる
+    ctx.globalCompositeOperation='source-over';
+    const y0=6.5, x0=3.2, x1=16.8, seg=13;
+    const col = f.kind==='ishibashi'?'rgba(206,198,180,':f.kind==='iwabashi'?'rgba(150,142,128,':'rgba(120,92,58,';
+    const gr=Math.min(1,f.t*0.42);
+    ctx.strokeStyle=col+(a*0.92).toFixed(3)+')';
+    ctx.lineWidth=Math.max(3,cam.TW*(f.kind==='iwabashi'?0.22:0.13));
+    ctx.lineCap= f.kind==='iwabashi'?'butt':'round';
+    ctx.beginPath();
+    for(let i=0;i<=seg;i++){
+      const u=i/seg;if(u>gr)break;
+      const mx=x0+(x1-x0)*u, my=y0+(f.kind==='ishibashi'?-Math.sin(u*Math.PI)*0.9:0);
+      const q=smMapPtAbs(cam,mx,my);
+      if(i===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);
+    }
+    ctx.stroke();
+    if(f.kind==='hobashira'){ // ふねの ほばしらを わたした＝ほが ならぶ
+      for(let i=1;i<5;i++){
+        const u=i/5;if(u>gr)continue;
+        const q=smMapPtAbs(cam,x0+(x1-x0)*u,y0);
+        ctx.fillStyle='rgba(240,234,216,'+(a*0.9).toFixed(3)+')';
+        ctx.beginPath();ctx.moveTo(q.x,q.y-cam.TH*0.2);ctx.quadraticCurveTo(q.x+cam.TW*0.32,q.y-cam.TH*0.9,q.x,q.y-cam.TH*1.5);ctx.closePath();ctx.fill();
+      }
+    }
+  }else if(f.kind==='koeami'){ // しおわかれ: 三そうを むすぶ こえの あみ
+    ctx.globalCompositeOperation='lighter';
+    const P=[[5,4],[15,7],[6,9],[10,6]];
+    ctx.lineCap='round';
+    for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){
+      const A=smMapPtAbs(cam,P[i][0]+0.5,P[i][1]+0.5), B=smMapPtAbs(cam,P[j][0]+0.5,P[j][1]+0.5);
+      const ph=(f.t*0.5+i*0.2+j*0.13)%1;
+      ctx.strokeStyle='rgba(180,226,255,'+(a*(0.16+0.24*Math.sin(ph*Math.PI))).toFixed(3)+')';
+      ctx.lineWidth=Math.max(1.5,cam.TW*0.022);
+      ctx.beginPath();ctx.moveTo(A.x,A.y-cam.TH*0.5);ctx.lineTo(B.x,B.y-cam.TH*0.5);ctx.stroke();
+      const t2=(f.t*0.42+i*0.3+j*0.17)%1; // こえの つぶが わたる
+      const px=A.x+(B.x-A.x)*t2, py=A.y+(B.y-A.y)*t2-cam.TH*0.5;
+      ctx.fillStyle='rgba(224,244,255,'+(a*0.8).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(px,py,Math.max(2,cam.TW*0.05),0,Math.PI*2);ctx.fill();
     }
   }else{ // kaze: しまを よこに ふきぬける かぜ
     ctx.globalCompositeOperation='lighter';
