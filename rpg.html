@@ -3519,6 +3519,7 @@ function loadMap(id){
   if(id==='cave2'&&Game.hidden.gate1)MAP=MAP.map((row,i)=>i===8?row.slice(0,16)+'F'+row.slice(17):row); // ひらいた とびらは ひらいたまま
   if(id==='umi'&&Game.hidden.ch11d)MAP=MAP.map(row=>row.replace(/X/g,'W')); // あらなみは ほどけたまま(みなと開通)
   Game.kodama=null; // やまびこ おいかけ(章14): マップを移ったら こだまは いない(保存しない一時状態)
+  Game.horaFx=null; // 章15 ほらが ほんとうに なる も 島を出たら 消える(保存しない)
   if(id!=='grass'){TAMESU_AT=null;TAMESU_GO=false;} // フクロが さした ばしょは むらの中だけ
   if(id!=='hoshiumi')CH21_REPLAY=false; // 再訪はほしのうみ滞在中だけ有効(2026-07-20)
   if(id!=='hoshiminamoto')URA_REPLAY=false; // 裏章の再戦はほしのみなもと滞在中だけ有効(2026-07-23)
@@ -6944,12 +6945,18 @@ async function talkNpc(n){
     await say('おおきな ほらがい。くちに あてて、そっと いきを ふきこんだ——');
     sfxEnc();flash('#ffe8c0',0.32,0.8);
     if(n.msg&&n.msg[0])await say(n.msg[0]);
+    if(horaFxStart(n.hrKey)){ // ほらが ほんとうに なる: 読む窓の まえに、しまの うえで おきる
+      await say(({niji:'——うみが もりあがり、しろい せなかが ひとつ うかんだ。\nしぶきが そらへ はねて、しまの うえに おおきな にじが かかる。',
+        hoshi:'——よぞらが しまの うえまで おりてきた。\nつりいとの ような ひかりを ひいて、ほしが ぱらぱらと ふってくる。',
+        kaze:'——どこからか かぜが はしってきて、しまを よこに ふきぬけた。\nくさも うみも、いっせいに おなじ ほうへ かたむく。'})[horaFxKind()]);
+    }
     Game.hidden[n.hrKey]=true;
     const hrc=['hr1','hr2','hr3'].filter(k=>Game.hidden[k]).length;
     await say('おおぼらなのに——きいた ひとの むねに のこったのは、あたたかい ほんとうだった。\nほらがいは たかく なりひびいて、しずかな しまを ゆらした。');
     toast('ほらがいを ふきならした（'+hrc+' / 3）');
     if(hrc>=3&&!Game.hidden.ch15w){
       Game.hidden.ch15w=true;
+      await say('にじが かかったまま、ほしが ふりつづけ、かぜが やまない。\nみっつの ほらが いちどに ほんとうに なって、しまから 消えなくなった。');
       await say('みっつの ほらが しまの そらで ひとつに かさなった——');
       await say('ほらふきの いえの まえで、しろい ふだが たつまきのように まいあがる。\n『ほんとうで ない ものは、みな うそ。うそつきの こえは、けす』');
       if(Game.mapId==='hora'&&!Game.enemies.some(e=>(e.sp&&e.sp.id)==='makoto'))
@@ -10207,6 +10214,7 @@ function autoStep(){
 }
 function updateField(dt){
   const p=Game.p;
+  if(Game.horaFx){for(const f of Game.horaFx)f.t+=dt;Game.horaFx=Game.horaFx.filter(f=>f.t<f.life);if(!Game.horaFx.length)Game.horaFx=null;} // 章15 ほらが ほんとうに なる
   if(Game.inventoryOpen||Game.proofOpen||Game.menuOpen){held.length=0;Game.autoPath=null;return;}
   if(!Game.talking&&!Game.battling&&!Game.transiting)checkChapterProof();
   if(!Game.talking)Game.dayT+=dt; // かいわちゅうは ときが とまる
@@ -11549,6 +11557,7 @@ function drawFieldScene(){
   }
   drawCh19Overlay();
   drawCh20Overlay();
+  horaFxDraw(cam); // 章15 ほらが ほんとうに なる
   // くもの かげ（ひるの くさはらだけ・しまの うえを ゆっくり ながれる）
   if(dm&&dm.sun>0.25){
     const cs=(MW+MH)*TW*0.5;
@@ -11747,6 +11756,86 @@ function drawMinimap(){
   ctx.globalAlpha=0.5;
   ctx.strokeStyle='#fff';ctx.lineWidth=1;
   ctx.beginPath();ctx.arc(hx,hy,4.5,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+}
+// ============================================================
+// 章15 ほらふきじま『ほらが ほんとうに なる』(2026-08-01)
+// ほらがいを ふくと、その ほら話が しまの うえで じっさいに おきる。
+// 「ふれて 読む」だけだった お使いを「ふいて、しまが かわるのを 見る」へ。
+// ★保存しない一時状態(Game.horaFx)だけ。マップ・通行・ぬし戦・お使いの達成条件・
+//   進行フラグ・セーブ形式は 1つも かえていない(演出の追加のみ)。
+// hr1=くじらの せなかで うみを ひとまたぎ → にじが かかる
+// hr2=よぞらに つりざおを なげたら ほしが つれた → ほしが ふる
+// hr3=かぜと かけっこして かった → かぜが しまを ふきぬける
+// ============================================================
+const HORA_FX={hr1:'niji',hr2:'hoshi',hr3:'kaze'};
+function horaFxStart(key){
+  const k=HORA_FX[key];if(!k)return false;
+  Game.horaFx=(Game.horaFx||[]).filter(f=>f.kind!==k);
+  // みっつ そろったら 消えない＝「そろえた」ことが 画面に のこる
+  const all=['hr1','hr2','hr3'].every(h=>Game.hidden[h]||h===key);
+  Game.horaFx.push({kind:k,t:0,life:all?1e9:9.0});
+  if(all)for(const f of Game.horaFx)f.life=1e9;
+  return true;
+}
+function horaFxKind(){const a=Game.horaFx;return (a&&a.length)?a[a.length-1].kind:null;}
+function horaFxDraw(cam){
+  if(Game.mapId!=='hora')return;
+  for(const f of (Game.horaFx||[]))horaFxOne(cam,f);
+}
+function horaFxOne(cam,f){
+  const k=Math.min(1,f.t/0.8), fade=Math.min(1,Math.max(0,(f.life-f.t)/2.2));
+  const a=k*fade;if(a<=0.01)return;
+  ctx.save();
+  if(f.kind==='niji'){ // うみを またぐ にじ(しまを またぐ 弧)
+    const isW=((MW+MH)/2)*cam.TW, isCY=cam.oy+(((MW+MH-2)/2+1)*cam.TH)/2;
+    const rr=isW*0.56, cx=cam.ox, cy=isCY+rr*0.42;
+    ctx.globalCompositeOperation='lighter';
+    const cols=['rgba(255,120,120,','rgba(255,190,110,','rgba(250,240,140,','rgba(150,230,160,','rgba(140,200,255,','rgba(190,160,255,'];
+    ctx.lineWidth=Math.max(5,isW*0.017);
+    for(let i=0;i<cols.length;i++){
+      ctx.strokeStyle=cols[i]+(0.34*a).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(cx,cy,rr-i*ctx.lineWidth*0.92,Math.PI*1.02,Math.PI*1.98);ctx.stroke();
+    }
+    // くじらの せなかが ひとつ、しまの てまえの うみを もちあげる
+    ctx.globalCompositeOperation='source-over';
+    const wx=cx+Math.sin(f.t*0.6)*isW*0.06, wy=isCY+((MW+MH-2)/2+1)*cam.TH*0.46;
+    ctx.fillStyle='rgba(46,80,124,'+(0.62*a).toFixed(3)+')';
+    ctx.beginPath();ctx.ellipse(wx,wy,isW*0.17,cam.TH*0.62,0,Math.PI,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(232,246,255,'+(0.5*a).toFixed(3)+')';
+    ctx.beginPath();ctx.ellipse(wx,wy,isW*0.17,cam.TH*0.16,0,0,Math.PI*2);ctx.fill();
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    for(let i=0;i<7;i++){ // しぶきが そらへ はねて にじに つながる
+      const ph=(f.t*0.5+i*0.14)%1, sx=wx+(i-3)*isW*0.045, sy=wy-ph*cam.TH*5.2;
+      ctx.fillStyle='rgba(226,244,255,'+(a*(1-ph)*0.6).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(sx,sy,Math.max(1.5,isW*0.005*(1-ph*0.5)),0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  }else if(f.kind==='hoshi'){ // つりざおに かかった ほしが ふってくる
+    ctx.globalCompositeOperation='lighter';
+    for(let i=0;i<26;i++){
+      const ph=(f.t*0.42+i*0.137)%1;
+      const sx=((i*97)%100)/100*W, sy=-H*0.05+ph*H*1.05;
+      const sa=a*(1-ph)*0.9;if(sa<=0.02)continue;
+      const r=Math.max(1.6,W*0.0032)*(0.7+((i*37)%10)/10);
+      ctx.fillStyle='rgba(255,246,200,'+sa.toFixed(3)+')';
+      ctx.beginPath();ctx.arc(sx,sy,r,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(255,240,180,'+(sa*0.5).toFixed(3)+')';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(sx,sy-r*5);ctx.lineTo(sx,sy);ctx.stroke();
+    }
+  }else{ // kaze: しまを よこに ふきぬける かぜ
+    ctx.globalCompositeOperation='lighter';
+    ctx.lineCap='round';
+    for(let i=0;i<16;i++){
+      const ph=(f.t*0.55+i*0.083)%1;
+      const y=H*0.16+((i*61)%100)/100*H*0.62;
+      const x0=-W*0.15+ph*W*1.3, len=W*(0.10+((i*29)%10)/100);
+      const sa=a*Math.sin(ph*Math.PI)*0.55;if(sa<=0.02)continue;
+      ctx.strokeStyle='rgba(226,244,255,'+sa.toFixed(3)+')';
+      ctx.lineWidth=Math.max(1.5,H*0.0035);
+      ctx.beginPath();ctx.moveTo(x0,y);ctx.quadraticCurveTo(x0+len*0.5,y-H*0.012,x0+len,y);ctx.stroke();
+    }
+  }
   ctx.restore();
 }
 // ============================================================
