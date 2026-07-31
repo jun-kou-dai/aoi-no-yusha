@@ -11749,6 +11749,459 @@ function drawMinimap(){
   ctx.beginPath();ctx.arc(hx,hy,4.5,0,Math.PI*2);ctx.stroke();
   ctx.restore();
 }
+// ============================================================
+// しまの じめん（SHIMAART）: id→えがく関数の表。敵の ZAKO2ART と おなじ形。
+//   top(g)   … 上面の ぬり。ctx.fillStyle を きめて true を かえすと 共通の いろわけを つかわない
+//   deco(g)  … 上面の もよう（ひしがたで クリップずみ）。true を かえすと 共通の もようを ださない
+//   face(o)  … がわ面。{lip:色} か true を かえすと 共通の いろを つかわない
+//   tree(x,y,cam,c) … き。true を かえすと 共通の きを ださない
+//   g = {t,x,y,bx,by,z,h,cx,cy,N,E,S,Wp,TW,TH,hsh,dia}
+//   o = {t,fg,rightSide,toVoid,TW,TH}
+// ★あたらしい しまを ふやすときは ここへ 1つ 足す。足さないと また おなじ みどりに なる。
+// ============================================================
+const SHIMAART={};
+const SM_GND='GTHOMNKYV'; // じめん（うえに ものが のる タイルも ふくむ）
+function smTop(g,c0,c1){const q=ctx.createLinearGradient(0,g.N.y,0,g.S.y);q.addColorStop(0,c0);q.addColorStop(1,c1);ctx.fillStyle=q;return true;}
+function smPt(g,i,a,b){const u=0.15+((g.hsh*a+i*0.31)%1)*0.70,v=0.15+((g.hsh*b+i*0.47)%1)*0.70;return{x:g.bx+(u-v)*g.TW/2,y:g.by+(u+v)*g.TH/2-g.z};}
+function smDot(g,p,rx,ry,rot,col){ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(p.x,p.y,rx,ry,rot,0,Math.PI*2);ctx.fill();}
+function smSeg(g,ax,ay,bx2,by2,col,w){ctx.strokeStyle=col;ctx.lineWidth=Math.max(1,g.TW*w);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx2,by2);ctx.stroke();}
+// タイルの ひしがたを よこぎる すじ。axis=0…みぎしたむき / axis=1…ひだりしたむき
+function smAxis(g,axis,f,col,w){
+  const P=axis?{x:g.N.x+(g.E.x-g.N.x)*f,y:g.N.y+(g.E.y-g.N.y)*f}:{x:g.N.x+(g.Wp.x-g.N.x)*f,y:g.N.y+(g.Wp.y-g.N.y)*f};
+  const Q=axis?{x:g.Wp.x+(g.S.x-g.Wp.x)*f,y:g.Wp.y+(g.S.y-g.Wp.y)*f}:{x:g.E.x+(g.S.x-g.E.x)*f,y:g.E.y+(g.S.y-g.E.y)*f};
+  smSeg(g,P.x,P.y,Q.x,Q.y,col,w);
+}
+// マップの ざひょう(u,v)→がめんの ざひょう。タイルを またいで つながる もようを えがくのに つかう
+function smMapPt(g,u,v){return{x:g.bx+((u-v)-(g.x-g.y))*g.TW/2,y:g.by+((u+v)-(g.x+g.y))*g.TH/2-g.z};}
+function smFace(o,cr,cl,lip){
+  o.fg.addColorStop(0,o.rightSide?cr[0]:cl[0]);
+  o.fg.addColorStop(o.toVoid?0.55:1,o.rightSide?cr[1]:cl[1]);
+  if(o.toVoid)o.fg.addColorStop(1,'rgba(12,14,28,0)');
+  return{lip:lip||null};
+}
+
+// ── 章13 くらのしま：しまいこまれた 倉。ゆかは あさぶくろの いろ、かべは つみあげた 木ばこ ──
+SHIMAART.kura={
+  top(g){
+    if(g.t==='F')return smTop(g,'#6a5636','#463a22');
+    if(g.t==='C'||g.t==='D')return smTop(g,'#5c4526','#3e2e18');
+    return false;
+  },
+  deco(g){
+    if(g.t==='F'){
+      smAxis(g,0,0.30,'rgba(38,24,10,.42)',0.012);smAxis(g,0,0.66,'rgba(38,24,10,.42)',0.012);
+      for(let i=0;i<3;i++)smDot(g,smPt(g,i,7,13),g.TW*0.030,g.TW*0.017,g.hsh*6,['rgba(150,126,80,.40)','rgba(96,78,44,.42)','rgba(178,152,102,.30)'][(i+((g.hsh*5)|0))%3]);
+      if(g.hsh>0.80){ // しまいこまれた あさぶくろ
+        const p={x:g.cx+(g.hsh-0.5)*g.TW*0.24,y:g.cy+g.TH*0.05};
+        const q=ctx.createLinearGradient(p.x,p.y-g.TH*0.26,p.x,p.y+g.TH*0.10);
+        q.addColorStop(0,'#c9ac72');q.addColorStop(1,'#8a7043');
+        ctx.fillStyle=q;
+        ctx.beginPath();
+        ctx.moveTo(p.x-g.TW*0.12,p.y+g.TH*0.08);
+        ctx.quadraticCurveTo(p.x-g.TW*0.15,p.y-g.TH*0.16,p.x-g.TW*0.05,p.y-g.TH*0.22);
+        ctx.lineTo(p.x+g.TW*0.05,p.y-g.TH*0.22);
+        ctx.quadraticCurveTo(p.x+g.TW*0.15,p.y-g.TH*0.16,p.x+g.TW*0.12,p.y+g.TH*0.08);
+        ctx.closePath();ctx.fill();
+        ctx.strokeStyle='rgba(88,66,34,.60)';ctx.lineWidth=Math.max(1,g.TW*0.012);
+        ctx.beginPath();ctx.moveTo(p.x-g.TW*0.06,p.y-g.TH*0.20);ctx.lineTo(p.x+g.TW*0.06,p.y-g.TH*0.20);ctx.stroke();
+      }else if(g.hsh>0.62){ // まかれた なわ
+        ctx.strokeStyle='rgba(212,186,128,.40)';ctx.lineWidth=Math.max(1,g.TW*0.016);
+        ctx.beginPath();ctx.ellipse(g.cx+(g.hsh-0.5)*g.TW*0.28,g.cy,g.TW*0.085,g.TH*0.075,0,0,Math.PI*2);ctx.stroke();
+      }
+      return true;
+    }
+    if(g.t==='C'||g.t==='D'){ // つみあげた 木ばこ（よこいた2まいと たてざん）
+      smAxis(g,0,0.5,'rgba(28,18,8,.55)',0.016);
+      smAxis(g,1,0.34,'rgba(232,206,150,.16)',0.012);smAxis(g,1,0.70,'rgba(28,18,8,.40)',0.012);
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='C'||o.t==='D'||o.t==='B')return smFace(o,['#4a3620','#2c1f10'],['#5e4628','#3a2a16'],'#6e5430');
+    if(o.t==='F'||o.t==='S'||o.t==='E')return smFace(o,['#4a3a22','#2e2414'],['#5c4a2c','#3a2e1a'],null);
+    return null;
+  }
+};
+
+// ── 章17 あつめのやかた：3かい ぶんを はっきり わける ──
+// 1かい＝げんかんの いたのま＋あかい じゅうたん
+SHIMAART.yakata1={
+  top(g){
+    if(g.t==='F')return smTop(g,'#4c3a26','#34271a');
+    if(g.t==='C'||g.t==='D')return smTop(g,'#3a2e26','#261e18');
+    return false;
+  },
+  deco(g){
+    if(g.t==='F'){
+      smAxis(g,0,0.26,'rgba(20,12,6,.48)',0.012);smAxis(g,0,0.58,'rgba(20,12,6,.48)',0.012);smAxis(g,0,0.86,'rgba(20,12,6,.34)',0.010);
+      smAxis(g,1,g.hsh>0.5?0.44:0.24,'rgba(255,226,186,.09)',0.010);
+      if(g.x>=9&&g.x<=11){ // げんかんから おくへ のびる あかい じゅうたん
+        ctx.fillStyle='rgba(132,34,38,.72)';g.dia();ctx.fill();
+        ctx.strokeStyle='rgba(226,182,96,.40)';ctx.lineWidth=Math.max(1,g.TW*0.018);
+        smAxis(g,1,0.16,'rgba(226,182,96,.34)',0.014);smAxis(g,1,0.84,'rgba(226,182,96,.34)',0.014);
+      }
+      return true;
+    }
+    if(g.t==='C'||g.t==='D'){ // はしらと しっくい
+      smAxis(g,1,0.30,'rgba(226,214,192,.20)',0.030);
+      smAxis(g,0,0.52,'rgba(18,12,8,.45)',0.014);
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='C'||o.t==='D'||o.t==='B')return smFace(o,['#3a2c22','#221a14'],['#4c3a2e','#2e241c'],'#5a4636');
+    if(o.t==='F'||o.t==='S'||o.t==='E')return smFace(o,['#42332a','#281f18'],['#54423a','#332820'],null);
+    return null;
+  }
+};
+// 2かい＝しょこ。ゆかまで 本が つみあがっている
+SHIMAART.yakata2={
+  top(g){
+    if(g.t==='F')return smTop(g,'#4a4340','#332c2c');
+    if(g.t==='C'||g.t==='D')return smTop(g,'#463a34','#2c2320');
+    return false;
+  },
+  deco(g){
+    if(g.t==='F'){
+      smAxis(g,0,0.42,'rgba(22,16,14,.40)',0.011);
+      for(let i=0;i<2;i++){ // つみあがった 本（よこに ねかせた ひとやま）
+        const p=smPt(g,i,7,13);
+        const col=['#a8463c','#42679e','#377854','#9c7a2e','#67437f'][(i+((g.hsh*7)|0))%5];
+        ctx.save();ctx.translate(p.x,p.y);ctx.rotate((((g.hsh*11+i)%1)-0.5)*0.8);
+        for(let k=0;k<3;k++){ // 3さつ かさねる
+          const wdt=g.TW*(0.16-k*0.018),yk=-k*g.TW*0.026;
+          ctx.fillStyle=k===1?'rgba(228,216,190,.92)':col;
+          ctx.fillRect(-wdt/2,yk-g.TW*0.022,wdt,g.TW*0.024);
+          ctx.fillStyle='rgba(20,14,10,.34)';ctx.fillRect(-wdt/2,yk+g.TW*0.000,wdt,g.TW*0.006);
+        }
+        ctx.restore();
+      }
+      return true;
+    }
+    if(g.t==='C'||g.t==='D'){ // 本だな：たての しきり＋ならんだ 本の せ
+      for(const f of[0.26,0.52,0.78])smAxis(g,1,f,'rgba(20,14,12,.45)',0.013);
+      for(let i=0;i<3;i++){const p=smPt(g,i,5,11);ctx.fillStyle=['rgba(180,90,80,.45)','rgba(96,132,180,.42)','rgba(198,170,96,.40)'][(i+((g.hsh*5)|0))%3];ctx.fillRect(p.x-g.TW*0.018,p.y-g.TW*0.030,g.TW*0.036,g.TW*0.060);}
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='C'||o.t==='D'||o.t==='B')return smFace(o,['#3c322e','#241d1a'],['#4e4038','#302623'],'#5c4c42');
+    if(o.t==='F'||o.t==='S'||o.t==='E')return smFace(o,['#403a38','#282322'],['#524a46','#332d2b'],null);
+    return null;
+  }
+};
+// 3かい＝おくのま。あつめた ものに しろい かぶせぬのが かかったまま
+SHIMAART.yakata3={
+  top(g){
+    if(g.t==='F')return smTop(g,'#6e675c','#4a443c');
+    if(g.t==='C'||g.t==='D')return smTop(g,'#5e574e','#3c3730');
+    return false;
+  },
+  deco(g){
+    if(g.t==='F'){
+      // つもった ほこり
+      for(let i=0;i<3;i++)smDot(g,smPt(g,i,7,13),g.TW*0.040,g.TW*0.022,g.hsh*6,['rgba(198,190,176,.16)','rgba(120,114,104,.20)','rgba(168,160,148,.13)'][(i+((g.hsh*5)|0))%3]);
+      smAxis(g,0,0.5,'rgba(30,26,22,.28)',0.011);
+      if(g.hsh>0.60){ // しろい かぶせぬの（あつめた ものに かかったまま。たかい／ひくい／ほそい が まざる）
+        const kt=(g.hsh*13)%1, hh=g.TH*(0.16+kt*0.30), ww=g.TW*(0.15+((g.hsh*17)%1)*0.15);
+        const p={x:g.cx+(g.hsh-0.5)*g.TW*0.20,y:g.cy+g.TH*0.05};
+        const q=ctx.createLinearGradient(p.x,p.y-hh,p.x,p.y+g.TH*0.22);
+        q.addColorStop(0,'rgba(246,242,232,.92)');q.addColorStop(1,'rgba(150,142,130,.92)');
+        ctx.fillStyle=q;
+        ctx.beginPath();
+        ctx.moveTo(p.x-ww,p.y+g.TH*0.10);
+        ctx.quadraticCurveTo(p.x-ww*0.80,p.y-hh*(0.72+0.24*((g.hsh*7)%1)),p.x-ww*0.10,p.y-hh);
+        ctx.quadraticCurveTo(p.x+ww*0.85,p.y-hh*(0.62+0.30*((g.hsh*11)%1)),p.x+ww,p.y+g.TH*0.10);
+        ctx.quadraticCurveTo(p.x,p.y+g.TH*0.24,p.x-ww,p.y+g.TH*0.10);
+        ctx.closePath();ctx.fill();
+        ctx.strokeStyle='rgba(100,94,86,.32)';ctx.lineWidth=Math.max(1,g.TW*0.010);
+        ctx.beginPath();ctx.moveTo(p.x-ww*0.5,p.y+g.TH*0.06);ctx.quadraticCurveTo(p.x-ww*0.1,p.y-hh*0.42,p.x+ww*0.3,p.y-hh*0.66);ctx.stroke();
+        if(kt>0.72){ // ぬのの すそが ゆかに たれる
+          ctx.fillStyle='rgba(214,208,196,.55)';
+          ctx.beginPath();ctx.ellipse(p.x,p.y+g.TH*0.12,ww*1.14,g.TH*0.07,0,0,Math.PI*2);ctx.fill();
+        }
+      }
+      if(g.hsh>0.90){ // ほこりの ひかり
+        ctx.save();ctx.globalCompositeOperation='lighter';
+        ctx.fillStyle='rgba(214,228,255,'+(0.10+0.08*Math.sin(TM*1.4+g.hsh*8)).toFixed(3)+')';
+        ctx.beginPath();ctx.arc(g.cx+(g.hsh-0.5)*g.TW*0.3,g.cy-g.TH*0.10,g.TW*0.05,0,Math.PI*2);ctx.fill();ctx.restore();
+      }
+      return true;
+    }
+    if(g.t==='C'||g.t==='D'){ // ぬのを かけた かたまりの やま
+      ctx.fillStyle='rgba(226,220,208,.22)';g.dia();ctx.fill();
+      smAxis(g,0,0.44,'rgba(40,36,30,.32)',0.014);
+      smAxis(g,1,0.62,'rgba(246,242,232,.18)',0.012);
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='C'||o.t==='D'||o.t==='B')return smFace(o,['#4e483f','#2c2822'],['#605950','#3a352e'],'#8e8678');
+    if(o.t==='F'||o.t==='S'||o.t==='E')return smFace(o,['#544e45','#332f29'],['#665f55','#403b34'],null);
+    return null;
+  }
+};
+
+// ── 章14 やまびこのたに：かわらの 石ころと やせた くさ、かべは 谷の 岩はだ（よこの 層）──
+SHIMAART.tani={
+  top(g){
+    if(SM_GND.includes(g.t))return smTop(g,'#74805e','#57603f');
+    if(g.t==='C'||g.t==='D')return smTop(g,'#6e6455','#494138');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){
+      for(let i=0;i<4;i++){const p=smPt(g,i,7,13);smDot(g,p,g.TW*(0.016+0.010*((g.hsh*9+i)%1)),g.TW*0.011,g.hsh*6,['rgba(206,202,188,.55)','rgba(150,146,134,.50)','rgba(178,174,158,.45)'][(i+((g.hsh*5)|0))%3]);}
+      ctx.lineCap='round';
+      for(let i=0;i<2;i++){const p=smPt(g,i+4,11,5);const hg=g.TH*(0.10+((g.hsh*9+i)%1)*0.08);
+        smSeg(g,p.x,p.y,p.x+((g.hsh*11+i)%1-0.5)*g.TW*0.05,p.y-hg,'rgba(126,148,92,.46)',0.014);}
+      return true;
+    }
+    if(g.t==='C'||g.t==='D'){ // 岩の 層（よこしま）
+      for(const f of[0.28,0.52,0.76])smAxis(g,0,f,'rgba(40,34,26,.34)',0.012);
+      smAxis(g,0,0.40,'rgba(216,208,190,.14)',0.010);
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='C'||o.t==='D'||o.t==='B')return smFace(o,['#584e42','#332c25'],['#6a5e50','#413830'],'#7c7062');
+    if(!'WLXIFSE'.includes(o.t))return smFace(o,['#6a5a44','#42382a'],['#7e6c52','#4e4232'],'#6e7a52');
+    return null;
+  },
+  tree(x,y,cam,c){ // 谷の やせた き（ほそい みきと まばらな は）
+    const TW=cam.TW,S=TW*0.80*(0.90+((tileHash(x,y)*5)%1)*0.22),h=tileHash(x,y),sway=Math.sin(TM*0.8+x*1.7+y*0.8)*S*0.03;
+    ctx.fillStyle='rgba(8,14,28,0.30)';ctx.beginPath();ctx.ellipse(c.x+S*0.12,c.y+cam.TH*0.09,S*0.28,cam.TH*0.26,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#6a5a44';ctx.lineWidth=Math.max(1.6,S*0.085);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.quadraticCurveTo(c.x+sway*2,c.y-S*0.55,c.x+sway*3.4,c.y-S*1.00);ctx.stroke();
+    ctx.lineWidth=Math.max(1,S*0.050);
+    for(let i=0;i<3;i++){const a=-0.5-i*0.8+((h*7+i)%1-0.5)*0.5,ly=c.y-S*(0.58+i*0.17);
+      ctx.beginPath();ctx.moveTo(c.x+sway*2,ly);ctx.lineTo(c.x+sway*2+Math.cos(a)*S*0.44,ly+Math.sin(a)*S*0.34);ctx.stroke();}
+    for(let i=0;i<5;i++){const a=h*6.28+i*1.28,r=S*(0.22+((h*9+i)%1)*0.20);
+      ctx.fillStyle=i%2?'rgba(118,148,90,.84)':'rgba(80,110,66,.84)';
+      ctx.beginPath();ctx.ellipse(c.x+sway*3+Math.cos(a)*r,c.y-S*0.90+Math.sin(a)*r*0.5,S*0.22,S*0.14,a*0.3,0,Math.PI*2);ctx.fill();}
+    return true;
+  }
+};
+
+// ── 章16 うたのしま：こけむした 石だたみに おんぷが きざまれている ──
+SHIMAART.uta={
+  top(g){
+    if(SM_GND.includes(g.t))return smTop(g,'#6b8a70','#48604a');
+    if(g.t==='C'||g.t==='D')return smTop(g,'#8c88a0','#615d74');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){
+      // 石だたみの めじ
+      smAxis(g,0,0.5,'rgba(30,44,34,.34)',0.014);smAxis(g,1,0.5,'rgba(30,44,34,.34)',0.014);
+      for(let i=0;i<3;i++)smDot(g,smPt(g,i,7,13),g.TW*0.035,g.TW*0.020,g.hsh*6,['rgba(120,168,116,.36)','rgba(86,134,92,.34)','rgba(150,186,140,.26)'][(i+((g.hsh*5)|0))%3]);
+      if(g.hsh>0.74){ // きざまれた おんぷ
+        const nx=g.cx+(g.hsh-0.5)*g.TW*0.26,ny=g.cy;
+        ctx.fillStyle='rgba(236,244,226,.60)';
+        ctx.beginPath();ctx.ellipse(nx-g.TW*0.03,ny+g.TH*0.10,g.TW*0.038,g.TH*0.055,-0.4,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='rgba(236,244,226,.60)';ctx.lineWidth=Math.max(1,g.TW*0.016);
+        ctx.beginPath();ctx.moveTo(nx+g.TW*0.005,ny+g.TH*0.10);ctx.lineTo(nx+g.TW*0.005,ny-g.TH*0.20);
+        ctx.lineTo(nx+g.TW*0.07,ny-g.TH*0.13);ctx.stroke();
+      }
+      return true;
+    }
+    if(g.t==='C'||g.t==='D'){ // しろい 石の かべ（つみいしの めじ）
+      smAxis(g,0,0.34,'rgba(48,44,60,.38)',0.013);smAxis(g,0,0.70,'rgba(48,44,60,.38)',0.013);
+      smAxis(g,1,g.hsh>0.5?0.42:0.62,'rgba(48,44,60,.30)',0.012);
+      smAxis(g,0,0.24,'rgba(246,244,255,.16)',0.010);
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='C'||o.t==='D'||o.t==='B')return smFace(o,['#66627a','#3c3948'],['#7a7690','#4a4759'],'#a49fba');
+    if(!'WLXIFSE'.includes(o.t))return smFace(o,['#5c5442','#382f26'],['#6e6650','#443a2e'],'#5c7a5e');
+    return null;
+  },
+  tree(x,y,cam,c){ // うたの しま：ほそながい いとすぎ
+    const TW=cam.TW,S=TW*0.54,h=tileHash(x,y),sway=Math.sin(TM*0.7+x*1.3+y*0.9)*S*0.035;
+    ctx.fillStyle='rgba(8,14,28,0.28)';ctx.beginPath();ctx.ellipse(c.x+S*0.10,c.y+cam.TH*0.09,S*0.20,cam.TH*0.20,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#4a3f30';rr(ctx,c.x-S*0.045,c.y-S*0.20,S*0.09,S*0.26,S*0.03);ctx.fill();
+    const hgt=S*(1.30+((h*5)%1)*0.26);
+    const q=ctx.createLinearGradient(0,c.y-hgt,0,c.y);q.addColorStop(0,'#79a884');q.addColorStop(1,'#2c4a3c');
+    ctx.fillStyle=q;
+    ctx.beginPath();ctx.moveTo(c.x+sway*1.6,c.y-hgt);
+    ctx.quadraticCurveTo(c.x+S*0.30,c.y-hgt*0.30,c.x+S*0.16,c.y-S*0.14);
+    ctx.lineTo(c.x-S*0.16,c.y-S*0.14);
+    ctx.quadraticCurveTo(c.x-S*0.30,c.y-hgt*0.30,c.x+sway*1.6,c.y-hgt);
+    ctx.closePath();ctx.fill();
+    return true;
+  }
+};
+
+// ── 章15 ほらふきじま：すなと かいがら（みどりの しまと はっきり わける）──
+SHIMAART.hora={
+  top(g){
+    if(SM_GND.includes(g.t))return smTop(g,'#d2bf8e','#a59061');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){
+      // すなの うねり
+      ctx.strokeStyle='rgba(255,246,214,.30)';ctx.lineWidth=Math.max(1,g.TW*0.013);
+      for(let i=0;i<2;i++){const p=smPt(g,i,7,13);ctx.beginPath();ctx.moveTo(p.x-g.TW*0.17,p.y);ctx.quadraticCurveTo(p.x,p.y+g.TH*0.09,p.x+g.TW*0.17,p.y-g.TH*0.01);ctx.stroke();}
+      ctx.strokeStyle='rgba(140,116,72,.26)';
+      {const p=smPt(g,3,11,5);ctx.beginPath();ctx.moveTo(p.x-g.TW*0.15,p.y+g.TH*0.06);ctx.quadraticCurveTo(p.x,p.y+g.TH*0.14,p.x+g.TW*0.16,p.y+g.TH*0.03);ctx.stroke();}
+      if(g.hsh>0.62){ // かいがら
+        const p=smPt(g,5,5,9);
+        ctx.fillStyle='rgba(255,244,232,.80)';
+        ctx.beginPath();ctx.ellipse(p.x,p.y,g.TW*0.045,g.TW*0.032,g.hsh*6,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='rgba(206,168,140,.70)';ctx.lineWidth=Math.max(1,g.TW*0.010);
+        for(let k=-1;k<2;k++){ctx.beginPath();ctx.moveTo(p.x,p.y+g.TW*0.030);ctx.lineTo(p.x+k*g.TW*0.030,p.y-g.TW*0.028);ctx.stroke();}
+      }
+      if(g.hsh>0.90){smDot(g,smPt(g,6,3,7),g.TW*0.026,g.TW*0.018,g.hsh*4,'rgba(196,150,110,.70)');}
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='W')return smFace(o,['#a08a58','#5e4e30'],['#b49c66','#6e5c3c'],'#c8b183'); // うみの そとがわの がけも すな（くさいろの ふちを ださない）
+    if(!'LXICBDRFSE'.includes(o.t))return smFace(o,['#b09760','#6e5c38'],['#c4aa72','#836e46'],'#dcc894');
+    return null;
+  },
+  tree(x,y,cam,c){ // みなみの しまの やしの き
+    const TW=cam.TW,S=TW*0.56,h=tileHash(x,y),sway=Math.sin(TM*1.0+x*1.7+y*0.8)*S*0.05;
+    ctx.fillStyle='rgba(8,14,28,0.28)';ctx.beginPath();ctx.ellipse(c.x+S*0.14,c.y+cam.TH*0.09,S*0.26,cam.TH*0.22,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#8a6f45';ctx.lineWidth=Math.max(1.6,S*0.085);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.quadraticCurveTo(c.x-S*0.10+sway,c.y-S*0.50,c.x+S*0.10+sway*2,c.y-S*0.92);ctx.stroke();
+    ctx.strokeStyle='rgba(60,44,24,.45)';ctx.lineWidth=Math.max(1,S*0.030);
+    for(let i=0;i<3;i++){const ly=c.y-S*(0.22+i*0.24);ctx.beginPath();ctx.moveTo(c.x-S*0.05,ly);ctx.lineTo(c.x+S*0.06,ly-S*0.02);ctx.stroke();}
+    const tx=c.x+S*0.10+sway*2,ty=c.y-S*0.92;
+    for(let i=0;i<6;i++){
+      const a=Math.PI+ (i/5)*Math.PI + ((h*7+i)%1-0.5)*0.24;
+      const ex=tx+Math.cos(a)*S*0.52,ey=ty+Math.sin(a)*S*0.30+S*0.12;
+      const q=ctx.createLinearGradient(tx,ty,ex,ey);q.addColorStop(0,'#5f9a52');q.addColorStop(1,'#2f5e3c');
+      ctx.fillStyle=q;
+      ctx.beginPath();ctx.moveTo(tx,ty);
+      ctx.quadraticCurveTo(tx+Math.cos(a)*S*0.32,ty+Math.sin(a)*S*0.10-S*0.14,ex,ey);
+      ctx.quadraticCurveTo(tx+Math.cos(a)*S*0.30,ty+Math.sin(a)*S*0.22+S*0.04,tx,ty);
+      ctx.closePath();ctx.fill();
+    }
+    ctx.fillStyle='#8a5f34';
+    for(let i=0;i<3;i++)  {ctx.beginPath();ctx.arc(tx+Math.cos(i*2.1)*S*0.08,ty+S*0.07+Math.sin(i*2.1)*S*0.05,S*0.045,0,Math.PI*2);ctx.fill();}
+    return true;
+  }
+};
+
+// ── 章18 かぜまちじま：かぜに ねた くさと すなの ふうもん ──
+const SM_KAZE={
+  top(g){
+    if(SM_GND.includes(g.t))return smTop(g,'#9cb468','#6d8746');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){
+      ctx.lineCap='round';
+      // ★かぜが わたる：あかるさが なみに なって しまを ふきぬける（タイルごとの いちで いろが かわる）
+      const gustW=Math.max(0,Math.sin((g.x+0.5)*0.55+(g.y+0.5)*0.22-TM*1.15));
+      // ぜんぶ おなじむきに ねた くさ（かぜの むき）
+      for(let i=0;i<4;i++){
+        const p=smPt(g,i,7,13),hg=g.TH*(0.13+((g.hsh*9+i)%1)*0.11);
+        const bend=g.TW*(0.10+0.05*gustW);
+        ctx.strokeStyle=i%2?'rgba(58,96,44,.62)':'rgba(198,228,142,'+(0.42+0.34*gustW).toFixed(3)+')';
+        ctx.lineWidth=Math.max(1,g.TW*0.016);
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.quadraticCurveTo(p.x+bend*0.5,p.y-hg*0.7,p.x+bend,p.y-hg*0.35);ctx.stroke();
+      }
+      // ★かぜの すじ：タイルを またいで つながる（しま ぜんたいを かぜが ふきぬける）
+      ctx.lineWidth=Math.max(1,g.TW*0.016);
+      for(let n=-1;n<=1;n++){
+        const v0=Math.round((g.y+0.5)*1.5+n)/1.5;
+        ctx.strokeStyle='rgba(244,238,196,'+(0.13+0.44*gustW).toFixed(3)+')';
+        ctx.beginPath();
+        for(let s=0;s<=6;s++){
+          const u=g.x-0.7+s*0.28, v=v0+0.16*Math.sin(u*0.9+v0*1.7)+0.06*Math.sin(TM*0.6+u*0.4);
+          const P=smMapPt(g,u,v);
+          if(s===0)ctx.moveTo(P.x,P.y);else ctx.lineTo(P.x,P.y);
+        }
+        ctx.stroke();
+      }
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(!'WLXICBDRFSE'.includes(o.t))return smFace(o,['#6a5c3c','#413826'],['#7e6e48','#4e4430'],'#7d9a52');
+    return null;
+  },
+  tree(x,y,cam,c){ // かぜに かたむいた き
+    const TW=cam.TW,S=TW*0.56,h=tileHash(x,y);
+    const gust=0.20+0.06*Math.sin(TM*1.3+x*0.9+y*0.6);
+    ctx.fillStyle='rgba(8,14,28,0.28)';ctx.beginPath();ctx.ellipse(c.x+S*0.16,c.y+cam.TH*0.09,S*0.28,cam.TH*0.24,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#5d4634';ctx.lineWidth=Math.max(1.6,S*0.10);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.quadraticCurveTo(c.x+S*gust*0.9,c.y-S*0.42,c.x+S*gust*2.0,c.y-S*0.70);ctx.stroke();
+    const tx=c.x+S*gust*2.0,ty=c.y-S*0.70;
+    for(let i=0;i<3;i++){
+      const cr=S*(0.36-i*0.07),ox2=tx+S*gust*(0.5+i*0.5),oy2=ty-cr*0.55-i*S*0.12;
+      const q=ctx.createRadialGradient(ox2-cr*0.4,oy2-cr*0.4,cr*0.15,ox2,oy2,cr);
+      q.addColorStop(0,'#8ec27e');q.addColorStop(1,'#3a6a4a');
+      ctx.fillStyle=q;
+      ctx.beginPath();ctx.ellipse(ox2,oy2,cr*1.22,cr*0.80,0.18,0,Math.PI*2);ctx.fill();
+    }
+    ctx.strokeStyle='rgba(226,240,206,.30)';ctx.lineWidth=Math.max(1,S*0.03);
+    for(let i=0;i<2;i++){const ly=ty-S*(0.20+i*0.26);ctx.beginPath();ctx.moveTo(tx+S*0.30,ly);ctx.quadraticCurveTo(tx+S*0.62,ly-S*0.05,tx+S*0.92,ly+S*0.02);ctx.stroke();}
+    return true;
+  }
+};
+SHIMAART.kazemachi=SM_KAZE;SHIMAART.kazemachiNight=SM_KAZE;
+
+// ── 章19 ときかさねじま：とけいの もじばんが しかれた しま（3つの ときで 共通）──
+const SM_TOKI={
+  top(g){
+    if(SM_GND.includes(g.t))return smTop(g,'#7d84a2','#545b76');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){
+      // 石の めじ
+      smAxis(g,0,0.5,'rgba(36,40,58,.34)',0.014);smAxis(g,1,0.5,'rgba(36,40,58,.34)',0.014);
+      // ★しま ぜんたいで ひとつの とけいの もじばん（タイルを またいで つながる）
+      const C=[10.0,6.5],ux=g.x+0.5-C[0],uy=g.y+0.5-C[1],rr2=Math.hypot(ux,uy);
+      const O=smMapPt(g,C[0],C[1]);
+      const K=Math.SQRT2;
+      ctx.strokeStyle='rgba(226,232,255,.30)';
+      for(const R of[2.4,4.6])if(Math.abs(rr2-R)<0.95){ // まるい わく（タイルごとに きりとられて つながる）
+        ctx.lineWidth=Math.max(1,g.TW*(R>4?0.020:0.014));
+        ctx.beginPath();ctx.ellipse(O.x,O.y,R*g.TW/K,R*g.TH/K,0,0,Math.PI*2);ctx.stroke();
+      }
+      if(rr2>3.0&&rr2<5.9){ // 12この めもり（ときの きざみ）
+        const th=Math.atan2(uy,ux);
+        for(let k=0;k<12;k++){
+          const a=k*Math.PI/6-Math.PI/2;
+          let d=th-a;while(d>Math.PI)d-=6.283185;while(d<-Math.PI)d+=6.283185;
+          if(Math.abs(d)*rr2>0.85)continue;
+          const P=smMapPt(g,C[0]+Math.cos(a)*3.9,C[1]+Math.sin(a)*3.9);
+          const Q=smMapPt(g,C[0]+Math.cos(a)*(k%3?5.0:5.5),C[1]+Math.sin(a)*(k%3?5.0:5.5));
+          ctx.lineWidth=Math.max(1,g.TW*(k%3?0.020:0.036));
+          ctx.strokeStyle=k%3?'rgba(226,232,255,.34)':'rgba(244,236,206,.46)';
+          ctx.beginPath();ctx.moveTo(P.x,P.y);ctx.lineTo(Q.x,Q.y);ctx.stroke();
+        }
+      }
+      if(rr2<1.6){ // まんなかの じく
+        ctx.save();ctx.globalCompositeOperation='lighter';
+        ctx.fillStyle='rgba(224,232,255,'+(0.16+0.10*Math.sin(TM*1.2)).toFixed(3)+')';
+        ctx.beginPath();ctx.ellipse(O.x,O.y,g.TW*0.30,g.TH*0.30,0,0,Math.PI*2);ctx.fill();ctx.restore();
+      }
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='W')return smFace(o,['#454b62','#24283a'],['#555c74','#2e3446'],'#767d94'); // うみの そとがわの がけも 石（くさいろの ふちを ださない）
+    if(!'LXICBDRFSE'.includes(o.t))return smFace(o,['#4e5470','#2c3046'],['#606880','#3a4056'],'#8c94b0');
+    return null;
+  }
+};
+SHIMAART.tokikasanedusk=SM_TOKI;SHIMAART.tokikasanebell=SM_TOKI;SHIMAART.tokikasanerain=SM_TOKI;
 function drawIsoBlock(x,y,cam){
   const t=MAP[y][x];
   const{TW,TH,lift}=cam;
@@ -11758,6 +12211,9 @@ function drawIsoBlock(x,y,cam){
   const cx=bx,cy=by+TH/2-z;
   const hsh=tileHash(x,y);
   const dia=()=>{ctx.beginPath();ctx.moveTo(N.x,N.y);ctx.lineTo(E.x,E.y);ctx.lineTo(S.x,S.y);ctx.lineTo(Wp.x,Wp.y);ctx.closePath();};
+  // しまごとの じめん（SHIMAART）。ある しまだけ ここから えがく＝ほかの しまは これまでどおり
+  const ART=SHIMAART[Game.mapId]||null;
+  const gA=ART?{t,x,y,bx,by,z,h,cx,cy,N,E,S,Wp,TW,TH,hsh,dia}:null;
   // 側面（南東＝暗・南西＝中間）
   const dR=h-hv(x+1,y);
   if(dR>0)isoFace(t,E,S,Math.min(dR,2.4)*lift,true,hv(x+1,y)<=-2,TW,TH);
@@ -11765,7 +12221,8 @@ function drawIsoBlock(x,y,cam){
   if(dL>0)isoFace(t,Wp,S,Math.min(dL,2.4)*lift,false,hv(x,y+1)<=-2,TW,TH);
   // 上面
   dia();
-  if(t==='W'){
+  if(ART&&ART.top&&ART.top(gA)){/* しまの えのぐ */}
+  else if(t==='W'){
     const wg=ctx.createLinearGradient(0,N.y,0,S.y);
     wg.addColorStop(0,'#2b4a7c');wg.addColorStop(1,'#1c3158');
     ctx.fillStyle=wg;
@@ -11853,7 +12310,8 @@ function drawIsoBlock(x,y,cam){
     ctx.fillStyle=eg;ctx.beginPath();ctx.ellipse(cx,cy,TW*0.34,TH*0.34,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
-  if(t==='G'||t==='T'||t==='H'||t==='O'||t==='M'||t==='N'||t==='K'||t==='Y'||t==='V'){
+  if(ART&&ART.deco&&ART.deco(gA)){/* しまの もよう */}
+  else if(t==='G'||t==='T'||t==='H'||t==='O'||t==='M'||t==='N'||t==='K'||t==='Y'||t==='V'){
     if(MAP===WORLDS.shiowakare.map){
       // 潮でぬれた岩盤。草花ではなく、白い塩筋と小さな水たまりを描く。
       ctx.strokeStyle='rgba(205,229,230,.28)';ctx.lineWidth=Math.max(1,TW*0.014);
@@ -12112,7 +12570,10 @@ function isoFace(t,A,B,dz,rightSide,toVoid,TW,TH){
   const yTop=Math.min(A.y,B.y);
   const fg=ctx.createLinearGradient(0,yTop,0,yTop+dz+TH/2);
   let lip=null;
-  if(t==='R'||t==='C'||t==='B'||t==='D'){
+  // しまごとの がわ面（SHIMAART.face）。かえり値が あれば その いろ＝しまの ふちが しまごとに かわる
+  const ARTF=SHIMAART[Game.mapId],rF=(ARTF&&ARTF.face)?ARTF.face({t,fg,rightSide,toVoid,TW,TH}):null;
+  if(rF){lip=rF.lip||null;}
+  else if(t==='R'||t==='C'||t==='B'||t==='D'){
     if(rightSide){fg.addColorStop(0,'#221f3a');fg.addColorStop(toVoid?0.6:1,toVoid?'#141226':'#141226');}
     else{fg.addColorStop(0,'#312d4e');fg.addColorStop(toVoid?0.6:1,toVoid?'#1c1933':'#1c1933');}
     if(toVoid)fg.addColorStop(1,'rgba(12,10,24,0)');
@@ -12184,6 +12645,8 @@ function drawIsoTree(x,y,cam){
   const{TW,TH}=cam;
   const c=isoCtr(x,y);
   c.y-=propZ(x,y);
+  const ARTT=SHIMAART[Game.mapId]; // しまごとの き（SHIMAART.tree）
+  if(ARTT&&ARTT.tree&&ARTT.tree(x,y,cam,c))return;
   if(MAP===WORLDS.forest.map){drawForestTree(x,y,cam,c);return;}
   if(MAP===WORLDS.minamoto.map){drawMinamotoTree(x,y,cam,c);return;}
   if((MAP===WORLDS.ice.map||MAP===WORLDS.icetown.map)){drawIceTree(x,y,cam,c);return;}
