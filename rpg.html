@@ -566,6 +566,12 @@ body{
 .bmh{ display:flex; align-items:center; gap:8px; font-size:1.02em; flex-wrap:wrap; }
 .bmh b{ color:#fbf3da; }
 .bsw{ width:14px; height:14px; border-radius:50%; box-shadow:0 0 6px rgba(0,0,0,.5); flex:none; }
+/* ずかんの すがた(2026-07-31)。それまで 色の まるが あるだけで、絵を 見せる場が 戦闘しか なかった */
+.bthumb{ width:58px; height:58px; flex:none; border-radius:9px; background:rgba(8,10,22,.55);
+  border:1px solid rgba(255,255,255,.10); display:flex; align-items:center; justify-content:center;
+  color:#4a5178; font-size:22px; font-weight:700; }
+.bthumb.has{ background-color:#0d1120; background-image:var(--bsheet); background-repeat:no-repeat; }
+.bmon.unseen .bthumb{ background-color:rgba(255,255,255,.03); }
 .bstat{ font-size:.85em; color:#cdd5ef; margin-top:3px; font-variant-numeric:tabular-nums; }
 .bbadges{ margin-top:6px; display:flex; flex-wrap:wrap; gap:5px; }
 .btags{ margin-top:5px; font-size:.85em; color:#b9e6c0; line-height:1.6; }
@@ -4727,12 +4733,55 @@ function buyFoeInfo(id){
   toast(f.name+'の よわてんが わかった！（-'+cost+'G）');
   const bb=document.getElementById('bookbody');if(bb)bb.innerHTML=renderBook();
 }
+// ずかんの すがた(2026-07-31)。それまで 色の まるが あるだけで、絵を 見せる場が 戦闘しか なかった。
+// ★1たいずつ <img src="data:..."> にすると HTMLが 4.7MB に なる(実測)ので、
+//   109たいを 1まいの 絵に まとめて えがき、CSSの background-position で 切り出す。
+const BTHUMB_CELL=116, BTHUMB_COLS=10, BTHUMB_VIEW=58;
+let _BSHEET=null;
+function bookSheet(){
+  if(_BSHEET)return _BSHEET;
+  const ids=Object.keys(FOES), rows=Math.ceil(ids.length/BTHUMB_COLS), pos={};
+  let url='';
+  try{
+    // 1こま116px を 58pxで 見せる=2ばいの 画面で ちょうど 1:1。これ以上 大きく 作らない
+    // (dpr2で PNGに すると 4.8MB に なった。したじきを ぬって JPEGに すると 1/20 に なる)
+    const cv=document.createElement('canvas');
+    cv.width=BTHUMB_CELL*BTHUMB_COLS; cv.height=BTHUMB_CELL*rows;
+    const g=cv.getContext('2d');
+    g.fillStyle='#0d1120'; g.fillRect(0,0,cv.width,cv.height);
+    const keep=ctx; ctx=g;
+    try{
+      ids.forEach(function(id,i){
+        const f=FOES[id], col=i%BTHUMB_COLS, row=Math.floor(i/BTHUMB_COLS);
+        const cx=col*BTHUMB_CELL, cy=row*BTHUMB_CELL;
+        pos[id]=[col,row];
+        // 外形は 実測ずみ: ザコ h200前後／中ボス・きょだい h262前後
+        const big=f.boss||f.huge||f.mboss, s=BTHUMB_CELL/(big?330:262);
+        const bt={t:1.4,foe:f,blink:0,recoil:0,flash:0,dying:null,soarK:0,foeDodge:null,
+                  enemyStrike:null,finQ:0,volgaPeel:0};
+        g.save(); g.beginPath(); g.rect(cx,cy,BTHUMB_CELL,BTHUMB_CELL); g.clip(); // となりへ はみ出さない
+        try{ drawFoeTinted(bt,{x:cx+BTHUMB_CELL/2,y:cy+BTHUMB_CELL*0.64,s:s}); }catch(e){}
+        g.restore();
+      });
+    }finally{ ctx=keep; }
+    url=cv.toDataURL('image/jpeg',0.88);
+  }catch(e){ url=''; }
+  _BSHEET={url:url,pos:pos,rows:rows};
+  if(url)document.documentElement.style.setProperty('--bsheet','url('+url+')');
+  return _BSHEET;
+}
+function bookFoeThumb(id){
+  const sh=bookSheet(), p=sh.pos[id];
+  if(!sh.url||!p)return '<span class="bthumb"></span>';
+  return '<span class="bthumb has" style="background-position:'+(-p[0]*BTHUMB_VIEW)+'px '+(-p[1]*BTHUMB_VIEW)+'px;'
+    +'background-size:'+(BTHUMB_COLS*BTHUMB_VIEW)+'px '+(sh.rows*BTHUMB_VIEW)+'px"></span>';
+}
 function bookUnknownCard(id,f){
   const role=f.boss?'<span class="bdg boss">ボス</span>':(f.mboss?'<span class="bdg mboss">中ボス</span>':(f.hunter?'<span class="bdg hunt">さまよう巨人</span>':''));
   const cost=foeInfoCost(f);
   const buy=cost>0?'<div class="bbuy" data-buy="'+id+'">💰 '+cost+'Gで しらべてもらう</div>':'';
   const cls='bmon unseen'+((f.boss||f.mboss)?' bunkboss':'');
-  return '<div class="'+cls+'"><div class="bmh"><span class="bsw"></span><b>？？？</b>'+role+'<span class="bdg unk">みつけていない</span></div><div class="bunk">？？？　ステータスは ふめい</div>'+buy+'</div>';
+  return '<div class="'+cls+'"><div class="bmh"><span class="bthumb">？</span><b>？？？</b>'+role+'<span class="bdg unk">みつけていない</span></div><div class="bunk">？？？　ステータスは ふめい</div>'+buy+'</div>';
 }
 const BOOK_ISLES=[
   ['むらの そうげん',['slime','crow','golem']],
@@ -4958,7 +5007,7 @@ function bookMonCard(id){
   if(f.dodge)tags.unshift('回避 '+Math.round(f.dodge*100)+'%');
   const badges=bookElemBadges(id,f).join('');
   const role=f.boss?'<span class="bdg boss">ボス</span>':(f.mboss?'<span class="bdg mboss">中ボス</span>':(f.hunter?'<span class="bdg hunt">さまよう巨人</span>':''));
-  return '<div class="bmon"><div class="bmh"><span class="bsw" style="background:'+f.col+'"></span><b>'+f.name+'</b>'+role+'</div>'
+  return '<div class="bmon"><div class="bmh">'+bookFoeThumb(id)+'<b>'+f.name+'</b>'+role+'</div>'
     +'<div class="bstat">'+stat+(gain?'　｜　'+gain:'')+'</div>'
     +'<div class="bbadges">'+badges+'</div>'
     +(tags.length?'<div class="btags">'+tags.map(t=>'・'+t).join('　')+'</div>':'')
@@ -13984,7 +14033,9 @@ const miniCv=document.createElement('canvas'),miniCtx=miniCv.getContext('2d');
 const MINI_FOOT={slime:92,crow:64,golem:62,boss:100,boss2:100,stormflock:92,timefracture:105,blackhelm:112};
 function drawMiniFoe(def,t,k){
   ctx.save();
-  ctx.translate(0,-(MINI_FOOT[def.draw]||90)*k);
+  // 2026-07-31: その敵だけの絵は 外形が 型と ちがうので、足もとも その絵で 実測した値を つかう
+  // (これまで かげ15たいは 型の値(62/64/92)の まま＝地面より 25〜55 下に 沈んで いた)
+  ctx.translate(0,-(zkFootOf(def)||MINI_FOOT[def.draw]||90)*k);
   if(drawZakoArt(k,t,null,def)){} // 2026-07-30: フィールドの ちいさな絵も 同じ すがたに そろえる
   else if(def.draw==='slime')drawSlime(k,t,def.v);
   else if(def.draw==='crow')drawCrow(k,t,def.v);
@@ -18062,7 +18113,7 @@ function drawFoeTinted(bt,ep){
   ctx=foeCtx;
   try{drawFoe(bt,{x:pad,y:pad,s:ep.s},strikeMotion);}finally{ctx=keep;}
   foeCtx.globalCompositeOperation='source-atop';
-  {const ftint=b2HasArt(bt.foe)?null:(bt.finTint||bt.foe.tint);if(ftint){foeCtx.fillStyle=ftint;foeCtx.fillRect(0,0,pad*2,pad*2);}} // 最終章: 正解ごとに影が明るくほどける／2026-07-30: 名前どおりの絵を もつ ボスは 色を かぶせない(段階は 絵の中で finQ/volgaPeel を 読む)
+  {const ftint=(b2HasArt(bt.foe)||zkHasArt(bt.foe))?null:(bt.finTint||bt.foe.tint);if(ftint){foeCtx.fillStyle=ftint;foeCtx.fillRect(0,0,pad*2,pad*2);}} // 最終章: 正解ごとに影が明るくほどける／2026-07-30: 名前どおりの絵を もつ ボスは 色を かぶせない(段階は 絵の中で finQ/volgaPeel を 読む)／2026-07-31: ザコの絵にも 同じ(色を かぶせると せっかくの かたちが 消える)
   if(bt.blink>0){foeCtx.fillStyle='rgba(255,255,255,'+(0.8*Math.min(1,bt.blink)).toFixed(3)+')';foeCtx.fillRect(0,0,pad*2,pad*2);} // ひげきの しろい てんめつ
   foeCtx.globalCompositeOperation='source-over';
   ctx.drawImage(foeCv,0,0,w,h,ep.x-pad,ep.y-pad,pad*2,pad*2);
@@ -18293,12 +18344,2247 @@ function zkMap(){
   return _ZKMAP;
 }
 function zkKeyOf(vf){ return zkMap().get(vf)||''; }
+// その敵だけの絵を もっているか。もっているなら 上から 色を かぶせない
+// (2026-07-31: かげ15たいは 名前どおりの絵に した あとも tint(のうど0.78〜0.90)が
+//  かかったままで、実戦闘では しおりの あかい ひもも じょうも かんむりも 見えず、
+//  「じょの かげ」は だいだい色、「はの かげ」は 水色に なっていた=絵が 台なしだった)
+function zkHasArt(f){ return !!f&&zkMap().has(f); }
 function drawZakoArt(s,t,bt,vf){
   const f=zkMap().has(vf)?ZAKOART[zkMap().get(vf)]:null;
   if(!f)return false;
   f(s,t,bt,vf);
   return true;
 }
+
+// ============================================================
+// ザコの すがた 第2弾(2026-07-31): 名前どおりの かたち 56たい
+// これまで 109たいのうち 73たいが「おなじ絵に 色を 重ねただけ」だった。
+// そのうち 56たいを それぞれの すがたへ。のこり12たいは スライム/ゴーレムの 型が
+// 名前と 合っている もの(v ちがいで 見た目が わかれる)。
+// 座標のやくそく: あしもと y=+90*s ／ 幅 ±110*s ／ 上は -150*s
+//   ※じめんの かげは drawFoe / drawFieldFoe が 先に えがくので ここでは えがかない
+// 大きさは 実測して そろえる(ZK2SCALE)。フィールドの 足もとは ZK2FOOT。
+// あたらしい絵を 足すときは ZAKO2ART に 1行 足すだけ。
+// ============================================================
+const ZAKO2ART={};
+
+
+// ---------- どうぐ ----------
+var Z2OL='rgba(24,18,32,0.88)';
+function zByte(v){return Math.max(0,Math.min(255,Math.round(v)));} // 0〜255へ まるめる
+function zSh(hex,k){
+  if(!hex||hex[0]!=='#')hex='#888888';
+  var n=parseInt(hex.slice(1),16);
+  return 'rgb('+zByte(((n>>16)&255)*k)+','+zByte(((n>>8)&255)*k)+','+zByte((n&255)*k)+')';
+}
+function zSh2(hex,k){ // zSh と同じだが hex を かえす(色を さらに 加工する ところ用)
+  if(!hex||hex[0]!=='#')hex='#888888';
+  var n=parseInt(hex.slice(1),16);
+  var r=zByte(((n>>16)&255)*k),g=zByte(((n>>8)&255)*k),b=zByte((n&255)*k);
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function zRgba(hex,a){
+  if(!hex||hex[0]!=='#')hex='#888888';
+  var n=parseInt(hex.slice(1),16);
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
+}
+function zGrad(y0,y1,c1,c2){var g=ctx.createLinearGradient(0,y0,0,y1);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;}
+function zOl(s,w){ctx.strokeStyle=Z2OL;ctx.lineWidth=Math.max(1.4,s*(w||2.6));ctx.lineJoin='round';ctx.lineCap='round';}
+// 目: lighter の ぼんやり だけだと ひるまの あかるい はいけいで 消えるので、まん中に 白を おく
+function zEye(s,x,y,r,col,glow){
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  var g=ctx.createRadialGradient(x,y,1,x,y,r*2.8);
+  g.addColorStop(0,zRgba(col,(glow===undefined?0.8:glow)));g.addColorStop(1,zRgba(col,0));
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r*2.8,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  ctx.fillStyle='rgba(255,255,255,0.95)';
+  ctx.beginPath();ctx.ellipse(x,y,r,r*0.74,0,0,Math.PI*2);ctx.fill();
+}
+function zEyePair(s,y,col,gap,r,glow){
+  gap=gap===undefined?13:gap;r=r===undefined?5:r;
+  zEye(s,-gap*s,y,r*s,col,glow);zEye(s,gap*s,y,r*s,col,glow);
+}
+// 木ばこ
+function zBox(x,y,w,h,c,s,dark){
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle=zGrad(-h/2,h/2,zSh(c,dark?1.02:1.30),zSh(c,dark?0.44:0.60));
+  ctx.beginPath();ctx.roundRect(-w/2,-h/2,w,h,5*s);ctx.fill();zOl(s);ctx.stroke();
+  ctx.save();ctx.beginPath();ctx.roundRect(-w/2,-h/2,w,h,5*s);ctx.clip();
+  ctx.strokeStyle='rgba(38,26,16,0.30)';ctx.lineWidth=Math.max(1,s*1.7);
+  ctx.beginPath();ctx.moveTo(-w/2,-h/6);ctx.lineTo(w/2,-h/6);ctx.moveTo(-w/2,h/6);ctx.lineTo(w/2,h/6);ctx.stroke();
+  ctx.fillStyle=zSh(c,0.5);
+  ctx.fillRect(-w/2,-h/2,8*s,h);ctx.fillRect(w/2-8*s,-h/2,8*s,h);
+  ctx.restore();
+  ctx.restore();
+}
+// いし(ごつごつ)
+function zStone(x,y,w,h,c,s,seed,lo){
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle=zGrad(-h/2,h/2,zSh(c,lo?0.95:1.24),zSh(c,lo?0.42:0.56));
+  ctx.beginPath();
+  var n=8,i;
+  for(i=0;i<n;i++){
+    var a=i/n*Math.PI*2+0.3;
+    var rr=0.46+(Math.sin(seed*3.7+i*2.1)+1)*0.055;
+    var px=Math.cos(a)*w*rr, py=Math.sin(a)*h*rr;
+    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.closePath();ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.restore();
+}
+// かみの ふだ
+function zFuda(x,y,w,h,rot,c,s,seal){
+  ctx.save();ctx.translate(x,y);ctx.rotate(rot);
+  ctx.fillStyle=zGrad(-h/2,h/2,zSh(c,1.16),zSh(c,0.84));
+  ctx.beginPath();ctx.rect(-w/2,-h/2,w,h);ctx.fill();
+  ctx.strokeStyle='rgba(40,32,24,0.55)';ctx.lineWidth=Math.max(1,s*1.6);ctx.stroke();
+  ctx.strokeStyle='rgba(60,50,40,0.42)';ctx.lineWidth=Math.max(1,s*1.4);
+  ctx.beginPath();ctx.moveTo(-w*0.28,-h*0.18);ctx.lineTo(w*0.28,-h*0.18);
+  ctx.moveTo(-w*0.28,h*0.06);ctx.lineTo(w*0.12,h*0.06);ctx.stroke();
+  if(seal){ctx.fillStyle='rgba(176,42,46,0.9)';ctx.fillRect(w*0.06,h*0.16,w*0.26,h*0.22);}
+  ctx.restore();
+}
+// かぎ
+function zKey(x,y,rot,L,c,s){
+  ctx.save();ctx.translate(x,y);ctx.rotate(rot);
+  ctx.fillStyle=zGrad(-L*0.5,L*0.5,zSh(c,1.38),zSh(c,0.68));
+  ctx.beginPath();
+  ctx.arc(0,-L*0.34,L*0.20,0,Math.PI*2);
+  ctx.rect(-L*0.055,-L*0.30,L*0.11,L*0.78);
+  ctx.rect(-L*0.055,L*0.30,L*0.24,L*0.10);
+  ctx.rect(-L*0.055,L*0.12,L*0.19,L*0.09);
+  ctx.fill('evenodd');
+  zOl(s,1.8);ctx.stroke();
+  ctx.fillStyle='rgba(12,10,16,0.9)';
+  ctx.beginPath();ctx.arc(0,-L*0.34,L*0.085,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+// けっしょう(かけら)
+function zShard(x,y,rot,w,h,c,s,a){
+  ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.globalAlpha=a===undefined?1:a;
+  ctx.fillStyle=zGrad(-h/2,h/2,zSh(c,1.5),zSh(c,0.6));
+  ctx.beginPath();
+  ctx.moveTo(0,-h/2);ctx.lineTo(w/2,-h*0.08);ctx.lineTo(w*0.26,h/2);
+  ctx.lineTo(-w*0.26,h/2);ctx.lineTo(-w/2,-h*0.08);ctx.closePath();
+  ctx.fill();zOl(s,2);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,0.30)';ctx.lineWidth=Math.max(1,s*1.4);
+  ctx.beginPath();ctx.moveTo(-w*0.10,-h*0.34);ctx.lineTo(w*0.06,h*0.30);ctx.stroke();
+  ctx.restore();
+}
+// おんぷ
+function zNote(x,y,r,col,a,s){
+  ctx.save();ctx.globalAlpha=a;ctx.fillStyle=col;ctx.strokeStyle=col;
+  ctx.lineWidth=Math.max(1,s*2);
+  ctx.beginPath();ctx.ellipse(x,y,r,r*0.76,-0.4,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.moveTo(x+r*0.85,y+r*0.2);ctx.lineTo(x+r*0.85,y-r*2.6);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x+r*0.85,y-r*2.6);ctx.quadraticCurveTo(x+r*2.3,y-r*2.2,x+r*1.9,y-r*1.0);ctx.stroke();
+  ctx.restore();
+}
+
+// ============ はこ族 ============
+ZAKO2ART.tsumibako=function(s,t,bt,vf){ // つみあげばこ = 木ばこを 三だん つみあげた すがた
+  var c=vf.col||'#8a6c48';
+  var segs=[[0,54,146,72,0.00],[-7,-12,126,66,0.055],[9,-74,106,60,-0.075]],i;
+  for(i=0;i<3;i++){
+    var q=segs[i];
+    ctx.save();ctx.translate(q[0]*s,q[1]*s);
+    ctx.rotate(q[4]+Math.sin(t*1.5+i*1.2)*0.02);
+    zBox(0,0,q[2]*s,q[3]*s,c,s);
+    ctx.restore();
+  }
+  // いちばん上の ふたが ずれて あいている
+  ctx.save();
+  ctx.translate(14*s,-112*s);ctx.rotate(-0.20+Math.sin(t*1.5+2.4)*0.028);
+  ctx.fillStyle=zGrad(-10*s,10*s,zSh(c,1.42),zSh(c,0.72));
+  ctx.beginPath();ctx.roundRect(-58*s,-10*s,116*s,19*s,5*s);ctx.fill();zOl(s);ctx.stroke();
+  ctx.restore();
+  // すきまから のぞく め
+  zEyePair(s,(-92+Math.sin(t*1.5+2.4)*2)*s,c,15,5,0.85);
+};
+
+ZAKO2ART.oisugaru=function(s,t,bt,vf){ // おいすがる はこ = ふたを あけて 走ってくる 大きな はこ
+  var c=vf.col||'#7a6248';
+  var lean=Math.sin(t*5.4)*0.035, i;
+  // あし(交互に ふみだす)
+  for(i=0;i<2;i++){
+    var sd=i?1:-1, ph=Math.sin(t*5.4+(i?Math.PI:0));
+    ctx.save();ctx.translate(sd*38*s,44*s);ctx.rotate(ph*0.36);
+    ctx.fillStyle=zSh(c,0.48);
+    ctx.beginPath();ctx.roundRect(-11*s,0,22*s,50*s,9*s);ctx.fill();zOl(s);ctx.stroke();
+    ctx.restore();
+  }
+  ctx.save();ctx.rotate(lean);
+  // ふた(ちょうつがいで うしろへ ひらいている)
+  ctx.save();ctx.translate(-70*s,-46*s);ctx.rotate(-0.95+Math.sin(t*5.4)*0.06);
+  ctx.fillStyle=zGrad(-11*s,11*s,zSh(c,1.3),zSh(c,0.6));
+  ctx.beginPath();ctx.roundRect(0,-11*s,138*s,21*s,6*s);ctx.fill();zOl(s);ctx.stroke();
+  ctx.restore();
+  // 本体
+  zBox(0,-4*s,164*s,110*s,c,s);
+  // 口(中は まっくら＋きば)
+  ctx.save();
+  ctx.fillStyle='rgba(10,6,14,0.93)';
+  ctx.beginPath();ctx.roundRect(-68*s,-50*s,136*s,38*s,6*s);ctx.fill();
+  ctx.fillStyle=zSh(c,1.5);
+  for(i=0;i<7;i++){
+    var x=(-62+i*19)*s;
+    ctx.beginPath();ctx.moveTo(x,-50*s);ctx.lineTo(x+10*s,-50*s);ctx.lineTo(x+5*s,-34*s);ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+  zEyePair(s,-30*s,'#ff6a4a',24,5.6,0.95);
+  ctx.restore();
+  // こぼれ落ちる 中身
+  ctx.save();
+  for(var j=0;j<4;j++){
+    var kk=((t*0.9+j*0.27)%1);
+    ctx.globalAlpha=(1-kk)*0.8;
+    ctx.fillStyle=zSh(c,1.5);
+    ctx.save();ctx.translate((78+j*13)*s,(0+kk*80)*s);ctx.rotate(kk*5+j);
+    ctx.beginPath();ctx.roundRect(-6*s,-5*s,12*s,10*s,2*s);ctx.fill();ctx.restore();
+  }
+  ctx.restore();
+};
+
+ZAKO2ART.hakomori=function(s,t,bt,vf){ // はこもり = はこを かかえて はなさない 番人
+  var c=vf.col||'#6a5a40';
+  var b=Math.sin(t*1.9)*2.5*s, i;
+  ctx.save();ctx.translate(0,b);
+  // からだ(大きな はこ)
+  zBox(0,26*s,132*s,124*s,c,s);
+  // たすき
+  ctx.save();ctx.beginPath();ctx.roundRect(-66*s,-36*s,132*s,124*s,5*s);ctx.clip();
+  ctx.fillStyle=zSh(c,0.40);
+  ctx.fillRect(-12*s,-36*s,24*s,124*s);
+  ctx.fillRect(-66*s,4*s,132*s,22*s);
+  ctx.restore();
+  // かぶった ふた(ひさし)
+  ctx.save();ctx.translate(0,-40*s);ctx.rotate(0.03+Math.sin(t*1.9)*0.012);
+  ctx.fillStyle=zGrad(-11*s,11*s,zSh(c,1.45),zSh(c,0.7));
+  ctx.beginPath();ctx.roundRect(-74*s,-11*s,148*s,21*s,5*s);ctx.fill();zOl(s);ctx.stroke();
+  ctx.restore();
+  // うで(かかえこむ)
+  ctx.fillStyle=zSh(c,0.56);
+  for(i=0;i<2;i++){
+    var sd=i?1:-1;
+    ctx.save();ctx.translate(sd*60*s,8*s);ctx.rotate(sd*0.62);
+    ctx.beginPath();ctx.roundRect(-12*s,-10*s,24*s,72*s,10*s);ctx.fill();zOl(s);ctx.stroke();
+    ctx.restore();
+  }
+  // かかえている 小ばこ
+  zBox(0,50*s,74*s,58*s,c,s,true);
+  // じょう
+  ctx.save();ctx.translate(0,48*s);
+  ctx.strokeStyle=zSh('#d8c684',0.75);ctx.lineWidth=5.5*s;
+  ctx.beginPath();ctx.arc(0,-11*s,11*s,Math.PI*1.05,Math.PI*1.95);ctx.stroke();
+  ctx.fillStyle='#d8c684';ctx.beginPath();ctx.roundRect(-14*s,-9*s,28*s,26*s,4*s);ctx.fill();
+  zOl(s,2);ctx.stroke();
+  ctx.fillStyle='#2a2416';ctx.beginPath();ctx.arc(0,2*s,4.4*s,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // ふたの すきまの め
+  zEyePair(s,-22*s,c,20,5.2,0.85);
+  ctx.restore();
+};
+
+// ============ かけら族 ============
+ZAKO2ART.towakage=function(s,t,bt,vf){ // とわのかけら = まわり つづけて 終わらない かけらの わ
+  var c=vf.col||'#6a5a9a';
+  var i;
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  ctx.strokeStyle=zRgba(c,0.34);ctx.lineWidth=Math.max(1.6,s*3);
+  ctx.beginPath();ctx.ellipse(0,-10*s,100*s,42*s,0,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+  for(i=0;i<7;i++){
+    var a=t*0.5+i/7*Math.PI*2;
+    if(Math.sin(a)<0)zShard(Math.cos(a)*100*s,-10*s+Math.sin(a)*42*s,a*0.6,22*s,32*s,c,s,0.5);
+  }
+  // 中しん(うごかない)
+  zShard(0,-16*s,0,72*s,150*s,c,s,1);
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  var g=ctx.createRadialGradient(0,-16*s,2,0,-16*s,58*s);
+  g.addColorStop(0,zRgba(c,0.5));g.addColorStop(1,zRgba(c,0));
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,-16*s,58*s,0,Math.PI*2);ctx.fill();ctx.restore();
+  zEye(s,0,-34*s,7.4*s,c,0.95);
+  for(i=0;i<7;i++){
+    var a2=t*0.5+i/7*Math.PI*2;
+    if(Math.sin(a2)>=0)zShard(Math.cos(a2)*100*s,-10*s+Math.sin(a2)*42*s,a2*0.6,24*s,36*s,c,s,0.95);
+  }
+};
+
+ZAKO2ART.owarika=function(s,t,bt,vf){ // おわりのかけら = ひび割れて 崩れかけた いわのかたまり
+  var c=vf.col||'#c08a58';
+  var w=Math.sin(t*1.4), i;
+  // 左がわ(大きい ほう)
+  var gap=(5+w*2.5)*s;
+  ctx.save();ctx.translate(-gap,0);ctx.rotate(-0.03-w*0.010);
+  ctx.fillStyle=zGrad(-118*s,90*s,zSh(c,1.26),zSh(c,0.50));
+  ctx.beginPath();
+  ctx.moveTo(-8*s,-118*s);ctx.lineTo(2*s,-64*s);ctx.lineTo(-10*s,-24*s);
+  ctx.lineTo(4*s,26*s);ctx.lineTo(-6*s,90*s);ctx.lineTo(-78*s,90*s);
+  ctx.lineTo(-92*s,20*s);ctx.lineTo(-80*s,-46*s);ctx.lineTo(-52*s,-96*s);
+  ctx.closePath();ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.restore();
+  // 右がわ(われて ずれた ほう)
+  ctx.save();ctx.translate(gap,-4*s);ctx.rotate(0.07+w*0.014);
+  ctx.fillStyle=zGrad(-108*s,90*s,zSh(c,1.06),zSh(c,0.42));
+  ctx.beginPath();
+  ctx.moveTo(-8*s,-118*s);ctx.lineTo(2*s,-64*s);ctx.lineTo(-10*s,-24*s);
+  ctx.lineTo(4*s,26*s);ctx.lineTo(-6*s,90*s);ctx.lineTo(58*s,90*s);
+  ctx.lineTo(74*s,26*s);ctx.lineTo(62*s,-40*s);ctx.lineTo(30*s,-92*s);
+  ctx.closePath();ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.restore();
+  // 割れ目から もれる ひかり
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  var g=ctx.createLinearGradient(0,-118*s,0,90*s);
+  g.addColorStop(0,zRgba(c,0));g.addColorStop(0.45,zRgba(c,0.62));g.addColorStop(1,zRgba(c,0));
+  ctx.fillStyle=g;ctx.fillRect(-gap-2*s,-118*s,gap*2+4*s,208*s);ctx.restore();
+  // くずれ落ちる かけら
+  for(i=0;i<5;i++){
+    var k=((t*0.5+i*0.2)%1);
+    var sd=(i%2)?1:-1;
+    zShard((sd*(58+(i%3)*14))*s+sd*k*22*s,(-52+i*22+k*120)*s,k*3.4+i,17*s,25*s,c,s,(1-k)*0.85);
+  }
+  zEye(s,-42*s,-48*s,6*s,c,0.9);
+  zEye(s,40*s,-52*s,6*s,c,0.9);
+};
+
+ZAKO2ART.iwanuke=function(s,t,bt,vf){ // いわのぬけがら = 中が からっぽの いわ
+  var c=vf.col||'#8a8578';
+  var P=[[-14,-132],[36,-118],[52,-84],[86,-44],[70,18],[80,62],[52,90],[-58,90],[-84,44],[-70,-14],[-88,-56],[-52,-104]];
+  var i;
+  function path(){ctx.beginPath();for(i=0;i<P.length;i++){if(i===0)ctx.moveTo(P[i][0]*s,P[i][1]*s);else ctx.lineTo(P[i][0]*s,P[i][1]*s);}ctx.closePath();}
+  ctx.save();ctx.globalAlpha=0.55;
+  ctx.fillStyle=zGrad(-134*s,90*s,zSh(c,1.2),zSh(c,0.48));
+  path();ctx.fill();ctx.restore();
+  path();ctx.strokeStyle=zSh(c,0.9);ctx.lineWidth=Math.max(2,s*4);ctx.lineJoin='round';ctx.stroke();
+  // まえの おおきな あな(中は からっぽ)
+  ctx.save();
+  ctx.fillStyle='rgba(8,8,14,0.93)';
+  ctx.beginPath();
+  ctx.moveTo(-34*s,-70*s);ctx.lineTo(-6*s,-88*s);ctx.lineTo(14*s,-72*s);ctx.lineTo(44*s,-56*s);
+  ctx.lineTo(34*s,-14*s);ctx.lineTo(50*s,16*s);ctx.lineTo(28*s,74*s);ctx.lineTo(-8*s,62*s);
+  ctx.lineTo(-32*s,76*s);ctx.lineTo(-40*s,20*s);ctx.lineTo(-24*s,-8*s);ctx.lineTo(-46*s,-40*s);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle=zRgba(c,0.5);ctx.lineWidth=Math.max(1.2,s*2.2);ctx.stroke();
+  ctx.restore();
+  // 中に ただよう ちり
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<8;i++){
+    var a=t*0.6+i*0.9;
+    ctx.fillStyle=zRgba(c,0.10+0.12*Math.sin(t*2+i));
+    ctx.beginPath();ctx.arc(Math.sin(a)*24*s,(4+Math.cos(a*0.8)*48)*s,(2.4+(i%3))*s,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+  // かけた ふち(いわが 割れた あと)
+  ctx.save();ctx.strokeStyle=zRgba(c,0.75);ctx.lineWidth=Math.max(1.2,s*2.2);
+  ctx.beginPath();ctx.moveTo(30*s,-134*s);ctx.lineTo(44*s,-112*s);ctx.lineTo(28*s,-100*s);ctx.stroke();
+  ctx.restore();
+};
+
+// ============ とけい族 ============
+ZAKO2ART.tomaridokei=function(s,t,bt,vf){ // とまり どけい = はりの とまった 大どけい
+  var c=vf.col||'#c9a94e';
+  var sw=Math.sin(t*0.7)*0.010, i;
+  ctx.save();ctx.rotate(sw);
+  ctx.fillStyle=zGrad(72*s,94*s,zSh(c,0.62),zSh(c,0.36));
+  ctx.beginPath();ctx.roundRect(-72*s,70*s,144*s,22*s,5*s);ctx.fill();zOl(s);ctx.stroke();
+  ctx.fillStyle=zGrad(-132*s,76*s,zSh(c,0.94),zSh(c,0.40));
+  ctx.beginPath();ctx.roundRect(-58*s,-130*s,116*s,206*s,11*s);ctx.fill();zOl(s,3);ctx.stroke();
+  // ガラス窓(ふりこが みえる)
+  ctx.save();
+  ctx.fillStyle='rgba(14,16,26,0.88)';
+  ctx.beginPath();ctx.roundRect(-38*s,-20*s,76*s,80*s,6*s);ctx.fill();
+  ctx.strokeStyle=zSh(c,0.7);ctx.lineWidth=Math.max(1.2,s*2.4);ctx.stroke();
+  ctx.save();ctx.translate(0,-18*s);ctx.rotate(0.30);
+  ctx.strokeStyle=zSh(c,1.05);ctx.lineWidth=Math.max(1.4,s*2.8);
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,52*s);ctx.stroke();
+  ctx.fillStyle=zGrad(44*s,72*s,zSh(c,1.3),zSh(c,0.7));
+  ctx.beginPath();ctx.arc(0,60*s,14*s,0,Math.PI*2);ctx.fill();zOl(s,1.8);ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+  // もじばん
+  ctx.fillStyle=zGrad(-128*s,-38*s,'#f4ecd6','#cfc3a6');
+  ctx.beginPath();ctx.arc(0,-84*s,45*s,0,Math.PI*2);ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.save();ctx.translate(0,-84*s);
+  ctx.strokeStyle='rgba(40,34,24,0.7)';
+  for(i=0;i<12;i++){
+    var a=i/12*Math.PI*2, L=(i%3===0)?10:6;
+    ctx.lineWidth=Math.max(1,s*((i%3===0)?2.6:1.6));
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*37*s,Math.sin(a)*37*s);
+    ctx.lineTo(Math.cos(a)*(37-L)*s,Math.sin(a)*(37-L)*s);ctx.stroke();
+  }
+  ctx.strokeStyle='rgba(30,24,18,0.9)';ctx.lineCap='round';
+  ctx.lineWidth=Math.max(1.6,s*3.6);
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(-2.03)*24*s,Math.sin(-2.03)*24*s);ctx.stroke();
+  ctx.lineWidth=Math.max(1.2,s*2.6);
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(-0.62)*34*s,Math.sin(-0.62)*34*s);ctx.stroke();
+  ctx.fillStyle='rgba(30,24,18,0.9)';ctx.beginPath();ctx.arc(0,0,4.6*s,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  zEyePair(s,-32*s,c,17,4.6,0.7);
+  ctx.restore();
+};
+
+ZAKO2ART.tomaribari=function(s,t,bt,vf){ // とまりばり = 打ちこまれて うごかない 大きな とけいの はり
+  var c=vf.col||'#b0a068';
+  var q=Math.sin(t*8.5)*0.007;
+  var PY=44; // じくの 高さ
+  ctx.save();ctx.translate(0,PY*s);ctx.rotate(-0.11+q);ctx.translate(0,-PY*s);
+  // ながい はり(じくから 上へ。さきは やじり)
+  ctx.fillStyle=zGrad(-150*s,PY*s,zSh(c,1.36),zSh(c,0.60));
+  ctx.beginPath();
+  ctx.moveTo(0,-150*s);
+  ctx.lineTo(15*s,-108*s);ctx.lineTo(9*s,-100*s);ctx.lineTo(9*s,PY*s);
+  ctx.lineTo(-9*s,PY*s);ctx.lineTo(-9*s,-100*s);ctx.lineTo(-15*s,-108*s);
+  ctx.closePath();ctx.fill();zOl(s,2.6);ctx.stroke();
+  // まん中の すかし(とけいの はりの かざり)
+  ctx.fillStyle=zSh(c,0.62);
+  ctx.beginPath();ctx.moveTo(0,-76*s);ctx.lineTo(14*s,-40*s);ctx.lineTo(0,-4*s);ctx.lineTo(-14*s,-40*s);ctx.closePath();
+  ctx.fill();zOl(s,1.8);ctx.stroke();
+  // じくの うしろ(みじかい しっぽ)=けんでは なく はり だと わかる ところ
+  ctx.fillStyle=zGrad(PY*s,92*s,zSh(c,1.05),zSh(c,0.5));
+  ctx.beginPath();
+  ctx.moveTo(-14*s,PY*s);ctx.lineTo(14*s,PY*s);ctx.lineTo(10*s,84*s);
+  ctx.quadraticCurveTo(0,94*s,-10*s,84*s);ctx.closePath();ctx.fill();zOl(s,2.4);ctx.stroke();
+  // じく
+  ctx.fillStyle=zSh(c,0.46);
+  ctx.beginPath();ctx.arc(0,PY*s,19*s,0,Math.PI*2);ctx.fill();zOl(s,2.4);ctx.stroke();
+  ctx.fillStyle=zSh(c,1.25);
+  ctx.beginPath();ctx.arc(0,PY*s,8*s,0,Math.PI*2);ctx.fill();zOl(s,1.6);ctx.stroke();
+  zEyePair(s,-72*s,c,9,4.2,0.9);
+  ctx.restore();
+  ctx.save();ctx.strokeStyle='rgba(20,18,26,0.4)';ctx.lineWidth=Math.max(1.2,s*2);
+  ctx.beginPath();ctx.moveTo(-38*s,92*s);ctx.lineTo(-14*s,86*s);ctx.lineTo(6*s,93*s);ctx.lineTo(34*s,87*s);ctx.stroke();
+  ctx.restore();
+};
+
+// ============ ふだ族 ============
+ZAKO2ART.hudanomure=function(s,t,bt,vf){ // ふだの むれ = まいあがる ふだが 人がたを つくっている
+  var c=vf.col||'#d8cfae';
+  // からだの かたち(あたま／かた／どう)に そって ふだを ならべる
+  // うしろ(うすい・ひろがり)
+  var BACK=[[-46,-92],[46,-94],[-70,-14],[70,-16],[-56,54],[56,52],[0,-134]],i;
+  for(i=0;i<BACK.length;i++){
+    var p=BACK[i], ph=t*0.9+i*0.7;
+    zFuda(p[0]*s+Math.sin(ph)*7*s,p[1]*s+Math.cos(ph*0.8)*6*s,30*s,42*s,Math.sin(ph)*0.4,zSh2(c,0.72),s,i%3===0);
+  }
+  // まえ(こい・人がたに ならぶ)
+  var FRONT=[
+    [-20,-104],[20,-106],[0,-124],            // あたま
+    [-48,-52],[48,-54],[-16,-56],[16,-58],    // かた
+    [-34,4],[34,2],[0,-2],                    // どう
+    [-28,58],[28,56],[0,52]                   // こし
+  ];
+  for(i=0;i<FRONT.length;i++){
+    var p2=FRONT[i], ph2=t*1.0+i*0.55;
+    zFuda(p2[0]*s+Math.sin(ph2)*6*s,p2[1]*s+Math.cos(ph2*0.9)*5*s,36*s,50*s,Math.sin(ph2+i)*0.26,c,s,i%3===0);
+  }
+  // とびちる ふだ
+  for(i=0;i<3;i++){
+    var k=((t*0.5+i*0.33)%1);
+    ctx.save();ctx.globalAlpha=(1-k)*0.6;
+    zFuda((78+i*8)*s+k*32*s,(-20+i*40)*s-k*44*s,24*s,33*s,k*4+i,c,s,false);
+    ctx.restore();
+  }
+  zEyePair(s,-108*s,'#c8483c',14,5.6,0.95);
+};
+
+ZAKO2ART.usofuda=function(s,t,bt,vf){ // うそふだのやま = つみあがった ふだの やま
+  var c=vf.col||'#d8d0c0';
+  var w=Math.sin(t*1.5);
+  var rows=[[86,7,150],[60,6,130],[34,5,110],[8,4,88],[-18,3,66],[-44,2,44]];
+  for(var r=0;r<rows.length;r++){
+    var y=rows[r][0],n=rows[r][1],wd=rows[r][2];
+    for(var i=0;i<n;i++){
+      var x=(-wd/2+(i+0.5)*(wd/n))*s;
+      zFuda(x,y*s,(wd/n+11)*s,30*s,(Math.sin(r*2.3+i*1.7)*0.14)+w*0.012,c,s,(r+i)%3===0);
+    }
+  }
+  ctx.save();ctx.translate(2*s,(-82+w*3)*s);ctx.rotate(-0.10+w*0.03);
+  zFuda(0,0,50*s,68*s,0,c,s,false);
+  ctx.strokeStyle='rgba(184,44,44,0.92)';ctx.lineWidth=Math.max(2,s*4.4);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-16*s,-20*s);ctx.lineTo(16*s,20*s);
+  ctx.moveTo(16*s,-20*s);ctx.lineTo(-16*s,20*s);ctx.stroke();
+  ctx.restore();
+  zEyePair(s,-8*s,'#8a7a52',26,5.2,0.8);
+};
+
+// ============ いし族 ============
+ZAKO2ART.kuzureishi=function(s,t,bt,vf){ // くずれいしがき = 崩れかけた いしがき
+  var c=vf.col||'#8f9a94';
+  var w=Math.sin(t*1.3), i, r;
+  // つみあがった いし(だんだん くずれる)
+  var rows=[[76,4,168],[36,4,150],[-4,3,124],[-44,3,102],[-82,2,72]];
+  for(r=0;r<rows.length;r++){
+    var y=rows[r][0],n=rows[r][1],wd=rows[r][2];
+    for(i=0;i<n;i++){
+      if(r===2&&i===1)continue; // ぬけている ところ=めが のぞく
+      var x=(-wd/2+(i+0.5)*(wd/n))*s;
+      ctx.save();ctx.translate(x,y*s);ctx.rotate(Math.sin(r*2.7+i*1.9)*0.05+w*0.008);
+      var bw=(wd/n-4)*s, bh=34*s;
+      ctx.fillStyle=zGrad(-bh/2,bh/2,zSh(c,1.20),zSh(c,0.56));
+      ctx.beginPath();ctx.roundRect(-bw/2,-bh/2,bw,bh,5*s);ctx.fill();zOl(s,2.2);ctx.stroke();
+      ctx.strokeStyle='rgba(255,255,255,0.10)';ctx.lineWidth=Math.max(1,s*1.4);
+      ctx.beginPath();ctx.moveTo(-bw/2+5*s,-bh/2+6*s);ctx.lineTo(bw/2-8*s,-bh/2+6*s);ctx.stroke();
+      ctx.restore();
+    }
+  }
+  // ずり落ちる いし
+  for(i=0;i<3;i++){
+    var k=((t*0.42+i*0.33)%1);
+    ctx.save();ctx.globalAlpha=(1-k)*0.85;ctx.translate((58+i*12)*s+k*26*s,(-40+i*30)*s+k*100*s);ctx.rotate(k*4+i);
+    ctx.fillStyle=zSh(c,0.8);
+    ctx.beginPath();ctx.roundRect(-11*s,-9*s,22*s,18*s,3*s);ctx.fill();zOl(s,1.8);ctx.stroke();
+    ctx.restore();
+  }
+  zEyePair(s,-4*s,c,0,0,0);
+  zEye(s,-8*s,-4*s,5.2*s,c,0.9);
+  zEye(s,14*s,-4*s,5.2*s,c,0.9);
+};
+
+ZAKO2ART.wasureishi=function(s,t,bt,vf){ // わすれいし = 字が 消えかけた せきひ
+  var c=vf.col||'#7a8078';
+  var i;
+  // だい
+  ctx.fillStyle=zGrad(64*s,92*s,zSh(c,0.8),zSh(c,0.44));
+  ctx.beginPath();ctx.roundRect(-70*s,62*s,140*s,30*s,5*s);ctx.fill();zOl(s,2.6);ctx.stroke();
+  // せきひ
+  ctx.fillStyle=zGrad(-128*s,66*s,zSh(c,1.22),zSh(c,0.55));
+  ctx.beginPath();
+  ctx.moveTo(-46*s,66*s);ctx.lineTo(-50*s,-96*s);
+  ctx.quadraticCurveTo(0,-134*s,50*s,-96*s);ctx.lineTo(46*s,66*s);
+  ctx.closePath();ctx.fill();zOl(s,3);ctx.stroke();
+  // 消えかけた 字
+  ctx.save();
+  for(i=0;i<5;i++){
+    var a=0.42-i*0.075+Math.sin(t*1.2+i)*0.05;
+    ctx.strokeStyle='rgba(30,32,30,'+a.toFixed(2)+')';
+    ctx.lineWidth=Math.max(1.2,s*2.6);
+    var y=(-72+i*30)*s;
+    ctx.beginPath();ctx.moveTo(-24*s,y);ctx.lineTo(24*s,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,y-9*s);ctx.lineTo(0,y+9*s);ctx.stroke();
+  }
+  ctx.restore();
+  // 消えて とんでいく 字
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<5;i++){
+    var k=((t*0.35+i*0.2)%1);
+    ctx.globalAlpha=(1-k)*0.55;
+    ctx.strokeStyle=zRgba(c,1);ctx.lineWidth=Math.max(1,s*2);
+    var x=(10+i*14)*s+k*40*s, y2=(-40-i*16)*s-k*50*s;
+    ctx.beginPath();ctx.moveTo(x-7*s,y2);ctx.lineTo(x+7*s,y2);ctx.moveTo(x,y2-6*s);ctx.lineTo(x,y2+6*s);ctx.stroke();
+  }
+  ctx.restore();
+  // こけ
+  ctx.fillStyle='rgba(110,140,90,0.35)';
+  ctx.beginPath();ctx.ellipse(-30*s,30*s,17*s,11*s,0.3,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(26*s,-30*s,12*s,8*s,-0.2,0,Math.PI*2);ctx.fill();
+  zEyePair(s,-46*s,c,16,4.6,0.55);
+};
+
+ZAKO2ART.kuchibue=function(s,t,bt,vf){ // いわのくちぶえ = あなの あいた いわ。かぜが ぬけて 音が なる
+  var c=vf.col||'#7a8496';
+  var i;
+  // ごつごつした いわ
+  var P=[[-18,-116],[34,-102],[62,-64],[96,-14],[76,42],[86,88],[-24,90],[-84,72],[-72,10],[-96,-38],[-56,-88]];
+  ctx.beginPath();
+  for(i=0;i<P.length;i++){if(i===0)ctx.moveTo(P[i][0]*s,P[i][1]*s);else ctx.lineTo(P[i][0]*s,P[i][1]*s);}
+  ctx.closePath();
+  ctx.fillStyle=zGrad(-116*s,90*s,zSh(c,1.24),zSh(c,0.52));ctx.fill();zOl(s,3);ctx.stroke();
+  ctx.save();
+  ctx.beginPath();
+  for(i=0;i<P.length;i++){if(i===0)ctx.moveTo(P[i][0]*s,P[i][1]*s);else ctx.lineTo(P[i][0]*s,P[i][1]*s);}
+  ctx.closePath();ctx.clip();
+  ctx.strokeStyle='rgba(255,255,255,0.10)';ctx.lineWidth=Math.max(1,s*2);
+  ctx.beginPath();ctx.moveTo(-56*s,-88*s);ctx.lineTo(-14*s,-40*s);ctx.lineTo(-46*s,30*s);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(34*s,-102*s);ctx.lineTo(50*s,-30*s);ctx.stroke();
+  ctx.restore();
+  // あな(いくつも)
+  var holes=[[-34,-42,18],[12,-58,13],[46,-14,16],[-14,24,13],[34,48,11],[-52,26,10]];
+  for(i=0;i<holes.length;i++){
+    var h=holes[i];
+    ctx.save();
+    ctx.fillStyle='rgba(10,10,16,0.88)';
+    ctx.beginPath();ctx.ellipse(h[0]*s,h[1]*s,h[2]*s,h[2]*0.86*s,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=zRgba(c,0.5);ctx.lineWidth=Math.max(1,s*1.8);ctx.stroke();
+    ctx.restore();
+  }
+  // ぬけていく かぜ
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<4;i++){
+    var k=((t*0.75+i*0.25)%1);
+    ctx.strokeStyle='rgba(220,236,255,'+((1-k)*0.42).toFixed(2)+')';
+    ctx.lineWidth=Math.max(1.2,s*2.4);
+    var y=(-56+i*30)*s;
+    ctx.beginPath();
+    ctx.moveTo((66+k*46)*s,y);
+    ctx.quadraticCurveTo((84+k*46)*s,(y-11)*s/s,(102+k*46)*s,y);
+    ctx.stroke();
+  }
+  ctx.restore();
+  // おんぷ
+  for(i=0;i<2;i++){
+    var kk=((t*0.42+i*0.5)%1);
+    zNote((72+i*22)*s+kk*30*s,(-20-i*34)*s-kk*54*s,7.5*s,'rgba(226,238,255,1)',(1-kk)*0.7,s);
+  }
+  // ふたつの あなが 目のように ひかる
+  zEye(s,-34*s,-42*s,6.4*s,c,0.85);
+  zEye(s,12*s,-58*s,5.2*s,c,0.85);
+};
+
+ZAKO2ART.katarikuzushi=function(s,t,bt,vf){ // かたりくずし = ものがたりの 石が われ、字が こぼれ落ちる
+  var c=vf.col||'#8a7a9a';
+  var w=Math.sin(t*1.25), i;
+  ctx.fillStyle=zGrad(64*s,92*s,zSh(c,0.76),zSh(c,0.42));
+  ctx.beginPath();ctx.roundRect(-64*s,64*s,128*s,28*s,5*s);ctx.fill();zOl(s,2.6);ctx.stroke();
+  // われた いしばん(上と下が ずれている)
+  ctx.save();ctx.translate(-4*s,(-2+w*1.5)*s);ctx.rotate(-0.045);
+  ctx.fillStyle=zGrad(-126*s,4*s,zSh(c,1.24),zSh(c,0.66));
+  ctx.beginPath();
+  ctx.moveTo(-52*s,4*s);ctx.lineTo(-56*s,-92*s);ctx.quadraticCurveTo(0,-128*s,56*s,-92*s);
+  ctx.lineTo(52*s,-14*s);ctx.lineTo(18*s,2*s);ctx.lineTo(-14*s,-10*s);
+  ctx.closePath();ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.restore();
+  ctx.save();ctx.translate(6*s,(2-w*1.5)*s);ctx.rotate(0.05);
+  ctx.fillStyle=zGrad(-6*s,68*s,zSh(c,1.06),zSh(c,0.5));
+  ctx.beginPath();
+  ctx.moveTo(-52*s,-4*s);ctx.lineTo(-16*s,-16*s);ctx.lineTo(20*s,-2*s);ctx.lineTo(52*s,-18*s);
+  ctx.lineTo(50*s,66*s);ctx.lineTo(-50*s,66*s);
+  ctx.closePath();ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.restore();
+  // ほられた 字(上は のこり、下は くずれる)
+  ctx.save();ctx.strokeStyle='rgba(28,24,34,0.5)';ctx.lineWidth=Math.max(1.2,s*2.4);
+  for(i=0;i<3;i++){
+    var y=(-88+i*26)*s;
+    ctx.beginPath();ctx.moveTo(-26*s,y);ctx.lineTo(26*s,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-10*s,y-8*s);ctx.lineTo(-10*s,y+8*s);ctx.stroke();
+  }
+  ctx.restore();
+  // こぼれ落ちる 字
+  ctx.save();
+  for(i=0;i<6;i++){
+    var k=((t*0.6+i*0.17)%1);
+    ctx.globalAlpha=(1-k)*0.8;
+    ctx.strokeStyle=zSh(c,1.5);ctx.lineWidth=Math.max(1,s*2.2);
+    var x=(-40+i*17)*s+Math.sin(i*2.1)*8*s, y2=(6+k*84)*s;
+    ctx.save();ctx.translate(x,y2);ctx.rotate(k*3+i);
+    ctx.beginPath();ctx.moveTo(-7*s,0);ctx.lineTo(7*s,0);ctx.moveTo(0,-6*s);ctx.lineTo(0,6*s);ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+  zEyePair(s,-58*s,c,17,4.8,0.7);
+};
+
+// ============ き族 ============
+ZAKO2ART.nagaregi=function(s,t,bt,vf){ // ながれぎ = うみを ながれてきた 白い ながれ木
+  var c=vf.col||'#9a7a52';
+  var w=Math.sin(t*1.15), i;
+  ctx.save();ctx.translate(0,90*s);ctx.rotate(-0.10+w*0.02);ctx.translate(0,-90*s);
+  // みき(ねじれた ながれ木)
+  ctx.fillStyle=zGrad(-120*s,90*s,zSh(c,1.34),zSh(c,0.58));
+  ctx.beginPath();
+  ctx.moveTo(-20*s,90*s);
+  ctx.bezierCurveTo(-34*s,30*s,-16*s,-24*s,-26*s,-86*s);
+  ctx.lineTo(-6*s,-116*s);ctx.lineTo(16*s,-88*s);
+  ctx.bezierCurveTo(8*s,-24*s,26*s,28*s,22*s,90*s);
+  ctx.closePath();ctx.fill();zOl(s,2.8);ctx.stroke();
+  // えだ(おれた のこり)
+  for(i=0;i<3;i++){
+    var sd=i%2?1:-1, y=(-58+i*44)*s;
+    ctx.save();ctx.translate(sd*16*s,y);ctx.rotate(sd*(0.9+i*0.18)+w*0.03);
+    ctx.fillStyle=zGrad(-8*s,8*s,zSh(c,1.22),zSh(c,0.6));
+    ctx.beginPath();ctx.moveTo(0,-9*s);ctx.lineTo((44+i*10)*s,-5*s);ctx.lineTo((48+i*10)*s,3*s);ctx.lineTo(0,9*s);ctx.closePath();
+    ctx.fill();zOl(s,2);ctx.stroke();ctx.restore();
+  }
+  // 木目
+  ctx.save();ctx.strokeStyle='rgba(60,44,28,0.28)';ctx.lineWidth=Math.max(1,s*1.6);
+  for(i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.moveTo((-14+i*12)*s,80*s);
+    ctx.bezierCurveTo((-24+i*12)*s,26*s,(-8+i*12)*s,-22*s,(-16+i*12)*s,-82*s);
+    ctx.stroke();
+  }
+  ctx.restore();
+  // ふしあな＝目
+  zEye(s,-10*s,-58*s,6*s,c,0.8);
+  zEye(s,10*s,-44*s,4.6*s,c,0.8);
+  ctx.restore();
+  // 足もとの みずけ
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<3;i++){
+    ctx.strokeStyle='rgba(150,205,235,'+(0.16+0.12*Math.sin(t*2+i)).toFixed(2)+')';
+    ctx.lineWidth=Math.max(1,s*2);
+    var yy=(78+i*8)*s;
+    ctx.beginPath();ctx.moveTo(-52*s,yy);ctx.quadraticCurveTo(-16*s,yy-6*s,16*s,yy);
+    ctx.quadraticCurveTo(44*s,yy+5*s,60*s,yy);ctx.stroke();
+  }
+  ctx.restore();
+};
+
+ZAKO2ART.ent=function(s,t,bt,vf){ // もりの ぬし = 大きな 古木
+  var c=vf.col||'#7ec86a';
+  var w=Math.sin(t*1.0), i;
+  var bark='#6a4a30';
+  // ね
+  ctx.fillStyle=zGrad(50*s,92*s,'#7a5638','#3e2a1a');
+  ctx.beginPath();
+  ctx.moveTo(-30*s,40*s);ctx.lineTo(-86*s,90*s);ctx.lineTo(-58*s,92*s);ctx.lineTo(-24*s,66*s);
+  ctx.lineTo(0,92*s);ctx.lineTo(26*s,66*s);ctx.lineTo(60*s,92*s);ctx.lineTo(88*s,90*s);
+  ctx.lineTo(32*s,40*s);ctx.closePath();ctx.fill();zOl(s,2.6);ctx.stroke();
+  // みき
+  ctx.fillStyle=zGrad(-40*s,80*s,'#8a6440','#4a3220');
+  ctx.beginPath();
+  ctx.moveTo(-34*s,72*s);ctx.bezierCurveTo(-40*s,10*s,-32*s,-30*s,-30*s,-64*s);
+  ctx.lineTo(30*s,-64*s);ctx.bezierCurveTo(32*s,-30*s,40*s,10*s,34*s,72*s);
+  ctx.closePath();ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.save();ctx.strokeStyle='rgba(40,26,14,0.32)';ctx.lineWidth=Math.max(1,s*1.8);
+  for(i=0;i<3;i++){ctx.beginPath();ctx.moveTo((-18+i*17)*s,66*s);ctx.bezierCurveTo((-24+i*17)*s,20*s,(-14+i*17)*s,-20*s,(-18+i*17)*s,-58*s);ctx.stroke();}
+  ctx.restore();
+  // は(三だん)
+  var caps=[[0,-116,110,52],[-52,-88,80,42],[52,-88,80,42]];
+  for(i=0;i<caps.length;i++){
+    var q=caps[i];
+    ctx.save();ctx.translate(q[0]*s,(q[1]+w*3)*s);
+    ctx.fillStyle=zGrad(-q[3]*s,q[3]*s,zSh(c,1.18),zSh(c,0.52));
+    ctx.beginPath();ctx.ellipse(0,0,q[2]*s,q[3]*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+    ctx.restore();
+  }
+  // はの てり
+  ctx.save();ctx.globalAlpha=0.28;ctx.fillStyle='#ffffff';
+  ctx.beginPath();ctx.ellipse(-40*s,(-128+w*3)*s,30*s,13*s,-0.3,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // みきの かお
+  ctx.save();
+  ctx.fillStyle='rgba(20,14,8,0.72)';
+  ctx.beginPath();ctx.ellipse(0,24*s,15*s,10*s,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  zEyePair(s,-8*s,'#d8f0a0',17,6,0.8);
+  // 落ちる は
+  ctx.save();
+  for(i=0;i<4;i++){
+    var k=((t*0.4+i*0.25)%1);
+    ctx.globalAlpha=(1-k)*0.7;ctx.fillStyle=zSh(c,0.9);
+    ctx.save();ctx.translate((-70+i*46)*s+Math.sin(t*2+i)*12*s,(-60+k*140)*s);ctx.rotate(t*1.5+i);
+    ctx.beginPath();ctx.ellipse(0,0,9*s,4.4*s,0,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+  ctx.restore();
+};
+
+// ============ て族 ============
+ZAKO2ART.yokubarite=function(s,t,bt,vf){ // よくばりて = つかみとろうと のびてくる 大きな て
+  var c=vf.col||'#a8863a';
+  var w=Math.sin(t*1.6), i;
+  // うでくび
+  ctx.fillStyle=zGrad(30*s,92*s,zSh(c,0.96),zSh(c,0.44));
+  ctx.beginPath();ctx.roundRect(-34*s,34*s,68*s,58*s,12*s);ctx.fill();zOl(s,2.8);ctx.stroke();
+  // おやゆび(てのひらの うしろから)
+  ctx.save();ctx.translate(-56*s,10*s);ctx.rotate(-0.62+w*0.07);
+  ctx.fillStyle=zGrad(-70*s,6*s,zSh(c,1.22),zSh(c,0.62));
+  ctx.beginPath();ctx.roundRect(-16*s,-72*s,32*s,84*s,16*s);ctx.fill();zOl(s,2.6);ctx.stroke();
+  ctx.restore();
+  // てのひら
+  ctx.fillStyle=zGrad(-46*s,52*s,zSh(c,1.30),zSh(c,0.58));
+  ctx.beginPath();ctx.roundRect(-60*s,-40*s,120*s,92*s,26*s);ctx.fill();zOl(s,3);ctx.stroke();
+  // ゆび4本(つかもうと まがる)
+  for(i=0;i<4;i++){
+    var x=(-42+i*28)*s, L=(64+(i===1||i===2?14:0))*s;
+    var bend=Math.sin(t*1.6+i*0.6)*0.06;
+    // そとの ゆびほど 内へ まがる＝つかみに くる かたち
+    ctx.save();ctx.translate(x,-36*s);ctx.rotate(-(i-1.5)*0.20+bend);
+    ctx.fillStyle=zGrad(-L,4*s,zSh(c,1.36),zSh(c,0.74));
+    ctx.beginPath();ctx.roundRect(-13*s,-L,26*s,L+14*s,13*s);ctx.fill();zOl(s,2.4);ctx.stroke();
+    // つめ
+    ctx.fillStyle=zSh(c,1.55);
+    ctx.beginPath();ctx.ellipse(0,(-L+10*s)/1,8*s,7*s,0,Math.PI,0);ctx.fill();
+    zOl(s,1.6);ctx.stroke();
+    ctx.restore();
+  }
+  // てのひらの 目
+  zEye(s,0,4*s,10*s,c,0.95);
+  // てのひらの しわ(にっこりに 見えないよう 2本の すじで)
+  ctx.save();ctx.strokeStyle='rgba(30,22,10,0.38)';ctx.lineWidth=Math.max(1,s*2.2);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-40*s,-8*s);ctx.quadraticCurveTo(-20*s,14*s,-6*s,34*s);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(40*s,-10*s);ctx.quadraticCurveTo(26*s,18*s,24*s,38*s);ctx.stroke();
+  ctx.restore();
+  // こぼれる こばん
+  ctx.save();
+  for(i=0;i<4;i++){
+    var k=((t*0.5+i*0.25)%1);
+    ctx.globalAlpha=(1-k)*0.9;
+    ctx.fillStyle='#f0c860';
+    ctx.save();ctx.translate((-52+i*36)*s,(40+k*56)*s);ctx.rotate(k*4+i);
+    ctx.beginPath();ctx.ellipse(0,0,12*s,8*s,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(90,64,14,0.75)';ctx.lineWidth=Math.max(1,s*1.6);ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+};
+
+// ============ こたえ ============
+ZAKO2ART.kotae=function(s,t,bt,vf){ // こたえなき もの = あたまに こたえが 無い
+  var c=vf.col||'#8a76c8';
+  var w=Math.sin(t*1.4), i;
+  // からだ(大きく・かたが 張る)
+  ctx.fillStyle=zGrad(-70*s,92*s,zSh(c,1.14),zSh(c,0.44));
+  ctx.beginPath();
+  ctx.moveTo(-64*s,-62*s);ctx.lineTo(64*s,-62*s);
+  ctx.bezierCurveTo(94*s,6*s,92*s,52*s,82*s,90*s);
+  ctx.lineTo(-82*s,90*s);
+  ctx.bezierCurveTo(-92*s,52*s,-94*s,6*s,-64*s,-62*s);
+  ctx.closePath();ctx.fill();zOl(s,3.2);ctx.stroke();
+  // むねの すじ
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,0.10)';ctx.lineWidth=Math.max(1,s*2.4);
+  ctx.beginPath();ctx.moveTo(-40*s,-40*s);ctx.lineTo(-30*s,60*s);ctx.moveTo(40*s,-40*s);ctx.lineTo(30*s,60*s);ctx.stroke();
+  ctx.restore();
+  // うで
+  for(i=0;i<2;i++){
+    var sd=i?1:-1;
+    ctx.save();ctx.translate(sd*82*s,-38*s);ctx.rotate(sd*(0.20+w*0.05));
+    ctx.fillStyle=zGrad(-10*s,96*s,zSh(c,1.0),zSh(c,0.42));
+    ctx.beginPath();ctx.roundRect(-16*s,-12*s,32*s,110*s,15*s);ctx.fill();zOl(s,2.6);ctx.stroke();
+    ctx.restore();
+  }
+  // あたまの わ(中が 空=こたえが 無い)
+  ctx.save();ctx.translate(0,(-118+w*3)*s);
+  ctx.strokeStyle=zGrad(-52*s,52*s,zSh(c,1.32),zSh(c,0.55));
+  ctx.lineWidth=18*s;
+  ctx.beginPath();ctx.arc(0,0,42*s,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle=Z2OL;ctx.lineWidth=Math.max(1.4,s*2.6);
+  ctx.beginPath();ctx.arc(0,0,51*s,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(0,0,33*s,0,Math.PI*2);ctx.stroke();
+  // わの 中で こわれて 落ちる「？」
+  var k=(t*0.55)%1;
+  ctx.globalAlpha=Math.max(0,Math.min(1,(1-k)*1.6));
+  ctx.strokeStyle=zRgba(c,1);ctx.lineWidth=Math.max(1.8,s*4.6);ctx.lineCap='round';
+  ctx.save();ctx.translate(k*7*s,-k*6*s);ctx.rotate(k*0.45);
+  ctx.beginPath();ctx.arc(0,-7*s,11*s,Math.PI*0.95,Math.PI*2.12);ctx.stroke();
+  ctx.restore();
+  ctx.save();ctx.translate(-k*8*s,k*11*s);ctx.rotate(-k*0.55);
+  ctx.beginPath();ctx.moveTo(3*s,3*s);ctx.lineTo(0,12*s);ctx.stroke();
+  ctx.beginPath();ctx.arc(0,22*s,3*s,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+  // むねの 目(あたまが 無いので むねで 見る)
+  zEyePair(s,-16*s,c,24,7,0.9);
+};
+
+// ============ うみ族 ============
+ZAKO2ART.uminohebi=function(s,t,bt,vf){ // おおうみへび = とぐろを まいて 頭を もたげた 大へび
+  var c=vf.col||'#3a8a7a';
+  var w=Math.sin(t*1.5), i;
+  // とぐろ(下から 2まき)
+  for(i=0;i<2;i++){
+    var y=(72-i*40)*s, rw=(90-i*20)*s;
+    ctx.fillStyle=zGrad(y-24*s,y+24*s,zSh(c,1.22),zSh(c,0.5));
+    ctx.beginPath();ctx.ellipse(0,y,rw,22*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+  }
+  // くび(Sじ)。せびれを 同じ 曲線の 上に のせるため 座標を 関数で 出す
+  var P0=[-4,26],P1=[36+w*6,-14],P2=[-32-w*6,-56],P3=[6+w*4,-96];
+  function bz(k){
+    var u=1-k;
+    return [u*u*u*P0[0]+3*u*u*k*P1[0]+3*u*k*k*P2[0]+k*k*k*P3[0],
+            u*u*u*P0[1]+3*u*u*k*P1[1]+3*u*k*k*P2[1]+k*k*k*P3[1]];
+  }
+  ctx.save();
+  ctx.strokeStyle=zGrad(-120*s,30*s,zSh(c,1.2),zSh(c,0.62));
+  ctx.lineWidth=34*s;ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(P0[0]*s,P0[1]*s);
+  ctx.bezierCurveTo(P1[0]*s,P1[1]*s,P2[0]*s,P2[1]*s,P3[0]*s,P3[1]*s);
+  ctx.stroke();
+  ctx.strokeStyle=Z2OL;ctx.lineWidth=34*s+Math.max(2.4,s*4);
+  ctx.globalCompositeOperation='destination-over';ctx.stroke();
+  ctx.restore();
+  // せびれ(くびの 曲線の 上に、そとへ 向けて)
+  ctx.save();ctx.fillStyle=zSh(c,1.5);
+  for(i=1;i<=4;i++){
+    var k=i/5, p=bz(k), q=bz(k+0.02);
+    var ang=Math.atan2(q[1]-p[1],q[0]-p[0]);
+    ctx.save();ctx.translate(p[0]*s,p[1]*s);ctx.rotate(ang+Math.PI/2);
+    ctx.beginPath();ctx.moveTo(-13*s,0);ctx.lineTo(0,-22*s);ctx.lineTo(13*s,0);ctx.closePath();ctx.fill();
+    zOl(s,1.8);ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+  // あたま
+  ctx.save();ctx.translate((6+w*4)*s,-104*s);ctx.rotate(-0.15+w*0.05);
+  ctx.fillStyle=zGrad(-30*s,26*s,zSh(c,1.35),zSh(c,0.6));
+  ctx.beginPath();ctx.ellipse(0,0,42*s,28*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.8);ctx.stroke();
+  // あご
+  ctx.fillStyle=zSh(c,0.5);
+  ctx.beginPath();ctx.moveTo(-10*s,10*s);ctx.quadraticCurveTo(30*s,20*s,44*s,6*s);
+  ctx.quadraticCurveTo(28*s,26*s,-8*s,22*s);ctx.closePath();ctx.fill();zOl(s,2);ctx.stroke();
+  // きば
+  ctx.fillStyle='#f4f0e0';
+  ctx.beginPath();ctx.moveTo(20*s,12*s);ctx.lineTo(27*s,12*s);ctx.lineTo(23*s,25*s);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(32*s,10*s);ctx.lineTo(38*s,9*s);ctx.lineTo(35*s,21*s);ctx.closePath();ctx.fill();
+  // ひれ(あたまの よこ)
+  ctx.fillStyle=zRgba(c,0.85);
+  ctx.beginPath();ctx.moveTo(-16*s,-6*s);ctx.lineTo(-46*s,-30*s);ctx.lineTo(-40*s,-2*s);ctx.lineTo(-52*s,14*s);ctx.lineTo(-14*s,10*s);ctx.closePath();
+  ctx.fill();zOl(s,2);ctx.stroke();
+  zEye(s,14*s,-6*s,6*s,'#ffe08a',0.9);
+  ctx.restore();
+  // みずしぶき
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<4;i++){
+    ctx.strokeStyle='rgba(160,220,245,'+(0.14+0.12*Math.sin(t*2.2+i)).toFixed(2)+')';
+    ctx.lineWidth=Math.max(1,s*2.2);
+    var yy=(86+i*7)*s;
+    ctx.beginPath();ctx.moveTo(-96*s,yy);ctx.quadraticCurveTo(-30*s,yy-7*s,20*s,yy);
+    ctx.quadraticCurveTo(70*s,yy+6*s,100*s,yy);ctx.stroke();
+  }
+  ctx.restore();
+};
+
+ZAKO2ART.yadokari=function(s,t,bt,vf){ // ほらがいやどかり = ほらがいを せおった やどかり
+  var c=vf.col||'#c89868';
+  var w=Math.sin(t*2.2), i;
+  // かい(うずまき) — うしろ みぎに せおう
+  ctx.save();ctx.translate(38*s,-26*s);ctx.rotate(-0.30);
+  ctx.fillStyle=zGrad(-72*s,60*s,zSh(c,1.32),zSh(c,0.56));
+  ctx.beginPath();ctx.ellipse(0,0,66*s,58*s,0,0,Math.PI*2);ctx.fill();zOl(s,3);ctx.stroke();
+  // うずの すじ
+  ctx.save();ctx.beginPath();ctx.ellipse(0,0,66*s,58*s,0,0,Math.PI*2);ctx.clip();
+  ctx.strokeStyle='rgba(70,44,20,0.35)';ctx.lineWidth=Math.max(1.2,s*2.6);
+  for(i=0;i<4;i++){
+    ctx.beginPath();
+    ctx.arc(-8*s+i*7*s,-4*s+i*4*s,(52-i*13)*s,0.5,4.4);ctx.stroke();
+  }
+  ctx.restore();
+  // かいの とがり
+  ctx.fillStyle=zSh(c,0.72);
+  ctx.beginPath();ctx.moveTo(50*s,-34*s);ctx.lineTo(88*s,-58*s);ctx.lineTo(62*s,-8*s);ctx.closePath();ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.restore();
+  // あし(3ぼん・からだの 下から)
+  ctx.fillStyle=zSh(c,0.58);
+  for(i=0;i<3;i++){
+    ctx.save();ctx.translate((-56+i*24)*s,58*s);ctx.rotate(-0.45+i*0.4+Math.sin(t*3+i)*0.1);
+    ctx.beginPath();ctx.roundRect(-7*s,0,14*s,36*s,7*s);ctx.fill();zOl(s,2);ctx.stroke();
+    ctx.restore();
+  }
+  // からだ(かいの まえ・ひだり下に 出ている)
+  ctx.fillStyle=zGrad(-2*s,66*s,zSh(c,1.24),zSh(c,0.56));
+  ctx.beginPath();ctx.ellipse(-42*s,30*s,50*s,36*s,-0.12,0,Math.PI*2);ctx.fill();zOl(s,2.8);ctx.stroke();
+  // はさみ(大=左上／小=左下)
+  ctx.save();ctx.translate(-102*s,-14*s);ctx.rotate(-0.36+w*0.12);
+  ctx.fillStyle=zGrad(-34*s,24*s,zSh(c,1.44),zSh(c,0.62));
+  ctx.beginPath();ctx.ellipse(0,0,36*s,25*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.4);ctx.stroke();
+  ctx.fillStyle=zSh(c,0.44);
+  ctx.beginPath();ctx.moveTo(-8*s,-9*s);ctx.lineTo(-44*s,-27*s);ctx.lineTo(-36*s,-4*s);ctx.closePath();ctx.fill();zOl(s,1.8);ctx.stroke();
+  ctx.restore();
+  ctx.save();ctx.translate(-88*s,54*s);ctx.rotate(0.46-w*0.12);
+  ctx.fillStyle=zGrad(-22*s,16*s,zSh(c,1.3),zSh(c,0.6));
+  ctx.beginPath();ctx.ellipse(0,0,24*s,17*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.fillStyle=zSh(c,0.46);
+  ctx.beginPath();ctx.moveTo(-6*s,-6*s);ctx.lineTo(-30*s,-16*s);ctx.lineTo(-25*s,-2*s);ctx.closePath();ctx.fill();
+  ctx.restore();
+  // め(え の さき)。さきの 座標を 出してから 目を おく
+  var tips=[];
+  for(i=0;i<2;i++){
+    var sd=i?1:-1, rot=sd*0.34+w*0.06;
+    var bx=(-58+i*28)*s, by=4*s, L=50*s;
+    var tx=bx+Math.sin(rot)*L, ty=by-Math.cos(rot)*L;
+    tips.push([tx,ty]);
+    ctx.strokeStyle=zSh(c,0.56);ctx.lineWidth=8*s;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(tx,ty);ctx.stroke();
+    ctx.strokeStyle=Z2OL;ctx.lineWidth=8*s+Math.max(1.6,s*2.6);
+    ctx.save();ctx.globalCompositeOperation='destination-over';
+    ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(tx,ty);ctx.stroke();ctx.restore();
+  }
+  for(i=0;i<2;i++)zEye(s,tips[i][0],tips[i][1],6.4*s,'#fff2c8',0.95);
+};
+
+ZAKO2ART.shiouzu=function(s,t,bt,vf){ // しおのうず = 巻きこむ しおの うず
+  var c=vf.col||'#4a7ab0';
+  var i,a;
+  // すりばち形の うず(下ほど 大きく、上ほど 小さい)
+  var N=8;
+  for(i=N-1;i>=0;i--){
+    var rr=(20+i*13.5)*s, ry=(7+i*5.4)*s;
+    var yy=(84-i*17)*s;
+    var sp=t*(0.9+i*0.22)+i*0.7;
+    ctx.save();ctx.translate(0,yy);
+    ctx.strokeStyle=zRgba(c,0.26+i*0.05);
+    ctx.lineWidth=Math.max(1.8,s*(3.4+i*0.7));ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.ellipse(0,0,rr,ry,0,sp%(Math.PI*2),(sp%(Math.PI*2))+Math.PI*1.5);
+    ctx.stroke();
+    // 白い あわの すじ
+    ctx.strokeStyle='rgba(226,246,255,'+(0.10+i*0.035).toFixed(2)+')';
+    ctx.lineWidth=Math.max(1,s*1.8);
+    ctx.beginPath();
+    ctx.ellipse(0,0,rr*0.86,ry*0.86,0,(sp+2)%(Math.PI*2),((sp+2)%(Math.PI*2))+Math.PI*0.9);
+    ctx.stroke();
+    ctx.restore();
+  }
+  // まん中の あな
+  ctx.save();ctx.translate(0,-35*s);
+  var g=ctx.createRadialGradient(0,0,2,0,0,42*s);
+  g.addColorStop(0,'rgba(4,10,22,0.96)');g.addColorStop(0.62,zRgba(c,0.6));g.addColorStop(1,zRgba(c,0));
+  ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(0,0,42*s,20*s,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // しぶき
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<10;i++){
+    a=t*1.6+i*0.63;
+    var r2=(56+((i*29)%56))*s;
+    ctx.fillStyle='rgba(200,236,255,'+(0.16+0.2*Math.sin(t*3+i)).toFixed(2)+')';
+    ctx.beginPath();ctx.arc(Math.cos(a)*r2,(10+Math.sin(a)*r2*0.4),(2.6+(i%3)*1.8)*s,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+  zEyePair(s,-40*s,'#cfe8ff',20,6,0.95);
+};
+
+ZAKO2ART.shionokiba=function(s,t,bt,vf){ // しおの きば = きばの ような しおの なみがしら
+  var c=vf.col||'#5f9ec4';
+  var w=Math.sin(t*1.6), i;
+  // なみの かべ
+  ctx.fillStyle=zGrad(-130*s,90*s,zSh(c,1.35),zSh(c,0.45));
+  ctx.beginPath();
+  ctx.moveTo(-108*s,90*s);
+  ctx.bezierCurveTo(-118*s,10*s,(-92+w*6)*s,-72*s,(-30+w*8)*s,-118*s);
+  ctx.bezierCurveTo((30+w*6)*s,-136*s,96*s,-84*s,104*s,-6*s);
+  ctx.lineTo(110*s,90*s);
+  ctx.closePath();ctx.fill();zOl(s,3);ctx.stroke();
+  // まきこむ なみがしら(みぎ上で 巻いている)
+  ctx.save();
+  ctx.fillStyle=zSh(c,0.60);
+  ctx.beginPath();
+  ctx.moveTo(-56*s,-10*s);
+  ctx.bezierCurveTo(-40*s,-74*s,30*s,-96*s,74*s,-52*s);
+  ctx.bezierCurveTo(42*s,-68*s,-6*s,-46*s,-16*s,6*s);
+  ctx.closePath();ctx.fill();
+  // 巻きの あわ
+  ctx.strokeStyle='rgba(240,250,255,0.75)';ctx.lineWidth=Math.max(1.6,s*3.2);ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(74*s,-52*s);
+  ctx.bezierCurveTo(96*s,-96*s,40*s,-124*s,4*s,-108*s);
+  ctx.stroke();
+  ctx.fillStyle='rgba(240,250,255,0.85)';
+  for(i=0;i<3;i++){ctx.beginPath();ctx.arc((6-i*20)*s,(-108-i*4+Math.sin(t*3+i)*4)*s,(9-i*2)*s,0,Math.PI*2);ctx.fill();}
+  ctx.restore();
+  // 口の おく(きばの 下に しく)
+  ctx.save();
+  ctx.fillStyle='rgba(6,18,34,0.88)';
+  ctx.beginPath();
+  ctx.moveTo(-96*s,-24*s);ctx.quadraticCurveTo(0,-40*s,96*s,-24*s);
+  ctx.quadraticCurveTo(100*s,42*s,74*s,56*s);ctx.lineTo(-78*s,56*s);
+  ctx.quadraticCurveTo(-100*s,42*s,-96*s,-24*s);ctx.closePath();ctx.fill();
+  ctx.restore();
+  // あわの きば(上と下)
+  ctx.fillStyle='#f2f8ff';
+  for(i=0;i<7;i++){
+    var x=(-90+i*30)*s;
+    ctx.beginPath();ctx.moveTo(x,-24*s);ctx.lineTo(x+22*s,-24*s);ctx.lineTo(x+11*s,(10+Math.sin(t*3+i)*5)*s);ctx.closePath();ctx.fill();
+    zOl(s,1.6);ctx.stroke();
+  }
+  for(i=0;i<6;i++){
+    var x2=(-76+i*30)*s;
+    ctx.beginPath();ctx.moveTo(x2,54*s);ctx.lineTo(x2+20*s,54*s);ctx.lineTo(x2+10*s,(24-Math.sin(t*3+i)*5)*s);ctx.closePath();ctx.fill();
+    zOl(s,1.6);ctx.stroke();
+  }
+  zEyePair(s,-74*s,'#eaf6ff',36,6.6,0.95);
+  // しぶき
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<8;i++){
+    var k=((t*0.8+i*0.13)%1);
+    ctx.fillStyle='rgba(220,244,255,'+((1-k)*0.5).toFixed(2)+')';
+    ctx.beginPath();ctx.arc((-70+i*22)*s+Math.sin(i*2)*10*s,(-110-k*40)*s,(3+(i%3)*2)*s,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+};
+
+ZAKO2ART.shionomukuro=function(s,t,bt,vf){ // しおのむくろ = しおに おおわれた ほねの むくろ
+  var c=vf.col||'#9aa89a';
+  var w=Math.sin(t*1.3), i;
+  var bone='#e8e6d8';
+  // あし
+  ctx.strokeStyle=bone;ctx.lineWidth=11*s;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-18*s,42*s);ctx.lineTo(-24*s,88*s);ctx.moveTo(18*s,42*s);ctx.lineTo(24*s,88*s);ctx.stroke();
+  // こしぼね
+  ctx.fillStyle=bone;
+  ctx.beginPath();ctx.roundRect(-30*s,26*s,60*s,26*s,8*s);ctx.fill();zOl(s,2.2);ctx.stroke();
+  // あばら
+  ctx.fillStyle=bone;
+  ctx.beginPath();ctx.roundRect(-8*s,-58*s,16*s,88*s,7*s);ctx.fill();zOl(s,2);ctx.stroke();
+  ctx.strokeStyle=bone;ctx.lineWidth=8*s;
+  for(i=0;i<4;i++){
+    var y=(-46+i*22)*s, rw=(40-i*3)*s;
+    ctx.beginPath();ctx.arc(0,y,rw,0.28,Math.PI-0.28);ctx.stroke();
+  }
+  // うで
+  ctx.strokeStyle=bone;ctx.lineWidth=10*s;
+  ctx.beginPath();
+  ctx.moveTo(-40*s,-48*s);ctx.lineTo((-64-w*4)*s,-4*s);ctx.lineTo((-56-w*6)*s,44*s);
+  ctx.moveTo(40*s,-48*s);ctx.lineTo((64+w*4)*s,-4*s);ctx.lineTo((58+w*6)*s,40*s);
+  ctx.stroke();
+  // あたま
+  ctx.fillStyle=bone;
+  ctx.beginPath();ctx.ellipse(0,-84*s,32*s,34*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+  ctx.fillStyle='rgba(14,18,20,0.9)';
+  ctx.beginPath();ctx.ellipse(-12*s,-88*s,9*s,10*s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(12*s,-88*s,9*s,10*s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.moveTo(0,-74*s);ctx.lineTo(-5*s,-64*s);ctx.lineTo(5*s,-64*s);ctx.closePath();ctx.fill();
+  // しおの けっしょう(体に へばりつく)
+  var SALT=[[-34,-30],[30,-14],[-24,26],[26,40],[-46,-56],[38,-62],[0,-112],[-30,68]];
+  for(i=0;i<SALT.length;i++){
+    ctx.save();ctx.translate(SALT[i][0]*s,SALT[i][1]*s);ctx.rotate(i*1.1);
+    ctx.fillStyle=zGrad(-12*s,12*s,zSh(c,1.5),zSh(c,0.8));
+    var r=(8+(i%3)*4)*s;
+    ctx.beginPath();
+    ctx.moveTo(0,-r);ctx.lineTo(r*0.7,-r*0.2);ctx.lineTo(r*0.45,r);ctx.lineTo(-r*0.45,r);ctx.lineTo(-r*0.7,-r*0.2);
+    ctx.closePath();ctx.fill();zOl(s,1.6);ctx.stroke();
+    ctx.restore();
+  }
+  // かいそう
+  ctx.save();ctx.strokeStyle='rgba(70,110,80,0.6)';ctx.lineWidth=Math.max(1.4,s*3);ctx.lineCap='round';
+  for(i=0;i<3;i++){
+    var x=(-30+i*30)*s;
+    ctx.beginPath();ctx.moveTo(x,-52*s);
+    ctx.quadraticCurveTo((x+ (w*6+8)*s),-20*s,x-6*s,18*s);ctx.stroke();
+  }
+  ctx.restore();
+  zEye(s,-12*s,-88*s,5.4*s,'#bfe6d8',0.85);
+  zEye(s,12*s,-88*s,5.4*s,'#bfe6d8',0.85);
+};
+
+// ============ スライム系の かたち ============
+ZAKO2ART.komari=function(s,t,bt,vf){ // ひかりのまり = ひかりで できた てまり
+  var c=vf.col||'#f0e2a0';
+  var hop=Math.abs(Math.sin(t*2.6)), i;
+  var cy=(38-hop*54)*s;
+  ctx.save();ctx.translate(0,cy);
+  var sq=1+ (1-hop)*0.10;
+  ctx.scale(sq,2-sq);
+  // まり
+  ctx.fillStyle=zGrad(-52*s,52*s,zSh(c,1.25),zSh(c,0.72));
+  ctx.beginPath();ctx.arc(0,0,52*s,0,Math.PI*2);ctx.fill();zOl(s,2.8);ctx.stroke();
+  // てまりの かがり糸
+  ctx.save();ctx.beginPath();ctx.arc(0,0,52*s,0,Math.PI*2);ctx.clip();
+  ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=Math.max(1.2,s*2.6);
+  for(i=0;i<5;i++){
+    ctx.beginPath();ctx.ellipse(0,0,52*s,(10+i*11)*s,0,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.strokeStyle='rgba(230,180,90,0.55)';
+  for(i=0;i<6;i++){
+    var a=i/6*Math.PI;
+    ctx.beginPath();ctx.moveTo(Math.cos(a)*54*s,Math.sin(a)*54*s);ctx.lineTo(-Math.cos(a)*54*s,-Math.sin(a)*54*s);ctx.stroke();
+  }
+  ctx.restore();
+  // てり
+  ctx.fillStyle='rgba(255,255,255,0.75)';
+  ctx.beginPath();ctx.ellipse(-19*s,-22*s,13*s,9*s,-0.5,0,Math.PI*2);ctx.fill();
+  zEyePair(s,0,'#fff6c8',17,5.4,0.9);
+  ctx.restore();
+  // まわりの ひかり
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  var g=ctx.createRadialGradient(0,cy,4,0,cy,96*s);
+  g.addColorStop(0,zRgba(c,0.36));g.addColorStop(1,zRgba(c,0));
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,cy,96*s,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+};
+
+ZAKO2ART.utawasure=function(s,t,bt,vf){ // うたわすれ = 舌の おちた かね。うたが こぼれて 消える
+  var c=vf.col||'#8a90b0';
+  var w=Math.sin(t*1.1), i;
+  ctx.save();ctx.translate(0,-8*s);ctx.rotate(w*0.035);
+  // かね
+  ctx.fillStyle=zGrad(-96*s,64*s,zSh(c,1.32),zSh(c,0.52));
+  ctx.beginPath();
+  ctx.moveTo(-14*s,-96*s);ctx.lineTo(14*s,-96*s);
+  ctx.bezierCurveTo(46*s,-60*s,66*s,4*s,72*s,52*s);
+  ctx.lineTo(-72*s,52*s);
+  ctx.bezierCurveTo(-66*s,4*s,-46*s,-60*s,-14*s,-96*s);
+  ctx.closePath();ctx.fill();zOl(s,3);ctx.stroke();
+  // ふち
+  ctx.fillStyle=zSh(c,0.66);
+  ctx.beginPath();ctx.roundRect(-78*s,50*s,156*s,20*s,7*s);ctx.fill();zOl(s,2.4);ctx.stroke();
+  // つりて
+  ctx.fillStyle=zSh(c,0.8);
+  ctx.beginPath();ctx.arc(0,-102*s,15*s,Math.PI,0);ctx.lineTo(9*s,-96*s);ctx.lineTo(-9*s,-96*s);ctx.closePath();
+  ctx.fill();zOl(s,2.2);ctx.stroke();
+  // 中は からっぽ(舌が ない)
+  ctx.fillStyle='rgba(10,12,20,0.55)';
+  ctx.beginPath();ctx.ellipse(0,54*s,58*s,13*s,0,0,Math.PI*2);ctx.fill();
+  // ひび
+  ctx.save();ctx.strokeStyle='rgba(20,22,32,0.5)';ctx.lineWidth=Math.max(1.2,s*2.4);
+  ctx.beginPath();ctx.moveTo(28*s,-64*s);ctx.lineTo(20*s,-22*s);ctx.lineTo(38*s,10*s);ctx.lineTo(30*s,50*s);ctx.stroke();
+  ctx.restore();
+  zEyePair(s,-42*s,c,18,5.4,0.8);
+  ctx.restore();
+  // こぼれて 消える おんぷ
+  for(i=0;i<4;i++){
+    var k=((t*0.42+i*0.25)%1);
+    zNote((-46+i*32)*s+Math.sin(i*2)*8*s,(60+k*44)*s,(8-k*3)*s,'rgba(210,220,245,1)',(1-k)*0.6,s);
+  }
+};
+
+ZAKO2ART.mugenslime=function(s,t,bt,vf){ // むげんスライム = 中に また 自分が いる
+  var c=vf.col||'#5a4a8a';
+  var i,N=4;
+  for(i=0;i<N;i++){
+    var k=Math.pow(0.62,i);
+    var pulse=1+0.03*Math.sin(t*1.8+i*1.1);
+    ctx.save();
+    ctx.translate(0,(88-88*k)*s);
+    ctx.scale(k*pulse,k*pulse);
+    ctx.fillStyle=zGrad(-96*s,88*s,zSh(c,1.05+i*0.18),zSh(c,0.42+i*0.10));
+    ctx.beginPath();
+    ctx.moveTo(0,-96*s);
+    ctx.bezierCurveTo(30*s,-92*s,86*s,-24*s,88*s,60*s);
+    ctx.quadraticCurveTo(88*s,88*s,58*s,88*s);
+    ctx.lineTo(-58*s,88*s);
+    ctx.quadraticCurveTo(-88*s,88*s,-88*s,60*s);
+    ctx.bezierCurveTo(-86*s,-24*s,-30*s,-92*s,0,-96*s);
+    ctx.closePath();ctx.fill();
+    zOl(s,2.6);ctx.stroke();
+    if(i===N-1){
+      zEyePair(s,-10*s,'#d8c8ff',26,8,0.95);
+    }
+    ctx.restore();
+  }
+  // てり
+  ctx.save();ctx.globalAlpha=0.5;ctx.fillStyle='#ffffff';
+  ctx.beginPath();ctx.ellipse(-40*s,-40*s,20*s,12*s,-0.5,0,Math.PI*2);ctx.fill();ctx.restore();
+};
+
+ZAKO2ART.kagimushi=function(s,t,bt,vf){ // かぎむし = かぎの すがたを した むし
+  var c=vf.col||'#8a7444';
+  var w=Math.sin(t*3.4), i;
+  ctx.save();ctx.translate(0,10*s);ctx.rotate(w*0.03);
+  // あし(6本)
+  ctx.strokeStyle=zSh(c,0.5);ctx.lineWidth=6*s;ctx.lineCap='round';
+  for(i=0;i<3;i++){
+    var y=(-16+i*30)*s, ph=Math.sin(t*4+i);
+    ctx.beginPath();
+    ctx.moveTo(-16*s,y);ctx.lineTo(-44*s,y+8*s+ph*5*s);ctx.lineTo(-52*s,y+30*s);
+    ctx.moveTo(16*s,y);ctx.lineTo(44*s,y+8*s-ph*5*s);ctx.lineTo(52*s,y+30*s);
+    ctx.stroke();
+  }
+  // からだ=かぎの じく
+  ctx.fillStyle=zGrad(-70*s,78*s,zSh(c,1.34),zSh(c,0.6));
+  ctx.beginPath();ctx.roundRect(-17*s,-46*s,34*s,120*s,9*s);ctx.fill();zOl(s,2.6);ctx.stroke();
+  // かぎの は(足のように 出ている)
+  ctx.fillStyle=zSh(c,1.15);
+  ctx.beginPath();ctx.rect(14*s,34*s,30*s,16*s);ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.beginPath();ctx.rect(14*s,58*s,22*s,15*s);ctx.fill();zOl(s,2.2);ctx.stroke();
+  // あたま=かぎの わ
+  ctx.save();ctx.translate(0,-72*s);
+  ctx.fillStyle=zGrad(-34*s,34*s,zSh(c,1.42),zSh(c,0.66));
+  ctx.beginPath();ctx.arc(0,0,34*s,0,Math.PI*2);ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.fillStyle='rgba(12,10,16,0.9)';
+  ctx.beginPath();ctx.arc(0,0,13*s,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // しょっかく
+  ctx.strokeStyle=zSh(c,0.55);ctx.lineWidth=4.4*s;
+  ctx.beginPath();
+  ctx.moveTo(-16*s,-96*s);ctx.quadraticCurveTo((-40+w*5)*s,-124*s,(-30+w*5)*s,-142*s);
+  ctx.moveTo(16*s,-96*s);ctx.quadraticCurveTo((40-w*5)*s,-124*s,(30-w*5)*s,-142*s);
+  ctx.stroke();
+  zEye(s,-14*s,-58*s,5*s,'#ffe9a0',0.9);
+  zEye(s,14*s,-58*s,5*s,'#ffe9a0',0.9);
+  ctx.restore();
+};
+
+ZAKO2ART.hikabake=function(s,t,bt,vf){ // ひかりのばけもの = ひかりが かたまって ばけものに なった
+  var c=vf.col||'#ffe9a8';
+  var i,w=Math.sin(t*1.7);
+  // 外の ひかり
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  var g=ctx.createRadialGradient(0,-16*s,6,0,-16*s,150*s);
+  g.addColorStop(0,zRgba(c,0.55));g.addColorStop(0.5,zRgba(c,0.18));g.addColorStop(1,zRgba(c,0));
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,-16*s,150*s,0,Math.PI*2);ctx.fill();
+  // とがった ひかりの すじ
+  for(i=0;i<12;i++){
+    var a=t*0.35+i/12*Math.PI*2;
+    var L=(104+Math.sin(t*2.4+i*1.7)*34)*s;
+    var lg=ctx.createLinearGradient(Math.cos(a)*50*s,-16*s+Math.sin(a)*44*s,Math.cos(a)*L,-16*s+Math.sin(a)*L*0.86);
+    lg.addColorStop(0,zRgba(c,0.75));lg.addColorStop(1,zRgba(c,0));
+    ctx.strokeStyle=lg;ctx.lineWidth=Math.max(1.6,s*(3+(i%3)*1.6));ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(Math.cos(a)*50*s,-16*s+Math.sin(a)*44*s);
+    ctx.lineTo(Math.cos(a)*L,-16*s+Math.sin(a)*L*0.86);ctx.stroke();
+  }
+  ctx.restore();
+  // 本体(ゆらぐ かたまり)
+  ctx.fillStyle=zGrad(-96*s,88*s,'#fffdf0',zSh(c,0.86));
+  ctx.beginPath();
+  var N=11;
+  for(i=0;i<N;i++){
+    var a2=i/N*Math.PI*2;
+    var rr=(66+Math.sin(t*2+i*1.9)*9)*s;
+    var px=Math.cos(a2)*rr, py=-16*s+Math.sin(a2)*rr*0.95;
+    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(150,120,40,0.5)';ctx.lineWidth=Math.max(1.4,s*2.6);ctx.stroke();
+  // たくさんの め(ひらいたり とじたり)
+  var EYES=[[0,-46,11],[-34,-14,10],[32,-12,10],[-16,26,8.4],[22,30,8],[0,-4,13]];
+  for(i=0;i<EYES.length;i++){
+    var op=0.5+0.5*Math.sin(t*2.2+i*1.3);
+    if(op<0.14){ // とじている
+      ctx.strokeStyle='rgba(120,92,30,0.7)';ctx.lineWidth=Math.max(1.2,s*2.2);
+      ctx.beginPath();ctx.moveTo((EYES[i][0]-EYES[i][2])*s,EYES[i][1]*s);ctx.lineTo((EYES[i][0]+EYES[i][2])*s,EYES[i][1]*s);ctx.stroke();
+    }else{
+      ctx.fillStyle='rgba(255,255,255,0.95)';
+      ctx.beginPath();ctx.ellipse(EYES[i][0]*s,EYES[i][1]*s,EYES[i][2]*s,EYES[i][2]*1.16*s,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(60,44,10,0.92)';
+      ctx.beginPath();ctx.arc((EYES[i][0]+w*1.6)*s,EYES[i][1]*s,EYES[i][2]*0.5*s,0,Math.PI*2);ctx.fill();
+    }
+  }
+};
+
+// ============ とりの 一族(そらを とぶ) ============
+// crow型の 外形に そろえる: どうの まん中 y=0 ／ 下は +70 ／ 上は -96 ／ はばは ±112
+function zBird(s,t,c,o){
+  o=o||{};
+  // しっぽ
+  ctx.fillStyle=zGrad(20*s,72*s,zSh(c,0.9),zSh(c,0.5));
+  ctx.beginPath();
+  ctx.moveTo(-20*s,34*s);ctx.lineTo(-10*s,72*s);ctx.lineTo(2*s,50*s);
+  ctx.lineTo(14*s,72*s);ctx.lineTo(22*s,34*s);ctx.closePath();ctx.fill();zOl(s,2.2);ctx.stroke();
+  // どう
+  ctx.fillStyle=zGrad(-46*s,54*s,zSh(c,1.28),zSh(c,0.52));
+  ctx.beginPath();ctx.ellipse(0,6*s,38*s,46*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.8);ctx.stroke();
+  // あたま
+  if(!o.noHead){
+    ctx.fillStyle=zGrad(-84*s,-30*s,zSh(c,1.36),zSh(c,0.62));
+    ctx.beginPath();ctx.ellipse(0,-54*s,30*s,27*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+    // くちばし
+    ctx.fillStyle=o.beak||'#e8a45a';
+    ctx.beginPath();ctx.moveTo(22*s,-60*s);ctx.lineTo(58*s,-50*s);ctx.lineTo(22*s,-42*s);ctx.closePath();ctx.fill();zOl(s,2);ctx.stroke();
+  }
+}
+function zWings(s,t,speed,amp,draw){
+  var fl=Math.sin(t*(speed||4.2));
+  for(var i=0;i<2;i++){
+    var sd=i?1:-1;
+    ctx.save();ctx.scale(sd,1);
+    ctx.translate(24*s,-8*s);ctx.rotate(-fl*(amp||0.30));
+    draw(s,t,sd,fl);
+    ctx.restore();
+  }
+}
+function zFeather(s,c){ // ふつうの はね
+  ctx.fillStyle=zGrad(-34*s,34*s,zSh(c,1.16),zSh(c,0.48));
+  ctx.beginPath();
+  ctx.moveTo(0,-22*s);
+  ctx.quadraticCurveTo(56*s,-42*s,92*s,-10*s);
+  ctx.quadraticCurveTo(64*s,10*s,72*s,26*s);
+  ctx.quadraticCurveTo(40*s,14*s,0,24*s);
+  ctx.closePath();ctx.fill();zOl(s,2.4);ctx.stroke();
+}
+
+ZAKO2ART.crow=function(s,t,bt,vf){ // おおがらす
+  var c=vf.col||'#a9b7ff';
+  zWings(s,t,4.2,0.30,function(){zFeather(s,c);});
+  zBird(s,t,c,{});
+  zEye(s,10*s,-58*s,5.4*s,'#fff2c8',0.9);
+};
+
+ZAKO2ART.kodamadori=function(s,t,bt,vf){ // こだまどり = はねが 音の わに なっている
+  var c=vf.col||'#f6eec8';
+  var i;
+  // 音の わ(はねの かわり)
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<2;i++){
+    var sd=i?1:-1;
+    for(var j=0;j<4;j++){
+      var k=((t*0.7+j*0.25)%1);
+      ctx.strokeStyle=zRgba(c,(1-k)*0.55);
+      ctx.lineWidth=Math.max(1.4,s*(3.4-k*1.6));
+      ctx.beginPath();
+      ctx.arc(sd*30*s,-6*s,(20+k*74)*s,sd>0?-1.15:Math.PI-(-1.15)-1.9,sd>0?1.15:Math.PI+1.15,sd<0);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+  ctx.save();ctx.globalAlpha=0.9;
+  zBird(s,t,c,{beak:'#e0c070'});
+  ctx.restore();
+  zEye(s,10*s,-58*s,5.4*s,'#fffbe0',0.95);
+  // こだまの おんぷ
+  for(i=0;i<2;i++){
+    var kk=((t*0.5+i*0.5)%1);
+    zNote((66+i*8)*s+kk*26*s,(-70-i*10)*s-kk*30*s,7*s,zRgba(c,1),(1-kk)*0.6,s);
+  }
+};
+
+ZAKO2ART.yamabiko=function(s,t,bt,vf){ // やまびこどり = おくれて ついてくる もう一羽
+  var c=vf.col||'#5a6a88';
+  // おくれた こだま(うしろ)
+  ctx.save();ctx.globalAlpha=0.34;ctx.translate(-40*s,14*s);ctx.scale(0.86,0.86);
+  zWings(s,t-0.5,4.2,0.30,function(){zFeather(s,c);});
+  zBird(s,t-0.5,c,{beak:'#9aa8c0'});
+  ctx.restore();
+  ctx.save();ctx.globalAlpha=0.18;ctx.translate(-72*s,26*s);ctx.scale(0.72,0.72);
+  zWings(s,t-1.0,4.2,0.30,function(){zFeather(s,c);});
+  zBird(s,t-1.0,c,{beak:'#9aa8c0'});
+  ctx.restore();
+  // 本体
+  ctx.save();ctx.translate(18*s,-6*s);
+  zWings(s,t,4.2,0.30,function(){zFeather(s,c);});
+  zBird(s,t,c,{});
+  zEye(s,10*s,-58*s,5.4*s,'#e8f0ff',0.9);
+  ctx.restore();
+};
+
+ZAKO2ART.jigencho=function(s,t,bt,vf){ // じげんちょう = 星ぞらの はねを もつ ちょう
+  var c=vf.col||'#8a76c8';
+  var fl=Math.sin(t*3.0), i;
+  function starWing(w,h,ox,oy,rot){
+    ctx.save();ctx.translate(ox,oy);ctx.rotate(rot);
+    var g=ctx.createLinearGradient(0,-h,0,h);
+    g.addColorStop(0,zSh(c,1.5));g.addColorStop(1,zSh(c,0.42));
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.bezierCurveTo(w*0.5,-h*1.1,w*1.25,-h*0.55,w,h*0.32);
+    ctx.bezierCurveTo(w*0.7,h*0.9,w*0.2,h*0.5,0,0);
+    ctx.closePath();ctx.fill();zOl(s,2.4);ctx.stroke();
+    // 星
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.bezierCurveTo(w*0.5,-h*1.1,w*1.25,-h*0.55,w,h*0.32);
+    ctx.bezierCurveTo(w*0.7,h*0.9,w*0.2,h*0.5,0,0);
+    ctx.closePath();ctx.clip();
+    ctx.globalCompositeOperation='lighter';
+    for(var q=0;q<14;q++){ // ★外の i を つぶさない(つぶすと はねが 片がわしか 出ない)
+      var px=w*(0.15+((q*37)%80)/100), py=h*(-0.6+((q*53)%110)/100);
+      ctx.fillStyle='rgba(255,255,255,'+(0.35+0.35*Math.sin(t*3+q*1.7)).toFixed(2)+')';
+      ctx.beginPath();ctx.arc(px,py,(1.4+(q%3)*0.9)*s,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+    ctx.restore();
+  }
+  for(i=0;i<2;i++){
+    var sd=i?1:-1;
+    ctx.save();ctx.scale(sd,1);
+    starWing(96*s,58*s,10*s,-30*s,-0.30-fl*0.26);   // 上ばね
+    starWing(70*s,44*s,10*s,10*s,0.42-fl*0.20);     // 下ばね
+    ctx.restore();
+  }
+  // どう
+  ctx.fillStyle=zGrad(-60*s,60*s,zSh(c,1.3),zSh(c,0.5));
+  ctx.beginPath();ctx.ellipse(0,0,15*s,58*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.4);ctx.stroke();
+  ctx.beginPath();ctx.ellipse(0,-66*s,17*s,16*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.2);ctx.stroke();
+  // しょっかく
+  ctx.strokeStyle=zSh(c,0.6);ctx.lineWidth=3.4*s;ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-8*s,-76*s);ctx.quadraticCurveTo(-30*s,-104*s,(-40+fl*4)*s,-96*s);
+  ctx.moveTo(8*s,-76*s);ctx.quadraticCurveTo(30*s,-104*s,(40-fl*4)*s,-96*s);
+  ctx.stroke();
+  zEye(s,-7*s,-68*s,4.4*s,'#ffffff',0.95);
+  zEye(s,7*s,-68*s,4.4*s,'#ffffff',0.95);
+};
+
+ZAKO2ART.nanashi=function(s,t,bt,vf){ // なまえなきもの = かおの ところが 白い ふだの ように 空
+  var c=vf.col||'#7a8aa2';
+  zWings(s,t,3.6,0.26,function(){zFeather(s,c);});
+  zBird(s,t,c,{noHead:true});
+  // あたま(かおが ない)
+  ctx.fillStyle=zGrad(-84*s,-30*s,zSh(c,1.3),zSh(c,0.6));
+  ctx.beginPath();ctx.ellipse(0,-54*s,30*s,27*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+  ctx.fillStyle='#f2eee4';
+  ctx.beginPath();ctx.roundRect(-19*s,-70*s,38*s,32*s,5*s);ctx.fill();zOl(s,2.2);ctx.stroke();
+  // 消えかけた 名まえの 線
+  ctx.save();ctx.strokeStyle='rgba(90,96,110,'+(0.16+0.14*Math.sin(t*1.6)).toFixed(2)+')';
+  ctx.lineWidth=Math.max(1,s*2);
+  ctx.beginPath();ctx.moveTo(-12*s,-58*s);ctx.lineTo(12*s,-58*s);
+  ctx.moveTo(-12*s,-49*s);ctx.lineTo(4*s,-49*s);ctx.stroke();
+  ctx.restore();
+};
+
+ZAKO2ART.kazesarai=function(s,t,bt,vf){ // かぜさらい = かぜを まとって さらっていく
+  var c=vf.col||'#7ab0c8';
+  var i;
+  // かぜの うず
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<5;i++){
+    var k=((t*0.8+i*0.2)%1);
+    ctx.strokeStyle=zRgba(c,(1-k)*0.5);ctx.lineWidth=Math.max(1.4,s*3);ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.ellipse(0,(-30+i*24)*s,(52+k*54)*s,(15+k*8)*s,0.12,k*4,k*4+Math.PI*1.4);
+    ctx.stroke();
+  }
+  ctx.restore();
+  zWings(s,t,5.0,0.42,function(ss,tt,sd){
+    // ほそ長い かぜの はね
+    ctx.fillStyle=zGrad(-30*s,30*s,zSh(c,1.3),zSh(c,0.5));
+    ctx.beginPath();
+    ctx.moveTo(0,-18*s);
+    ctx.quadraticCurveTo(70*s,-52*s,116*s,-24*s);
+    ctx.quadraticCurveTo(74*s,-4*s,84*s,20*s);
+    ctx.quadraticCurveTo(42*s,4*s,0,18*s);
+    ctx.closePath();ctx.fill();zOl(s,2.4);ctx.stroke();
+  });
+  zBird(s,t,c,{beak:'#cfe6f2'});
+  zEye(s,10*s,-58*s,5.4*s,'#eaffff',0.95);
+  // さらった もの
+  ctx.save();
+  for(i=0;i<3;i++){
+    var a=t*1.5+i*2.1;
+    ctx.globalAlpha=0.75;
+    ctx.fillStyle=zSh(c,1.5);
+    ctx.save();ctx.translate(Math.cos(a)*76*s,(30+Math.sin(a)*26)*s);ctx.rotate(a*1.4);
+    ctx.beginPath();ctx.roundRect(-7*s,-6*s,14*s,12*s,2*s);ctx.fill();zOl(s,1.6);ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+};
+
+ZAKO2ART.otomodoki=function(s,t,bt,vf){ // おともどき = 音を まねる。口が らっぱに なっている
+  var c=vf.col||'#6a88a0';
+  var i;
+  zWings(s,t,4.6,0.32,function(){zFeather(s,c);});
+  zBird(s,t,c,{noHead:true});
+  // あたま
+  ctx.fillStyle=zGrad(-84*s,-30*s,zSh(c,1.34),zSh(c,0.6));
+  ctx.beginPath();ctx.ellipse(-6*s,-54*s,28*s,26*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+  // らっぱの 口
+  ctx.save();ctx.translate(16*s,-52*s);ctx.rotate(-0.16);
+  ctx.fillStyle=zGrad(-30*s,30*s,zSh(c,1.5),zSh(c,0.66));
+  ctx.beginPath();
+  ctx.moveTo(0,-9*s);ctx.lineTo(46*s,-32*s);ctx.lineTo(46*s,32*s);ctx.lineTo(0,9*s);ctx.closePath();
+  ctx.fill();zOl(s,2.4);ctx.stroke();
+  ctx.fillStyle='rgba(10,14,22,0.8)';
+  ctx.beginPath();ctx.ellipse(45*s,0,7*s,31*s,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  zEye(s,-14*s,-58*s,5*s,'#e8f4ff',0.9);
+  // 出てくる 音
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<3;i++){
+    var k=((t*0.9+i*0.33)%1);
+    ctx.strokeStyle=zRgba(c,(1-k)*0.65);ctx.lineWidth=Math.max(1.4,s*2.6);
+    ctx.beginPath();ctx.arc(60*s,-52*s,(14+k*54)*s,-0.9,0.9);ctx.stroke();
+  }
+  ctx.restore();
+  for(i=0;i<2;i++){
+    var kk=((t*0.55+i*0.5)%1);
+    zNote((78+i*10)*s+kk*24*s,(-84-i*12)*s-kk*22*s,7*s,'rgba(226,240,255,1)',(1-kk)*0.65,s);
+  }
+};
+
+ZAKO2ART.kaginomure=function(s,t,bt,vf){ // かぎのむれ = かぎが むれに なって とぶ
+  var c=vf.col||'#8a8a5a';
+  var i,N=7;
+  var POS=[[0,-30,1.35],[-58,6,1.10],[58,0,1.10],[-88,-52,0.80],[86,-56,0.80],[-34,58,0.92],[40,60,0.92]];
+  // うしろの かぎ
+  for(i=0;i<N;i++){
+    if(i%2===0)continue;
+    var p=POS[i], ph=t*2.2+i*0.9;
+    ctx.save();ctx.globalAlpha=0.6;
+    zKey(p[0]*s+Math.sin(ph)*8*s,p[1]*s+Math.cos(ph*0.8)*8*s,Math.sin(ph)*0.4+0.2,96*s*p[2],zSh2(c,0.72),s);
+    ctx.restore();
+  }
+  // まえの かぎ
+  for(i=0;i<N;i++){
+    if(i%2===1)continue;
+    var p2=POS[i], ph2=t*2.4+i*0.7;
+    zKey(p2[0]*s+Math.sin(ph2)*7*s,p2[1]*s+Math.cos(ph2*0.9)*7*s,Math.sin(ph2)*0.34-0.12,104*s*p2[2],c,s);
+  }
+  // むれの まん中に ひかる め
+  zEyePair(s,-46*s,'#f4f4a8',20,6,0.95);
+};
+
+ZAKO2ART.tobiyane=function(s,t,bt,vf){ // とびやね = 屋ねが はねに なって とぶ
+  var c=vf.col||'#c8a86a';
+  var fl=Math.sin(t*3.4), i;
+  // のき=はね
+  for(i=0;i<2;i++){
+    var sd=i?1:-1;
+    ctx.save();ctx.scale(sd,1);ctx.translate(30*s,-16*s);ctx.rotate(-fl*0.26-0.10);
+    ctx.fillStyle=zGrad(-24*s,24*s,zSh(c,1.2),zSh(c,0.52));
+    ctx.beginPath();
+    ctx.moveTo(0,-16*s);ctx.lineTo(84*s,4*s);ctx.lineTo(78*s,22*s);ctx.lineTo(0,16*s);ctx.closePath();
+    ctx.fill();zOl(s,2.4);ctx.stroke();
+    // かわらの すじ
+    ctx.strokeStyle='rgba(60,44,22,0.35)';ctx.lineWidth=Math.max(1,s*1.6);
+    for(var j=1;j<4;j++){ctx.beginPath();ctx.moveTo(j*20*s,-12*s+j*4*s);ctx.lineTo(j*20*s,16*s);ctx.stroke();}
+    ctx.restore();
+  }
+  // 屋ねの 本体(そりの ある 日本の 屋ね)
+  ctx.fillStyle=zGrad(-78*s,42*s,zSh(c,1.34),zSh(c,0.5));
+  ctx.beginPath();
+  ctx.moveTo(0,-78*s);
+  ctx.quadraticCurveTo(46*s,-40*s,86*s,14*s);
+  ctx.quadraticCurveTo(92*s,26*s,74*s,30*s);
+  ctx.lineTo(-74*s,30*s);
+  ctx.quadraticCurveTo(-92*s,26*s,-86*s,14*s);
+  ctx.quadraticCurveTo(-46*s,-40*s,0,-78*s);
+  ctx.closePath();
+  ctx.fill();zOl(s,3);ctx.stroke();
+  // かわら
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(0,-78*s);
+  ctx.quadraticCurveTo(46*s,-40*s,86*s,14*s);
+  ctx.quadraticCurveTo(92*s,26*s,74*s,30*s);
+  ctx.lineTo(-74*s,30*s);
+  ctx.quadraticCurveTo(-92*s,26*s,-86*s,14*s);
+  ctx.quadraticCurveTo(-46*s,-40*s,0,-78*s);
+  ctx.closePath();ctx.clip();
+  ctx.strokeStyle='rgba(60,44,22,0.34)';ctx.lineWidth=Math.max(1,s*1.8);
+  for(i=1;i<5;i++){ctx.beginPath();ctx.moveTo(-92*s,(-58+i*22)*s);ctx.lineTo(92*s,(-58+i*22)*s);ctx.stroke();}
+  for(i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(i*30*s,-78*s);ctx.lineTo(i*44*s,30*s);ctx.stroke();}
+  ctx.restore();
+  // むなぎ
+  ctx.fillStyle=zSh(c,0.56);
+  ctx.beginPath();ctx.roundRect(-24*s,-88*s,48*s,16*s,5*s);ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(-80*s,24*s,160*s,17*s,4*s);ctx.fill();zOl(s,2.2);ctx.stroke();
+  zEyePair(s,-24*s,'#ffe3a0',22,5.8,0.9);
+};
+
+ZAKO2ART.hitokomadori=function(s,t,bt,vf){ // ひとこまどり = ひとこまだけの とり
+  var c=vf.col||'#9a8ab8';
+  var i;
+  var step=Math.floor(t*4)%3; // かくかく 動く
+  ctx.save();ctx.translate(0,step*4*s-4*s);
+  // フィルムの こま
+  ctx.fillStyle=zGrad(-90*s,70*s,zSh(c,0.92),zSh(c,0.42));
+  ctx.beginPath();ctx.roundRect(-84*s,-88*s,168*s,158*s,7*s);ctx.fill();zOl(s,3);ctx.stroke();
+  // パーフォレーション
+  ctx.fillStyle='rgba(16,14,24,0.8)';
+  for(i=0;i<5;i++){
+    ctx.beginPath();ctx.roundRect(-78*s,(-74+i*30)*s,16*s,17*s,3*s);ctx.fill();
+    ctx.beginPath();ctx.roundRect(62*s,(-74+i*30)*s,16*s,17*s,3*s);ctx.fill();
+  }
+  // こまの 中(とりの かげ)
+  ctx.fillStyle='rgba(12,12,22,0.72)';
+  ctx.beginPath();ctx.roundRect(-54*s,-72*s,108*s,126*s,4*s);ctx.fill();
+  ctx.save();
+  ctx.beginPath();ctx.roundRect(-54*s,-72*s,108*s,126*s,4*s);ctx.clip();
+  ctx.translate(0,-6*s);ctx.scale(0.44,0.44);
+  ctx.fillStyle=zSh(c,1.5);
+  // 中の とり(はばたかない=ひとこま)
+  ctx.beginPath();ctx.ellipse(0,10*s,38*s,46*s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(0,-54*s,30*s,27*s,0,0,Math.PI*2);ctx.fill();
+  for(i=0;i<2;i++){
+    var sd=i?1:-1;
+    ctx.save();ctx.scale(sd,1);
+    ctx.beginPath();
+    ctx.moveTo(20*s,-24*s);ctx.quadraticCurveTo(76*s,-56*s,116*s,-16*s);
+    ctx.quadraticCurveTo(70*s,4*s,20*s,20*s);ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+  zEyePair(s,-30*s,'#e8dcff',18,5.4,0.95);
+  ctx.restore();
+};
+
+ZAKO2ART.wasuredori=function(s,t,bt,vf){ // わすれどり = はねの さきから ほどけて 消える
+  var c=vf.col||'#c8a86a';
+  var i;
+  zWings(s,t,3.0,0.22,function(){
+    ctx.fillStyle=zGrad(-34*s,34*s,zSh(c,1.14),zSh(c,0.46));
+    ctx.beginPath();
+    ctx.moveTo(0,-24*s);
+    ctx.quadraticCurveTo(50*s,-46*s,84*s,-16*s);
+    ctx.quadraticCurveTo(58*s,6*s,64*s,24*s);
+    ctx.quadraticCurveTo(36*s,12*s,0,26*s);
+    ctx.closePath();ctx.fill();zOl(s,2.4);ctx.stroke();
+    // さきが ほどける
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    for(var j=0;j<6;j++){
+      var k=((t*0.6+j*0.17)%1);
+      ctx.fillStyle=zRgba(c,(1-k)*0.6);
+      ctx.beginPath();ctx.arc((84+k*46)*s,(-16+Math.sin(j*2.1)*22)*s,(3.4-k*1.6)*s,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  });
+  zBird(s,t,c,{beak:'#d8b478'});
+  // ふくろうの みみ
+  ctx.fillStyle=zSh(c,1.2);
+  ctx.beginPath();ctx.moveTo(-26*s,-70*s);ctx.lineTo(-14*s,-94*s);ctx.lineTo(-6*s,-68*s);ctx.closePath();ctx.fill();zOl(s,2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(26*s,-70*s);ctx.lineTo(14*s,-94*s);ctx.lineTo(6*s,-68*s);ctx.closePath();ctx.fill();zOl(s,2);ctx.stroke();
+  zEye(s,-11*s,-56*s,6.4*s,'#fff0c8',0.9);
+  zEye(s,11*s,-56*s,6.4*s,'#fff0c8',0.9);
+};
+
+ZAKO2ART.namigarasu=function(s,t,bt,vf){ // なみがらす = はねが なみに なっている
+  var c=vf.col||'#8fb8d8';
+  var i;
+  zWings(s,t,3.4,0.24,function(){
+    ctx.fillStyle=zGrad(-40*s,34*s,zSh(c,1.36),zSh(c,0.5));
+    ctx.beginPath();
+    ctx.moveTo(0,-22*s);
+    ctx.bezierCurveTo(44*s,-52*s,86*s,-40*s,104*s,-10*s);
+    // なみの ぎざぎざ
+    ctx.quadraticCurveTo(88*s,-2*s,80*s,10*s);
+    ctx.quadraticCurveTo(64*s,0,54*s,14*s);
+    ctx.quadraticCurveTo(36*s,4*s,26*s,20*s);
+    ctx.quadraticCurveTo(12*s,10*s,0,24*s);
+    ctx.closePath();ctx.fill();zOl(s,2.4);ctx.stroke();
+    // あわ
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    for(var j=0;j<3;j++){ctx.beginPath();ctx.arc((84-j*26)*s,(8+j*5)*s,(5-j)*s,0,Math.PI*2);ctx.fill();}
+  });
+  zBird(s,t,c,{beak:'#e8f2ff'});
+  zEye(s,10*s,-58*s,5.4*s,'#ffffff',0.95);
+  // しずく
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<4;i++){
+    var k=((t*0.8+i*0.25)%1);
+    ctx.fillStyle='rgba(210,240,255,'+((1-k)*0.6).toFixed(2)+')';
+    ctx.beginPath();ctx.ellipse((-60+i*40)*s,(30+k*54)*s,3.4*s,6*s,0,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+};
+
+// こうもり2たいの かきわけ
+function zBatWing(s,c,ribs){
+  ctx.fillStyle=zGrad(-40*s,32*s,zSh(c,1.1),zSh(c,0.42));
+  ctx.beginPath();
+  ctx.moveTo(0,-24*s);
+  ctx.quadraticCurveTo(52*s,-56*s,104*s,-34*s);
+  ctx.quadraticCurveTo(86*s,-12*s,92*s,4*s);
+  ctx.quadraticCurveTo(66*s,-6*s,62*s,16*s);
+  ctx.quadraticCurveTo(38*s,2*s,30*s,26*s);
+  ctx.quadraticCurveTo(14*s,10*s,0,22*s);
+  ctx.closePath();ctx.fill();zOl(s,2.4);ctx.stroke();
+  if(ribs){
+    ctx.strokeStyle='rgba(255,255,255,0.16)';ctx.lineWidth=Math.max(1,s*1.6);
+    ctx.beginPath();
+    ctx.moveTo(4*s,-18*s);ctx.lineTo(88*s,-26*s);
+    ctx.moveTo(4*s,-6*s);ctx.lineTo(60*s,8*s);
+    ctx.moveTo(4*s,6*s);ctx.lineTo(28*s,20*s);
+    ctx.stroke();
+  }
+}
+ZAKO2ART.dbat=function(s,t,bt,vf){ // やみこうもり = はねが 大きく、目が よっつ
+  var c=vf.col||'#b090e0';
+  zWings(s,t,5.0,0.40,function(){zBatWing(s,c,true);});
+  // どう
+  ctx.fillStyle=zGrad(-40*s,50*s,zSh(c,1.22),zSh(c,0.46));
+  ctx.beginPath();ctx.ellipse(0,10*s,34*s,42*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.beginPath();ctx.ellipse(0,-46*s,30*s,26*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+  // みみ
+  ctx.fillStyle=zSh(c,0.8);
+  ctx.beginPath();ctx.moveTo(-26*s,-58*s);ctx.lineTo(-32*s,-94*s);ctx.lineTo(-6*s,-64*s);ctx.closePath();ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(26*s,-58*s);ctx.lineTo(32*s,-94*s);ctx.lineTo(6*s,-64*s);ctx.closePath();ctx.fill();zOl(s,2.2);ctx.stroke();
+  // きば
+  ctx.fillStyle='#f4f0e0';
+  ctx.beginPath();ctx.moveTo(-11*s,-32*s);ctx.lineTo(-4*s,-32*s);ctx.lineTo(-7*s,-19*s);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(4*s,-32*s);ctx.lineTo(11*s,-32*s);ctx.lineTo(8*s,-19*s);ctx.closePath();ctx.fill();
+  // 目 よっつ
+  zEye(s,-14*s,-52*s,5*s,'#ffd0ff',0.95);
+  zEye(s,14*s,-52*s,5*s,'#ffd0ff',0.95);
+  zEye(s,-8*s,-38*s,3.4*s,'#ffd0ff',0.8);
+  zEye(s,8*s,-38*s,3.4*s,'#ffd0ff',0.8);
+};
+ZAKO2ART.dcrow=function(s,t,bt,vf){ // じごくがらす = はねが ほのおに なっている
+  var c=vf.col||'#ff9f9f';
+  var i;
+  zWings(s,t,4.6,0.34,function(){
+    // ほのおの はね
+    ctx.fillStyle=zGrad(-40*s,30*s,'#ffd08a',zSh(c,0.66));
+    ctx.beginPath();
+    ctx.moveTo(0,-22*s);
+    ctx.quadraticCurveTo(40*s,-50*s,72*s,-40*s);
+    ctx.quadraticCurveTo(60*s,-26*s,86*s,-20*s);
+    ctx.quadraticCurveTo(66*s,-6*s,96*s,2*s);
+    ctx.quadraticCurveTo(60*s,10*s,72*s,26*s);
+    ctx.quadraticCurveTo(38*s,12*s,0,24*s);
+    ctx.closePath();ctx.fill();zOl(s,2.4);ctx.stroke();
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    for(var j=0;j<4;j++){
+      var k=((t*1.3+j*0.25)%1);
+      ctx.fillStyle='rgba(255,180,80,'+((1-k)*0.55).toFixed(2)+')';
+      ctx.beginPath();ctx.arc((60+j*14)*s,(-30+k*-30)*s,(6-k*4)*s,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  });
+  // からだは すみのように くろく
+  zBird(s,t,'#3a1a18',{beak:'#ffcf70'});
+  zEye(s,10*s,-58*s,6*s,'#ffb040',0.95);
+  // ほのおの かんむり(大きく もえあがる)
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<7;i++){
+    var k2=((t*1.5+i*0.14)%1);
+    var hx=(-28+i*9.5)*s+Math.sin(t*3+i)*4*s;
+    ctx.fillStyle='rgba(255,'+Math.round(120+k2*90)+',50,'+((1-k2)*0.65).toFixed(2)+')';
+    ctx.beginPath();ctx.ellipse(hx,(-78-k2*54)*s,(10-k2*6)*s,(22-k2*13)*s,0,0,Math.PI*2);ctx.fill();
+  }
+  var g3=ctx.createRadialGradient(0,-40*s,4,0,-40*s,120*s);
+  g3.addColorStop(0,'rgba(255,140,50,0.32)');g3.addColorStop(1,'rgba(255,140,50,0)');
+  ctx.fillStyle=g3;ctx.beginPath();ctx.arc(0,-40*s,120*s,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+};
+
+ZAKO2ART.bat=function(s,t,bt,vf){ // どくこうもり
+  var c=vf.col||'#9fe88f';
+  var i;
+  zWings(s,t,5.4,0.40,function(){zBatWing(s,c,false);});
+  ctx.fillStyle=zGrad(-40*s,50*s,zSh(c,1.2),zSh(c,0.5));
+  ctx.beginPath();ctx.ellipse(0,10*s,32*s,40*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.beginPath();ctx.ellipse(0,-44*s,28*s,25*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+  ctx.fillStyle=zSh(c,0.78);
+  ctx.beginPath();ctx.moveTo(-24*s,-56*s);ctx.lineTo(-28*s,-86*s);ctx.lineTo(-6*s,-62*s);ctx.closePath();ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(24*s,-56*s);ctx.lineTo(28*s,-86*s);ctx.lineTo(6*s,-62*s);ctx.closePath();ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.fillStyle='#f4f0e0';
+  ctx.beginPath();ctx.moveTo(-10*s,-31*s);ctx.lineTo(-4*s,-31*s);ctx.lineTo(-7*s,-20*s);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(4*s,-31*s);ctx.lineTo(10*s,-31*s);ctx.lineTo(7*s,-20*s);ctx.closePath();ctx.fill();
+  zEye(s,-12*s,-48*s,5*s,'#d8ffb0',0.9);
+  zEye(s,12*s,-48*s,5*s,'#d8ffb0',0.9);
+  // どくの しずく
+  for(i=0;i<3;i++){
+    var k=((t*0.9+i*0.33)%1);
+    ctx.save();ctx.globalAlpha=(1-k)*0.8;
+    ctx.fillStyle=zSh(c,1.2);
+    ctx.beginPath();ctx.ellipse((-8+i*9)*s,(-16+k*72)*s,4*s,7*s,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+};
+ZAKO2ART.fukayami=function(s,t,bt,vf){ // ふかやみこうもり = はねが やぶれ、まわりが くらい
+  var c=vf.col||'#4a3a5a';
+  var i;
+  // まわりの やみ
+  ctx.save();ctx.globalCompositeOperation='multiply';
+  var g=ctx.createRadialGradient(0,-10*s,6,0,-10*s,140*s);
+  g.addColorStop(0,'rgba(20,14,30,0.9)');g.addColorStop(1,'rgba(20,14,30,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,-10*s,140*s,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  zWings(s,t,3.4,0.30,function(){
+    ctx.fillStyle=zGrad(-40*s,32*s,zSh(c,1.5),zSh(c,0.5));
+    ctx.beginPath();
+    ctx.moveTo(0,-24*s);
+    ctx.quadraticCurveTo(52*s,-58*s,108*s,-32*s);
+    ctx.lineTo(92*s,-18*s);ctx.lineTo(104*s,-6*s);
+    ctx.quadraticCurveTo(70*s,-10*s,66*s,14*s);
+    ctx.lineTo(54*s,0);ctx.lineTo(44*s,22*s);
+    ctx.quadraticCurveTo(24*s,4*s,0,22*s);
+    ctx.closePath();ctx.fill();zOl(s,2.4);ctx.stroke();
+  });
+  ctx.fillStyle=zGrad(-40*s,50*s,zSh(c,1.5),zSh(c,0.5));
+  ctx.beginPath();ctx.ellipse(0,10*s,32*s,40*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.beginPath();ctx.ellipse(0,-44*s,28*s,25*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+  ctx.fillStyle=zSh(c,1.1);
+  ctx.beginPath();ctx.moveTo(-24*s,-56*s);ctx.lineTo(-30*s,-90*s);ctx.lineTo(-6*s,-62*s);ctx.closePath();ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(24*s,-56*s);ctx.lineTo(30*s,-90*s);ctx.lineTo(6*s,-62*s);ctx.closePath();ctx.fill();zOl(s,2.2);ctx.stroke();
+  zEye(s,-12*s,-48*s,5.4*s,'#c8a0ff',0.95);
+  zEye(s,12*s,-48*s,5.4*s,'#c8a0ff',0.95);
+};
+ZAKO2ART.ecrow=function(s,t,bt,vf){ // ほのおがらす = はねの ふちが 火の こ
+  var c=vf.col||'#ff8a6a';
+  var i;
+  zWings(s,t,4.4,0.32,function(){
+    zFeather(s,c);
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    for(var j=0;j<4;j++){
+      var k=((t*1.1+j*0.25)%1);
+      ctx.fillStyle='rgba(255,190,110,'+((1-k)*0.5).toFixed(2)+')';
+      ctx.beginPath();ctx.arc((70+j*10)*s,(-6-k*34)*s,(5-k*3)*s,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  });
+  zBird(s,t,c,{beak:'#ffd07a'});
+  zEye(s,10*s,-58*s,5.4*s,'#fff0c0',0.95);
+};
+ZAKO2ART.scrow=function(s,t,bt,vf){ // ゆきがらす = はねに ゆきの けっしょう
+  var c=vf.col||'#cfe6ff';
+  var i;
+  zWings(s,t,3.2,0.24,function(){
+    zFeather(s,c);
+    ctx.save();ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=Math.max(1,s*1.8);
+    for(var j=0;j<3;j++){
+      var cx2=(34+j*22)*s, cy2=(-16+j*10)*s, r=(7-j)*s;
+      for(var q=0;q<3;q++){
+        var a=q/3*Math.PI;
+        ctx.beginPath();ctx.moveTo(cx2-Math.cos(a)*r,cy2-Math.sin(a)*r);ctx.lineTo(cx2+Math.cos(a)*r,cy2+Math.sin(a)*r);ctx.stroke();
+      }
+    }
+    ctx.restore();
+  });
+  zBird(s,t,c,{beak:'#e8a45a'});
+  zEye(s,10*s,-58*s,5.4*s,'#bfe6ff',0.9);
+  // ふる ゆき
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<5;i++){
+    var k=((t*0.5+i*0.2)%1);
+    ctx.fillStyle='rgba(255,255,255,'+((1-k)*0.6).toFixed(2)+')';
+    ctx.beginPath();ctx.arc((-70+i*36)*s+Math.sin(t*2+i)*8*s,(20+k*60)*s,2.6*s,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+};
+ZAKO2ART.yamabato=function(s,t,bt,vf){ // やまばと = まるい からだの はと
+  var c=vf.col||'#d8b06a';
+  zWings(s,t,2.6,0.20,function(){
+    ctx.fillStyle=zGrad(-30*s,30*s,zSh(c,1.2),zSh(c,0.52));
+    ctx.beginPath();
+    ctx.moveTo(0,-18*s);
+    ctx.quadraticCurveTo(44*s,-38*s,74*s,-12*s);
+    ctx.quadraticCurveTo(48*s,6*s,54*s,22*s);
+    ctx.quadraticCurveTo(30*s,10*s,0,22*s);
+    ctx.closePath();ctx.fill();zOl(s,2.4);ctx.stroke();
+  });
+  // まるい からだ
+  ctx.fillStyle=zGrad(20*s,72*s,zSh(c,0.9),zSh(c,0.5));
+  ctx.beginPath();
+  ctx.moveTo(-18*s,34*s);ctx.lineTo(-8*s,68*s);ctx.lineTo(4*s,48*s);
+  ctx.lineTo(14*s,68*s);ctx.lineTo(20*s,34*s);ctx.closePath();ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.fillStyle=zGrad(-42*s,56*s,zSh(c,1.3),zSh(c,0.54));
+  ctx.beginPath();ctx.ellipse(0,10*s,42*s,44*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.beginPath();ctx.ellipse(-4*s,-46*s,26*s,24*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+  ctx.fillStyle='#c86a4a';
+  ctx.beginPath();ctx.moveTo(16*s,-50*s);ctx.lineTo(40*s,-44*s);ctx.lineTo(16*s,-38*s);ctx.closePath();ctx.fill();zOl(s,1.8);ctx.stroke();
+  // くびの わ
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=Math.max(1.4,s*3);
+  ctx.beginPath();ctx.arc(-4*s,-30*s,22*s,0.4,2.6);ctx.stroke();ctx.restore();
+  zEye(s,6*s,-50*s,4.6*s,'#fff0c8',0.85);
+};
+
+// ============ スライムの かきわけ ============
+function zSlimeBody(s,t,c,o){
+  o=o||{};
+  var wob=Math.sin(t*2.0)*0.02;
+  ctx.save();ctx.scale(1+wob,1-wob);
+  ctx.fillStyle=zGrad(-96*s,88*s,zSh(c,1.28),zSh(c,0.56));
+  ctx.beginPath();
+  ctx.moveTo(0,(o.tip===false?-88:-98)*s);
+  ctx.bezierCurveTo(30*s,-92*s,86*s,-24*s,88*s,60*s);
+  ctx.quadraticCurveTo(88*s,88*s,58*s,88*s);
+  ctx.lineTo(-58*s,88*s);
+  ctx.quadraticCurveTo(-88*s,88*s,-88*s,60*s);
+  ctx.bezierCurveTo(-86*s,-24*s,-30*s,-92*s,0,(o.tip===false?-88:-98)*s);
+  ctx.closePath();ctx.fill();zOl(s,3);ctx.stroke();
+  ctx.save();ctx.globalAlpha=0.55;ctx.fillStyle='#ffffff';
+  ctx.beginPath();ctx.ellipse(-38*s,-34*s,20*s,12*s,-0.5,0,Math.PI*2);ctx.fill();ctx.restore();
+  ctx.restore();
+}
+ZAKO2ART.hslime=function(s,t,bt,vf){ // ホイミスライム = いやしの わっか
+  var c=vf.col||'#8fd8e8';
+  zSlimeBody(s,t,c,{});
+  // いやしの じゅうじ(目より 下に、ひとつづきの かたちで=わくの 中の 横ぼうに 見えないよう)
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  var g=ctx.createRadialGradient(0,18*s,2,0,18*s,54*s);
+  g.addColorStop(0,'rgba(180,255,220,0.50)');g.addColorStop(1,'rgba(180,255,220,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,18*s,54*s,0,Math.PI*2);ctx.fill();ctx.restore();
+  ctx.fillStyle='rgba(240,255,250,0.95)';
+  ctx.beginPath();
+  ctx.moveTo(-11*s,-14*s);ctx.lineTo(11*s,-14*s);ctx.lineTo(11*s,7*s);
+  ctx.lineTo(32*s,7*s);ctx.lineTo(32*s,29*s);ctx.lineTo(11*s,29*s);
+  ctx.lineTo(11*s,50*s);ctx.lineTo(-11*s,50*s);ctx.lineTo(-11*s,29*s);
+  ctx.lineTo(-32*s,29*s);ctx.lineTo(-32*s,7*s);ctx.lineTo(-11*s,7*s);
+  ctx.closePath();ctx.fill();zOl(s,2);ctx.stroke();
+  // あたまの わっか
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  ctx.strokeStyle='rgba(200,255,240,'+(0.5+0.3*Math.sin(t*2)).toFixed(2)+')';
+  ctx.lineWidth=Math.max(1.6,s*3.4);
+  ctx.beginPath();ctx.ellipse(0,(-114+Math.sin(t*2)*4)*s,30*s,10*s,0,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+  zEyePair(s,-42*s,'#d8fbff',24,7,0.9);
+};
+ZAKO2ART.wslime=function(s,t,bt,vf){ // まどうスライム = とんがりぼうしと つえ
+  var c=vf.col||'#c8a8f0';
+  var w=Math.sin(t*1.6);
+  zSlimeBody(s,t,c,{tip:false});
+  // ぼうし
+  ctx.save();ctx.translate(0,(-92+w*3)*s);ctx.rotate(-0.08+w*0.02);
+  ctx.fillStyle=zGrad(-72*s,10*s,zSh(c,0.72),zSh(c,0.38));
+  ctx.beginPath();ctx.moveTo(0,-74*s);ctx.quadraticCurveTo(20*s,-24*s,42*s,4*s);ctx.lineTo(-42*s,4*s);
+  ctx.quadraticCurveTo(-20*s,-24*s,0,-74*s);ctx.closePath();ctx.fill();zOl(s,2.6);ctx.stroke();
+  ctx.fillStyle=zSh(c,0.5);
+  ctx.beginPath();ctx.ellipse(0,6*s,58*s,11*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.4);ctx.stroke();
+  ctx.fillStyle='#ffe38a';
+  ctx.beginPath();ctx.arc(4*s,-58*s,7*s,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // つえ
+  ctx.save();ctx.translate(72*s,20*s);ctx.rotate(0.16+w*0.05);
+  ctx.strokeStyle=zSh(c,0.48);ctx.lineWidth=8*s;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(0,64*s);ctx.lineTo(0,-64*s);ctx.stroke();
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  var g2=ctx.createRadialGradient(0,-74*s,2,0,-74*s,32*s);
+  g2.addColorStop(0,'rgba(255,230,150,0.8)');g2.addColorStop(1,'rgba(255,230,150,0)');
+  ctx.fillStyle=g2;ctx.beginPath();ctx.arc(0,-74*s,32*s,0,Math.PI*2);ctx.fill();ctx.restore();
+  ctx.fillStyle='#ffe38a';ctx.beginPath();ctx.arc(0,-74*s,11*s,0,Math.PI*2);ctx.fill();zOl(s,2);ctx.stroke();
+  ctx.restore();
+  zEyePair(s,-24*s,'#f0e0ff',24,7,0.9);
+};
+ZAKO2ART.cuslime=function(s,t,bt,vf){ // のろいスライム = くさりと のろいの ふだ
+  var c=vf.col||'#e88ad0';
+  var i,w=Math.sin(t*1.5);
+  zSlimeBody(s,t,c,{});
+  // くさり(からだを 巻く)
+  ctx.save();ctx.strokeStyle='rgba(120,110,130,0.9)';ctx.lineWidth=Math.max(1.6,s*3.4);
+  for(i=0;i<3;i++){
+    var y=(-24+i*36)*s;
+    ctx.beginPath();
+    ctx.moveTo(-88*s,y);ctx.quadraticCurveTo(0,(y+16+w*3)*s/s,88*s,y);ctx.stroke();
+  }
+  ctx.fillStyle='rgba(150,140,160,0.9)';
+  for(i=0;i<9;i++){
+    var yy=(-24+Math.floor(i/3)*36)*s, xx=(-52+(i%3)*52)*s;
+    ctx.beginPath();ctx.ellipse(xx,yy+8*s,7*s,5*s,0,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+  // のろいの ふだ
+  ctx.save();ctx.translate(52*s,-56*s);ctx.rotate(0.22+w*0.05);
+  zFuda(0,0,26*s,38*s,0,'#e8e0d0',s,true);
+  ctx.restore();
+  // どくどくしい めと 口
+  zEyePair(s,-30*s,'#ffd0f0',24,7,0.95);
+  ctx.save();ctx.strokeStyle='rgba(40,20,40,0.8)';ctx.lineWidth=Math.max(1.4,s*3);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-20*s,10*s);ctx.quadraticCurveTo(0,-6*s,20*s,10*s);ctx.stroke();
+  ctx.restore();
+};
+
+// ============ ゴーレムの かきわけ ============
+function zBone(s,t,c,o){
+  o=o||{};
+  var bone=o.bone||'#e8e8e0', i;
+  ctx.strokeStyle=bone;ctx.lineWidth=(o.thick||11)*s;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-20*s,44*s);ctx.lineTo(-26*s,88*s);ctx.moveTo(20*s,44*s);ctx.lineTo(26*s,88*s);ctx.stroke();
+  ctx.fillStyle=bone;
+  ctx.beginPath();ctx.roundRect(-32*s,26*s,64*s,28*s,8*s);ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(-9*s,-60*s,18*s,92*s,8*s);ctx.fill();zOl(s,2);ctx.stroke();
+  ctx.strokeStyle=bone;ctx.lineWidth=(o.rib||9)*s;
+  for(i=0;i<4;i++){ctx.beginPath();ctx.arc(0,(-48+i*23)*s,(42-i*3)*s,0.28,Math.PI-0.28);ctx.stroke();}
+  ctx.fillStyle=bone;
+  ctx.beginPath();ctx.ellipse(0,-88*s,33*s,35*s,0,0,Math.PI*2);ctx.fill();zOl(s,2.6);ctx.stroke();
+  ctx.fillStyle='rgba(14,18,20,0.9)';
+  ctx.beginPath();ctx.ellipse(-13*s,-92*s,10*s,11*s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(13*s,-92*s,10*s,11*s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.moveTo(0,-76*s);ctx.lineTo(-5*s,-66*s);ctx.lineTo(5*s,-66*s);ctx.closePath();ctx.fill();
+}
+ZAKO2ART.gskel=function(s,t,bt,vf){ // がいこつけんし = つるぎと たてを もつ
+  var c=vf.col||'#e0d8c8';
+  var w=Math.sin(t*1.5);
+  // うしろの たて
+  ctx.save();ctx.translate(-62*s,4*s);ctx.rotate(-0.12+w*0.03);
+  ctx.fillStyle=zGrad(-46*s,46*s,'#8a8a98','#4a4a58');
+  ctx.beginPath();
+  ctx.moveTo(0,-48*s);ctx.lineTo(34*s,-34*s);ctx.lineTo(30*s,26*s);ctx.lineTo(0,54*s);
+  ctx.lineTo(-30*s,26*s);ctx.lineTo(-34*s,-34*s);ctx.closePath();ctx.fill();zOl(s,2.6);ctx.stroke();
+  ctx.fillStyle='rgba(230,226,210,0.5)';
+  ctx.beginPath();ctx.arc(0,-2*s,12*s,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  zBone(s,t,c,{bone:'#e8e6d6'});
+  // うで
+  ctx.strokeStyle='#e8e6d6';ctx.lineWidth=10*s;ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-40*s,-50*s);ctx.lineTo(-62*s,-14*s);
+  ctx.moveTo(40*s,-50*s);ctx.lineTo((62+w*4)*s,-22*s);
+  ctx.stroke();
+  // つるぎ
+  ctx.save();ctx.translate((66+w*4)*s,-24*s);ctx.rotate(-0.34+w*0.06);
+  ctx.fillStyle=zGrad(-110*s,10*s,'#dfe4f0','#8a90a6');
+  ctx.beginPath();ctx.moveTo(-7*s,0);ctx.lineTo(7*s,0);ctx.lineTo(6*s,-96*s);ctx.lineTo(0,-114*s);ctx.lineTo(-6*s,-96*s);ctx.closePath();
+  ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.fillStyle='#6a5a3a';ctx.beginPath();ctx.roundRect(-19*s,-4*s,38*s,10*s,3*s);ctx.fill();zOl(s,2);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(-6*s,4*s,12*s,26*s,4*s);ctx.fill();zOl(s,2);ctx.stroke();
+  ctx.restore();
+  zEye(s,-13*s,-92*s,5.4*s,'#ffd0a0',0.9);
+  zEye(s,13*s,-92*s,5.4*s,'#ffd0a0',0.9);
+};
+ZAKO2ART.bonewarden=function(s,t,bt,vf){ // ほねの きょへい = 大きく、かたに よろい
+  var c=vf.col||'#d8d0b8';
+  var w=Math.sin(t*1.1), i;
+  ctx.save();ctx.translate(0,104*s);ctx.scale(1.26,1.26);ctx.translate(0,-104*s);
+  zBone(s,t,c,{bone:'#ded8c0',thick:13,rib:10});
+  // かたの よろい
+  for(i=0;i<2;i++){
+    var sd=i?1:-1;
+    ctx.save();ctx.translate(sd*46*s,-54*s);ctx.rotate(sd*0.2);
+    ctx.fillStyle=zGrad(-26*s,20*s,'#9aa0ac','#4e5460');
+    ctx.beginPath();ctx.ellipse(0,0,30*s,22*s,0,Math.PI,0);ctx.lineTo(-30*s,6*s);ctx.closePath();ctx.fill();zOl(s,2.6);ctx.stroke();
+    ctx.restore();
+  }
+  // うで
+  ctx.strokeStyle='#ded8c0';ctx.lineWidth=12*s;ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-44*s,-48*s);ctx.lineTo((-70-w*4)*s,0);ctx.lineTo((-62-w*5)*s,46*s);
+  ctx.moveTo(44*s,-48*s);ctx.lineTo((70+w*4)*s,0);ctx.lineTo((62+w*5)*s,46*s);
+  ctx.stroke();
+  zEye(s,-13*s,-92*s,6*s,'#bfe6ff',0.9);
+  zEye(s,13*s,-92*s,6*s,'#bfe6ff',0.9);
+  ctx.restore();
+};
+function zGolem(s,t,c,o){
+  o=o||{};
+  var w=Math.sin(t*1.3), i;
+  // あし
+  ctx.fillStyle=zGrad(40*s,92*s,zSh(c,0.9),zSh(c,0.44));
+  ctx.beginPath();ctx.roundRect(-46*s,44*s,38*s,48*s,8*s);ctx.fill();zOl(s,2.6);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(8*s,44*s,38*s,48*s,8*s);ctx.fill();zOl(s,2.6);ctx.stroke();
+  // どう
+  ctx.fillStyle=zGrad(-60*s,54*s,zSh(c,1.24),zSh(c,0.5));
+  ctx.beginPath();ctx.roundRect(-58*s,-52*s,116*s,102*s,(o.round||12)*s);ctx.fill();zOl(s,3);ctx.stroke();
+  // うで
+  for(i=0;i<2;i++){
+    var sd=i?1:-1;
+    ctx.save();ctx.translate(sd*72*s,-38*s);ctx.rotate(sd*(0.10+w*0.05));
+    ctx.fillStyle=zGrad(-12*s,84*s,zSh(c,1.06),zSh(c,0.44));
+    ctx.beginPath();ctx.roundRect(-15*s,-12*s,30*s,96*s,14*s);ctx.fill();zOl(s,2.6);ctx.stroke();
+    ctx.restore();
+  }
+  // あたま
+  ctx.fillStyle=zGrad(-108*s,-56*s,zSh(c,1.30),zSh(c,0.56));
+  ctx.beginPath();ctx.roundRect(-36*s,-104*s,72*s,52*s,(o.headRound||10)*s);ctx.fill();zOl(s,2.8);ctx.stroke();
+}
+ZAKO2ART.icewarden=function(s,t,bt,vf){ // こおりの ばんへい = やりと たてを かまえる
+  var c=vf.col||'#8fc8e8';
+  var w=Math.sin(t*1.2);
+  // やり
+  ctx.save();ctx.translate(78*s,-10*s);ctx.rotate(0.08+w*0.02);
+  ctx.fillStyle=zGrad(-140*s,90*s,zSh(c,1.4),zSh(c,0.7));
+  ctx.beginPath();ctx.roundRect(-6*s,-120*s,12*s,210*s,5*s);ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,-158*s);ctx.lineTo(17*s,-116*s);ctx.lineTo(0,-104*s);ctx.lineTo(-17*s,-116*s);ctx.closePath();
+  ctx.fill();zOl(s,2.2);ctx.stroke();
+  ctx.restore();
+  zGolem(s,t,c,{round:8,headRound:6});
+  // たて
+  ctx.save();ctx.translate(-72*s,4*s);ctx.rotate(-0.08-w*0.02);
+  ctx.fillStyle=zGrad(-52*s,52*s,zSh(c,1.24),zSh(c,0.52));
+  ctx.beginPath();
+  ctx.moveTo(0,-54*s);ctx.lineTo(38*s,-38*s);ctx.lineTo(34*s,28*s);ctx.lineTo(0,60*s);
+  ctx.lineTo(-34*s,28*s);ctx.lineTo(-38*s,-38*s);ctx.closePath();ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=Math.max(1.2,s*2.2);
+  ctx.beginPath();ctx.moveTo(0,-40*s);ctx.lineTo(0,44*s);ctx.moveTo(-24*s,-6*s);ctx.lineTo(24*s,-6*s);ctx.stroke();
+  ctx.restore();
+  zEyePair(s,-78*s,'#dff2ff',15,5,0.9);
+};
+ZAKO2ART.frostlord=function(s,t,bt,vf){ // さまよう ひょうじん = とげが 生え、こごえた ままごとの ように かたむく
+  var c=vf.col||'#bfe6ff';
+  var w=Math.sin(t*0.9), i;
+  ctx.save();ctx.translate(0,92*s);ctx.rotate(-0.06+w*0.02);ctx.translate(0,-92*s);
+  zGolem(s,t,c,{round:5,headRound:4});
+  // こおりの とげ(かたと せなか)
+  ctx.fillStyle=zGrad(-120*s,0,'#f0fbff',zSh(c,0.66));
+  var SP=[[-52,-54,26,60,-0.35],[-20,-70,20,48,-0.12],[16,-70,20,52,0.12],[52,-54,26,58,0.35]];
+  for(i=0;i<SP.length;i++){
+    var q=SP[i];
+    ctx.save();ctx.translate(q[0]*s,q[1]*s);ctx.rotate(q[4]);
+    ctx.beginPath();ctx.moveTo(-q[2]/2*s,0);ctx.lineTo(0,-q[3]*s);ctx.lineTo(q[2]/2*s,0);ctx.closePath();
+    ctx.fill();zOl(s,2.2);ctx.stroke();
+    ctx.restore();
+  }
+  zEyePair(s,-78*s,'#eaf8ff',15,5.4,0.95);
+  ctx.restore();
+  // こごえた いき
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<5;i++){
+    var k=((t*0.5+i*0.2)%1);
+    ctx.fillStyle='rgba(220,244,255,'+((1-k)*0.35).toFixed(2)+')';
+    ctx.beginPath();ctx.arc((30+k*60)*s,(-72+Math.sin(i*2)*14-k*20)*s,(5+k*8)*s,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+};
+ZAKO2ART.chaoslord=function(s,t,bt,vf){ // こんとんの きょじん = 左右が そろわない
+  var c=vf.col||'#a88ae8';
+  var w=Math.sin(t*1.7), i;
+  // ちぐはぐな あし(太いのと ほそいの)
+  ctx.fillStyle=zGrad(36*s,92*s,zSh(c,0.86),zSh(c,0.38));
+  ctx.beginPath();ctx.roundRect(-58*s,36*s,50*s,56*s,10*s);ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(16*s,54*s,28*s,38*s,7*s);ctx.fill();zOl(s,2.8);ctx.stroke();
+  // 大きい うで(左・ふとい)
+  ctx.save();ctx.translate(-84*s,-40*s);ctx.rotate(-0.14+w*0.08);
+  ctx.fillStyle=zGrad(-16*s,110*s,zSh(c,1.06),zSh(c,0.42));
+  ctx.beginPath();ctx.roundRect(-25*s,-18*s,50*s,124*s,22*s);ctx.fill();zOl(s,3);ctx.stroke();
+  ctx.restore();
+  // 小さい うで(右・ほそい)
+  ctx.save();ctx.translate(76*s,-34*s);ctx.rotate(0.34-w*0.12);
+  ctx.fillStyle=zGrad(-10*s,64*s,zSh(c,1.0),zSh(c,0.42));
+  ctx.beginPath();ctx.roundRect(-10*s,-10*s,20*s,62*s,10*s);ctx.fill();zOl(s,2.4);ctx.stroke();
+  ctx.restore();
+  // ゆがんだ どう
+  ctx.fillStyle=zGrad(-66*s,60*s,zSh(c,1.24),zSh(c,0.46));
+  ctx.beginPath();
+  ctx.moveTo(-66*s,-44*s);ctx.lineTo(46*s,-60*s);ctx.lineTo(68*s,30*s);
+  ctx.lineTo(34*s,62*s);ctx.lineTo(-52*s,52*s);ctx.closePath();ctx.fill();zOl(s,3.2);ctx.stroke();
+  // むねで うずまく こんとん
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(-66*s,-44*s);ctx.lineTo(46*s,-60*s);ctx.lineTo(68*s,30*s);
+  ctx.lineTo(34*s,62*s);ctx.lineTo(-52*s,52*s);ctx.closePath();ctx.clip();
+  ctx.globalCompositeOperation='lighter';
+  for(i=0;i<4;i++){
+    ctx.strokeStyle=zRgba(c,0.42);ctx.lineWidth=Math.max(1.6,s*3.4);
+    ctx.beginPath();ctx.arc(4*s,0,(14+i*15)*s,t*(1.2+i*0.5),t*(1.2+i*0.5)+Math.PI*1.15);ctx.stroke();
+  }
+  ctx.restore();
+  // かたむいた あたま(ふたつ ある=そろわない)
+  ctx.save();ctx.translate(-14*s,-92*s);ctx.rotate(-0.22+w*0.05);
+  ctx.fillStyle=zGrad(-36*s,26*s,zSh(c,1.34),zSh(c,0.54));
+  ctx.beginPath();ctx.moveTo(-40*s,22*s);ctx.lineTo(-32*s,-30*s);ctx.lineTo(28*s,-36*s);ctx.lineTo(42*s,18*s);ctx.closePath();
+  ctx.fill();zOl(s,2.8);ctx.stroke();
+  ctx.restore();
+  ctx.save();ctx.translate(46*s,-72*s);ctx.rotate(0.42-w*0.06);
+  ctx.fillStyle=zGrad(-24*s,16*s,zSh(c,1.10),zSh(c,0.46));
+  ctx.beginPath();ctx.moveTo(-22*s,14*s);ctx.lineTo(-16*s,-18*s);ctx.lineTo(18*s,-22*s);ctx.lineTo(24*s,12*s);ctx.closePath();
+  ctx.fill();zOl(s,2.4);ctx.stroke();
+  ctx.restore();
+  zEye(s,-30*s,-96*s,6.6*s,'#e8d8ff',0.95);
+  zEye(s,-2*s,-100*s,5*s,'#e8d8ff',0.95);
+  zEye(s,44*s,-74*s,4.6*s,'#e8d8ff',0.9);
+};
+ZAKO2ART.magmalord=function(s,t,bt,vf){ // さまよう マグマじん = からだが われ、中から マグマ
+  var c=vf.col||'#ff7a3a';
+  var w=Math.sin(t*1.2), i;
+  var crust='#4a2a1e';
+  ctx.save();ctx.translate(0,92*s);ctx.scale(1.10,1.10);ctx.translate(0,-92*s);
+  zGolem(s,t,crust,{round:8,headRound:6});
+  // ひび(中から マグマ)
+  ctx.save();
+  ctx.beginPath();ctx.roundRect(-58*s,-52*s,116*s,102*s,8*s);
+  ctx.roundRect(-36*s,-104*s,72*s,52*s,6*s);
+  ctx.roundRect(-46*s,44*s,38*s,48*s,8*s);ctx.roundRect(8*s,44*s,38*s,48*s,8*s);
+  ctx.clip();
+  ctx.globalCompositeOperation='lighter';
+  ctx.strokeStyle=zRgba(c,0.85+0.15*Math.sin(t*3));ctx.lineWidth=Math.max(1.8,s*4);ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-58*s,-20*s);ctx.lineTo(-18*s,-6*s);ctx.lineTo(-30*s,26*s);ctx.lineTo(6*s,50*s);
+  ctx.moveTo(-18*s,-6*s);ctx.lineTo(24*s,-24*s);ctx.lineTo(58*s,-2*s);
+  ctx.moveTo(-20*s,-96*s);ctx.lineTo(2*s,-76*s);ctx.lineTo(30*s,-88*s);
+  ctx.moveTo(-32*s,60*s);ctx.lineTo(-22*s,90*s);
+  ctx.stroke();
+  ctx.restore();
+  zEyePair(s,-78*s,'#ffd08a',15,5.4,0.95);
+  ctx.restore();
+  // ふきあがる 火のこ
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(i=0;i<6;i++){
+    var k=((t*0.9+i*0.17)%1);
+    ctx.fillStyle='rgba(255,170,70,'+((1-k)*0.6).toFixed(2)+')';
+    ctx.beginPath();ctx.arc((-48+i*20)*s+Math.sin(t*2+i)*7*s,(-100-k*54)*s,(5-k*3)*s,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+};
+
+
+// 実測(s=1)して きめた 大きさ。ザコ h200/w250・mboss h235/w270・きょだい h262/w272 を
+// こえた ものだけ 縮める(あしもと y=90 を 支点＝足が 浮かない)
+const ZK2SCALE={
+  bat:0.93, bonewarden:0.9, dbat:0.93, dcrow:0.88, ent:0.89,
+  fukayami:0.75, gskel:0.88, hikabake:0.77, hslime:0.91, hudanomure:0.95,
+  icewarden:0.94, iwanuke:0.88, kagimushi:0.89, kaginomure:0.93, katarikuzushi:0.96,
+  kazesarai:0.88, kodamadori:0.99, kotae:0.94, kuchibue:0.93, kuzureishi:0.89,
+  nagaregi:0.93, namigarasu:0.97, oisugaru:0.95, otomodoki:0.97, owarika:0.76,
+  shionomukuro:0.93, tomaribari:0.82, tsumibako:0.88, uminohebi:0.82, usofuda:0.88,
+  utawasure:0.88, wasuredori:0.81, wasureishi:0.88, wslime:0.77, yadokari:0.96,
+  yamabiko:0.87, yokubarite:0.91
+};
+// フィールドで 足が つく 高さ(外形の 下を 実測)。かげ15たいも ここで そろえる
+const ZK2FOOT={
+  bat:56, bonewarden:91, chaoslord:93, crow:73, cuslime:90, dbat:56, dcrow:75, ecrow:73,
+  ent:93, frostlord:95, fukayami:114, gskel:93, hakage:108, hakomori:91, hikabake:108, hitokomadori:75,
+  hslime:90, hudanomure:92, icewarden:93, iwanuke:91, jigencho:62, johikage:108, kagehito:108, kagekishi:108,
+  kagimushi:88, kaginomure:107, katarikuzushi:93, kazesarai:86, kirinokage:108, kirinuki:108, kodamadori:79, komari:91,
+  kotae:91, kuchibue:91, kuzureishi:120, kyukage:108, magmalord:93, manebi:108, mugenslime:91, nagaregi:97,
+  nagorikage:108, nakikage:108, namigarasu:76, nanashi:73, nukegara:108, oisugaru:95, otomodoki:74, owarika:127,
+  satonushi:108, scrow:75, shionokiba:91, shionomukuro:93, shiorikage:108, shiouzu:92, tobiyane:41, tomaribari:92,
+  tomaridokei:93, towakage:59, tozakage:108, tsumibako:92, uminohebi:106, uminokage:108, usofuda:101, utawasure:101,
+  wasuredori:76, wasureishi:93, wslime:90, yadokari:94, yamabato:69, yamabiko:80, yokubarite:103
+};
+function zkFootOf(def){ const k=zkMap().get(def); return k?(ZK2FOOT[k]||0):0; }
+for(const k in ZAKO2ART){
+  ZAKOART[k]=(function(fn,kk){
+    if(!kk)return fn;
+    return function(s,t,bt,vf){
+      ctx.save();ctx.translate(0,90*s);ctx.scale(kk,kk);ctx.translate(0,-90*s);
+      fn(s,t,bt,vf);ctx.restore();
+    };
+  })(ZAKO2ART[k],ZK2SCALE[k]);
+}
+_ZKMAP=null; // ZAKOART が ふえたので 引きなおす
 
 function drawFoe(bt,ep,strikeMotion){
   const t=bt.t,s=ep.s;
