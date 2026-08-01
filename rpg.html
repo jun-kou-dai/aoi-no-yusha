@@ -9642,10 +9642,17 @@ async function runShop(funamise,shitaku){
 function fieldCam(){
   const wUnits=(MW+MH)/2;            // ひし形全体の幅（TW単位）
   const hUnits=(MW+MH-2)/2+1;        // 上面ぶんの高さ（TH単位）
-  let TW=Math.min((W-20)/wUnits,(H-30)/(hUnits/2+2.4));
+  // ★ひしがたは よこ:たて=2:1 なので、よこを つかいきると たてが かならず あまる。
+  //   たてなが画面(iPadの たて)では しまが 画面の たて37%しか つかっていなかった。
+  //   → 絵が こわれない ぶんだけ 見下ろす角を あさくして(TH を のばして)しまを 大きく見せる。
+  //   よこむき画面・ちいさい画面(follow)では R=0.5＝これまでと 1ドットも かわらない。
+  const RMIN=0.5,RMAX=0.78;
+  const fitR=((H-30)*wUnits/(W-20)-2.4)/hUnits;
+  let R=(isFinite(fitR)&&fitR>0)?Math.max(RMIN,Math.min(RMAX,fitR)):RMIN;
+  let TW=Math.min((W-20)/wUnits,(H-30)/(hUnits*R+2.4));
   let mode='fit';
-  if(TW<34){TW=56;mode='follow';}
-  const TH=TW/2,lift=TH*0.95;
+  if(TW<34){TW=56;mode='follow';R=RMIN;}
+  const TH=TW*R,lift=TH*0.95;
   let ox,oy;
   if(mode==='fit'){
     ox=W/2-(MW-MH)*TW/4;
