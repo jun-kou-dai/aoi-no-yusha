@@ -11847,16 +11847,30 @@ function horaFxOne(cam,f){
     }
     ctx.restore();
   }else if(f.kind==='hoshi'){ // つりざおに かかった ほしが ふってくる
-    ctx.globalCompositeOperation='lighter';
-    for(let i=0;i<26;i++){
-      const ph=(f.t*0.42+i*0.137)%1;
-      const sx=((i*97)%100)/100*W, sy=-H*0.05+ph*H*1.05;
-      const sa=a*(1-ph)*0.9;if(sa<=0.02)continue;
-      const r=Math.max(1.6,W*0.0032)*(0.7+((i*37)%10)/10);
-      ctx.fillStyle='rgba(255,246,200,'+sa.toFixed(3)+')';
-      ctx.beginPath();ctx.arc(sx,sy,r,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle='rgba(255,240,180,'+(sa*0.5).toFixed(3)+')';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(sx,sy-r*5);ctx.lineTo(sx,sy);ctx.stroke();
+    ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+    for(let i=0;i<12;i++){
+      const ph=(f.t*0.30+i*0.0833)%1;
+      const sx=W*0.06+((i*97)%100)/100*W*0.88, sy=-H*0.06+ph*H*1.10;
+      const sa=a*(1-ph*0.65)*0.95;if(sa<=0.02)continue;
+      const r=Math.max(8,W*0.018)*(0.8+((i*37)%10)/16);
+      const tg=ctx.createLinearGradient(sx,sy-r*11,sx,sy); // ながい お
+      tg.addColorStop(0,'rgba(255,240,180,0)');tg.addColorStop(1,'rgba(255,244,196,'+(sa*0.72).toFixed(3)+')');
+      ctx.strokeStyle=tg;ctx.lineWidth=Math.max(3,r*0.52);
+      ctx.beginPath();ctx.moveTo(sx,sy-r*11);ctx.lineTo(sx,sy);ctx.stroke();
+      const g2=ctx.createRadialGradient(sx,sy,0,sx,sy,r*3.4); // ひかりの わ
+      g2.addColorStop(0,'rgba(255,250,214,'+sa.toFixed(3)+')');g2.addColorStop(1,'rgba(255,226,140,0)');
+      ctx.fillStyle=g2;ctx.beginPath();ctx.arc(sx,sy,r*3.4,0,Math.PI*2);ctx.fill();
+      ctx.save();ctx.globalCompositeOperation='source-over'; // ★は べた塗り＝あかるい そらでも 見える
+      ctx.beginPath();
+      for(let p=0;p<10;p++){const rad=(p%2)?r*0.42:r, ang=-Math.PI/2+p*Math.PI/5;
+        const px=sx+Math.cos(ang)*rad, py=sy+Math.sin(ang)*rad;
+        if(p===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
+      ctx.closePath();
+      ctx.fillStyle='rgba(255,214,86,'+sa.toFixed(3)+')';ctx.fill();
+      ctx.strokeStyle='rgba(158,104,26,'+(sa*0.9).toFixed(3)+')';ctx.lineWidth=Math.max(1.5,r*0.14);ctx.stroke();
+      ctx.fillStyle='rgba(255,252,232,'+sa.toFixed(3)+')'; // しんの ひかり
+      ctx.beginPath();ctx.arc(sx,sy,r*0.30,0,Math.PI*2);ctx.fill();
+      ctx.restore();
     }
   }else if(f.kind==='tegami'){ // くら: しまわれた てがみが まいあがる
     ctx.globalCompositeOperation='source-over';
@@ -11872,19 +11886,27 @@ function horaFxOne(cam,f){
     }
   }else if(f.kind==='hana'){ // くら: なまえの しらない はなが 咲く
     ctx.globalCompositeOperation='source-over';
-    for(let i=0;i<14;i++){
+    for(let i=0;i<22;i++){
       const gx=2+((i*5)%16), gy=1+((i*7)%11);
       const q=smMapPtAbs(cam,gx+0.5,gy+0.5);if(!q)continue;
-      const gr=Math.min(1,Math.max(0,f.t*0.55-i*0.06));if(gr<=0)continue;
-      const sa=a*gr, r=cam.TW*0.115*gr;
+      const gr=Math.min(1,Math.max(0,f.t*0.55-i*0.04));if(gr<=0)continue;
+      const sa=a*gr, r=cam.TW*0.30*gr, sw=Math.sin(TM*1.4+i)*r*0.10;
       ctx.save();ctx.globalCompositeOperation='lighter';
-      const hg=ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,r*2.2);
-      hg.addColorStop(0,'rgba(255,220,238,'+(sa*0.5).toFixed(3)+')');hg.addColorStop(1,'rgba(255,200,230,0)');
-      ctx.fillStyle=hg;ctx.beginPath();ctx.arc(q.x,q.y,r*2.2,0,Math.PI*2);ctx.fill();ctx.restore();
-      ctx.fillStyle='rgba(255,244,250,'+sa.toFixed(3)+')';
-      for(let p=0;p<5;p++){const ang=p*1.2566+i*0.4;ctx.beginPath();ctx.ellipse(q.x+Math.cos(ang)*r*0.9,q.y+Math.sin(ang)*r*0.45,r*0.62,r*0.38,ang,0,Math.PI*2);ctx.fill();}
-      ctx.fillStyle='rgba(255,206,110,'+sa.toFixed(3)+')';
-      ctx.beginPath();ctx.ellipse(q.x,q.y,r*0.38,r*0.24,0,0,Math.PI*2);ctx.fill();
+      const hg=ctx.createRadialGradient(q.x,q.y-r*0.7,0,q.x,q.y-r*0.7,r*2.4);
+      hg.addColorStop(0,'rgba(255,214,236,'+(sa*0.55).toFixed(3)+')');hg.addColorStop(1,'rgba(255,190,226,0)');
+      ctx.fillStyle=hg;ctx.beginPath();ctx.arc(q.x,q.y-r*0.7,r*2.4,0,Math.PI*2);ctx.fill();ctx.restore();
+      ctx.strokeStyle='rgba(120,168,110,'+(sa*0.9).toFixed(3)+')'; // くき
+      ctx.lineWidth=Math.max(2,r*0.16);ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(q.x,q.y+r*0.34);ctx.quadraticCurveTo(q.x+sw*2,q.y-r*0.2,q.x+sw,q.y-r*0.7);ctx.stroke();
+      const cx2=q.x+sw, cy2=q.y-r*0.7;
+      ctx.fillStyle='rgba(255,236,248,'+sa.toFixed(3)+')'; // 花びら5まい
+      for(let p=0;p<5;p++){const ang=p*1.2566+i*0.4;
+        ctx.beginPath();ctx.ellipse(cx2+Math.cos(ang)*r*0.72,cy2+Math.sin(ang)*r*0.46,r*0.58,r*0.36,ang,0,Math.PI*2);ctx.fill();}
+      ctx.strokeStyle='rgba(226,150,196,'+(sa*0.75).toFixed(3)+')';ctx.lineWidth=Math.max(1,r*0.06);
+      for(let p=0;p<5;p++){const ang=p*1.2566+i*0.4;
+        ctx.beginPath();ctx.ellipse(cx2+Math.cos(ang)*r*0.72,cy2+Math.sin(ang)*r*0.46,r*0.58,r*0.36,ang,0,Math.PI*2);ctx.stroke();}
+      ctx.fillStyle='rgba(255,198,84,'+sa.toFixed(3)+')';
+      ctx.beginPath();ctx.ellipse(cx2,cy2,r*0.30,r*0.22,0,0,Math.PI*2);ctx.fill();
     }
   }else if(f.kind==='warai'){ // くら: よるの わらいごえが ともしびに なる
     ctx.globalCompositeOperation='lighter';
@@ -11926,27 +11948,52 @@ function horaFxOne(cam,f){
   }else if(f.kind==='ame'){ // うた: あまごいうた=あめが はたけに おちる
     ctx.globalCompositeOperation='source-over';
     ctx.lineCap='round';
-    for(let i=0;i<70;i++){
-      const ph=(f.t*1.15+i*0.0143)%1;
+    for(let i=0;i<110;i++){
+      const ph=(f.t*1.15+i*0.0091)%1;
       const sx=((i*89)%100)/100*W, sy=-H*0.05+ph*H*1.08;
-      const sa=a*0.5;if(sa<=0.02)continue;
-      ctx.strokeStyle='rgba(198,222,246,'+sa.toFixed(3)+')';
-      ctx.lineWidth=Math.max(1,W*0.0016);
-      ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx-W*0.004,sy+H*0.020);ctx.stroke();
+      const sa=a*0.82;if(sa<=0.02)continue;
+      ctx.strokeStyle='rgba(214,236,255,'+sa.toFixed(3)+')';
+      ctx.lineWidth=Math.max(2,W*0.0038);
+      ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx-W*0.008,sy+H*0.042);ctx.stroke();
+    }
+    for(let i=0;i<16;i++){ // はたけに おちて ひろがる はもん
+      const ph=(f.t*0.75+i*0.0625)%1;
+      const q=smMapPtAbs(cam,2+((i*5)%16)+0.5,1+((i*7)%11)+0.5);
+      const sa=a*(1-ph)*0.85;if(sa<=0.02)continue;
+      ctx.strokeStyle='rgba(206,232,255,'+sa.toFixed(3)+')';
+      ctx.lineWidth=Math.max(1.5,cam.TW*0.045*(1-ph));
+      ctx.beginPath();ctx.ellipse(q.x,q.y,cam.TW*0.14+ph*cam.TW*0.52,(cam.TW*0.14+ph*cam.TW*0.52)*0.5,0,0,Math.PI*2);ctx.stroke();
     }
   }else if(f.kind==='fune'){ // かぜまち: ふねが かえってくる
-    ctx.globalCompositeOperation='source-over';
+    ctx.globalCompositeOperation='source-over';ctx.lineCap='round';
     for(let i=0;i<3;i++){
-      const ph=Math.min(1,f.t*0.13+i*0.10);
-      // てまえの うみ(y=12.6)を みぎから ひだりへ わたる＝しまの うえに のらない
-      const q=smMapPtAbs(cam,17.4-ph*13.5,12.6+i*0.55);
-      const sc=cam.TW*0.42;
-      ctx.fillStyle='rgba(72,54,38,'+a.toFixed(3)+')';
-      ctx.beginPath();ctx.moveTo(q.x-sc*0.5,q.y);ctx.quadraticCurveTo(q.x,q.y+sc*0.28,q.x+sc*0.5,q.y);ctx.closePath();ctx.fill();
-      ctx.strokeStyle='rgba(80,60,42,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(1.5,sc*0.06);
-      ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(q.x,q.y-sc*0.85);ctx.stroke();
-      ctx.fillStyle='rgba(244,238,222,'+a.toFixed(3)+')';
-      ctx.beginPath();ctx.moveTo(q.x+2,q.y-sc*0.85);ctx.quadraticCurveTo(q.x+sc*0.55,q.y-sc*0.34,q.x+2,q.y-sc*0.05);ctx.closePath();ctx.fill();
+      const ph=Math.min(1,f.t*0.17+i*0.11);
+      // てまえの うみを みぎから ひだりへ わたる＝しまの うえに のらない
+      const q=smMapPtAbs(cam,17.4-ph*13.5,12.2+i*0.62);
+      const sc=cam.TW*1.02, bob=Math.sin(TM*2.0+i*1.7)*sc*0.05;
+      const by=q.y+bob;
+      ctx.strokeStyle='rgba(236,248,255,'+(a*0.5).toFixed(3)+')'; // こうせきの しらなみ
+      ctx.lineWidth=Math.max(2,sc*0.07);
+      ctx.beginPath();ctx.moveTo(q.x+sc*0.5,by+sc*0.10);
+      ctx.quadraticCurveTo(q.x+sc*1.3,by+sc*0.02,q.x+sc*2.1,by+sc*0.12);ctx.stroke();
+      ctx.fillStyle='rgba(96,70,46,'+a.toFixed(3)+')'; // せんたい
+      ctx.beginPath();ctx.moveTo(q.x-sc*0.56,by-sc*0.06);
+      ctx.quadraticCurveTo(q.x,by+sc*0.34,q.x+sc*0.56,by-sc*0.06);ctx.closePath();ctx.fill();
+      ctx.fillStyle='rgba(146,110,72,'+a.toFixed(3)+')'; // ふなべりの ひかり
+      ctx.beginPath();ctx.moveTo(q.x-sc*0.56,by-sc*0.06);ctx.lineTo(q.x+sc*0.56,by-sc*0.06);
+      ctx.lineTo(q.x+sc*0.46,by-sc*0.14);ctx.lineTo(q.x-sc*0.46,by-sc*0.14);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(88,64,44,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(2.5,sc*0.055); // ほばしら
+      ctx.beginPath();ctx.moveTo(q.x-sc*0.04,by-sc*0.10);ctx.lineTo(q.x-sc*0.04,by-sc*1.12);ctx.stroke();
+      ctx.fillStyle='rgba(250,246,234,'+a.toFixed(3)+')'; // おおきな ほ
+      ctx.beginPath();ctx.moveTo(q.x,by-sc*1.10);
+      ctx.quadraticCurveTo(q.x+sc*0.78,by-sc*0.56,q.x,by-sc*0.12);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(176,150,110,'+(a*0.8).toFixed(3)+')';ctx.lineWidth=Math.max(1.5,sc*0.03);
+      ctx.beginPath();ctx.moveTo(q.x,by-sc*1.10);
+      ctx.quadraticCurveTo(q.x+sc*0.78,by-sc*0.56,q.x,by-sc*0.12);ctx.closePath();ctx.stroke();
+      ctx.save();ctx.globalCompositeOperation='lighter'; // へさきの あかり
+      const lg=ctx.createRadialGradient(q.x-sc*0.44,by-sc*0.22,0,q.x-sc*0.44,by-sc*0.22,sc*0.5);
+      lg.addColorStop(0,'rgba(255,224,150,'+(a*0.9).toFixed(3)+')');lg.addColorStop(1,'rgba(255,196,96,0)');
+      ctx.fillStyle=lg;ctx.beginPath();ctx.arc(q.x-sc*0.44,by-sc*0.22,sc*0.5,0,Math.PI*2);ctx.fill();ctx.restore();
     }
   }else if(f.kind==='akari'){ // かぜまち: こやに あかりが ともる
     ctx.globalCompositeOperation='lighter';
@@ -11958,78 +12005,166 @@ function horaFxOne(cam,f){
       ctx.fillStyle=g2;ctx.beginPath();ctx.arc(q.x,q.y-cam.TH*0.3,r,0,Math.PI*2);ctx.fill();
     }
   }else if(f.kind==='hata'){ // かぜまち: かざみばたが ひがしを さす
-    ctx.globalCompositeOperation='lighter';
     ctx.lineCap='round';
-    for(let i=0;i<10;i++){
-      const ph=(f.t*0.62+i*0.1)%1;
+    const HP=[[3,3],[7,2],[11,4],[15,3],[5,8],[13,9],[9,6]];
+    for(let i=0;i<HP.length;i++){
+      const gr=Math.min(1,Math.max(0,f.t*0.9-i*0.12));if(gr<=0)continue;
+      const q=smMapPtAbs(cam,HP[i][0]+0.5,HP[i][1]+0.5);
+      const sa=a*gr, hh=cam.TH*3.4*gr, sw=Math.sin(TM*3.0+i*1.1);
+      ctx.globalCompositeOperation='source-over';
+      ctx.strokeStyle='rgba(92,70,48,'+sa.toFixed(3)+')'; // はたざお
+      ctx.lineWidth=Math.max(2.5,cam.TW*0.075);
+      ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(q.x,q.y-hh);ctx.stroke();
+      const ty=q.y-hh, fw=cam.TW*0.86, fh=cam.TH*1.15; // ひがし＝みぎへ なびく ぬの
+      ctx.fillStyle='rgba(240,236,214,'+sa.toFixed(3)+')';
+      ctx.beginPath();ctx.moveTo(q.x,ty);
+      ctx.quadraticCurveTo(q.x+fw*0.55,ty-fh*0.16+sw*fh*0.22,q.x+fw,ty+fh*0.16+sw*fh*0.14);
+      ctx.quadraticCurveTo(q.x+fw*0.5,ty+fh*0.52+sw*fh*0.10,q.x,ty+fh*0.60);
+      ctx.closePath();ctx.fill();
+      ctx.fillStyle='rgba(196,116,86,'+sa.toFixed(3)+')'; // あかい すじ
+      ctx.beginPath();ctx.moveTo(q.x,ty+fh*0.26);
+      ctx.quadraticCurveTo(q.x+fw*0.5,ty+fh*0.20+sw*fh*0.16,q.x+fw*0.96,ty+fh*0.30+sw*fh*0.12);
+      ctx.lineTo(q.x+fw*0.94,ty+fh*0.44+sw*fh*0.12);
+      ctx.quadraticCurveTo(q.x+fw*0.5,ty+fh*0.36+sw*fh*0.14,q.x,ty+fh*0.42);
+      ctx.closePath();ctx.fill();
+      ctx.save();ctx.globalCompositeOperation='lighter'; // さおの さきの ひかり
+      ctx.fillStyle='rgba(255,244,206,'+(sa*0.8).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(q.x,ty,Math.max(2,cam.TW*0.07),0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+    ctx.globalCompositeOperation='lighter'; // ひがしへ ながれる かぜ
+    for(let i=0;i<6;i++){
+      const ph=(f.t*0.62+i*0.167)%1;
       const q=smMapPtAbs(cam,2+ph*16,1.5+((i*7)%10));
-      const sa=a*Math.sin(ph*Math.PI)*0.7;if(sa<=0.02)continue;
-      ctx.strokeStyle='rgba(214,238,255,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(1.5,cam.TW*0.035);
-      ctx.beginPath();ctx.moveTo(q.x-cam.TW*0.4,q.y);ctx.lineTo(q.x+cam.TW*0.4,q.y-cam.TH*0.14);ctx.stroke();
+      const sa=a*Math.sin(ph*Math.PI)*0.5;if(sa<=0.02)continue;
+      ctx.strokeStyle='rgba(214,238,255,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(2,cam.TW*0.05);
+      ctx.beginPath();ctx.moveTo(q.x-cam.TW*0.6,q.y);ctx.lineTo(q.x+cam.TW*0.6,q.y-cam.TH*0.2);ctx.stroke();
     }
   }else if(f.kind==='koe'){ // やかた1: とじられた こえが はこから でる
     ctx.globalCompositeOperation='lighter';
-    for(let i=0;i<14;i++){
-      const ph=(f.t*0.32+i*0.071)%1;
-      const q=smMapPtAbs(cam,3+((i*5)%15)+0.5,2+((i*4)%9)+0.5);
-      const sa=a*Math.sin(ph*Math.PI)*0.75;if(sa<=0.02)continue;
-      const r=cam.TW*(0.06+ph*0.20);
-      ctx.strokeStyle='rgba(255,226,180,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(1,cam.TW*0.018);
-      ctx.beginPath();ctx.ellipse(q.x,q.y-cam.TH*0.4-ph*cam.TH*1.4,r,r*0.5,0,0,Math.PI*2);ctx.stroke();
+    const KP=[[4,3],[9,2],[14,4],[6,8],[12,7]];
+    for(let i=0;i<KP.length;i++){
+      const q=smMapPtAbs(cam,KP[i][0]+0.5,KP[i][1]+0.5);
+      const bg=ctx.createRadialGradient(q.x,q.y-cam.TH*0.5,0,q.x,q.y-cam.TH*0.5,cam.TW*1.5); // はこの くちが ひかる
+      bg.addColorStop(0,'rgba(255,232,180,'+(a*0.62).toFixed(3)+')');bg.addColorStop(1,'rgba(255,196,110,0)');
+      ctx.fillStyle=bg;ctx.beginPath();ctx.arc(q.x,q.y-cam.TH*0.5,cam.TW*1.5,0,Math.PI*2);ctx.fill();
+      for(let j=0;j<3;j++){ // ひろがる こえの わ
+        const ph=(f.t*0.36+i*0.17+j*0.333)%1;
+        const sa=a*Math.sin(ph*Math.PI)*0.95;if(sa<=0.02)continue;
+        const r=cam.TW*(0.16+ph*0.86);
+        ctx.strokeStyle='rgba(255,232,186,'+sa.toFixed(3)+')';
+        ctx.lineWidth=Math.max(2.5,cam.TW*0.07*(1-ph*0.5));
+        ctx.beginPath();ctx.ellipse(q.x,q.y-cam.TH*0.5-ph*cam.TH*2.0,r,r*0.5,0,0,Math.PI*2);ctx.stroke();
+      }
+      for(let j=0;j<4;j++){ // のぼる こえの つぶ
+        const ph=(f.t*0.30+i*0.21+j*0.25)%1;
+        const sa=a*(1-ph)*0.9;if(sa<=0.02)continue;
+        const px=q.x+Math.sin(f.t*1.4+i+j*1.7)*cam.TW*0.42;
+        const py=q.y-cam.TH*0.5-ph*cam.TH*3.2;
+        ctx.fillStyle='rgba(255,246,214,'+sa.toFixed(3)+')';
+        ctx.beginPath();ctx.arc(px,py,Math.max(2.5,cam.TW*0.10*(1-ph*0.4)),0,Math.PI*2);ctx.fill();
+      }
     }
   }else if(f.kind==='page'){ // やかた2: ページが とびだす
     ctx.globalCompositeOperation='source-over';
-    for(let i=0;i<20;i++){
-      const ph=(f.t*0.26+i*0.05)%1;
+    for(let i=0;i<13;i++){
+      const ph=(f.t*0.26+i*0.077)%1;
       const q=smMapPtAbs(cam,2+((i*7)%16)+0.5,1+((i*5)%11)+0.5);
-      const sa=a*Math.sin(ph*Math.PI)*0.85;if(sa<=0.02)continue;
-      const sy=q.y-ph*cam.TH*3.2, sw=cam.TW*0.20, sh=sw*0.74;
-      ctx.save();ctx.translate(q.x,sy);ctx.rotate(Math.sin(f.t*2.2+i)*0.8);
-      ctx.fillStyle='rgba(244,238,220,'+sa.toFixed(3)+')';ctx.fillRect(-sw/2,-sh/2,sw,sh);
-      ctx.strokeStyle='rgba(120,100,72,'+(sa*0.7).toFixed(3)+')';ctx.lineWidth=1;ctx.strokeRect(-sw/2,-sh/2,sw,sh);
+      const sa=a*Math.sin(ph*Math.PI)*0.95;if(sa<=0.02)continue;
+      const sy=q.y-ph*cam.TH*3.6, sw=cam.TW*0.62, sh=sw*0.78, rot=Math.sin(f.t*2.0+i)*0.7;
+      ctx.save();ctx.translate(q.x,sy);ctx.rotate(rot);
+      ctx.fillStyle='rgba(30,26,20,'+(sa*0.30).toFixed(3)+')'; // かげ＝あかるい ゆかでも 見える
+      ctx.fillRect(-sw/2+sw*0.06,-sh/2+sh*0.08,sw,sh);
+      ctx.fillStyle='rgba(250,246,232,'+sa.toFixed(3)+')';ctx.fillRect(-sw/2,-sh/2,sw,sh);
+      ctx.fillStyle='rgba(226,218,196,'+sa.toFixed(3)+')';ctx.fillRect(-sw/2,-sh/2,sw*0.14,sh); // とじしろ
+      ctx.strokeStyle='rgba(96,78,54,'+(sa*0.85).toFixed(3)+')';ctx.lineWidth=Math.max(1.2,sw*0.035);
+      ctx.strokeRect(-sw/2,-sh/2,sw,sh);
+      ctx.strokeStyle='rgba(120,102,74,'+(sa*0.7).toFixed(3)+')';ctx.lineWidth=Math.max(1,sw*0.022); // もじの ぎょう
+      for(let L=0;L<4;L++){const ly=-sh*0.30+L*sh*0.20;
+        ctx.beginPath();ctx.moveTo(-sw*0.30,ly);ctx.lineTo(sw*(L===3?0.16:0.36),ly);ctx.stroke();}
       ctx.restore();
     }
-  }else if(f.kind==='hikari'){ // やかた3: かぶせぬのの したから ひかりが もれる
-    ctx.globalCompositeOperation='lighter';
-    for(let i=0;i<12;i++){
-      const q=smMapPtAbs(cam,2+((i*7)%16)+0.5,1+((i*5)%11)+0.5);
-      const fl=0.55+0.45*Math.sin(TM*1.6+i*1.3);
-      const r=cam.TW*0.62*fl;
-      const g2=ctx.createRadialGradient(q.x,q.y-cam.TH*0.3,0,q.x,q.y-cam.TH*0.3,r);
-      g2.addColorStop(0,'rgba(226,238,255,'+(a*0.34).toFixed(3)+')');g2.addColorStop(1,'rgba(200,220,255,0)');
-      ctx.fillStyle=g2;ctx.beginPath();ctx.arc(q.x,q.y-cam.TH*0.3,r,0,Math.PI*2);ctx.fill();
+  }else if(f.kind==='hikari'){ // やかた3: かぶせぬのが めくれ、したから ひかりが もれる
+    const CP=[[4,3],[9,2],[14,4],[6,8],[13,8]];
+    for(let i=0;i<CP.length;i++){
+      const q=smMapPtAbs(cam,CP[i][0]+0.5,CP[i][1]+0.5);
+      const lift=Math.min(1,Math.max(0,f.t*0.7-i*0.12));if(lift<=0)continue;
+      const bw=cam.TW*1.05, bh=cam.TH*1.5;
+      ctx.globalCompositeOperation='lighter'; // ぬのの したから もれる ひかり
+      const lg=ctx.createLinearGradient(q.x,q.y-bh*0.1,q.x,q.y+bh*1.1);
+      lg.addColorStop(0,'rgba(255,248,214,'+(a*0.85*lift).toFixed(3)+')');lg.addColorStop(1,'rgba(255,232,160,0)');
+      ctx.fillStyle=lg;
+      ctx.beginPath();ctx.moveTo(q.x-bw*0.34,q.y-bh*0.06);ctx.lineTo(q.x+bw*0.34,q.y-bh*0.06);
+      ctx.lineTo(q.x+bw*0.86,q.y+bh*1.0);ctx.lineTo(q.x-bw*0.86,q.y+bh*1.0);ctx.closePath();ctx.fill();
+      ctx.globalCompositeOperation='source-over';
+      ctx.fillStyle='rgba(246,244,238,'+a.toFixed(3)+')'; // しろい かぶせぬの(めくれた)
+      ctx.beginPath();ctx.moveTo(q.x-bw*0.5,q.y-bh*0.30);
+      ctx.quadraticCurveTo(q.x,q.y-bh*(0.52+0.26*lift),q.x+bw*0.5,q.y-bh*0.30);
+      ctx.quadraticCurveTo(q.x+bw*0.30,q.y-bh*(0.06+0.30*lift),q.x,q.y-bh*(0.10+0.22*lift));
+      ctx.quadraticCurveTo(q.x-bw*0.30,q.y-bh*(0.06+0.30*lift),q.x-bw*0.5,q.y-bh*0.30);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(178,172,158,'+(a*0.8).toFixed(3)+')';ctx.lineWidth=Math.max(1.2,cam.TW*0.025);
+      ctx.beginPath();ctx.moveTo(q.x-bw*0.5,q.y-bh*0.30);
+      ctx.quadraticCurveTo(q.x,q.y-bh*(0.52+0.26*lift),q.x+bw*0.5,q.y-bh*0.30);ctx.stroke();
     }
   }else if(f.kind==='genpon'){ // やかた3: げんぽんの やまが うかびあがる
+    const q=smMapPtAbs(cam,10,6.5), bw=cam.TW*1.5, bh=cam.TH*0.62;
     ctx.globalCompositeOperation='lighter';
-    const q=smMapPtAbs(cam,10,6.5);
-    const r=cam.TW*(1.4+0.15*Math.sin(TM*1.2));
-    const g2=ctx.createRadialGradient(q.x,q.y-cam.TH*0.8,0,q.x,q.y-cam.TH*0.8,r);
-    g2.addColorStop(0,'rgba(255,244,214,'+(a*0.5).toFixed(3)+')');g2.addColorStop(1,'rgba(255,226,160,0)');
-    ctx.fillStyle=g2;ctx.beginPath();ctx.arc(q.x,q.y-cam.TH*0.8,r,0,Math.PI*2);ctx.fill();
-    for(let i=0;i<10;i++){
+    const r=cam.TW*(2.2+0.18*Math.sin(TM*1.2));
+    const g2=ctx.createRadialGradient(q.x,q.y-cam.TH*1.4,0,q.x,q.y-cam.TH*1.4,r);
+    g2.addColorStop(0,'rgba(255,238,196,'+(a*0.55).toFixed(3)+')');g2.addColorStop(1,'rgba(255,214,140,0)');
+    ctx.fillStyle=g2;ctx.beginPath();ctx.arc(q.x,q.y-cam.TH*1.4,r,0,Math.PI*2);ctx.fill();
+    ctx.globalCompositeOperation='source-over';
+    for(let i=0;i<7;i++){ // つみあがった げんぽん(ほん)の やま
+      const gr2=Math.min(1,Math.max(0,f.t*0.7-i*0.13));if(gr2<=0)continue;
+      const w2=bw*(1-i*0.10), yy=q.y-i*bh*0.80-(1-gr2)*cam.TH*3.0;
+      const off=((i*11)%5-2)*cam.TW*0.10;
+      ctx.fillStyle='rgba(28,24,18,'+(a*0.26*gr2).toFixed(3)+')';
+      ctx.fillRect(q.x-w2*0.5+off+cam.TW*0.05,yy-bh*0.5+cam.TH*0.06,w2,bh);
+      ctx.fillStyle=(i%2?'rgba(196,142,96,':'rgba(160,110,78,')+(a*gr2).toFixed(3)+')'; // ほんの せ
+      ctx.fillRect(q.x-w2*0.5+off,yy-bh*0.5,w2,bh);
+      ctx.fillStyle='rgba(244,238,220,'+(a*gr2).toFixed(3)+')'; // ページの こぐち
+      ctx.fillRect(q.x-w2*0.5+off,yy-bh*0.5,w2,bh*0.26);
+      ctx.strokeStyle='rgba(72,54,38,'+(a*0.85*gr2).toFixed(3)+')';ctx.lineWidth=Math.max(1,cam.TW*0.02);
+      ctx.strokeRect(q.x-w2*0.5+off,yy-bh*0.5,w2,bh);
+    }
+    ctx.globalCompositeOperation='lighter';
+    for(let i=0;i<10;i++){ // やまから のぼる ひかりの つぶ
       const ph=(f.t*0.34+i*0.1)%1, ang=i*0.628+f.t*0.3;
-      const sa=a*(1-ph)*0.7;if(sa<=0.02)continue;
-      ctx.fillStyle='rgba(255,238,190,'+sa.toFixed(3)+')';
-      ctx.beginPath();ctx.arc(q.x+Math.cos(ang)*r*0.5*ph,q.y-cam.TH*0.8+Math.sin(ang)*r*0.28*ph-ph*cam.TH*1.6,Math.max(1.5,cam.TW*0.04*(1-ph)),0,Math.PI*2);ctx.fill();
+      const sa=a*(1-ph)*0.8;if(sa<=0.02)continue;
+      ctx.fillStyle='rgba(255,242,200,'+sa.toFixed(3)+')';
+      ctx.beginPath();ctx.arc(q.x+Math.cos(ang)*bw*0.6*ph,q.y-cam.TH*4.6-ph*cam.TH*2.0,Math.max(2,cam.TW*0.07*(1-ph)),0,Math.PI*2);ctx.fill();
     }
   }else if(f.kind==='yodori'){ // ゆうぐれ: よどりが とうへ／だれも のらない ふねが うみへ
     ctx.globalCompositeOperation='source-over';
-    for(let i=0;i<9;i++){ // よどりの むれ
-      const ph=(f.t*0.20+i*0.11)%1;
-      const q=smMapPtAbs(cam,2+ph*15,2.2+((i*3)%5)*0.9-ph*2.4);
-      const sa=a*Math.sin(ph*Math.PI)*0.9;if(sa<=0.02)continue;
-      const wsp=Math.sin(f.t*7+i*1.3)*cam.TH*0.34, r=cam.TW*0.20;
-      ctx.strokeStyle='rgba(24,22,36,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(2,cam.TW*0.042);
-      ctx.beginPath();ctx.moveTo(q.x-r,q.y+wsp*0.5);ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.16,q.x,q.y);
-      ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.16,q.x+r,q.y+wsp*0.5);ctx.stroke();
+    ctx.lineCap='round';
+    for(let i=0;i<12;i++){ // よどりの むれ
+      const ph=(f.t*0.20+i*0.083)%1;
+      const q=smMapPtAbs(cam,2+ph*15,2.6+((i*3)%5)*0.9-ph*2.6);
+      const sa=a*Math.sin(ph*Math.PI)*1.0;if(sa<=0.02)continue;
+      const wsp=Math.sin(f.t*7+i*1.3)*cam.TH*0.62, r=cam.TW*0.46;
+      ctx.strokeStyle='rgba(255,214,160,'+(sa*0.55).toFixed(3)+')'; // ゆうやけの ふちどり
+      ctx.lineWidth=Math.max(5,cam.TW*0.145);
+      ctx.beginPath();ctx.moveTo(q.x-r,q.y+wsp*0.5);ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.30,q.x,q.y);
+      ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.30,q.x+r,q.y+wsp*0.5);ctx.stroke();
+      ctx.strokeStyle='rgba(26,22,34,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(3,cam.TW*0.085);
+      ctx.beginPath();ctx.moveTo(q.x-r,q.y+wsp*0.5);ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.30,q.x,q.y);
+      ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.30,q.x+r,q.y+wsp*0.5);ctx.stroke();
+      ctx.fillStyle='rgba(26,22,34,'+sa.toFixed(3)+')'; // からだ
+      ctx.beginPath();ctx.ellipse(q.x,q.y+cam.TH*0.04,cam.TW*0.10,cam.TH*0.11,0,0,Math.PI*2);ctx.fill();
     }
     { // だれも のらない ふねが うみへ でていく
-      const ph=Math.min(1,f.t*0.10), q=smMapPtAbs(cam,9.5+ph*8.5,12.4);
-      const sc=cam.TW*0.40;
-      ctx.fillStyle='rgba(64,50,38,'+a.toFixed(3)+')';
-      ctx.beginPath();ctx.moveTo(q.x-sc*0.5,q.y);ctx.quadraticCurveTo(q.x,q.y+sc*0.26,q.x+sc*0.5,q.y);ctx.closePath();ctx.fill();
-      ctx.strokeStyle='rgba(80,62,44,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(1.5,sc*0.06);
-      ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(q.x,q.y-sc*0.8);ctx.stroke();
+      const ph=Math.min(1,f.t*0.13), q=smMapPtAbs(cam,9.5+ph*8.0,12.4);
+      const sc=cam.TW*0.95, by=q.y+Math.sin(TM*1.9)*sc*0.05;
+      ctx.strokeStyle='rgba(255,222,178,'+(a*0.42).toFixed(3)+')';ctx.lineWidth=Math.max(2,sc*0.07);
+      ctx.beginPath();ctx.moveTo(q.x-sc*0.5,by+sc*0.10);
+      ctx.quadraticCurveTo(q.x-sc*1.3,by+sc*0.02,q.x-sc*2.0,by+sc*0.12);ctx.stroke();
+      ctx.fillStyle='rgba(48,38,32,'+a.toFixed(3)+')';
+      ctx.beginPath();ctx.moveTo(q.x-sc*0.54,by-sc*0.06);
+      ctx.quadraticCurveTo(q.x,by+sc*0.32,q.x+sc*0.54,by-sc*0.06);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(58,46,38,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(2.5,sc*0.055);
+      ctx.beginPath();ctx.moveTo(q.x+sc*0.04,by-sc*0.10);ctx.lineTo(q.x+sc*0.04,by-sc*1.05);ctx.stroke();
+      ctx.fillStyle='rgba(212,182,150,'+a.toFixed(3)+')'; // だれも いない ほ
+      ctx.beginPath();ctx.moveTo(q.x,by-sc*1.03);
+      ctx.quadraticCurveTo(q.x-sc*0.72,by-sc*0.54,q.x,by-sc*0.12);ctx.closePath();ctx.fill();
     }
   }else if(f.kind==='kane'){ // かねの時: ひが おおわれ、なべの おとの わが ひろがる
     ctx.globalCompositeOperation='lighter';
@@ -12046,47 +12181,122 @@ function horaFxOne(cam,f){
     ctx.fillStyle=dg;ctx.fillRect(0,0,W,H);
   }else if(f.kind==='modoru'){ // あめあがり: そらの ふねが ひとを のせて もどり、よどりは とうを こえる
     ctx.globalCompositeOperation='source-over';
-    { const ph=Math.min(1,f.t*0.10), q=smMapPtAbs(cam,17.4-ph*9.4,12.7);
-      const sc=cam.TW*0.52;
-      ctx.fillStyle='rgba(64,50,38,'+a.toFixed(3)+')';
-      ctx.beginPath();ctx.moveTo(q.x-sc*0.5,q.y);ctx.quadraticCurveTo(q.x,q.y+sc*0.26,q.x+sc*0.5,q.y);ctx.closePath();ctx.fill();
-      ctx.strokeStyle='rgba(80,62,44,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(1.5,sc*0.06);
-      ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(q.x,q.y-sc*0.8);ctx.stroke();
-      ctx.fillStyle='rgba(226,214,190,'+a.toFixed(3)+')'; // のっている ひと
-      ctx.beginPath();ctx.arc(q.x-sc*0.16,q.y-sc*0.16,sc*0.10,0,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.arc(q.x+sc*0.14,q.y-sc*0.13,sc*0.09,0,Math.PI*2);ctx.fill();
+    ctx.lineCap='round';
+    { const ph=Math.min(1,f.t*0.13), q=smMapPtAbs(cam,17.4-ph*9.4,12.7);
+      const sc=cam.TW*1.05, by=q.y+Math.sin(TM*1.9)*sc*0.04;
+      ctx.strokeStyle='rgba(236,248,255,'+(a*0.5).toFixed(3)+')';ctx.lineWidth=Math.max(2,sc*0.07);
+      ctx.beginPath();ctx.moveTo(q.x+sc*0.5,by+sc*0.10);
+      ctx.quadraticCurveTo(q.x+sc*1.3,by+sc*0.02,q.x+sc*2.0,by+sc*0.12);ctx.stroke();
+      ctx.fillStyle='rgba(96,70,46,'+a.toFixed(3)+')';
+      ctx.beginPath();ctx.moveTo(q.x-sc*0.54,by-sc*0.06);
+      ctx.quadraticCurveTo(q.x,by+sc*0.32,q.x+sc*0.54,by-sc*0.06);ctx.closePath();ctx.fill();
+      ctx.fillStyle='rgba(146,110,72,'+a.toFixed(3)+')';
+      ctx.beginPath();ctx.moveTo(q.x-sc*0.54,by-sc*0.06);ctx.lineTo(q.x+sc*0.54,by-sc*0.06);
+      ctx.lineTo(q.x+sc*0.44,by-sc*0.14);ctx.lineTo(q.x-sc*0.44,by-sc*0.14);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(88,64,44,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(2.5,sc*0.055);
+      ctx.beginPath();ctx.moveTo(q.x-sc*0.04,by-sc*0.10);ctx.lineTo(q.x-sc*0.04,by-sc*1.08);ctx.stroke();
+      ctx.fillStyle='rgba(250,246,234,'+a.toFixed(3)+')';
+      ctx.beginPath();ctx.moveTo(q.x,by-sc*1.06);
+      ctx.quadraticCurveTo(q.x+sc*0.74,by-sc*0.54,q.x,by-sc*0.12);ctx.closePath();ctx.fill();
+      ctx.fillStyle='rgba(238,224,200,'+a.toFixed(3)+')'; // のっている ふたり
+      ctx.beginPath();ctx.arc(q.x-sc*0.22,by-sc*0.30,sc*0.15,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(q.x+sc*0.20,by-sc*0.26,sc*0.13,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(126,150,196,'+a.toFixed(3)+')';
+      ctx.beginPath();ctx.ellipse(q.x-sc*0.22,by-sc*0.10,sc*0.13,sc*0.15,0,Math.PI,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(q.x+sc*0.20,by-sc*0.08,sc*0.11,sc*0.13,0,Math.PI,Math.PI*2);ctx.fill();
     }
-    for(let i=0;i<11;i++){ // よどりは とうを こえていく
-      const ph=(f.t*0.17+i*0.09)%1;
+    for(let i=0;i<12;i++){ // よどりは とうを こえていく
+      const ph=(f.t*0.17+i*0.083)%1;
       const q=smMapPtAbs(cam,3+ph*14,7.5-ph*7.2+((i*3)%4)*0.6);
-      const sa=a*Math.sin(ph*Math.PI)*0.85;if(sa<=0.02)continue;
-      const wsp=Math.sin(f.t*7+i*1.1)*cam.TH*0.34, r=cam.TW*0.20;
-      ctx.strokeStyle='rgba(28,26,40,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(2,cam.TW*0.042);
-      ctx.beginPath();ctx.moveTo(q.x-r,q.y+wsp*0.5);ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.16,q.x,q.y);
-      ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.16,q.x+r,q.y+wsp*0.5);ctx.stroke();
+      const sa=a*Math.sin(ph*Math.PI)*0.95;if(sa<=0.02)continue;
+      const wsp=Math.sin(f.t*7+i*1.1)*cam.TH*0.62, r=cam.TW*0.46;
+      ctx.strokeStyle='rgba(246,250,255,'+(sa*0.5).toFixed(3)+')';ctx.lineWidth=Math.max(5,cam.TW*0.145);
+      ctx.beginPath();ctx.moveTo(q.x-r,q.y+wsp*0.5);ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.30,q.x,q.y);
+      ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.30,q.x+r,q.y+wsp*0.5);ctx.stroke();
+      ctx.strokeStyle='rgba(30,28,44,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(3,cam.TW*0.085);
+      ctx.beginPath();ctx.moveTo(q.x-r,q.y+wsp*0.5);ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.30,q.x,q.y);
+      ctx.quadraticCurveTo(q.x,q.y-cam.TH*0.30,q.x+r,q.y+wsp*0.5);ctx.stroke();
+      ctx.fillStyle='rgba(30,28,44,'+sa.toFixed(3)+')';
+      ctx.beginPath();ctx.ellipse(q.x,q.y+cam.TH*0.04,cam.TW*0.10,cam.TH*0.11,0,0,Math.PI*2);ctx.fill();
     }
   }else if(f.kind==='ishibashi'||f.kind==='iwabashi'||f.kind==='hobashira'){ // たに: かたられた はしが たにに かかる
-    ctx.globalCompositeOperation='source-over';
-    const y0=6.5, x0=3.2, x1=16.8, seg=13;
-    const col = f.kind==='ishibashi'?'rgba(206,198,180,':f.kind==='iwabashi'?'rgba(150,142,128,':'rgba(120,92,58,';
-    const gr=Math.min(1,f.t*0.42);
-    ctx.strokeStyle=col+(a*0.92).toFixed(3)+')';
-    ctx.lineWidth=Math.max(3,cam.TW*(f.kind==='iwabashi'?0.22:0.13));
-    ctx.lineCap= f.kind==='iwabashi'?'butt':'round';
-    ctx.beginPath();
-    for(let i=0;i<=seg;i++){
-      const u=i/seg;if(u>gr)break;
-      const mx=x0+(x1-x0)*u, my=y0+(f.kind==='ishibashi'?-Math.sin(u*Math.PI)*0.9:0);
-      const q=smMapPtAbs(cam,mx,my);
-      if(i===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);
-    }
-    ctx.stroke();
-    if(f.kind==='hobashira'){ // ふねの ほばしらを わたした＝ほが ならぶ
-      for(let i=1;i<5;i++){
-        const u=i/5;if(u>gr)continue;
+    // ★3つは 色ちがいでは なく かたちが べつもの: 石を つむ／岩が おちる／ほばしらを わたす
+    ctx.globalCompositeOperation='source-over';ctx.lineJoin='round';
+    const y0=6.5, x0=3.2, x1=16.8, gr=Math.min(1,f.t*0.42);
+    if(f.kind==='ishibashi'){ // きりいしを ひとつずつ つんだ アーチばし
+      const NS=13;
+      for(let i=0;i<NS;i++){
+        const u=(i+0.5)/NS;if(u>gr)continue;
+        const lift=Math.sin(u*Math.PI)*1.15;
+        const q=smMapPtAbs(cam,x0+(x1-x0)*u,y0-lift);
+        const bw=cam.TW*0.76, bh=cam.TH*1.22, drop=Math.max(0,(gr-u)*1.4);
+        const yy=q.y-Math.min(1,drop)*0+0;
+        ctx.fillStyle='rgba(26,24,20,'+(a*0.30).toFixed(3)+')'; // 石の かげ
+        ctx.beginPath();ctx.ellipse(q.x,yy+bh*0.52,bw*0.56,bh*0.20,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='rgba(222,214,196,'+a.toFixed(3)+')'; // きりいし(うわ面)
+        ctx.beginPath();ctx.moveTo(q.x-bw*0.5,yy);ctx.lineTo(q.x,yy-bh*0.42);
+        ctx.lineTo(q.x+bw*0.5,yy);ctx.lineTo(q.x,yy+bh*0.42);ctx.closePath();ctx.fill();
+        ctx.fillStyle='rgba(168,160,144,'+a.toFixed(3)+')'; // よこ面＝あつみ
+        ctx.beginPath();ctx.moveTo(q.x-bw*0.5,yy);ctx.lineTo(q.x,yy+bh*0.42);
+        ctx.lineTo(q.x,yy+bh*0.42+bh*0.36);ctx.lineTo(q.x-bw*0.5,yy+bh*0.36);ctx.closePath();ctx.fill();
+        ctx.fillStyle='rgba(196,188,170,'+a.toFixed(3)+')';
+        ctx.beginPath();ctx.moveTo(q.x+bw*0.5,yy);ctx.lineTo(q.x,yy+bh*0.42);
+        ctx.lineTo(q.x,yy+bh*0.42+bh*0.36);ctx.lineTo(q.x+bw*0.5,yy+bh*0.36);ctx.closePath();ctx.fill();
+        ctx.strokeStyle='rgba(122,116,104,'+(a*0.9).toFixed(3)+')';ctx.lineWidth=Math.max(1,cam.TW*0.02);
+        ctx.beginPath();ctx.moveTo(q.x-bw*0.5,yy);ctx.lineTo(q.x,yy-bh*0.42);
+        ctx.lineTo(q.x+bw*0.5,yy);ctx.lineTo(q.x,yy+bh*0.42);ctx.closePath();ctx.stroke();
+        if(i%2===0){ // らんかんの はしら
+          ctx.strokeStyle='rgba(236,230,214,'+(a*0.95).toFixed(3)+')';ctx.lineWidth=Math.max(2,cam.TW*0.055);
+          ctx.beginPath();ctx.moveTo(q.x,yy-bh*0.42);ctx.lineTo(q.x,yy-bh*1.5);ctx.stroke();
+        }
+      }
+    }else if(f.kind==='iwabashi'){ // おおきな岩が ドスンと おちて たにを ふさぐ
+      const NR=5;
+      for(let i=0;i<NR;i++){
+        const u=(i+0.5)/NR;if(u>gr)continue;
+        const q=smMapPtAbs(cam,x0+(x1-x0)*u,y0+((i%2)?0.25:-0.25));
+        const fall=Math.max(0,Math.min(1,(gr-u)*3.2)), rw=cam.TW*(0.95+((i*7)%4)*0.10), rh=cam.TH*(2.0+((i*5)%3)*0.35);
+        const yy=q.y-(1-fall)*cam.TH*7.0;
+        ctx.fillStyle='rgba(20,18,16,'+(a*0.34*fall).toFixed(3)+')';
+        ctx.beginPath();ctx.ellipse(q.x,q.y+rh*0.10,rw*0.62,cam.TH*0.34,0,0,Math.PI*2);ctx.fill();
+        const NV=8;
+        ctx.fillStyle='rgba(126,120,110,'+a.toFixed(3)+')'; // ごつごつした 岩の かたまり
+        ctx.beginPath();
+        for(let p=0;p<NV;p++){const ang=p/NV*Math.PI*2, wob=0.68+((i*13+p*29)%10)/22;
+          const px=q.x+Math.cos(ang)*rw*0.5*wob, py=yy+Math.sin(ang)*rh*0.5*wob;
+          if(p===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
+        ctx.closePath();ctx.fill();
+        ctx.fillStyle='rgba(174,168,156,'+a.toFixed(3)+')'; // 上の あたる ひかり
+        ctx.beginPath();
+        for(let p=0;p<NV;p++){const ang=Math.PI+p/NV*Math.PI, wob=0.62+((i*13+p*29)%10)/24;
+          const px=q.x+Math.cos(ang)*rw*0.46*wob, py=yy-rh*0.10+Math.sin(ang)*rh*0.40*wob;
+          if(p===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
+        ctx.closePath();ctx.fill();
+        ctx.strokeStyle='rgba(78,74,68,'+(a*0.85).toFixed(3)+')';ctx.lineWidth=Math.max(1.5,cam.TW*0.03); // われめ
+        ctx.beginPath();ctx.moveTo(q.x-rw*0.24,yy-rh*0.22);ctx.lineTo(q.x-rw*0.02,yy+rh*0.06);
+        ctx.lineTo(q.x+rw*0.22,yy-rh*0.14);ctx.stroke();
+      }
+    }else{ // ほばしらを よこに わたし、ほが ならぶ
+      const A0=smMapPtAbs(cam,x0,y0), A1=smMapPtAbs(cam,x0+(x1-x0)*gr,y0);
+      ctx.strokeStyle='rgba(20,18,14,'+(a*0.28).toFixed(3)+')';ctx.lineCap='round';
+      ctx.lineWidth=Math.max(5,cam.TW*0.34);
+      ctx.beginPath();ctx.moveTo(A0.x,A0.y+cam.TH*0.34);ctx.lineTo(A1.x,A1.y+cam.TH*0.34);ctx.stroke();
+      ctx.strokeStyle='rgba(122,90,56,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(5,cam.TW*0.30); // まるた
+      ctx.beginPath();ctx.moveTo(A0.x,A0.y);ctx.lineTo(A1.x,A1.y);ctx.stroke();
+      ctx.strokeStyle='rgba(168,128,80,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(2,cam.TW*0.10); // 木目の ひかり
+      ctx.beginPath();ctx.moveTo(A0.x,A0.y-cam.TH*0.10);ctx.lineTo(A1.x,A1.y-cam.TH*0.10);ctx.stroke();
+      for(let i=1;i<6;i++){ // ならぶ ほ
+        const u=i/6;if(u>gr)continue;
         const q=smMapPtAbs(cam,x0+(x1-x0)*u,y0);
-        ctx.fillStyle='rgba(240,234,216,'+(a*0.9).toFixed(3)+')';
-        ctx.beginPath();ctx.moveTo(q.x,q.y-cam.TH*0.2);ctx.quadraticCurveTo(q.x+cam.TW*0.32,q.y-cam.TH*0.9,q.x,q.y-cam.TH*1.5);ctx.closePath();ctx.fill();
+        const sw2=Math.sin(TM*2.2+i)*cam.TW*0.10;
+        ctx.strokeStyle='rgba(92,68,44,'+a.toFixed(3)+')';ctx.lineWidth=Math.max(2,cam.TW*0.05);
+        ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(q.x,q.y-cam.TH*2.1);ctx.stroke();
+        ctx.fillStyle='rgba(248,242,226,'+a.toFixed(3)+')';
+        ctx.beginPath();ctx.moveTo(q.x,q.y-cam.TH*2.05);
+        ctx.quadraticCurveTo(q.x+cam.TW*0.52+sw2,q.y-cam.TH*1.10,q.x,q.y-cam.TH*0.22);ctx.closePath();ctx.fill();
+        ctx.strokeStyle='rgba(172,146,108,'+(a*0.85).toFixed(3)+')';ctx.lineWidth=Math.max(1.2,cam.TW*0.022);
+        ctx.beginPath();ctx.moveTo(q.x,q.y-cam.TH*2.05);
+        ctx.quadraticCurveTo(q.x+cam.TW*0.52+sw2,q.y-cam.TH*1.10,q.x,q.y-cam.TH*0.22);ctx.closePath();ctx.stroke();
       }
     }
   }else if(f.kind==='koeami'){ // しおわかれ: 三そうを むすぶ こえの あみ
@@ -12096,25 +12306,46 @@ function horaFxOne(cam,f){
     for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){
       const A=smMapPtAbs(cam,P[i][0]+0.5,P[i][1]+0.5), B=smMapPtAbs(cam,P[j][0]+0.5,P[j][1]+0.5);
       const ph=(f.t*0.5+i*0.2+j*0.13)%1;
-      ctx.strokeStyle='rgba(180,226,255,'+(a*(0.16+0.24*Math.sin(ph*Math.PI))).toFixed(3)+')';
-      ctx.lineWidth=Math.max(1.5,cam.TW*0.022);
+      ctx.strokeStyle='rgba(150,208,255,'+(a*(0.14+0.20*Math.sin(ph*Math.PI))).toFixed(3)+')';
+      ctx.lineWidth=Math.max(4,cam.TW*0.10); // ふとい あみの すじ
+      ctx.beginPath();ctx.moveTo(A.x,A.y-cam.TH*0.5);ctx.lineTo(B.x,B.y-cam.TH*0.5);ctx.stroke();
+      ctx.strokeStyle='rgba(226,246,255,'+(a*(0.30+0.42*Math.sin(ph*Math.PI))).toFixed(3)+')';
+      ctx.lineWidth=Math.max(1.5,cam.TW*0.032); // しんの ひかり
       ctx.beginPath();ctx.moveTo(A.x,A.y-cam.TH*0.5);ctx.lineTo(B.x,B.y-cam.TH*0.5);ctx.stroke();
       const t2=(f.t*0.42+i*0.3+j*0.17)%1; // こえの つぶが わたる
       const px=A.x+(B.x-A.x)*t2, py=A.y+(B.y-A.y)*t2-cam.TH*0.5;
-      ctx.fillStyle='rgba(224,244,255,'+(a*0.8).toFixed(3)+')';
-      ctx.beginPath();ctx.arc(px,py,Math.max(2,cam.TW*0.05),0,Math.PI*2);ctx.fill();
+      const pg=ctx.createRadialGradient(px,py,0,px,py,cam.TW*0.34);
+      pg.addColorStop(0,'rgba(240,252,255,'+(a*0.95).toFixed(3)+')');pg.addColorStop(1,'rgba(160,220,255,0)');
+      ctx.fillStyle=pg;ctx.beginPath();ctx.arc(px,py,cam.TW*0.34,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(240,252,255,'+(a*0.9).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(px,py,Math.max(3,cam.TW*0.10),0,Math.PI*2);ctx.fill();
     }
-  }else{ // kaze: しまを よこに ふきぬける かぜ
-    ctx.globalCompositeOperation='lighter';
-    ctx.lineCap='round';
-    for(let i=0;i<16;i++){
-      const ph=(f.t*0.55+i*0.083)%1;
-      const y=H*0.16+((i*61)%100)/100*H*0.62;
-      const x0=-W*0.15+ph*W*1.3, len=W*(0.10+((i*29)%10)/100);
-      const sa=a*Math.sin(ph*Math.PI)*0.55;if(sa<=0.02)continue;
-      ctx.strokeStyle='rgba(226,244,255,'+sa.toFixed(3)+')';
-      ctx.lineWidth=Math.max(1.5,H*0.0035);
-      ctx.beginPath();ctx.moveTo(x0,y);ctx.quadraticCurveTo(x0+len*0.5,y-H*0.012,x0+len,y);ctx.stroke();
+  }else{ // kaze: すなの しまを よこに ふきぬける かぜ＝すなが まいあがって ながれる
+    ctx.globalCompositeOperation='source-over';ctx.lineCap='round';
+    for(let i=0;i<11;i++){ // しまの うえを わたる すなの すじ(タイルを またいで つながる)
+      const ph=(f.t*0.42+i*0.091)%1;
+      const my=1.2+((i*7)%11)*1.05;
+      const sa=a*Math.sin(ph*Math.PI)*0.92;if(sa<=0.02)continue;
+      const mx0=-1.5+ph*22, len=3.6+((i*29)%10)*0.28;
+      ctx.strokeStyle='rgba(158,120,72,'+(sa*0.62).toFixed(3)+')'; // すじの かげ＝すなの上でも 見える
+      ctx.lineWidth=Math.max(5,cam.TH*0.78);
+      ctx.beginPath();
+      for(let s=0;s<=8;s++){const u=s/8, q=smMapPtAbs(cam,mx0+len*u,my+Math.sin(u*3.1+f.t*2.0)*0.34+0.14);
+        if(s===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);}
+      ctx.stroke();
+      ctx.strokeStyle='rgba(255,250,238,'+sa.toFixed(3)+')'; // まいあがる すなの おび
+      ctx.lineWidth=Math.max(4,cam.TH*0.62);
+      ctx.beginPath();
+      for(let s=0;s<=8;s++){const u=s/8, q=smMapPtAbs(cam,mx0+len*u,my+Math.sin(u*3.1+f.t*2.0)*0.34);
+        if(s===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);}
+      ctx.stroke();
+    }
+    for(let i=0;i<22;i++){ // まいあがる すなつぶ
+      const ph=(f.t*0.7+i*0.045)%1;
+      const q=smMapPtAbs(cam,-1+ph*21,1+((i*13)%12)*1.0);
+      const sa=a*Math.sin(ph*Math.PI)*0.85;if(sa<=0.02)continue;
+      ctx.fillStyle='rgba(246,228,186,'+sa.toFixed(3)+')';
+      ctx.beginPath();ctx.arc(q.x,q.y-cam.TH*(0.3+Math.sin(f.t*3+i)*0.5),Math.max(2,cam.TW*0.055),0,Math.PI*2);ctx.fill();
     }
   }
   ctx.restore();
