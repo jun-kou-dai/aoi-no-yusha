@@ -12810,6 +12810,364 @@ const SM_TOKI={
   }
 };
 SHIMAART.tokikasanedusk=SM_TOKI;SHIMAART.tokikasanebell=SM_TOKI;SHIMAART.tokikasanerain=SM_TOKI;
+
+// ============================================================
+// 第1・2部の じめん（12マップ）＋むら。
+// 実測(2026-08-01): G は 23マップ・P は 13・C は 12・F は 9マップが おなじ えのぐだった。
+// しまの 名前どおりの じめんに する。ここに 足すまで、名前が ちがうのに じめんは 同じ。
+// ============================================================
+
+// ── そうげん（むら）：ふみならされた ひろばの 土と、はたけの うね ──
+SHIMAART.grass={
+  top(g){
+    if(g.t==='P')return smTop(g,'#a98e63','#7a6440'); // むらの 土のみち（ひろばと おなじ 土）
+    return false;                                     // くさは 共通のまま＝むらの 花は のこす
+  },
+  deco(g){
+    if(g.t==='P'){ // わだち 2本（タイルを またいで つながる）＋ふまれた 小石
+      const a=smMapPt(g,g.x-0.5,g.y+0.20),b=smMapPt(g,g.x+1.5,g.y+0.20);
+      smSeg(g,a.x,a.y,b.x,b.y,'rgba(84,64,36,.34)',0.014);
+      const c2=smMapPt(g,g.x-0.5,g.y+0.72),d2=smMapPt(g,g.x+1.5,g.y+0.72);
+      smSeg(g,c2.x,c2.y,d2.x,d2.y,'rgba(84,64,36,.28)',0.012);
+      for(let i=0;i<2;i++)smDot(g,smPt(g,i,7,11),g.TW*0.020,g.TW*0.012,0,'rgba(214,190,142,.34)');
+      return true;
+    }
+    if(g.t==='G'&&g.hsh<0.30){ // はたけの うね（3ぼん）。くさと 花は この上に 共通で のる
+      for(let k=1;k<=3;k++)smAxis(g,1,k*0.25,'rgba(94,72,38,.30)',0.013);
+    }
+    return false;
+  }
+};
+
+// ── はてのしま：せかいの はて。くさが しろちゃけて ひび割れ、ほしの すなが たまる ──
+SHIMAART.edge={
+  top(g){
+    if(SM_GND.includes(g.t))return smTop(g,'#7e8a78','#525c4e');
+    if(g.t==='P')return smTop(g,'#b6b0a0','#888274');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){
+      const a=smMapPt(g,g.x+0.04,g.y+0.46),b=smMapPt(g,g.x+0.96,g.y+0.38); // ひび（タイルを またぐ）
+      smSeg(g,a.x,a.y,b.x,b.y,'rgba(228,234,242,.20)',0.010);
+      if(g.hsh>0.55){const c2=smMapPt(g,g.x+0.42,g.y+0.02),d2=smMapPt(g,g.x+0.52,g.y+0.98);
+        smSeg(g,c2.x,c2.y,d2.x,d2.y,'rgba(228,234,242,.14)',0.008);}
+      for(let i=0;i<3;i++)smDot(g,smPt(g,i,5,11),g.TW*0.014,g.TW*0.010,0,'rgba(242,246,255,'+(0.26+i*0.08).toFixed(2)+')');
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(SM_GND.includes(o.t)||o.t==='P')return smFace(o,['#59614f','#31372b'],['#6b7460','#3e4436'],'#96a08c');
+    return null;
+  }
+};
+
+// ── しずみのさと：水に つかった 里。くさは 水を ふくみ、みちは 水の上に わたした いた ──
+SHIMAART.sunken={
+  top(g){
+    if(SM_GND.includes(g.t))return smTop(g,'#5f7a63','#3c5240');
+    if(g.t==='P')return smTop(g,'#6d5c42','#463a28');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){ // たまり水（そこが すける）と こけ
+      if(g.hsh>0.40){
+        smDot(g,{x:g.cx+(g.hsh-0.5)*g.TW*0.26,y:g.cy+g.TH*0.06},g.TW*0.115,g.TH*0.075,0,'rgba(74,126,140,.32)');
+        ctx.strokeStyle='rgba(168,214,222,.26)';ctx.lineWidth=Math.max(1,g.TW*0.010);
+        ctx.beginPath();ctx.ellipse(g.cx+(g.hsh-0.5)*g.TW*0.26,g.cy+g.TH*0.06,g.TW*0.115,g.TH*0.075,0,0,Math.PI*2);ctx.stroke();
+      }
+      for(let i=0;i<2;i++)smDot(g,smPt(g,i,9,7),g.TW*0.026,g.TW*0.015,g.hsh*5,'rgba(96,146,88,.34)');
+      return true;
+    }
+    if(g.t==='P'){ // わたした いた（2まい）＋つぎめ
+      smAxis(g,1,0.34,'rgba(30,22,12,.42)',0.014);smAxis(g,1,0.70,'rgba(30,22,12,.42)',0.014);
+      smAxis(g,0,0.50,'rgba(214,192,150,.14)',0.010);
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='W')return smFace(o,['#2c4a52','#16282e'],['#37585f','#1d323a'],'#4e767e');
+    if(SM_GND.includes(o.t)||o.t==='P')return smFace(o,['#3f5644','#22302a'],['#4c6650','#2b3a32'],'#6f8a72');
+    return null;
+  }
+};
+
+// ── わすれのうみ：きりの うみ。いろが ぬけた 灰みどりに、きりの すじが よこに ながれる ──
+SHIMAART.mistsea={
+  top(g){
+    if(SM_GND.includes(g.t))return smTop(g,'#7c8a84','#525d59');
+    if(g.t==='P')return smTop(g,'#8e9490','#636966');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)||g.t==='P'){ // きりの すじ（タイルを またいで つながる 2本）
+      for(let k=0;k<2;k++){
+        const f=0.30+k*0.36;
+        const a=smMapPt(g,g.x-0.5,g.y+f),b=smMapPt(g,g.x+1.5,g.y+f-0.06);
+        smSeg(g,a.x,a.y,b.x,b.y,'rgba(228,236,238,'+(0.16-k*0.05).toFixed(2)+')',0.020);
+      }
+      if(g.hsh>0.70)smDot(g,{x:g.cx,y:g.cy},g.TW*0.10,g.TH*0.06,0,'rgba(228,236,238,.10)');
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='W')return smFace(o,['#3d4c50','#1f292c'],['#4a5b60','#283438'],'#657a7e');
+    if(SM_GND.includes(o.t)||o.t==='P')return smFace(o,['#4b564f','#2a322e'],['#5a6659','#333c37'],'#7b877f');
+    return null;
+  }
+};
+
+// ── みなもとのもり：こけの じめんから 清水が しみだす（きんの おちばは 共通のまま のこす） ──
+SHIMAART.minamoto={
+  top(g){
+    if(SM_GND.includes(g.t))return smTop(g,'#4f7a52','#2f4f36');
+    if(g.t==='P')return smTop(g,'#6f7a56','#4a5238');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)&&g.hsh>0.46){ // しみだす 清水（ちいさな わき水）
+      ctx.save();ctx.globalCompositeOperation='lighter';
+      smDot(g,{x:g.cx+(g.hsh-0.5)*g.TW*0.22,y:g.cy+g.TH*0.04},g.TW*0.055,g.TH*0.038,0,'rgba(150,220,210,.16)');
+      ctx.restore();
+    }
+    return false; // きんの おちばは 共通の えがきに まかせる
+  },
+  face(o){
+    if(SM_GND.includes(o.t)||o.t==='P')return smFace(o,['#34503a','#1c2c22'],['#3f5f45','#24362a'],'#5c8060');
+    return null;
+  }
+};
+
+// ── こころのにわ：はなびらが しきつめられた にわ。かだんの ふちが 通る ──
+SHIMAART.kokoro={
+  top(g){
+    // ★実プレイの 大きさで 見ると、くらい むらさきでは まっくろに つぶれて はなびらが 見えなかった
+    if(SM_GND.includes(g.t))return smTop(g,'#8e83a8','#5d5478');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){
+      if(g.hsh>0.74){ // かだんの ふち（ならんだ しきいし）
+        smAxis(g,0,0.5,'rgba(228,216,242,.42)',0.024);
+      }
+      for(let i=0;i<4;i++){ // ちった はなびら
+        const p=smPt(g,i,7,13);
+        smDot(g,p,g.TW*0.038,g.TW*0.020,g.hsh*6+i,['rgba(255,192,220,.72)','rgba(236,214,255,.66)','rgba(255,240,214,.62)','rgba(206,222,255,.58)'][(i+((g.hsh*5)|0))%4]);
+      }
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(SM_GND.includes(o.t))return smFace(o,['#3c3552','#221d34'],['#48405f','#2a2440'],'#6a608a');
+    return null;
+  }
+};
+
+// ── とわのふち：ふちの むこうは 星空。くさは くらく、みちは みがかれた 石 ──
+SHIMAART.towa={
+  top(g){
+    // ★実プレイの 大きさで 見ると、くらすぎて じめんと みちの ちがいが 出なかった
+    if(SM_GND.includes(g.t))return smTop(g,'#5a7686','#33485a');
+    if(g.t==='P')return smTop(g,'#6a6c88','#3e405c');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){ // じめんに すける ほし
+      for(let i=0;i<3;i++){
+        const p=smPt(g,i,5,11);
+        ctx.save();ctx.globalCompositeOperation='lighter';
+        smDot(g,p,g.TW*0.018,g.TW*0.018,0,'rgba(220,236,255,'+(0.34+0.22*Math.sin(TM*1.6+g.hsh*9+i)).toFixed(3)+')');
+        ctx.restore();
+      }
+      return true;
+    }
+    if(g.t==='P'){ // みがかれた 石だたみ（4まい）
+      smAxis(g,0,0.5,'rgba(16,18,30,.52)',0.016);smAxis(g,1,0.5,'rgba(16,18,30,.52)',0.016);
+      smAxis(g,1,0.24,'rgba(206,220,246,.20)',0.010);
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(SM_GND.includes(o.t)||o.t==='P')return smFace(o,['#27343e','#131b22'],['#2f3f4a','#19222a'],'#48606e');
+    return null;
+  }
+};
+
+// ── みおくりのみさき：うみかぜに なびく くさ。しろい 岩はだが すける ──
+SHIMAART.misaki={
+  top(g){
+    if(SM_GND.includes(g.t))return smTop(g,'#8a9a6a','#5e6c46');
+    if(g.t==='P')return smTop(g,'#c2bda8','#948f7c');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){
+      if(g.hsh>0.66){ // すける しろい 岩はだ
+        smDot(g,{x:g.cx+(g.hsh-0.5)*g.TW*0.30,y:g.cy+g.TH*0.02},g.TW*0.13,g.TH*0.085,g.hsh*4,'rgba(226,222,206,.34)');
+      }
+      ctx.lineCap='round'; // かぜに ふかれて みな おなじ むきに ねる くさ
+      for(let i=0;i<4;i++){
+        const p=smPt(g,i,7,13), hgt=g.TH*(0.17+((g.hsh*9+i)%1)*0.10);
+        ctx.strokeStyle=(i%2?'rgba(96,124,64,.50)':'rgba(176,196,124,.44)');
+        ctx.lineWidth=Math.max(1,g.TW*0.015);
+        ctx.beginPath();ctx.moveTo(p.x,p.y);
+        ctx.quadraticCurveTo(p.x+g.TW*0.05,p.y-hgt*0.7,p.x+g.TW*0.11,p.y-hgt*0.86);
+        ctx.stroke();
+      }
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(SM_GND.includes(o.t)||o.t==='P')return smFace(o,['#6d6a58','#3e3c31'],['#7e7b66','#4b483b'],'#a9a58e');
+    return null;
+  }
+};
+
+// ── みおくりのふね：みちは こうはんの いた。木目と つぎめが とおる ──
+SHIMAART.fune={
+  top(g){
+    if(g.t==='P'||g.t==='V')return smTop(g,'#8a6f49','#5c482c');
+    return false;
+  },
+  deco(g){
+    if(g.t==='P'||g.t==='V'){
+      smAxis(g,1,0.32,'rgba(34,22,10,.46)',0.014); // いたの つぎめ
+      smAxis(g,1,0.68,'rgba(34,22,10,.46)',0.014);
+      smAxis(g,0,0.5,'rgba(228,206,164,.12)',0.009); // 木目
+      if(g.hsh>0.82){ // くぎ
+        smDot(g,{x:g.cx-g.TW*0.18,y:g.cy},g.TW*0.012,g.TW*0.012,0,'rgba(226,214,186,.42)');
+        smDot(g,{x:g.cx+g.TW*0.18,y:g.cy},g.TW*0.012,g.TW*0.012,0,'rgba(226,214,186,.42)');
+      }
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='P'||o.t==='V')return smFace(o,['#4e3c24','#2c2114'],['#5e4a2e','#38291a'],'#7a5f3a');
+    return null;
+  }
+};
+
+// ── おおほりあと：ほりかえした 土と がれき。ゆかは つちが むきだし ──
+SHIMAART.ohori={
+  top(g){
+    if(g.t==='F')return smTop(g,'#6b5a44','#453a2c');
+    if(g.t==='C'||g.t==='D')return smTop(g,'#5a5048','#3a332e');
+    return false;
+  },
+  deco(g){
+    if(g.t==='F'){ // ほりあとの すじ（ふぞろい）と こいし
+      smAxis(g,0,0.28+(g.hsh*0.12),'rgba(36,26,14,.34)',0.013);
+      smAxis(g,0,0.68+(g.hsh*0.10),'rgba(36,26,14,.28)',0.011);
+      for(let i=0;i<3;i++)smDot(g,smPt(g,i,7,13),g.TW*0.022,g.TW*0.014,g.hsh*6,['rgba(150,136,112,.40)','rgba(96,86,70,.42)','rgba(178,164,138,.30)'][(i+((g.hsh*5)|0))%3]);
+      return true;
+    }
+    if(g.t==='C'||g.t==='D'){ // くずれた 石がき
+      smAxis(g,0,0.5,'rgba(24,20,16,.48)',0.016);
+      smAxis(g,1,0.30,'rgba(24,20,16,.34)',0.011);smAxis(g,1,0.72,'rgba(206,196,178,.12)',0.010);
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='C'||o.t==='D'||o.t==='B')return smFace(o,['#463d33','#28221c'],['#544a3e','#322b23'],'#6c6152');
+    if(o.t==='F')return smFace(o,['#4a3f30','#2c2519'],['#584c3c','#362e22'],null);
+    return null;
+  }
+};
+
+// ── ともしびのま：あかりが てりかえす、あたたかい 石の ま ──
+SHIMAART.tomoshibi={
+  top(g){
+    if(g.t==='C'||g.t==='D')return smTop(g,'#5e4a44','#3c2e2c');
+    if(g.t==='F')return smTop(g,'#6a5240','#42322a');
+    return false;
+  },
+  deco(g){
+    if(g.t==='C'||g.t==='D'){ // つまれた 石＋ともしびの てりかえし
+      smAxis(g,0,0.5,'rgba(26,16,14,.44)',0.015);
+      smAxis(g,1,0.34,'rgba(255,206,140,.10)',0.011);smAxis(g,1,0.70,'rgba(26,16,14,.34)',0.011);
+      if(g.hsh>0.72){
+        ctx.save();ctx.globalCompositeOperation='lighter';
+        smDot(g,{x:g.cx+(g.hsh-0.5)*g.TW*0.24,y:g.cy},g.TW*0.085,g.TH*0.055,0,'rgba(255,196,110,'+(0.10+0.07*Math.sin(TM*1.4+g.hsh*7)).toFixed(3)+')');
+        ctx.restore();
+      }
+      return true;
+    }
+    if(g.t==='F'){
+      smAxis(g,0,0.5,'rgba(30,18,14,.34)',0.012);
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='C'||o.t==='D'||o.t==='B')return smFace(o,['#4a3630','#2a1e1c'],['#58423a','#332622'],'#7a5a48');
+    if(o.t==='F')return smFace(o,['#4c3a2e','#2e231c'],['#5a4636','#372b22'],null);
+    return null;
+  }
+};
+
+// ── かたりのおか：ゆうぐれの くさ。かたりの 石が わに ならぶ ──
+SHIMAART.oka={
+  top(g){
+    // ★実プレイの 大きさで 見ると、ちゃいろすぎて「くさの おか」が つちに 見えた
+    if(SM_GND.includes(g.t))return smTop(g,'#88924e','#5a6636');
+    if(g.t==='P')return smTop(g,'#a08a5e','#6e5c3e');
+    return false;
+  },
+  deco(g){
+    if(SM_GND.includes(g.t)){
+      ctx.lineCap='round'; // ゆうひを うけた くさ
+      for(let i=0;i<4;i++){
+        const p=smPt(g,i,7,13), hgt=g.TH*(0.15+((g.hsh*9+i)%1)*0.12), lean=((g.hsh*11+i*0.7)%1-0.5)*g.TW*0.06;
+        ctx.strokeStyle=(i%2?'rgba(110,88,44,.48)':'rgba(224,190,116,.40)');
+        ctx.lineWidth=Math.max(1,g.TW*0.015);
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.quadraticCurveTo(p.x+lean*0.4,p.y-hgt*0.6,p.x+lean,p.y-hgt);ctx.stroke();
+      }
+      if(g.hsh>0.86){ // かたりの 石
+        smDot(g,{x:g.cx,y:g.cy+g.TH*0.02},g.TW*0.075,g.TH*0.055,0,'rgba(168,152,124,.62)');
+        smDot(g,{x:g.cx-g.TW*0.012,y:g.cy-g.TH*0.02},g.TW*0.055,g.TH*0.038,0,'rgba(216,202,172,.50)');
+      }
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(SM_GND.includes(o.t)||o.t==='P')return smFace(o,['#6a5a38','#3c3320'],['#7a6842','#483d28'],'#a08c5e');
+    return null;
+  }
+};
+
+// ── ひとつのうみ：あさせの すな。ひいた なみの あとが のこる ──
+SHIMAART.umi={
+  top(g){
+    if(g.t==='S')return smTop(g,'#cbb98c','#9b8a62');
+    if(SM_GND.includes(g.t))return smTop(g,'#a8ac78','#767a50');
+    return false;
+  },
+  deco(g){
+    if(g.t==='S'){ // ひいた なみの あと（タイルを またいで つながる 3本）
+      for(let k=0;k<3;k++){
+        const f=0.22+k*0.28;
+        const a=smMapPt(g,g.x-0.5,g.y+f),b=smMapPt(g,g.x+1.5,g.y+f+0.05);
+        smSeg(g,a.x,a.y,b.x,b.y,'rgba(246,238,214,'+(0.22-k*0.05).toFixed(2)+')',0.011);
+      }
+      if(g.hsh>0.80)smDot(g,smPt(g,0,7,11),g.TW*0.020,g.TW*0.012,g.hsh*6,'rgba(232,220,236,.44)'); // かいがら
+      return true;
+    }
+    return false;
+  },
+  face(o){
+    if(o.t==='S'||SM_GND.includes(o.t))return smFace(o,['#8e7c54','#4e4430'],['#a08d61','#5e523a'],'#c0ab7c');
+    return null;
+  }
+};
 function drawIsoBlock(x,y,cam){
   const t=MAP[y][x];
   const{TW,TH,lift}=cam;
@@ -12918,6 +13276,11 @@ function drawIsoBlock(x,y,cam){
     ctx.fillStyle=eg;ctx.beginPath();ctx.ellipse(cx,cy,TW*0.34,TH*0.34,0,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
+  // ★ここを ctx.save()/restore() で はさんでは いけない。
+  //   たに・かぜまち(よる ふくむ)の もようは、deco の 中で きめた ペンの じょうたいが
+  //   そのあとの えがきに のこることを 前提に した 絵に なっている(実測 2026-08-01。
+  //   はさむと この3マップの 絵が かわる)。あたらしい しまを 足すときは、
+  //   じぶんで つかう いろと ふとさを かならず じぶんで きめる こと。
   if(ART&&ART.deco&&ART.deco(gA)){/* しまの もよう */}
   else if(t==='G'||t==='T'||t==='H'||t==='O'||t==='M'||t==='N'||t==='K'||t==='Y'||t==='V'){
     if(MAP===WORLDS.shiowakare.map){
@@ -13599,27 +13962,72 @@ function drawMast(x,y,cam){ // みおくりのふねの ほばしら(ほは か�
   ctx.strokeStyle='rgba(90,70,45,0.6)';ctx.lineWidth=S*0.02;ctx.stroke();
   ctx.restore();
 }
+// ── いえも しまごと。ここに 足すまで、ゆきのまちも しずみのさとも すなの しまも おなじ 家だった ──
+// wallL/wallR=かべ・roofL/roofR=やね・door=とびら。after(S,TH,x,y)=その しま だけの ひとつ。
+// 表に 無い しまは これまでどおり＝1ドットも かわらない。
+const HOUSEART={
+  icetown:{ // ゆきのまち：やねに ゆきが つもり、のきから つららが さがる
+    // ★かべを ゆきと おなじ 明るさに すると、実画面で 家に 見えない（実測して 濃くした）
+    wallL:'#6d7c92',wallR:'#48556a',roofL:'#8ea4bc',roofR:'#67788f',door:'#242f3c',
+    after(S,TH){
+      ctx.fillStyle='rgba(255,255,255,.92)'; // つもった ゆきの ふくらみ
+      ctx.beginPath();ctx.moveTo(-S*0.62,-S*0.42);
+      ctx.quadraticCurveTo(-S*0.30,-S*0.72,0,-S*0.92);
+      ctx.quadraticCurveTo(S*0.30,-S*0.72,S*0.62,-S*0.42);
+      ctx.lineTo(S*0.62,-S*0.50);ctx.quadraticCurveTo(0,-S*1.00,-S*0.62,-S*0.50);ctx.closePath();ctx.fill();
+      ctx.fillStyle='rgba(214,238,252,.85)'; // つらら3本
+      for(let i=0;i<3;i++){const px=-S*0.42+i*S*0.40, ln=S*(0.10+((i*7)%3)*0.04);
+        ctx.beginPath();ctx.moveTo(px-S*0.035,-S*0.40);ctx.lineTo(px+S*0.035,-S*0.40);ctx.lineTo(px,-S*0.40+ln);ctx.closePath();ctx.fill();}
+    }},
+  sunken:{ // しずみのさと：かべの したが 水に つかり、やねに こけが のる
+    wallL:'#7f8a72','wallR':'#5d6754',roofL:'#6f7f6a','roofR':'#55634f',door:'#2c3428',
+    after(S,TH){
+      ctx.fillStyle='rgba(74,126,140,.42)'; // かべを のみこむ 水面
+      ctx.beginPath();ctx.moveTo(-S*0.52,S*0.06);ctx.lineTo(0,S*0.30);ctx.lineTo(S*0.52,S*0.06);
+      ctx.lineTo(S*0.52,-S*0.05);ctx.lineTo(0,S*0.19);ctx.lineTo(-S*0.52,-S*0.05);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(178,220,228,.46)';ctx.lineWidth=Math.max(1,S*0.022);
+      ctx.beginPath();ctx.moveTo(-S*0.52,-S*0.05);ctx.lineTo(0,S*0.19);ctx.lineTo(S*0.52,-S*0.05);ctx.stroke();
+      ctx.fillStyle='rgba(108,150,92,.50)'; // やねの こけ
+      for(let i=0;i<3;i++)
+        {ctx.beginPath();ctx.ellipse(-S*0.30+i*S*0.28,-S*0.52-i*S*0.06,S*0.10,S*0.045,0.4,0,Math.PI*2);ctx.fill();}
+    }},
+  hora:{ // ほらふきじま：しろい しっくいの かべに、ぬのの ひよけ やね
+    wallL:'#e2d8bf',wallR:'#bfb197',roofL:'#d8a86a',roofR:'#b0854c',door:'#5c4426',
+    after(S,TH){
+      ctx.fillStyle='rgba(250,240,214,.90)'; // ぬのの たるみ（3こ）
+      for(let i=0;i<3;i++){
+        const x0=-S*0.56+i*S*0.40;
+        ctx.beginPath();ctx.moveTo(x0,-S*0.44+i*S*0.10);
+        ctx.quadraticCurveTo(x0+S*0.20,-S*0.28+i*S*0.10,x0+S*0.40,-S*0.44+i*S*0.10+S*0.10);
+        ctx.lineTo(x0+S*0.40,-S*0.50+i*S*0.10+S*0.10);
+        ctx.quadraticCurveTo(x0+S*0.20,-S*0.36+i*S*0.10,x0,-S*0.50+i*S*0.10);
+        ctx.closePath();ctx.fill();
+      }
+    }}
+};
 function drawHouse(x,y,cam,palace){
   const{TW,TH}=cam;
   const c=isoCtr(x,y);
   const S=TW*(palace?0.78:0.62);
+  const HA=(!palace&&HOUSEART[Game.mapId])||null;
   ctx.save();
   ctx.translate(c.x,c.y);
   ctx.fillStyle='rgba(8,14,28,0.30)';
   ctx.beginPath();ctx.ellipse(S*0.08,TH*0.16,S*0.55,TH*0.36,0,0,Math.PI*2);ctx.fill();
   // かべ（ひだり=あかるい・みぎ=くらい）
-  ctx.fillStyle=palace?'#b8b2cf':'#8a7355';
+  ctx.fillStyle=palace?'#b8b2cf':(HA?HA.wallL:'#8a7355');
   ctx.beginPath();ctx.moveTo(-S*0.52,S*0.06);ctx.lineTo(0,S*0.30);ctx.lineTo(0,-S*0.26);ctx.lineTo(-S*0.52,-S*0.50);ctx.closePath();ctx.fill();
-  ctx.fillStyle=palace?'#8f88b0':'#6a563d';
+  ctx.fillStyle=palace?'#8f88b0':(HA?HA.wallR:'#6a563d');
   ctx.beginPath();ctx.moveTo(S*0.52,S*0.06);ctx.lineTo(0,S*0.30);ctx.lineTo(0,-S*0.26);ctx.lineTo(S*0.52,-S*0.50);ctx.closePath();ctx.fill();
   // とびら
-  ctx.fillStyle='#3a2c1d';
+  ctx.fillStyle=HA?HA.door:'#3a2c1d';
   ctx.beginPath();ctx.moveTo(-S*0.30,S*0.005);ctx.lineTo(-S*0.13,S*0.085);ctx.lineTo(-S*0.13,-S*0.16);ctx.lineTo(-S*0.30,-S*0.24);ctx.closePath();ctx.fill();
   // やね
-  ctx.fillStyle=palace?'#5560a8':'#a8503c';
+  ctx.fillStyle=palace?'#5560a8':(HA?HA.roofL:'#a8503c');
   ctx.beginPath();ctx.moveTo(-S*0.62,-S*0.42);ctx.lineTo(0,-S*(palace?1.0:0.86));ctx.lineTo(0,-S*0.18);ctx.closePath();ctx.fill();
-  ctx.fillStyle=palace?'#3f4884':'#8a3f30';
+  ctx.fillStyle=palace?'#3f4884':(HA?HA.roofR:'#8a3f30');
   ctx.beginPath();ctx.moveTo(S*0.62,-S*0.42);ctx.lineTo(0,-S*(palace?1.0:0.86));ctx.lineTo(0,-S*0.18);ctx.closePath();ctx.fill();
+  if(HA&&HA.after)HA.after(S,TH,x,y);
   if(!palace){
     // まど（よるは あかりが ともる）
     const dn=Game.dayNow,night=dn?Math.max(0,1-dn.sun*1.5):0;
