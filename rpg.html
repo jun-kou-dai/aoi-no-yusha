@@ -3523,6 +3523,7 @@ function loadMap(id){
   if(id==='umi'&&Game.hidden.ch11d)MAP=MAP.map(row=>row.replace(/X/g,'W')); // あらなみは ほどけたまま(みなと開通)
   Game.kodama=null; // やまびこ おいかけ(章14): マップを移ったら こだまは いない(保存しない一時状態)
   Game.horaFx=null; // 章15 ほらが ほんとうに なる も 島を出たら 消える(保存しない)
+  if(typeof horaFxRestore==='function')horaFxRestore(); // ★そろえた しまは 入りなおしても のこる(これが 無いと クリアずみでは 1つも 出ない)
   if(id!=='grass'){TAMESU_AT=null;TAMESU_GO=false;} // フクロが さした ばしょは むらの中だけ
   if(id!=='hoshiumi')CH21_REPLAY=false; // 再訪はほしのうみ滞在中だけ有効(2026-07-20)
   if(id!=='hoshiminamoto')URA_REPLAY=false; // 裏章の再戦はほしのみなもと滞在中だけ有効(2026-07-23)
@@ -11796,9 +11797,12 @@ const HORA_FX={
   ka1:{m:'kura',k:'tegami',s:['ka1','ka2','ka3']}, ka2:{m:'kura',k:'hana',  s:['ka1','ka2','ka3']}, ka3:{m:'kura',k:'warai', s:['ka1','ka2','ka3']},
   ut1:{m:'uta', k:'komori',s:['ut1','ut2','ut3']}, ut2:{m:'uta', k:'hokake',s:['ut1','ut2','ut3']}, ut3:{m:'uta', k:'ame',   s:['ut1','ut2','ut3']},
   // 章18 かぜまち: たてなおした ものが はたらきはじめる
-  ch18BuiltPier   :{m:'kazemachi',k:'fune',  s:['ch18BuiltPier','ch18BuiltShelter','ch18BuiltBeacon']},
-  ch18BuiltShelter:{m:'kazemachi',k:'akari', s:['ch18BuiltPier','ch18BuiltShelter','ch18BuiltBeacon']},
-  ch18BuiltBeacon :{m:'kazemachi',k:'hata',  s:['ch18BuiltPier','ch18BuiltShelter','ch18BuiltBeacon']},
+  // ★n:2＝けんちくけんは 2まいしか ない(ch18TicketLeft)。三つ全部は 構造上 建てられないので、
+  //   ここだけ「建てられるだけ 建てた＝2つ」で そろいとする(2026-08-01。それまでは そろいに 永久に
+  //   ならず、たてなおした ものが 9びょうで 消えて 二度と 出なかった)。
+  ch18BuiltPier   :{m:'kazemachi',k:'fune',  n:2,s:['ch18BuiltPier','ch18BuiltShelter','ch18BuiltBeacon']},
+  ch18BuiltShelter:{m:'kazemachi',k:'akari', n:2,s:['ch18BuiltPier','ch18BuiltShelter','ch18BuiltBeacon']},
+  ch18BuiltBeacon :{m:'kazemachi',k:'hata',  n:2,s:['ch18BuiltPier','ch18BuiltShelter','ch18BuiltBeacon']},
   // 章17 やかた: くさりが ほどけるたび、しまいこまれた ものが めざめる
   cn1:{m:'yakata1',k:'koe',   s:['cn1']}, cn2:{m:'yakata2',k:'page',  s:['cn2']},
   cn3:{m:'yakata3',k:'hikari',s:['cn3','cn4']}, cn4:{m:'yakata3',k:'genpon',s:['cn3','cn4']},
@@ -11812,14 +11816,38 @@ const HORA_FX={
   ch20Intro:{m:'shiowakare',k:'koeami',s:['ch20Intro']}
 };
 function smMapPtAbs(cam,u,v){return{x:cam.ox+(u-v)*cam.TW/2,y:cam.oy+(u+v)*cam.TH/2};}
+// そろったか。n が あれば その かず、なければ s ぜんぶ。key は「いま 達成した ぶん」(旗より さきに 呼ばれる)
+function horaFxAll(e,key){
+  const need=e.n||e.s.length;let n=0;
+  for(const h of e.s)if((Game.hidden&&Game.hidden[h])||h===key)n++;
+  return n>=need;
+}
 function horaFxStart(key){
   const e=HORA_FX[key];if(!e)return false;
   Game.horaFx=(Game.horaFx||[]).filter(f=>f.kind!==e.k);
   // みっつ そろったら 消えない＝「そろえた」ことが 画面に のこる
-  const all=e.s.every(h=>Game.hidden[h]||h===key);
+  const all=horaFxAll(e,key);
   Game.horaFx.push({kind:e.k,map:e.m,t:0,life:all?1e9:9.0});
   if(all)for(const f of Game.horaFx)if(f.map===e.m)f.life=1e9;
   return true;
+}
+// ★しまへ 入りなおしても「そろえた」ことが のこる(2026-08-01 追加)。
+//   horaFxStart は「達成した しゅんかん」にしか 呼ばれず、loadMap は 入るたび Game.horaFx を null にする。
+//   これが 無いと、**もう そろえた ぼうけんのしょでは 23の えんしゅつが 1つも 出ない**(実測)。
+//   そろっている ものだけ(life=1e9 の やつ)を つみ直す。達成の とちゅうの 9びょうの えんしゅつは
+//   つみ直さない＝入るたび 何度も 出るのを ふせぐ。
+function horaFxRestore(){
+  if(typeof HORA_FX==='undefined')return;
+  const done={};
+  for(const key in HORA_FX){
+    const e=HORA_FX[key];
+    if(e.m!==Game.mapId)continue;                        // その しまの ぶんだけ
+    if(done[e.k])continue;                               // 同じ えんしゅつは 1つ
+    if(!horaFxAll(e,null))continue;                      // そろっている ものだけ
+    if(!(Game.hidden&&Game.hidden[key]))continue;        // その えんしゅつ自体が 達成ずみの ものだけ
+    done[e.k]=true;
+    (Game.horaFx=Game.horaFx||[]).push({kind:e.k,map:e.m,t:0,life:1e9});
+  }
 }
 function horaFxKind(){const a=Game.horaFx;return (a&&a.length)?a[a.length-1].kind:null;}
 function horaFxDraw(cam){
