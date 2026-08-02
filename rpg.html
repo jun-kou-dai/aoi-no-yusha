@@ -6860,6 +6860,13 @@ async function talkNpc(n){
     toast('ちそこの みなみに たてあなが ひらいた——おおほりあとへ！');
     endTalk();saveGame();return;
   }
+  if(n.utKey&&Game.shimaPlay&&Game.shimaPlay.map===Game.mapId){ // うたのみ: のまれた いしぶみは 会話到達=うたいかえし成立(タップ半径では密閉できない=ほらと同じ裁定)
+    const spN=shimaPlaySpec();
+    if(spN&&spN.mode==='nomi'){
+      const ni=spN.anchors.findIndex(a2=>a2.x===n.x&&a2.y===n.y);
+      if(ni>=0&&Game.shimaPlay.boxed[ni]){shimaPlaySing(ni);endTalk();return;}
+    }
+  }
   if(n.utKey&&!Game.hidden[n.utKey]){ // 章16: うたのかけらを ひろう(3つで ぬしが めざめる)
     await say('ちいさな ひかりが、おんぷの かたちで ふるえている。そっと てのひらに のせた——');
     sfxHeal();flash('#d8e2ff',0.32,0.8);
@@ -11896,6 +11903,12 @@ const SHIMA_PLAY={
     anchors:[{x:4,y:3,kind:'niji'},{x:15,y:6,kind:'hoshi'},{x:7,y:9,kind:'kaze'}], // ほらがい3体の上=紙が 口を ふさぐ
     decoys:[[[5,2],[5,3]],[[14,5],[16,7]],[[8,8],[6,9]]], // かみきれ2枚の着地先(walkable・吸着から2マス以上を機械検算済み)
     steals:2 // しかけは 計2回で 打ち止め(くらと同じ裁定)
+  },
+  uta:{ // うたのしま「うたのみと うたいかえし」: わすれられしものが そろった三つの うたを のみこみにくる(SPEC_utanomi_20260802)
+    nushi:'wasurare', mode:'nomi',
+    anchors:[{x:3,y:4,kind:'komori'},{x:16,y:4,kind:'hokake'},{x:10,y:9,kind:'ame'}], // うたのかけらの いしぶみ3体の上=うたの 出どころ
+    steals:2, // しかけは 計2回で 打ち止め(くら・ほらと同じ裁定)
+    motifs:{komori:[64,67,64,72],hokake:[62,66,69,74],ame:[60,64,67,64]} // 石が うたう おと(こもりは 章17の うたひと同源)
   }
 };
 function shimaPlaySpec(){return SHIMA_PLAY[Game.mapId]||null;}
@@ -11919,6 +11932,51 @@ function shimaPlayTick(dt){
   if(st.map!==Game.mapId)return;
   st.blinkT+=dt;
   const nu=shimaPlayNushi();
+  if(sp.mode==='nomi'){ // うたのみ(うたのしま): おおくちが しまの うたを すいこむ(SPEC_utanomi_20260802)
+    nomiFxTick(st,dt); // おんぷ・メロディの前進は ぬしの生死に よらない(解放の絵と音を 殺さない)
+    if(!nu){ // ぬしが ほどけた: すいこみを 掃除し、のまれた うたは いっせいに とびだす(winMsgと画面一致)
+      st.arm=null;
+      for(const f of (Game.horaFx||[]))if(f.map===st.map)delete f.suck;
+      if(st.boxed.some(b=>b))nomiReleaseAll(st,sp);
+      return;
+    }
+    if(st.arm){
+      const a=st.arm;a.t+=dt;
+      if(a.phase==='suck'){
+        const mp=nomiMouthPt();
+        if(mp){const ee=Math.min(1,a.t/a.dur),e2=ee*ee*(3-2*ee);
+          for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===sp.anchors[a.i].kind)f.suck={x:mp.x,y:mp.y,k:e2};}
+        if(a.t>=a.dur){ // ごくん=のまれた(演出は 灰の余韻で のこる=因果)
+          a.phase='gulp';a.t=0;
+          st.boxed[a.i]=true;
+          for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===sp.anchors[a.i].kind){f.nomare=true;delete f.suck;}
+          if(mp)puff(mp.x,mp.y,'rgba(184,159,216,.9)',16,130,0.8,{s0:2,s1:5});
+          sfxRun();
+          if(!st.firstGrab){st.firstGrab=true;toast('うたが のみこまれた！');}
+        }
+      }else if(a.phase==='gulp'&&a.t>=0.4){st.arm=null;st.cool=5.0;}
+      else if(a.phase==='choked'&&a.t>=0.5){st.arm=null;st.cool=4.5;}
+      return;
+    }
+    if(st.stealsLeft<=0)return;
+    st.cool-=dt;
+    if(st.cool>0)return;
+    if(!Game.cam){st.cool=0.5;return;} // カメラが まだ 無い(マップ入り直後)=待ち直しは 無音無光
+    const mq=nomiMouthPt(),mg=Game.cam.TW*0.6;
+    if(!mq||mq.x<mg||mq.x>W-mg||mq.y<mg||mq.y>H-mg){st.cool=0.5;return;} // くちが 画面の そとの あいだは あけない(気づけない ごくんを 作らない)
+    let hb=-1,hd=1e9; // つぎの的: まだ のまれていない うたのうち 勇者に いちばん 近いもの
+    for(let i=0;i<sp.anchors.length;i++){
+      if(st.boxed[i])continue;
+      const d=Math.hypot(sp.anchors[i].x-Game.p.px,sp.anchors[i].y-Game.p.py);
+      if(d<hd){hd=d;hb=i;}
+    }
+    if(hb<0){st.stealsLeft=0;return;}
+    st.stealsLeft--;
+    st.arm={i:hb,t:0,dur:2.6,phase:'suck'};
+    flash('#b89fd8',0.3,0.6); // おおくちの むらさき=戦闘の まるのみと 同じ記号(kuseMouth)
+    sfxEnc();
+    return;
+  }
   if(st.arm&&!nu){st.arm=null;return;} // ぬしが たおれたら うでも きえる(箱は あけられる)
   if(sp.mode==='huda'){ // うそふだ(ほらふきじま): かかげ→ひらひら→ぺたり。くらの うでの機械には 入れない(SPEC_huda_hagashi_20260802)
     if(st.scraps){ // はがれた ふだの 紙ふぶき(回転する紙片)
@@ -12038,6 +12096,142 @@ function shimaPlayPeel(i){ // うそふだを はがす(タップ/会話到達�
   if(st.chips){st.chips=st.chips.filter(c=>c.i!==i);if(!st.chips.length)delete st.chips;}
   return true;
 }
+function nomiMouthPt(){ // うたのみ: おおくちの画面座標(ぬしが いなければ null)
+  const nu=shimaPlayNushi();
+  if(!nu||!Game.cam)return null;
+  const q=isoCtr(nu.px,nu.py);
+  return {x:q.x,y:q.y-Game.cam.TW*0.95};
+}
+function nomiFxTick(st,dt){ // おんぷと メロディの前進(ぬしの生死に よらず うごく=解放の絵と音を 殺さない)
+  if(st.notes){
+    for(const nt of st.notes){nt.t+=dt;if(nt.t<0)continue;nt.x+=nt.vx*dt;nt.y+=nt.vy*dt;nt.vy+=(nt.g||0)*dt;}
+    st.notes=st.notes.filter(nt=>nt.t<nt.life);
+    if(!st.notes.length)delete st.notes;
+  }
+  if(st.melody){
+    st.melody.t+=dt;
+    while(st.melody.i<st.melody.notes.length&&st.melody.t>=st.melody.i*0.14){sfxTone(st.melody.notes[st.melody.i],0.3);st.melody.i++;}
+    if(st.melody.i>=st.melody.notes.length)delete st.melody;
+  }
+}
+function nomiMotif(sp,i){return (sp.motifs&&sp.motifs[sp.anchors[i].kind])||[64,67,72];}
+function nomiRiseNotes(st,sp,i,cam){ // いしぶみから おんぷが 順に 立ちのぼる(大きさ=音程・ミュートでも 読める)
+  const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y),mo=nomiMotif(sp,i);
+  st.notes=(st.notes||[]);
+  for(let j=0;j<mo.length;j++)
+    st.notes.push({x:q.x+(j-(mo.length-1)/2)*7,y:q.y-cam.TW*0.15,vx:(Math.random()*2-1)*12,vy:-62,g:-8,t:-j*0.14,life:1.1,s:cam.TW*(0.08+(mo[j]-58)*0.008),c:'255,223,154'});
+}
+function nomiFlowNotes(st,sp,i,mp,cam){ // くちから いしぶみへ おんぷが もどる(むせの こたえ)
+  const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y),mo=nomiMotif(sp,i);
+  st.notes=(st.notes||[]);
+  for(let j=0;j<mo.length;j++){const fdur=0.55;
+    st.notes.push({x:mp.x,y:mp.y,vx:(q.x-mp.x)/fdur,vy:(q.y-cam.TW*0.3-mp.y)/fdur,g:0,t:-j*0.12,life:fdur,s:cam.TW*(0.08+(mo[j]-58)*0.008),c:'255,223,154'});}
+}
+function nomiReleaseAll(st,sp){ // ぬしが ほどけ、のまれた うたが いっせいに とびだす(flash1枚・メロディ1本・shakeなし=静かな余韻の掟)
+  const cam=Game.cam;let done=false;
+  for(let i=0;i<sp.anchors.length;i++){
+    if(!st.boxed[i])continue;
+    st.boxed[i]=false;
+    for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===sp.anchors[i].kind){delete f.nomare;delete f.suck;f.t=0;}
+    if(cam){const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+      puff(q.x,q.y-cam.TW*0.2,'rgba(255,223,154,.95)',20,150,1.0,{up:true,s0:2,s1:5});
+      nomiRiseNotes(st,sp,i,cam);
+      if(!done)popup(q.x,q.y-cam.TW*0.5,'うたが かえってきた！','sp');}
+    if(!done){done=true;st.melody={notes:nomiMotif(sp,i),i:0,t:0};}
+  }
+  if(done){sfxChest();flash('#ffeed0',0.3,0.8);}
+}
+function shimaPlaySing(i){ // のまれた うたを うたいかえす(タップ/会話到達の 両方から よぶ)。罰なし
+  const st=Game.shimaPlay,sp=shimaPlaySpec(),cam=Game.cam;
+  if(!st||!sp||!cam||!st.boxed[i])return false;
+  st.boxed[i]=false;
+  const k=sp.anchors[i].kind;
+  for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===k){delete f.nomare;delete f.suck;f.t=0;} // 灰が はれて 0.8秒で 咲きなおす
+  st.melody={notes:nomiMotif(sp,i),i:0,t:0}; // 石が うたいだしを うたう
+  nomiRiseNotes(st,sp,i,cam);
+  const mp=nomiMouthPt();
+  if(mp)puff(mp.x,mp.y,'rgba(240,238,230,.85)',14,120,0.8,{s0:2,s1:4}); // ぬしが むせて はきだす
+  const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+  puff(q.x,q.y-cam.TW*0.18,'rgba(255,238,180,.95)',16,140,0.9,{up:true,s0:2,s1:4});
+  popup(q.x,q.y-cam.TW*0.5,'うたが かえった！','sp');
+  sfxChest();flash('#ffeed0',0.25,0.6);
+  return true;
+}
+function shimaPlayNoteGone(n){ // うたのみ: この いしぶみの うたは いま のまれているか(NPCの金の音符を 消すための問い)
+  const st=Game.shimaPlay,sp=shimaPlaySpec();
+  if(!st||!sp||sp.mode!=='nomi'||st.map!==Game.mapId)return false;
+  const i=sp.anchors.findIndex(a=>a.x===n.x&&a.y===n.y);
+  return i>=0&&!!st.boxed[i];
+}
+function shimaPlayDrawNomi(cam,st,sp){ // うたのみ(うたのしま)。おんぷ=まると 線だけ(勾配なし=描画負荷の掟)
+  ctx.save();
+  const note=(x,y,s,col,al,outline)=>{
+    ctx.save();ctx.translate(x,y);
+    ctx.fillStyle='rgba('+col+','+al.toFixed(3)+')';
+    ctx.strokeStyle='rgba('+col+','+al.toFixed(3)+')';
+    ctx.lineWidth=Math.max(2,s*0.16);ctx.lineCap='round';
+    ctx.beginPath();ctx.ellipse(-s*0.18,s*0.3,s*0.3,s*0.22,-0.35,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.moveTo(s*0.08,s*0.22);ctx.lineTo(s*0.08,-s*0.5);ctx.quadraticCurveTo(s*0.42,-s*0.44,s*0.5,-s*0.14);ctx.stroke();
+    if(outline){ctx.strokeStyle='rgba(90,70,20,'+(al*0.9).toFixed(3)+')';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.ellipse(-s*0.18,s*0.3,s*0.3,s*0.22,-0.35,0,Math.PI*2);ctx.stroke();}
+    ctx.restore();
+  };
+  const mp=nomiMouthPt(); // ぬしが いなければ null=口・周回おんぷ・因果の流れは 描かない(解放おんぷ st.notes は 描く)
+  const bl=st.blinkT;
+  for(let i=0;i<sp.anchors.length;i++){ // のまれた いしぶみ: 灰おんぷ+脈動リング(押せるの合図・えがく中心=あたり判定の中心)
+    if(!st.boxed[i])continue;
+    const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+    note(q.x,q.y-cam.TW*0.05,cam.TW*0.16,'156,156,156',0.55+0.25*(0.5+0.5*Math.sin(bl*4.2+i)),false);
+    const rr=cam.TW*(0.30+0.09*Math.sin(bl*4.2+i));
+    ctx.strokeStyle='rgba(255,223,154,'+(0.35+0.3*(0.5+0.5*Math.sin(bl*4.2+i))).toFixed(3)+')';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.arc(q.x,q.y,rr,0,Math.PI*2);ctx.stroke();
+    if(mp)for(let j=0;j<2;j++){ // いしぶみ→口へ 灰おんぷの ながれ(どこから 取られたかの 因果線)
+      const ph=((bl*0.22)+j*0.5+i*0.33)%1;
+      const nx=q.x+(mp.x-q.x)*ph,ny=(q.y-cam.TW*0.2)+(mp.y-(q.y-cam.TW*0.2))*ph;
+      note(nx,ny,cam.TW*0.09,'176,170,182',0.5*(1-Math.abs(ph-0.5)*0.9),false);
+    }
+  }
+  if(mp){let oi=0; // のまれた うたの 金おんぷが 口を 周回(尾つき=ぬしの飾りと 見まちがえない)
+    for(let i=0;i<sp.anchors.length;i++){
+      if(!st.boxed[i])continue;
+      for(let j=0;j<3;j++){
+        const ang=bl*1.6+oi*2.1+j*2.09,rx=cam.TW*0.62,ry=cam.TW*0.30;
+        for(let tl=1;tl<=3;tl++){
+          const ta=ang-tl*0.22;
+          ctx.fillStyle='rgba(255,214,86,'+(0.28*(1-tl/3.5)).toFixed(3)+')';
+          ctx.beginPath();ctx.arc(mp.x+Math.cos(ta)*rx,mp.y+Math.sin(ta)*ry,Math.max(1.5,cam.TW*0.035),0,Math.PI*2);ctx.fill();
+        }
+        note(mp.x+Math.cos(ang)*rx,mp.y+Math.sin(ang)*ry,cam.TW*0.15,'255,214,86',0.9,true);
+      }
+      oi++;
+    }
+  }
+  if(mp&&st.arm&&(st.arm.phase==='suck'||st.arm.phase==='choked'||st.arm.phase==='gulp')){ // おおくち(phase中だけ=cool中の誤タップを 罰に 見せない)
+    const a2=st.arm;
+    let open=1;
+    if(a2.phase==='choked')open=Math.max(0.05,1-a2.t/0.18);
+    else if(a2.phase==='gulp')open=Math.max(0.05,1-a2.t/0.3);
+    else open=Math.min(1,a2.t/0.35)*(0.92+0.08*Math.sin(bl*7));
+    const mw=cam.TW*0.55,mh=Math.max(2,cam.TW*0.38*open);
+    ctx.fillStyle='rgba(26,16,34,0.92)';
+    ctx.beginPath();ctx.ellipse(mp.x,mp.y,mw,mh,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(120,80,150,0.5)'; // のどの おく
+    ctx.beginPath();ctx.ellipse(mp.x,mp.y+mh*0.15,mw*0.5,Math.max(1,mh*0.5),0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(184,159,216,0.9)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.ellipse(mp.x,mp.y,mw,mh,0,0,Math.PI*2);ctx.stroke();
+    if(a2.phase==='suck'){ // 「ここを おせ」の 脈動リング(strokeのみ)
+      const rr2=cam.TW*(0.62+0.14*Math.sin(bl*6.0));
+      ctx.strokeStyle='rgba(255,226,150,0.85)';ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(mp.x,mp.y,rr2,0,Math.PI*2);ctx.stroke();
+    }
+  }
+  for(const nt of (st.notes||[])){ // うたいかえし/むせ/解放の おんぷ(大きさ=音程)
+    if(nt.t<0)continue;
+    const al=Math.max(0,1-nt.t/nt.life);
+    note(nt.x,nt.y,nt.s,nt.c,0.95*al,true);
+  }
+  ctx.restore();
+}
 function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを ここで つかった(あるかない)
   const st=Game.shimaPlay,sp=shimaPlaySpec(),cam=Game.cam;
   if(!st||!sp||!cam||st.map!==Game.mapId)return false;
@@ -12060,6 +12254,28 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
         popup(q.x,q.y-cam.TW*0.4,'ただの かみきれ','sp');
         return true;
       }
+    }
+    return false;
+  }
+  if(sp.mode==='nomi'){ // うたのみ: あいた くちを むせさせる/のまれた いしぶみを うたいかえす(SPEC_utanomi_20260802)
+    if(st.arm&&st.arm.phase==='suck'){
+      const mp=nomiMouthPt();
+      if(mp&&Math.hypot(lx-mp.x,ly-mp.y)<cam.TW*0.55){ // 半径0.55TW上限=ぬしの体タップ(たたかいに行く)を 殺さない
+        st.arm.phase='choked';st.arm.t=0;
+        const ai=st.arm.i;
+        for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===sp.anchors[ai].kind)delete f.suck;
+        puff(mp.x,mp.y,'rgba(255,226,150,.95)',18,140,0.9,{up:true,s0:2,s1:4});
+        popup(mp.x,mp.y-cam.TW*0.3,'むせた！','sp');
+        sfxSlash();
+        st.melody={notes:nomiMotif(sp,ai),i:0,t:0}; // もどる うたの おと
+        nomiFlowNotes(st,sp,ai,mp,cam);
+        return true;
+      }
+    }
+    for(let i=0;i<sp.anchors.length;i++){ // のまれた いしぶみ=うたいかえし(えがく中心=あたり判定の中心・オフセット0)
+      if(!st.boxed[i])continue;
+      const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+      if(Math.hypot(lx-q.x,ly-q.y)<cam.TW*0.45){shimaPlaySing(i);return true;}
     }
     return false;
   }
@@ -12142,7 +12358,8 @@ function shimaPlayDrawHuda(cam,st,sp){ // うそふだ(ほらふきじま)。紙
 function shimaPlayDraw(cam){ // 闇の うえに えがく。うで=線と多角形のみ(勾配なし=描画負荷の掟)
   const st=Game.shimaPlay,sp=shimaPlaySpec();
   if(!st||!sp||st.map!==Game.mapId)return;
-  if(sp.mode==='huda'){shimaPlayDrawHuda(cam,st,sp);return;} // うそふだは 別の絵(phase'fly'を くらの うで描画に 落とさない)
+  if(sp.mode==='huda'){shimaPlayDrawHuda(cam,st,sp);return;}
+  if(sp.mode==='nomi'){shimaPlayDrawNomi(cam,st,sp);return;} // うたのみは 別の絵(suckを くらの うで描画に 落とさない) // うそふだは 別の絵(phase'fly'を くらの うで描画に 落とさない)
   ctx.save();
   for(let i=0;i<sp.anchors.length;i++){ // なわの箱(盗られた もの)。点滅=「押せる」の合図(文字は 出さない)
     if(!st.boxed[i])continue;
@@ -12186,7 +12403,8 @@ function horaFxOne(cam,f){
   const SOLID={ishibashi:1,iwabashi:1,hobashira:1}; // 橋は 建造物=常設でも うすくしない
   const quiet=(f.life>1e8&&!SOLID[f.kind])?0.35:1; // 常設は 余韻の こさまで 落とす(2026-08-02)
   const uso=f.uso?Math.max(0.4,1-((f.t-f.usoT)/0.5)*0.6):1; // うそふだに いろを すわれた 灰の残像(消さない=因果が 画面に のこる)
-  const a=k*fade*quiet*uso;if(a<=0.01)return;
+  const nom=f.nomare?0.4:1; // うたを のまれた 灰の余韻(消さない=因果。0.4×常設0.35=0.14=ほらの灰と同じ床・SPEC_utanomi_20260802)
+  const a=k*fade*quiet*uso*nom;if(a<=0.01)return;
   ctx.save();
   if(f.kind==='niji'){ // うみを またぐ にじ(しまを またぐ 弧)
     const isW=((MW+MH)/2)*cam.TW, isCY=cam.oy+(((MW+MH-2)/2+1)*cam.TH)/2;
@@ -12289,8 +12507,9 @@ function horaFxOne(cam,f){
     ctx.globalCompositeOperation='lighter';
     for(let i=0;i<(quiet<1?7:16);i++){
       const ph=(f.t*0.13+i*0.0625)%1;
-      const sx=W*0.14+((i*71)%100)/100*W*0.72+Math.sin(f.t*0.7+i)*W*0.03;
-      const sy=H*0.80-ph*H*0.52;
+      let sx=W*0.14+((i*71)%100)/100*W*0.72+Math.sin(f.t*0.7+i)*W*0.03;
+      let sy=H*0.80-ph*H*0.52;
+      if(f.suck){const kq=Math.max(0,Math.min(1,f.suck.k*1.15-(i%7)*0.02)),eq=kq*kq*(3-2*kq);sx+=(f.suck.x-sx)*eq;sy+=(f.suck.y-sy)*eq;} // うたのみ: くちへ すいこまれる(SPEC_utanomi_20260802)
       const sa=a*Math.sin(ph*Math.PI)*0.55;if(sa<=0.02)continue;
       const r=Math.max(3,W*0.016);
       const g2=ctx.createRadialGradient(sx,sy,0,sx,sy,r*2.6);
@@ -12301,7 +12520,8 @@ function horaFxOne(cam,f){
     ctx.globalCompositeOperation='lighter';
     for(let i=0;i<6;i++){
       const ph=(f.t*0.30+i*0.167)%1;
-      const sx=-W*0.14+ph*W*1.28, sy=H*0.22+((i*47)%100)/100*H*0.52;
+      let sx=-W*0.14+ph*W*1.28, sy=H*0.22+((i*47)%100)/100*H*0.52;
+      if(f.suck){const kq=Math.max(0,Math.min(1,f.suck.k*1.15-(i%7)*0.02)),eq=kq*kq*(3-2*kq);sx+=(f.suck.x-sx)*eq;sy+=(f.suck.y-sy)*eq;} // うたのみ: くちへ すいこまれる
       const sa=a*Math.sin(ph*Math.PI)*0.72;if(sa<=0.02)continue;
       const sw=W*0.055, sh=H*0.075;
       ctx.strokeStyle='rgba(232,244,255,'+sa.toFixed(3)+')';ctx.lineWidth=Math.max(1.5,W*0.0026);
@@ -12316,7 +12536,8 @@ function horaFxOne(cam,f){
     ctx.lineCap='round';
     for(let i=0;i<(quiet<1?49:110);i++){
       const ph=(f.t*1.15+i*0.0091)%1;
-      const sx=((i*89)%100)/100*W, sy=-H*0.05+ph*H*1.08;
+      let sx=((i*89)%100)/100*W, sy=-H*0.05+ph*H*1.08;
+      if(f.suck){const kq=Math.max(0,Math.min(1,f.suck.k*1.15-(i%7)*0.02)),eq=kq*kq*(3-2*kq);sx+=(f.suck.x-sx)*eq;sy+=(f.suck.y-sy)*eq;} // うたのみ: くちへ すいこまれる
       const sa=a*0.82;if(sa<=0.02)continue;
       ctx.strokeStyle='rgba(214,236,255,'+sa.toFixed(3)+')';
       ctx.lineWidth=Math.max(2,W*0.0038);
@@ -12325,7 +12546,7 @@ function horaFxOne(cam,f){
     for(let i=0;i<(quiet<1?7:16);i++){ // はたけに おちて ひろがる はもん
       const ph=(f.t*0.75+i*0.0625)%1;
       const q=smMapPtAbs(cam,2+((i*5)%16)+0.5,1+((i*7)%11)+0.5);
-      const sa=a*(1-ph)*0.85;if(sa<=0.02)continue;
+      const sa=a*(1-ph)*0.85*(f.suck?Math.max(0,1-f.suck.k):1);if(sa<=0.02)continue; // うたのみ: 雨が のまれる あいだ 波紋も しずまる
       ctx.strokeStyle='rgba(206,232,255,'+sa.toFixed(3)+')';
       ctx.lineWidth=Math.max(1.5,cam.TW*0.045*(1-ph));
       ctx.beginPath();ctx.ellipse(q.x,q.y,cam.TW*0.14+ph*cam.TW*0.52,(cam.TW*0.14+ph*cam.TW*0.52)*0.5,0,0,Math.PI*2);ctx.stroke();
@@ -14918,6 +15139,7 @@ function drawNpc(n){
     const fl=Math.sin(TM*2+n.x)*ts*0.05;
     ctx.fillStyle='rgba(90,100,90,0.6)';
     ctx.beginPath();ctx.ellipse(0,-ts*0.02,ts*0.15,ts*0.06,0,0,Math.PI*2);ctx.fill();
+    if(typeof shimaPlayNoteGone==='function'&&shimaPlayNoteGone(n)){ctx.restore();return;} // うたのみ: のまれた いしぶみは 音符も 光輪も ださない(灰おんぷは しかけ側が えがく)
     ctx.save();ctx.translate(0,-ts*0.44+fl);
     const ncol=sung?'#ffdf9a':'#a8bce0';
     ctx.strokeStyle=ncol;ctx.fillStyle=ncol;ctx.lineWidth=3;ctx.lineCap='round';
@@ -16675,6 +16897,9 @@ async function runBattle(ref){
   if(foe===FOES.makoto&&!Game.bt.shin){ // うそふだ 配信2: 見えている ものがたりの数だけ 開幕の芝居(SPEC_huda_hagashi_20260802)
     Game.bt.horaOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
   }
+  if(foe===FOES.wasurare&&!Game.bt.shin){ // うたのみ: のまれていない うたの数だけ 開幕の芝居(SPEC_utanomi_20260802)
+    Game.bt.utaOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
+  }
   if(foe===FOES.shioarashi){
     Game.bt.ch18Pier=!!Game.hidden.ch18BuiltPier;
     Game.bt.ch18Shelter=!!Game.hidden.ch18BuiltShelter;
@@ -16831,7 +17056,19 @@ async function runBattle(ref){
   else if(foe===FOES.wasurare){
     await say('うたごえの ぬけがらのような かげが、ゆらりと そびえたつ——');
     await say('『わたしの うたを うたいながら、わたしを わすれた——\nなら もう、だれにも うたわせない』');
-    await say('すいこまれた うたたちが、かげの なかで ひかりを さがしている…！');
+    if(Game.bt.utaOpen>=3){ // うたのみ: 盤で ひとつも のまれずに 挑んだ=開幕の芝居のみ(ため一撃の重さ・式は 不変)
+      await say('わすれられしものは おおくちを いっぱいに あけ、\nしまの うたを まるごと すいこもうとした——なにも はいってこない。');
+      const epu=enemyPos();sfxEnc();flash('#b89fd8',0.4,0.9);
+      Game.bt.recoil=2.2;Game.bt.hitStop=0.18;Game.bt.blink=1; // りょうてで くちを ふさぐ(見た目のみ=ダメージ0)
+      puff(epu.x,epu.y-epu.s*40,'rgba(255,223,154,.9)',20,140,1.0,{up:true,s0:2,s1:5});
+      popup(epu.x,epu.y-epu.s*70,'ぽろん♪','crit');
+      for(const mn of [64,67,64,72]){sfxTone(mn,0.45);await wait(0.2);} // のどが おぼえている うたいだし(章17の うたひと同源)
+      await say('のどの おくから、ぽろん、と まのぬけた うたごえが こぼれた——\n『ねんね ころり……』 あわてて りょうてで くちを ふさいでいる！');
+    }else{
+      await say('すいこまれた うたたちが、かげの なかで ひかりを さがしている…！');
+      if(Game.bt.utaOpen===2)await say('わすれられしものは のどを おさえ、\nけげんそうに ひくく うなった。');
+      else if(Game.bt.utaOpen===1)await say('わすれられしものは のどの おくで のんだ うたを ころがし、\nまんぞくそうに のどを ならした。');
+    }
   }
   else if(foe===FOES.hitorijime){
     await say('はこの やまの てっぺんに、ちいさな かげが すわって いた。\n——一座の ざちょうだ。');
