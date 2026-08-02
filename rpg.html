@@ -6951,6 +6951,13 @@ async function talkNpc(n){
     await say('うたひの まえで、こどもたちが こもりうたを うたっている。\nきんいろの なまえが、うたごえに あわせて またたいている。');
     endTalk();return;
   }
+  if(n.kind==='conch'&&Game.shimaPlay&&Game.shimaPlay.map===Game.mapId){ // うそふだ: ふさがれた ほらがいは 会話到達=はがし成立(タップ半径では密閉できない=SPEC_huda_hagashi_20260802)
+    const spH=shimaPlaySpec();
+    if(spH&&spH.mode==='huda'){
+      const hi=spH.anchors.findIndex(a2=>a2.x===n.x&&a2.y===n.y);
+      if(hi>=0&&Game.shimaPlay.boxed[hi]){shimaPlayPeel(hi);endTalk();return;}
+    }
+  }
   if(n.hrKey&&!Game.hidden[n.hrKey]){ // 章15: ほらがいを ふきならす(3つで ぬしが めざめる)
     await say('おおきな ほらがい。くちに あてて、そっと いきを ふきこんだ——');
     sfxEnc();flash('#ffe8c0',0.32,0.8);
@@ -11883,6 +11890,12 @@ const SHIMA_PLAY={
     nushi:'shimaikomu',
     anchors:[{x:7,y:4,kind:'tegami'},{x:13,y:4,kind:'hana'},{x:10,y:9,kind:'warai'}],
     steals:2 // 盗みは 計2回で 打ち止め(3回目は 間延び)
+  },
+  hora:{ // ほらふきじま「うそふだと はがし」: まことをせまるものが 三つの ものがたりに「うそつき」の ふだを はる(SPEC_huda_hagashi_20260802)
+    nushi:'makoto', mode:'huda',
+    anchors:[{x:4,y:3,kind:'niji'},{x:15,y:6,kind:'hoshi'},{x:7,y:9,kind:'kaze'}], // ほらがい3体の上=紙が 口を ふさぐ
+    decoys:[[[5,2],[5,3]],[[14,5],[16,7]],[[8,8],[6,9]]], // かみきれ2枚の着地先(walkable・吸着から2マス以上を機械検算済み)
+    steals:2 // しかけは 計2回で 打ち止め(くらと同じ裁定)
   }
 };
 function shimaPlaySpec(){return SHIMA_PLAY[Game.mapId]||null;}
@@ -11907,6 +11920,48 @@ function shimaPlayTick(dt){
   st.blinkT+=dt;
   const nu=shimaPlayNushi();
   if(st.arm&&!nu){st.arm=null;return;} // ぬしが たおれたら うでも きえる(箱は あけられる)
+  if(sp.mode==='huda'){ // うそふだ(ほらふきじま): かかげ→ひらひら→ぺたり。くらの うでの機械には 入れない(SPEC_huda_hagashi_20260802)
+    if(st.scraps){ // はがれた ふだの 紙ふぶき(回転する紙片)
+      for(const sc of st.scraps){sc.t+=dt;sc.x+=sc.vx*dt;sc.y+=sc.vy*dt;sc.vy+=sc.g*dt;sc.r+=sc.vr*dt;}
+      st.scraps=st.scraps.filter(sc=>sc.t<0.9);
+      if(!st.scraps.length)delete st.scraps;
+    }
+    if(st.arm){
+      const a=st.arm;a.t+=dt;
+      if(a.dodgeT>0)a.dodgeT-=dt;
+      if(!a.sealed&&a.t>=a.dur){ // 本物が ぺたり=ほらがいの こえが ふさがれ、ものがたりの いろが ふだへ すわれる
+        a.sealed=true;
+        st.boxed[a.i]=true;
+        const hk=sp.anchors[a.i].kind;
+        for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===hk){f.uso=true;f.usoT=f.t;}
+        if(Game.cam){const hq=isoCtr(sp.anchors[a.i].x,sp.anchors[a.i].y);
+          puff(hq.x,hq.y-Game.cam.TW*0.2,'rgba(255,255,255,.9)',14,120,0.8,{s0:2,s1:4});}
+        sfxEnc();
+        if(!st.firstGrab){st.firstGrab=true;toast('「うそつき」の ふだが ほらがいの こえを ふさいだ！');}
+      }
+      if(a.t>=a.dur+0.7){ // かみきれ2枚も おりて、この しかけが おわる
+        for(const d of (sp.decoys[a.i]||[]))st.chips=(st.chips||[]).concat([{x:d[0],y:d[1],i:a.i}]);
+        st.arm=null;st.cool=5.0;
+      }
+      return;
+    }
+    if(!nu||st.stealsLeft<=0)return;
+    st.cool-=dt;
+    if(st.cool>0)return;
+    let hb=-1,hd=1e9; // つぎの的: まだ ふさがれていない ほらがいの うち 勇者に いちばん 近いもの(=画面の中で 起きる)
+    for(let i=0;i<sp.anchors.length;i++){
+      if(st.boxed[i])continue;
+      const d=Math.hypot(sp.anchors[i].x-Game.p.px,sp.anchors[i].y-Game.p.py);
+      if(d<hd){hd=d;hb=i;}
+    }
+    if(hb<0){st.stealsLeft=0;return;}
+    st.stealsLeft--;
+    st.arm={i:hb,t:0,dur:1.4,phase:'fly',dodged:false,dodgeT:0,sealed:false};
+    flash('#ffffff',0.35,0.6); // かかげの 白=戦闘の うそのためと 同じ記号
+    if(Game.cam){const nq=isoCtr(nu.px,nu.py);puff(nq.x,nq.y-Game.cam.TW*1.1,'rgba(255,255,255,.9)',12,110,0.7,{up:true,s0:2,s1:4});}
+    sfxRun();
+    return;
+  }
   if(st.arm){
     const a=st.arm;a.t+=dt;
     if(a.phase==='reach'&&a.t>=a.dur){ // 間に合わなかった=しまいこまれた
@@ -11951,9 +12006,63 @@ function shimaPlayArmTip(cam){ // うでの先端の画面座標
   const ee=k*k*(3-2*k);
   return {x:s.x+(g.x-s.x)*ee,y:sy+(g.y-cam.TH*0.3-sy)*ee,sx:s.x,sy:sy,k:ee};
 }
+function shimaPlayHudaPos(cam,st,sp,j){ // 飛行中の ふだj(0=本物/1,2=かみきれ)の画面座標。ひらひら=よこゆれ(直線ミサイル禁止)
+  const a=st.arm;if(!a||a.phase!=='fly')return null;
+  const nu=shimaPlayNushi();if(!nu)return null;
+  const dst=j===0?sp.anchors[a.i]:{x:sp.decoys[a.i][j-1][0],y:sp.decoys[a.i][j-1][1]};
+  const s=isoCtr(nu.px,nu.py),g=isoCtr(dst.x,dst.y);
+  const sy=s.y-cam.TW*1.05;
+  const k=Math.max(0,Math.min(1,(a.t-j*0.35)/a.dur));
+  const ee=k*k*(3-2*k);
+  const sway=Math.sin((a.t*4.6)+j*2.1)*cam.TW*0.16*(1-ee);
+  const dodge=(a.dodgeT>0&&j===0)?Math.sin(a.dodgeT*16)*cam.TW*0.3:0; // ひらり(1回だけ・罰なし・文字なし)
+  return {x:s.x+(g.x-s.x)*ee+sway+dodge,y:sy+((g.y-cam.TW*0.18)-sy)*ee+Math.sin(a.t*7+j)*3*(1-ee),k:ee};
+}
+function shimaPlayPeel(i){ // うそふだを はがす(タップ/会話到達の 両方から よぶ)。罰なし
+  const st=Game.shimaPlay,sp=shimaPlaySpec(),cam=Game.cam;
+  if(!st||!sp||!cam||!st.boxed[i])return false;
+  st.boxed[i]=false;
+  const k=sp.anchors[i].kind;
+  for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===k){delete f.uso;delete f.usoT;f.t=0;} // いろが もどり 0.8秒で 咲きなおす
+  const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+  const nu=shimaPlayNushi();
+  st.scraps=(st.scraps||[]);
+  for(let s2=0;s2<8;s2++)st.scraps.push({x:q.x+(Math.random()*2-1)*8,y:q.y-cam.TW*0.2,vx:(Math.random()*2-1)*60,vy:-40-Math.random()*50,g:140,r:Math.random()*6.3,vr:(Math.random()*2-1)*9,t:0,c:'240,238,230'});
+  if(nu){const nq=isoCtr(nu.px,nu.py); // くしゃっと まるまった ふだが ぬしへ とび、たじろがせる
+    st.scraps.push({x:q.x,y:q.y-cam.TW*0.3,vx:(nq.x-q.x)/0.5,vy:(nq.y-cam.TW*0.8-q.y)/0.5,g:0,r:0,vr:14,t:0,c:'255,255,255',big:true});
+    puff(nq.x,nq.y-cam.TW*0.8,'rgba(240,238,230,.85)',12,110,0.7,{s0:2,s1:4});}
+  puff(q.x,q.y-cam.TW*0.18,'rgba(255,255,255,.95)',16,140,0.9,{up:true,s0:2,s1:4});
+  popup(q.x,q.y-cam.TW*0.5,'ふだを はがした！','sp');
+  sfxChest();flash('#e8f2ff',0.25,0.6);
+  for(const c of (st.chips||[]))if(c.i===i){const cq=isoCtr(c.x,c.y);puff(cq.x,cq.y-cam.TW*0.15,'rgba(232,226,210,.85)',8,100,0.6,{s0:2,s1:3});} // かみきれも いっしょに ちる
+  if(st.chips){st.chips=st.chips.filter(c=>c.i!==i);if(!st.chips.length)delete st.chips;}
+  return true;
+}
 function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを ここで つかった(あるかない)
   const st=Game.shimaPlay,sp=shimaPlaySpec(),cam=Game.cam;
   if(!st||!sp||!cam||st.map!==Game.mapId)return false;
+  if(sp.mode==='huda'){ // うそふだ: はがす/かみきれ/ひらり(SPEC_huda_hagashi_20260802)
+    const R=cam.TW*0.45; // 0.8だと となりの らくがき読みを 食う(直交隣は 画面で0.56TW)
+    if(st.arm&&st.arm.phase==='fly'&&!st.arm.dodged){ // 飛行中は 1回だけ ひらり(実命中のときだけ 消費。外れ・2回目は ただの歩き)
+      const tp=shimaPlayHudaPos(cam,st,sp,0);
+      if(tp&&Math.hypot(lx-tp.x,ly-tp.y)<R){st.arm.dodged=true;st.arm.dodgeT=0.4;return true;}
+    }
+    for(let i=0;i<sp.anchors.length;i++){ // 本物の ふだを はがす(えがく中心=あたり判定の中心)
+      if(!st.boxed[i])continue;
+      const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+      if(Math.hypot(lx-q.x,ly-(q.y-cam.TW*0.18))<R){shimaPlayPeel(i);return true;}
+    }
+    for(let ci=0;ci<(st.chips||[]).length;ci++){ // かみきれは ちるだけ(罰なし)
+      const c=st.chips[ci],q=isoCtr(c.x,c.y);
+      if(Math.hypot(lx-q.x,ly-(q.y-cam.TW*0.18))<R){
+        st.chips.splice(ci,1);
+        puff(q.x,q.y-cam.TW*0.18,'rgba(232,226,210,.9)',10,110,0.7,{s0:2,s1:4});
+        popup(q.x,q.y-cam.TW*0.4,'ただの かみきれ','sp');
+        return true;
+      }
+    }
+    return false;
+  }
   if(st.arm&&st.arm.phase==='reach'){ // うでを はたきおとす(外しても 罰なし=ただの 歩きになる)
     const tip=shimaPlayArmTip(cam);
     if(tip&&Math.hypot(lx-tip.x,ly-tip.y)<cam.TW*0.9){
@@ -11987,9 +12096,53 @@ function shimaPlayOpenCount(){ // 開幕の芝居むけ: あいている数(0〜
   let n=0;for(const b of st.boxed)if(!b)n++;
   return n;
 }
+function shimaPlayDrawHuda(cam,st,sp){ // うそふだ(ほらふきじま)。紙=多角形と線だけ(勾配なし=描画負荷の掟)
+  ctx.save();
+  const tagW=cam.TW*0.34,tagH=cam.TW*0.44;
+  const paper=(x,y,w,h,rot,alpha,white)=>{
+    ctx.save();ctx.translate(x,y);ctx.rotate(rot);
+    ctx.fillStyle=white?('rgba(248,248,244,'+alpha.toFixed(3)+')'):('rgba(226,220,204,'+alpha.toFixed(3)+')');
+    ctx.fillRect(-w/2,-h/2,w,h);
+    ctx.strokeStyle='rgba(90,84,70,'+(alpha*0.9).toFixed(3)+')';ctx.lineWidth=2;
+    ctx.strokeRect(-w/2,-h/2,w,h);
+    if(white){ctx.fillStyle='rgba(178,60,48,'+(alpha*0.9).toFixed(3)+')'; // 封の しるし(文字は 書かない)
+      ctx.beginPath();ctx.arc(0,-h*0.28,Math.max(2.5,w*0.13),0,Math.PI*2);ctx.fill();}
+    ctx.restore();
+  };
+  for(let i=0;i<sp.anchors.length;i++){ // はられた 本物(白く ゆれて 点滅=戦闘の うそのためと 同じ記号)
+    if(!st.boxed[i])continue;
+    const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+    const bl=0.6+0.4*Math.sin(st.blinkT*4.2+i);
+    paper(q.x,q.y-cam.TW*0.18,tagW,tagH,Math.sin(st.blinkT*2.1+i)*0.08,0.55+0.4*bl,true);
+    const rr=cam.TW*(0.34+0.10*Math.sin(st.blinkT*4.2+i)); // 「押せる」の合図(strokeのみ)
+    ctx.strokeStyle='rgba(255,255,255,'+(0.5*bl).toFixed(3)+')';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.arc(q.x,q.y-cam.TW*0.18,rr,0,Math.PI*2);ctx.stroke();
+  }
+  for(const c of (st.chips||[])){ // かみきれ(うごかない・くすんだ紙)
+    const q=isoCtr(c.x,c.y);
+    paper(q.x,q.y-cam.TW*0.10,tagW*0.8,tagH*0.7,((c.x*7+c.y*3)%10)*0.06-0.3,0.8,false);
+  }
+  if(st.arm&&st.arm.phase==='fly'){ // ひらひらと まいおりる 3まい(本物が さき)
+    for(let j=2;j>=0;j--){
+      const p=shimaPlayHudaPos(cam,st,sp,j);
+      if(!p||(j===0&&st.arm.sealed))continue;
+      paper(p.x,p.y,tagW*(j===0?1:0.8),tagH*(j===0?1:0.7),Math.sin((st.blinkT+j)*6)*0.5,0.9,j===0);
+    }
+  }
+  for(const sc of (st.scraps||[])){ // 紙ふぶき(回転する紙片)
+    const al=Math.max(0,1-sc.t/0.9);
+    ctx.save();ctx.translate(sc.x,sc.y);ctx.rotate(sc.r);
+    ctx.fillStyle='rgba('+sc.c+','+(0.9*al).toFixed(3)+')';
+    const s3=sc.big?cam.TW*0.16:cam.TW*0.07;
+    ctx.fillRect(-s3/2,-s3*0.35,s3,s3*0.7);
+    ctx.restore();
+  }
+  ctx.restore();
+}
 function shimaPlayDraw(cam){ // 闇の うえに えがく。うで=線と多角形のみ(勾配なし=描画負荷の掟)
   const st=Game.shimaPlay,sp=shimaPlaySpec();
   if(!st||!sp||st.map!==Game.mapId)return;
+  if(sp.mode==='huda'){shimaPlayDrawHuda(cam,st,sp);return;} // うそふだは 別の絵(phase'fly'を くらの うで描画に 落とさない)
   ctx.save();
   for(let i=0;i<sp.anchors.length;i++){ // なわの箱(盗られた もの)。点滅=「押せる」の合図(文字は 出さない)
     if(!st.boxed[i])continue;
@@ -12032,7 +12185,8 @@ function horaFxOne(cam,f){
   const k=Math.min(1,f.t/0.8), fade=Math.min(1,Math.max(0,(f.life-f.t)/2.2));
   const SOLID={ishibashi:1,iwabashi:1,hobashira:1}; // 橋は 建造物=常設でも うすくしない
   const quiet=(f.life>1e8&&!SOLID[f.kind])?0.35:1; // 常設は 余韻の こさまで 落とす(2026-08-02)
-  const a=k*fade*quiet;if(a<=0.01)return;
+  const uso=f.uso?Math.max(0.4,1-((f.t-f.usoT)/0.5)*0.6):1; // うそふだに いろを すわれた 灰の残像(消さない=因果が 画面に のこる)
+  const a=k*fade*quiet*uso;if(a<=0.01)return;
   ctx.save();
   if(f.kind==='niji'){ // うみを またぐ にじ(しまを またぐ 弧)
     const isW=((MW+MH)/2)*cam.TW, isCY=cam.oy+(((MW+MH-2)/2+1)*cam.TH)/2;
@@ -16518,6 +16672,9 @@ async function runBattle(ref){
   if(foe===FOES.shimaikomu&&!Game.bt.shin){ // ぬしの しかけ 配信2: 盤で あけた数だけ 開幕の芝居(SPEC_nushi_shikake_20260802)
     Game.bt.kuraOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
   }
+  if(foe===FOES.makoto&&!Game.bt.shin){ // うそふだ 配信2: 見えている ものがたりの数だけ 開幕の芝居(SPEC_huda_hagashi_20260802)
+    Game.bt.horaOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
+  }
   if(foe===FOES.shioarashi){
     Game.bt.ch18Pier=!!Game.hidden.ch18BuiltPier;
     Game.bt.ch18Shelter=!!Game.hidden.ch18BuiltShelter;
@@ -16658,7 +16815,18 @@ async function runBattle(ref){
   else if(foe===FOES.makoto){
     await say('しろい ふだが たつまきのように まいあがり、おおきな ひとみが ひらいた——');
     await say('『ほんとうで ない ものは、くちを とじよ。\nゆめも、ほらも、つくりばなしも——みな、うそだ』');
-    await say('ふだの すきまで、とりあげられた ほらばなしたちが もがいている…！');
+    if(Game.bt.horaOpen>=3){ // うそふだ: 盤で ぜんぶ はがして 挑んだ=開幕の芝居のみ(ため一撃の重さ・式は 不変)
+      await say('まことをせまるものは「うそつき」の ふだを ふりかぶり、\n勇者に たたきつけようとした——');
+      const eph=enemyPos();sfxSlash();shakeBattle(40,1.0);flash('#ffffff',0.5,1.0);
+      Game.bt.recoil=2.6;Game.bt.hitStop=0.22;Game.bt.blink=1; // おおきく のけぞる(見た目のみ=ダメージ0)
+      puff(eph.x,eph.y-eph.s*60,'rgba(255,255,255,.9)',22,150,1.0,{s0:2,s1:5});
+      popup(eph.x,eph.y-eph.s*70,'ぺたり！','crit');
+      await say('つるりと すべって、じぶんの おおきな ひとみに ぺたり！\nまえが みえず、すってんと ころんだ。');
+    }else{
+      await say('ふだの すきまで、とりあげられた ほらばなしたちが もがいている…！');
+      if(Game.bt.horaOpen===2)await say('まことをせまるものは ふだを かぞえなおし、\nけげんそうに ひとみを ほそめた。');
+      else if(Game.bt.horaOpen===1)await say('まことをせまるものは ふだの たばを ぎゅっと にぎりなおした。');
+    }
   }
   else if(foe===FOES.wasurare){
     await say('うたごえの ぬけがらのような かげが、ゆらりと そびえたつ——');
