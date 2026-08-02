@@ -18097,7 +18097,7 @@ async function enemyAction(){
     return 'enemyFled';
   }
   // スライム：たまに ぷるぷるして にげだす
-  if(foe===FOES.slime&&bt.hp<bt.mhp*0.4&&Math.random()<0.12){
+  if(foe===FOES.slime&&Game.p.lv>=4&&bt.hp<bt.mhp*0.4&&Math.random()<0.12){ // Lv4から(2026-08-02): Lv1-3の撃破速度では逃走が誤発火し報酬ゼロ戦が最大5割(SPEC_hajimari_10min_20260802)
     sfxRun();
     await say('スライムは ぷるぷるして にげだした！');
     return 'enemyFled';
@@ -18111,7 +18111,7 @@ async function enemyAction(){
     return;
   }
   // おびえ：よわった こわがりの ざこは にげだす（ほうびなし＝トドメの きんちょう）
-  if(foe.coward&&!bt.merged&&bt.hp<bt.mhp*0.3&&Math.random()<0.25){
+  if(foe.coward&&Game.p.lv>=4&&!bt.merged&&bt.hp<bt.mhp*0.3&&Math.random()<0.25){ // Lv4から(2026-08-02): 同上=そうげんの おおがらす戦が 実るように
     sfxRun();
     await say(foe.name+'は おびえて にげだした！');
     return 'enemyFled';
@@ -26683,6 +26683,11 @@ async function openingSequence(){
   await say('おうさま「やみのおう ヴォルガが ひかりのたまを うばい、\nせかいは ながい よるに のまれかけて おる。」');
   await say('おうさま「やつが なぜ たまを ねらったのか… それは まだ いえぬ。\nいつか そなたも しる ときが こよう。」');
   await say('おうさま「きたの はての しろから たまを とりもどせ！\nむらの みなも ちからに なって くれよう。」');
+  if(!Game.ng){ // はじまりの おくりもの(2026-08-02): Lv1は回復手段ゼロで連戦の2戦目が敗率9割(SPEC_hajimari_10min_20260802)
+    Game.items.yakuso=(Game.items.yakuso||0)+2;
+    sfxChest();
+    await say('おうさま「これを もっていけ。やくそうが ふたつ ある。\nいのちを だいじに な。」');
+  }
   endTalk();
   toast('ひかりのたまを とりもどせ！ むらの ひとに はなしを きいてみよう。');
   showChapter('だい 1 しょう','ひかりなき よあけ');
