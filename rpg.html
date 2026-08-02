@@ -16616,9 +16616,11 @@ async function runBattle(ref){
     await say('『……さわるな。ぜんぶ、わたしの たからだ。\nうしなうくらいなら、だれにも きかせない』');
     if(Game.bt.kuraOpen>=3){ // ぬしの しかけ: 盤で ぜんぶ あけて 挑んだ=開幕の芝居のみ(ため一撃の重さ・式は 不変)
       await say('しまいこむものは おおきな ふくろを さかさに ふった——\nなにも おちてこない。ぜんぶ あけられている！');
-      const epk=enemyPos();sfxSlash();shakeBattle(26,0.8);flash('#f6e8c0',0.5,0.9);
+      const epk=enemyPos();sfxSlash();shakeBattle(40,1.0);flash('#f6e8c0',0.65,1.2);
+      Game.bt.recoil=2.6;Game.bt.hitStop=0.22;Game.bt.blink=1; // おおきく のけぞる(見た目のみ=ダメージ0)
       puff(epk.x,epk.y-epk.s*30,'rgba(214,178,120,.9)',24,150,1.0,{s0:2,s1:5});
-      popup(epk.x,epk.y-epk.s*70,'すってん！','sp');
+      puff(epk.x,epk.y,'rgba(180,150,100,.85)',20,180,1.1,{s0:3,s1:7}); // あしもとの すなぼこり
+      popup(epk.x,epk.y-epk.s*70,'すってん！','crit');
       await say('あわてて あしを すべらせ、すってんと ころんだ！\nものすごく くやしそうだ。');
     }else{
       await say('しまいこまれた こえたちが、はこの すきまから ひかりを もらしている…！');
