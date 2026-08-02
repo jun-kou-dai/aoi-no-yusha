@@ -8721,6 +8721,10 @@ function tamesuList(){
   // ふねの行に ひとまとめで 書いてあるだけで、どの島に なにが あるかは どこにも 出ていなかった
   if(h.ch13a)out.push({id:'shimameguri',label:'🏝 みせ・やど・いずみが どこに あるか みる',
     line:'いままでに わたった ところで、たびに つかえる ものを かぞえて みよう。\nふねの ゆきさきを えらぶ まえに、ここで たしかめると よい。',islands:true});
+  // 島の秘密(2026-08-02): 道しるべの掟=足したものは 台帳へ1行。場所は明かさない(秘密の楽しみを守る)
+  if(h.ch13a){const _ht=HIDDENS.length,_hg=HIDDENS.filter(hd=>h[hd.key]).length;
+   out.push({id:'takara',label:'🪙 しまの ほりだしもの（いま '+_hg+'/'+_ht+'）',
+    line:'じめんが キラリと ひかる ところに、ほりだしものが ねむっておる。ふめば ひろえる。\nどの しまに のこって おるかは、☰メニューの「たびのメモ」にも でておる。',takara:true});}
   if(h.ch12c)out.push({id:'butai',label:'🎭 いちざの ぶたい ─ こだまと けいこする',
     line:'みなみひがしの あかい テントから ぶたいへ。だんちょうに たのめば、\n「ものがたりの こだま」と なんども けいこできる——きずも ついえも のこらぬ 手あわせじゃ。',at:{x:17,y:12}});
   if(h.ch14c)out.push({id:'tani',label:'🌿 やまびこのたに ─ にげる こだまを おいかける',
@@ -9230,6 +9234,13 @@ async function gunshiTamesu(){
     if(!rows.length)await say('フクロ「まだ どの しまにも わたって おらぬ。\nにしの きしの ふねが、さいしょの ゆきさきを もっておる。」');
     for(let i=0;i<rows.length;i+=3)await say(rows.slice(i,i+3).join('\n'));
     await say('フクロ「ゆきさきは ふねが きめる。したの もくてきに したがって わたるが よい。\nよみものの のこりは、☰メニューの「たびのメモ」の やりのこしに ぜんぶ でておる。」');
+    return;
+  }
+  if(e.takara){ // 島の秘密(2026-08-02): のこる島の名だけ ささやく(ほりびとと同じ物差し・場所は明かさない)
+    const rem=[...new Set(HIDDENS.filter(hd=>!Game.hidden[hd.key]&&Game.visited[hd.map]).map(hd=>MAPNAME[hd.map]||hd.map))];
+    if(HIDDENS.every(hd=>Game.hidden[hd.key]))await say('フクロ「ぜんぶ ほりあてたか！ たいした たからさがしの めきき じゃ。」');
+    else if(rem.length)await say('フクロ「わたった ことの ある なかでは——\n「'+rem.slice(0,4).join('」「')+'」に、まだ ねむって おるようじゃ。」');
+    else await say('フクロ「まだ みぬ しまにも ねむって おる。\nたびが すすんだら、また きくが よい。」');
     return;
   }
   if(e.kitaeru){ // つよくなる みち: そうび/たね/かせぎの3窓(各2行・2026-07-29)
@@ -10031,7 +10042,16 @@ const HIDDENS=[
  {map:'sunken',x:2,y:10,key:'h11',gold:250,msg:'しずんだ いえの かげに ぬれた かわぶくろ…\n250ゴールドも はいっていた！'},
  {map:'mistsea',x:2,y:2,key:'h12',gold:300,msg:'きりの おくの いわだなに ふるい はこ…\n300ゴールドを てにいれた！'},
  {map:'minamoto',x:1,y:11,key:'h13',gold:400,msg:'おおきの うろに きんかが かくされていた…！\n400ゴールドを てにいれた！'},
- {map:'towa',x:17,y:6,key:'h14',gold:500,msg:'とわの ほとりに、いにしえの たびびとの ざいふ…\n500ゴールドも はいっていた！'}];
+ {map:'towa',x:17,y:6,key:'h14',gold:500,msg:'とわの ほとりに、いにしえの たびびとの ざいふ…\n500ゴールドも はいっていた！'},
+ // 島の秘密(2026-08-02 SPEC_shima_himitsu): 第3部の8島に 0個だった かくしざいほうを 島の物語の場所へ。しおわかれは SPEC_ch20 の裁定(あつめるものを置かない)で置かない
+ {map:'kura',x:2,y:2,key:'h15',gold:600,msg:'はこの やまの おくに、うけとられなかった あずかりもの…\nふくろに 600ゴールドも はいっていた！'},
+ {map:'tani',x:7,y:7,key:'h16',gold:700,msg:'かわらの いしの したに、ふるい ぬのづつみ…\nはしを かけた いしくの たくわえ、700ゴールドだ！'},
+ {map:'hora',x:3,y:10,key:'h17',gold:800,msg:'らくがきの とおりだ…！ みなみへ ななつめの すなの したに\nほらふきの たからばこ！ 800ゴールドを てにいれた！'},
+ {map:'uta',x:2,y:5,key:'h18',taneM:true,msg:'いしぶみの ねもとに、ちいさな つぼが うまっていた…\nサヨの うたが しみこんでいる。さいだいMPが 6 あがった！'},
+ {map:'yakata2',x:16,y:10,key:'h19',gold:500,msg:'くさりの かげに ちいさな ふくろ。ふだに「かえす ひの ために」…\n500ゴールドを てにいれた！'},
+ {map:'kazemachi',x:17,y:9,key:'h20',item:'hoshitetsu',msg:'なみうちぎわに、あらしの はこんだ ながれもの…\nほしのてつを てにいれた！'},
+ {map:'tokikasanebell',x:12,y:10,key:'h21',item:'hoshikake',msg:'とまった かねの よる、ほしあかりの さす つちの したから…\nほしのかけらを てにいれた！'},
+ {map:'tokikasanerain',x:12,y:9,key:'h22',gold:900,msg:'あめあがりの つちが キラリ… うもれていた こばこに\n900ゴールドも はいっていた！'}];
 function openChest(c){
   const p=Game.p;
   if(Game.chestsOpen.includes(c))return;
