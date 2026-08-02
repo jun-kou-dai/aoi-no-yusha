@@ -12040,7 +12040,7 @@ function horaFxOne(cam,f){
     ctx.restore();
   }else if(f.kind==='hoshi'){ // つりざおに かかった ほしが ふってくる
     ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
-    for(let i=0;i<12;i++){
+    for(let i=0;i<(quiet<1?5:12);i++){
       const ph=(f.t*0.30+i*0.0833)%1;
       const sx=W*0.06+((i*97)%100)/100*W*0.88, sy=-H*0.06+ph*H*1.10;
       const sa=a*(1-ph*0.65)*0.95;if(sa<=0.02)continue;
@@ -12113,7 +12113,7 @@ function horaFxOne(cam,f){
     }
   }else if(f.kind==='komori'){ // うた: こもりうた=しずかな ひかりが ただよう
     ctx.globalCompositeOperation='lighter';
-    for(let i=0;i<16;i++){
+    for(let i=0;i<(quiet<1?7:16);i++){
       const ph=(f.t*0.13+i*0.0625)%1;
       const sx=W*0.14+((i*71)%100)/100*W*0.72+Math.sin(f.t*0.7+i)*W*0.03;
       const sy=H*0.80-ph*H*0.52;
@@ -12140,7 +12140,7 @@ function horaFxOne(cam,f){
   }else if(f.kind==='ame'){ // うた: あまごいうた=あめが はたけに おちる
     ctx.globalCompositeOperation='source-over';
     ctx.lineCap='round';
-    for(let i=0;i<110;i++){
+    for(let i=0;i<(quiet<1?49:110);i++){
       const ph=(f.t*1.15+i*0.0091)%1;
       const sx=((i*89)%100)/100*W, sy=-H*0.05+ph*H*1.08;
       const sa=a*0.82;if(sa<=0.02)continue;
@@ -12148,7 +12148,7 @@ function horaFxOne(cam,f){
       ctx.lineWidth=Math.max(2,W*0.0038);
       ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx-W*0.008,sy+H*0.042);ctx.stroke();
     }
-    for(let i=0;i<16;i++){ // はたけに おちて ひろがる はもん
+    for(let i=0;i<(quiet<1?7:16);i++){ // はたけに おちて ひろがる はもん
       const ph=(f.t*0.75+i*0.0625)%1;
       const q=smMapPtAbs(cam,2+((i*5)%16)+0.5,1+((i*7)%11)+0.5);
       const sa=a*(1-ph)*0.85;if(sa<=0.02)continue;
@@ -12258,7 +12258,7 @@ function horaFxOne(cam,f){
     }
   }else if(f.kind==='page'){ // やかた2: ページが とびだす
     ctx.globalCompositeOperation='source-over';
-    for(let i=0;i<13;i++){
+    for(let i=0;i<(quiet<1?5:13);i++){
       const ph=(f.t*0.26+i*0.077)%1;
       const q=smMapPtAbs(cam,2+((i*7)%16)+0.5,1+((i*5)%11)+0.5);
       const sa=a*Math.sin(ph*Math.PI)*0.95;if(sa<=0.02)continue;
@@ -12328,7 +12328,7 @@ function horaFxOne(cam,f){
   }else if(f.kind==='yodori'){ // ゆうぐれ: よどりが とうへ／だれも のらない ふねが うみへ
     ctx.globalCompositeOperation='source-over';
     ctx.lineCap='round';
-    for(let i=0;i<12;i++){ // よどりの むれ
+    for(let i=0;i<(quiet<1?5:12);i++){ // よどりの むれ
       const ph=(f.t*0.20+i*0.083)%1;
       const q=smMapPtAbs(cam,2+ph*15,2.6+((i*3)%5)*0.9-ph*2.6);
       const sa=a*Math.sin(ph*Math.PI)*1.0;if(sa<=0.02)continue;
@@ -12397,7 +12397,7 @@ function horaFxOne(cam,f){
       ctx.beginPath();ctx.ellipse(q.x-sc*0.22,by-sc*0.10,sc*0.13,sc*0.15,0,Math.PI,Math.PI*2);ctx.fill();
       ctx.beginPath();ctx.ellipse(q.x+sc*0.20,by-sc*0.08,sc*0.11,sc*0.13,0,Math.PI,Math.PI*2);ctx.fill();
     }
-    for(let i=0;i<12;i++){ // よどりは とうを こえていく
+    for(let i=0;i<(quiet<1?5:12);i++){ // よどりは とうを こえていく
       const ph=(f.t*0.17+i*0.083)%1;
       const q=smMapPtAbs(cam,3+ph*14,7.5-ph*7.2+((i*3)%4)*0.6);
       const sa=a*Math.sin(ph*Math.PI)*0.95;if(sa<=0.02)continue;
@@ -12514,7 +12514,7 @@ function horaFxOne(cam,f){
     }
   }else{ // kaze: すなの しまを よこに ふきぬける かぜ＝すなが まいあがって ながれる
     ctx.globalCompositeOperation='source-over';ctx.lineCap='round';
-    for(let i=0;i<11;i++){ // しまの うえを わたる すなの すじ(タイルを またいで つながる)
+    for(let i=0;i<(quiet<1?4:11);i++){ // しまの うえを わたる すなの すじ(タイルを またいで つながる)
       const ph=(f.t*0.42+i*0.091)%1;
       const my=1.2+((i*7)%11)*1.05;
       const sa=a*Math.sin(ph*Math.PI)*0.92;if(sa<=0.02)continue;
@@ -12532,7 +12532,7 @@ function horaFxOne(cam,f){
         if(s===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);}
       ctx.stroke();
     }
-    for(let i=0;i<22;i++){ // まいあがる すなつぶ
+    for(let i=0;i<(quiet<1?9:22);i++){ // まいあがる すなつぶ
       const ph=(f.t*0.7+i*0.045)%1;
       const q=smMapPtAbs(cam,-1+ph*21,1+((i*13)%12)*1.0);
       const sa=a*Math.sin(ph*Math.PI)*0.85;if(sa<=0.02)continue;
