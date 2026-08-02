@@ -10239,7 +10239,7 @@ function autoStep(){
 }
 function updateField(dt){
   const p=Game.p;
-  if(Game.horaFx){for(const f of Game.horaFx)f.t+=dt;Game.horaFx=Game.horaFx.filter(f=>f.t<f.life);if(!Game.horaFx.length)Game.horaFx=null;} // 章15 ほらが ほんとうに なる
+  if(Game.horaFx){for(const f of Game.horaFx)f.t+=(f.life>1e8?dt*0.35:dt);Game.horaFx=Game.horaFx.filter(f=>f.t<f.life);if(!Game.horaFx.length)Game.horaFx=null;} // 章15 ほらが ほんとうに なる。常設は0.35倍速=しずかな余韻(発注者はうるささを許可していない 2026-08-02)
   if(Game.inventoryOpen||Game.proofOpen||Game.menuOpen){held.length=0;Game.autoPath=null;return;}
   if(!Game.talking&&!Game.battling&&!Game.transiting)checkChapterProof();
   if(!Game.talking)Game.dayT+=dt; // かいわちゅうは ときが とまる
@@ -12010,7 +12010,9 @@ function horaFxDraw(cam){
 }
 function horaFxOne(cam,f){
   const k=Math.min(1,f.t/0.8), fade=Math.min(1,Math.max(0,(f.life-f.t)/2.2));
-  const a=k*fade;if(a<=0.01)return;
+  const SOLID={ishibashi:1,iwabashi:1,hobashira:1}; // 橋は 建造物=常設でも うすくしない
+  const quiet=(f.life>1e8&&!SOLID[f.kind])?0.35:1; // 常設は 余韻の こさまで 落とす(2026-08-02)
+  const a=k*fade*quiet;if(a<=0.01)return;
   ctx.save();
   if(f.kind==='niji'){ // うみを またぐ にじ(しまを またぐ 弧)
     const isW=((MW+MH)/2)*cam.TW, isCY=cam.oy+(((MW+MH-2)/2+1)*cam.TH)/2;
@@ -12064,7 +12066,7 @@ function horaFxOne(cam,f){
     }
   }else if(f.kind==='tegami'){ // くら: しまわれた てがみが まいあがる
     ctx.globalCompositeOperation='source-over';
-    for(let i=0;i<18;i++){
+    for(let i=0;i<(quiet<1?7:18);i++){
       const ph=(f.t*0.30+i*0.0555)%1, sx=W*0.10+((i*67)%100)/100*W*0.80, sy=H*0.92-ph*H*0.92;
       const sa=a*Math.sin(ph*Math.PI)*0.85;if(sa<=0.02)continue;
       const rot=Math.sin(f.t*1.6+i)*0.7, sw=W*0.026, sh=sw*0.72;
@@ -12076,7 +12078,7 @@ function horaFxOne(cam,f){
     }
   }else if(f.kind==='hana'){ // くら: なまえの しらない はなが 咲く
     ctx.globalCompositeOperation='source-over';
-    for(let i=0;i<22;i++){
+    for(let i=0;i<(quiet<1?10:22);i++){
       const gx=2+((i*5)%16), gy=1+((i*7)%11);
       const q=smMapPtAbs(cam,gx+0.5,gy+0.5);if(!q)continue;
       const gr=Math.min(1,Math.max(0,f.t*0.55-i*0.04));if(gr<=0)continue;
@@ -12100,7 +12102,7 @@ function horaFxOne(cam,f){
     }
   }else if(f.kind==='warai'){ // くら: よるの わらいごえが ともしびに なる
     ctx.globalCompositeOperation='lighter';
-    for(let i=0;i<20;i++){
+    for(let i=0;i<(quiet<1?8:20);i++){
       const ph=(f.t*0.24+i*0.05)%1;
       const sx=W*0.12+((i*53)%100)/100*W*0.76, sy=H*0.86-ph*H*0.62+Math.sin(f.t*1.4+i)*H*0.012;
       const sa=a*Math.sin(ph*Math.PI)*0.8;if(sa<=0.02)continue;
