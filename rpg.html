@@ -6407,6 +6407,13 @@ async function talkNpc(n){
   if(n.ch19Person){await ch19TalkPerson(n.ch19Person);endTalk();saveGame();return;}
   if(n.ch19Scene){await ch19TalkScene(n.ch19Scene);endTalk();saveGame();return;}
   if(n.ch18Chief){await ch18TalkChief();if(Game.talking)endTalk();saveGame();return;}
+  if(n.ch18Site&&Game.shimaPlay&&Game.shimaPlay.map===Game.mapId){ // まもり: しぶきに つつまれた 施設は 会話到達=はらい成立
+    const spM=shimaPlaySpec();
+    if(spM&&spM.mode==='mamori'){
+      const mi=spM.anchors.findIndex(a2=>a2.x===n.x&&a2.y===n.y);
+      if(mi>=0&&Game.shimaPlay.boxed[mi]){mamoriHarai(mi);endTalk();return;}
+    }
+  }
   if(n.ch18Site){await ch18BuildSite(n.ch18Site);endTalk();saveGame();return;}
   if(n.hoshibashi){await hoshibashiTalk();if(Game.talking)endTalk();saveGame();return;}
   if(n.uraLight){await uraLightTalk();if(Game.talking)endTalk();saveGame();return;}
@@ -11921,6 +11928,11 @@ const SHIMA_PLAY={
     nushi:'hitorijime', mode:'tsumi',
     anchors:[{x:17,y:2,kind:'hikari'},{x:3,y:2,kind:'genpon'}], // はこNPC2体の上=会話到達の実体・(17,2)は立て札「まだ、いきている」の箱
     steals:2 // しかけは 計2回で 打ち止め
+  },
+  kazemachiNight:{ // かぜまち・あらしのよる「たてたものの まもり」: むれが しぶきの つばさで たてた施設を つつみにくる(SPEC_mamori_20260803・再戦専用=初回は強制戦闘で窓ゼロ)
+    nushi:'shioarashi', mode:'mamori',
+    anchors:[{x:4,y:3,kind:'Pier',need:'ch18BuiltPier',ry:0.5,cy:0.30},{x:15,y:6,kind:'Shelter',need:'ch18BuiltShelter',ry:0.5,cy:0.30},{x:8,y:9,kind:'Beacon',need:'ch18BuiltBeacon',ry:0.6,cy:0.35}], // 建てた施設だけが 的(needを 毎回 生で見る)
+    steals:2 // 計2投で 打ち止め
   }
 };
 function shimaPlaySpec(){return SHIMA_PLAY[Game.mapId]||null;}
@@ -11929,6 +11941,7 @@ function shimaPlayReady(){ // 発火条件: そろい済み+ぬしが盤上+か�
   const sp=shimaPlaySpec();if(!sp)return false;
   if(NUSHI_REPLAY&&NUSHI_REPLAY.shin)return false;
   if(!shimaPlayNushi())return false;
+  if(sp.mode==='mamori'){const h=(Game&&Game.hidden)||{};return sp.anchors.some(a=>!!h[a.need]);} // かぜまち: fxでなく 建てた旗で そろい(SPEC_mamori_20260803)
   const kinds={};
   for(const f of (Game.horaFx||[]))if(f.map===Game.mapId&&f.life>1e8)kinds[f.kind]=1;
   return sp.anchors.every(a=>kinds[a.kind]); // 2/3までは 起きない(v2038の境界)
@@ -12031,6 +12044,46 @@ function shimaPlayTick(dt){
     st.arm={i:hb,t:0,dur:1.8,phase:'fly',n:3,slapped:false};
     flash('#c8a040',0.3,0.6); // とじるの 金=JIMEの変身と 同じ記号
     sfxEnc();
+    return;
+  }
+  if(sp.mode==='mamori'){ // かぜまち「たてたものの まもり」(SPEC_mamori_20260803)
+    if(!st.drops)st.drops=sp.anchors.map(()=>0);
+    mamoriFxTick(st,dt); // 撃退の絵の前進
+    if(!nu){st.arm=null;return;} // 勝利後〜送還の数フレーム(夜の盤の締めは 作らない=leaveBattleが 必ず 昼へ)
+    if(st.arm){
+      const a=st.arm;a.t+=dt;
+      if(a.phase==='wind'){ // 予備動作: むれが ふくらみ、ねらわれた施設が こわがる(発射前の読み)
+        if(a.t>=0.6){a.phase='fly';a.t=0;}
+      }else if(a.phase==='fly'){
+        if(a.t>=a.dur){ // つつまれた(施設は 消えない・戦闘の効果も 不変=罰なし)
+          st.boxed[a.i]=true;
+          if(Game.cam){const q=isoCtr(sp.anchors[a.i].x,sp.anchors[a.i].y);
+            puff(q.x,q.y-Game.cam.TW*0.3,'rgba(140,190,220,.85)',16,130,0.8,{s0:2,s1:5});}
+          sfxRun();
+          if(!st.firstGrab){st.firstGrab=true;toast('たてた ものが しぶきに つつまれた！');}
+          st.arm=null;st.cool=5.0;
+        }
+      }else if(a.phase==='shot'&&a.t>=0.4){st.arm=null;st.cool=4.5;}
+      return;
+    }
+    if(st.stealsLeft<=0)return;
+    st.cool-=dt;
+    if(st.cool>0)return;
+    if(!Game.cam){st.cool=0.5;return;} // 待ち直しは 無音無光
+    const hM=(Game&&Game.hidden)||{};
+    let hb=-1,hd=1e9; // 的: たっていて まだ つつまれていない 施設のうち 勇者に近い方(needは 毎回 生で見る=夜中の3つ目購入で 的が ふえる)
+    for(let i=0;i<sp.anchors.length;i++){
+      if(st.boxed[i]||!hM[sp.anchors[i].need])continue;
+      const d=Math.hypot(sp.anchors[i].x-Game.p.px,sp.anchors[i].y-Game.p.py);
+      if(d<hd){hd=d;hb=i;}
+    }
+    if(hb<0){st.stealsLeft=0;return;}
+    {const mg=Game.cam.TW*0.6,nq=isoCtr(nu.px,nu.py),aq=isoCtr(sp.anchors[hb].x,sp.anchors[hb].y);
+     const sy2=nq.y-Game.cam.TW*0.95;
+     if(nq.x<mg||nq.x>W-mg||sy2<mg||sy2>H-mg||aq.x<mg||aq.x>W-mg||aq.y<mg||aq.y>H-mg){st.cool=0.5;return;}} // 投げ起点と 的の 両方が 画面内のときだけ
+    st.stealsLeft--;st.threw=true;
+    st.arm={i:hb,t:0,dur:3.5,phase:'wind',repelled:false};
+    sfxCharge(); // つばさを そろえる=戦闘の ため予告と 同一モチーフ
     return;
   }
   if(st.arm&&!nu){st.arm=null;return;} // ぬしが たおれたら うでも きえる(箱は あけられる)
@@ -12290,6 +12343,148 @@ function tsumiFlyPt(cam,st,sp,j){ // とんでいく はこj の 画面座標(�
   const arc=-Math.sin(ee*Math.PI)*cam.TW*0.8;
   return {x:s.x+(g.x-s.x)*ee,y:sy+((g.y-cam.TW*0.4)-sy)*ee+arc,k:ee};
 }
+function mamoriEllipseHit(lx,ly,q,a,cam,mul){ // kind別の 縦楕円(0.55TWの円は 街道(9,10)を 0.500TWで 食う=SPEC_mamori 実測)
+  const rx=cam.TW*0.42*(mul||1),ry=cam.TW*(a.ry||0.5)*(mul||1);
+  const ddx=(lx-q.x)/rx,ddy=(ly-(q.y-cam.TW*(a.cy||0.30)))/ry;
+  return ddx*ddx+ddy*ddy<1;
+}
+function mamoriFxTick(st,dt){ // 撃退の絵(とあみ/ひ/かぜ)の前進
+  if(st.beams){for(const b of st.beams)b.t+=dt;st.beams=st.beams.filter(b=>b.t<0.4);if(!st.beams.length)delete st.beams;}
+}
+function mamoriFlyPt(cam,st,sp){ // とんでいく つばさの 画面座標(弧・ゆっくり)
+  const a=st.arm;if(!a||a.phase!=='fly')return null;
+  const nu=shimaPlayNushi(),np=nu?{x:nu.px,y:nu.py}:{x:10,y:5};
+  const sPt=isoCtr(np.x,np.y),aa=sp.anchors[a.i],g=isoCtr(aa.x,aa.y);
+  const sy=sPt.y-cam.TW*0.9;
+  const k=Math.min(1,a.t/a.dur),ee=k*k*(3-2*k);
+  const arc=-Math.sin(ee*Math.PI)*cam.TW*1.1;
+  return {x:sPt.x+(g.x-sPt.x)*ee,y:sy+((g.y-cam.TW*(aa.cy||0.3))-sy)*ee+arc,k:ee};
+}
+function mamoriRepel(st,sp,i){ // 号令: たてた ものが じぶんの持ち技で つばさを 追いはらう(罰なし)
+  const a=st.arm,cam=Game.cam;if(!a||!cam)return false;
+  a.repelled=true;a.phase='shot';a.t=0;
+  st.drops[i]=(st.drops[i]||0)+1; // しずくあかり(まもった しるし・滞在中 消えない)
+  const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+  const fp=mamoriFlyPt(cam,st,sp)||{x:q.x,y:q.y-cam.TW*1.4};
+  st.beams=(st.beams||[]);
+  st.beams.push({x0:q.x,y0:q.y-cam.TW*((sp.anchors[i].cy||0.3)+0.2),x1:fp.x,y1:fp.y,kind:sp.anchors[i].kind,t:0});
+  puff(fp.x,fp.y,'rgba(240,248,255,.95)',18,150,0.9,{up:true,s0:2,s1:4});
+  popup(q.x,q.y-cam.TW*1.0,({Pier:'とあみが からめとった！',Shelter:'かぜが そらした！',Beacon:'ひが やきはらった！'})[sp.anchors[i].kind]||'まもった！','sp');
+  sfxSlash();
+  return true;
+}
+function mamoriHarai(i){ // 膜を はらう(タップ/会話到達の 両方から よぶ)。罰なし
+  const st=Game.shimaPlay,sp=shimaPlaySpec(),cam=Game.cam;
+  if(!st||!sp||!cam||!st.boxed[i])return false;
+  st.boxed[i]=false;
+  const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+  puff(q.x,q.y-cam.TW*0.3,'rgba(190,232,255,.95)',22,150,1.0,{up:true,s0:2,s1:5});
+  popup(q.x,q.y-cam.TW*0.8,'しぶきを はらった！','sp');
+  sfxChest();
+  return true;
+}
+async function mamoriWetSay(kind){ // つつまれたまま 挑んだ施設は みずを はらってから はたらく(効果は 不変=嘘なし)
+  const st=Game.shimaPlay,sp=shimaPlaySpec();
+  if(!st||!sp||sp.mode!=='mamori'||st.map!==Game.mapId)return;
+  const i=sp.anchors.findIndex(a=>a.kind===kind);
+  if(i<0||!st.boxed[i])return;
+  await say('しぶきを かぶった '+(CH18_SITES[kind]?CH18_SITES[kind].name:'それ')+'が、ぶるりと みずを はらって——');
+}
+function shimaPlayDrawMamori(cam,st,sp){ // まもり(あらしのよる)。自発光+白い泡の縁取り=闇(darkA0.62)の上でも 立つ。勾配なし
+  ctx.save();
+  const tw=cam.TW,bl=st.blinkT,hM=(Game&&Game.hidden)||{};
+  for(let i=0;i<sp.anchors.length;i++){ // しずくあかり(まもった しるし・1撃退=3粒)+膜
+    const aa=sp.anchors[i];
+    if(!hM[aa.need])continue;
+    const q=isoCtr(aa.x,aa.y);
+    if(st.boxed[i]){ // 泡の膜(常時可視・つつまれても 消えない)
+      const mrx=tw*0.46,mry=tw*((aa.ry||0.5)+0.08),mcy=q.y-tw*(aa.cy||0.3);
+      ctx.fillStyle='rgba(150,200,235,0.30)';
+      ctx.beginPath();ctx.ellipse(q.x,mcy,mrx,mry,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(210,238,255,'+(0.55+0.25*Math.sin(bl*4.2+i)).toFixed(3)+')';ctx.lineWidth=2.5;
+      ctx.beginPath();ctx.ellipse(q.x,mcy,mrx,mry,0,0,Math.PI*2);ctx.stroke();
+      for(let b2=0;b2<5;b2++){ // 泡粒
+        const ba=(bl*0.5+b2*0.2)%1;
+        ctx.strokeStyle='rgba(226,244,255,'+(0.5*(1-ba)).toFixed(3)+')';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.arc(q.x+Math.sin(b2*2.1)*mrx*0.6,mcy+mry*0.7-ba*mry*1.4,Math.max(1.5,tw*0.03+b2),0,Math.PI*2);ctx.stroke();
+      }
+      const rr=tw*(0.5+0.1*Math.sin(bl*4.2+i)); // 押せるの合図
+      ctx.strokeStyle='rgba(255,238,180,'+(0.4+0.25*(0.5+0.5*Math.sin(bl*4.2+i))).toFixed(3)+')';ctx.lineWidth=2.5;
+      ctx.beginPath();ctx.arc(q.x,mcy,rr,0,Math.PI*2);ctx.stroke();
+    }
+    const dn=(st.drops&&st.drops[i])||0; // しずくあかり(膜の上に描く=誇りは 消えない・スクショに 写る大きさ)
+    for(let d2=0;d2<dn*3;d2++){
+      const ang=d2*2.1+i,ph=0.6+0.4*Math.sin(bl*3+d2);
+      const dx3=q.x+Math.cos(ang)*tw*0.32,dy3=q.y-tw*((aa.cy||0.3)+0.46)-Math.abs(Math.sin(ang))*tw*0.20;
+      ctx.strokeStyle='rgba(200,235,255,'+(0.5*ph).toFixed(3)+')';ctx.lineWidth=2; // 光の輪
+      ctx.beginPath();ctx.arc(dx3,dy3,Math.max(3.5,tw*0.11),0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle='rgba(214,240,255,'+(0.9*ph).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(dx3,dy3,Math.max(2.5,tw*0.065),0,Math.PI*2);ctx.fill();
+    }
+  }
+  if(st.arm){
+    const a=st.arm,aa=sp.anchors[a.i],q=isoCtr(aa.x,aa.y);
+    const nuM=shimaPlayNushi();
+    if((a.phase==='wind'||a.phase==='fly')&&!a.repelled){ // こわがり: ねらわれた施設の 明滅(rebuild描画は 触らない)
+      const fl2=0.5+0.5*Math.sin(bl*10);
+      ctx.strokeStyle='rgba(255,226,150,'+(0.5*fl2).toFixed(3)+')';ctx.lineWidth=2.5;
+      const rr2=tw*(0.5+0.08*fl2);
+      ctx.beginPath();ctx.arc(q.x,q.y-tw*(aa.cy||0.3),rr2,0,Math.PI*2);ctx.stroke();
+    }
+    if(a.phase==='wind'&&nuM){ // 予備動作: むれが ふくらんで 白く さかだつ
+      const nq=isoCtr(nuM.px,nuM.py),k2=Math.min(1,a.t/0.6);
+      for(let w2=0;w2<7;w2++){
+        const ang=w2*0.9-1.2;
+        ctx.strokeStyle='rgba(235,246,255,'+(0.65*k2).toFixed(3)+')';ctx.lineWidth=2.5;ctx.lineCap='round';
+        ctx.beginPath();ctx.moveTo(nq.x+Math.cos(ang)*tw*0.4,nq.y-tw*0.9+Math.sin(ang)*tw*0.25);
+        ctx.lineTo(nq.x+Math.cos(ang)*tw*(0.4+0.35*k2),nq.y-tw*0.9+Math.sin(ang)*tw*(0.25+0.3*k2)-tw*0.2*k2);ctx.stroke();
+      }
+    }
+    if(a.phase==='fly'){ // しぶきの つばさ(黒青+白い泡の縁取り+白い尾)
+      const p=mamoriFlyPt(cam,st,sp);
+      if(p){
+        ctx.strokeStyle='rgba(220,240,255,0.65)';ctx.lineWidth=4;ctx.lineCap='round'; // 白い尾(実寸で 沈まない太さ)
+        ctx.beginPath();ctx.moveTo(p.x-tw*0.3,p.y+tw*0.12);ctx.lineTo(p.x-tw*1.1,p.y+tw*0.42);ctx.stroke();
+        ctx.strokeStyle='rgba(220,240,255,0.4)';ctx.lineWidth=2.5;
+        ctx.beginPath();ctx.moveTo(p.x-tw*0.15,p.y+tw*0.22);ctx.lineTo(p.x-tw*0.85,p.y+tw*0.5);ctx.stroke();
+        ctx.fillStyle='rgba(24,44,66,0.92)'; // からだ(黒青)
+        ctx.beginPath();ctx.ellipse(p.x,p.y,tw*0.30,tw*0.16,0,0,Math.PI*2);ctx.fill();
+        const flap=Math.sin(a.t*10)*0.5;
+        ctx.strokeStyle='rgba(30,54,80,0.92)';ctx.lineWidth=Math.max(3,tw*0.07);
+        ctx.beginPath();ctx.moveTo(p.x-tw*0.1,p.y);ctx.quadraticCurveTo(p.x-tw*0.35,p.y-tw*(0.3+flap*0.15),p.x-tw*0.55,p.y-tw*0.05);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(p.x+tw*0.1,p.y);ctx.quadraticCurveTo(p.x+tw*0.35,p.y-tw*(0.3+flap*0.15),p.x+tw*0.55,p.y-tw*0.05);ctx.stroke();
+        ctx.strokeStyle='rgba(226,244,255,0.95)';ctx.lineWidth=3; // 泡の縁取り(闇に しずまない)
+        ctx.beginPath();ctx.ellipse(p.x,p.y,tw*0.34,tw*0.20,0,0,Math.PI*2);ctx.stroke();
+        ctx.fillStyle='rgba(226,244,255,0.9)'; // 泡のしぶき粒
+        for(let sp2=0;sp2<4;sp2++){ctx.beginPath();ctx.arc(p.x+Math.cos(sp2*1.7+p.k*9)*tw*0.4,p.y-tw*0.15-Math.abs(Math.sin(sp2*2.3))*tw*0.14,Math.max(1.5,tw*0.035),0,Math.PI*2);ctx.fill();}
+      }
+    }
+  }
+  for(const b of (st.beams||[])){ // 撃退の絵(kind別・勾配なし)
+    const al=Math.max(0,1-b.t/0.4);
+    if(b.kind==='Pier'){ // とあみ(白線の網)
+      ctx.strokeStyle='rgba(235,246,255,'+(0.85*al).toFixed(3)+')';ctx.lineWidth=2;
+      const mx=(b.x0+b.x1)/2,my=(b.y0+b.y1)/2;
+      for(let g2=-2;g2<=2;g2++){
+        ctx.beginPath();ctx.moveTo(b.x0+g2*6,b.y0);ctx.lineTo(b.x1+g2*8,b.y1);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(mx-tw*0.4,my+g2*10);ctx.lineTo(mx+tw*0.4,my+g2*10-8);ctx.stroke();
+      }
+    }else if(b.kind==='Beacon'){ // ひ(白芯+橙の三角の重ね)
+      const k3=Math.min(1,b.t/0.4);
+      const px2=b.x0+(b.x1-b.x0)*k3,py2=b.y0+(b.y1-b.y0)*k3;
+      ctx.fillStyle='rgba(255,150,60,'+(0.8*al).toFixed(3)+')';
+      ctx.beginPath();ctx.moveTo(b.x0,b.y0);ctx.lineTo(px2-8,py2);ctx.lineTo(px2+8,py2);ctx.closePath();ctx.fill();
+      ctx.fillStyle='rgba(255,246,220,'+(0.9*al).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(px2,py2,Math.max(2.5,tw*0.09),0,Math.PI*2);ctx.fill();
+    }else{ // かぜ(白の弧)
+      ctx.strokeStyle='rgba(226,244,255,'+(0.85*al).toFixed(3)+')';ctx.lineWidth=3;ctx.lineCap='round';
+      for(let g3=0;g3<3;g3++){
+        ctx.beginPath();ctx.arc(b.x1,b.y1,tw*(0.25+g3*0.18+b.t*0.8),-2.4,-0.7);ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
 function shimaPlayDrawTsumi(cam,st,sp){ // やかた3。はこ=多角形と線だけ(勾配なし=描画負荷の掟)。闇の上の後段=くらい おおひろまでも 立つ
   if(!st.towers)return;
   ctx.save();
@@ -12510,6 +12705,27 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
     }
     return false;
   }
+  if(sp.mode==='mamori'){ // かぜまち: たてた施設に 号令/膜を はらう(SPEC_mamori_20260803)
+    if(st.arm&&st.arm.phase==='shot'){ // 撃退の 散りの あいだの 連打も うける(施設会話へ 落とさない)
+      const a0=sp.anchors[st.arm.i],q0=isoCtr(a0.x,a0.y);
+      if(mamoriEllipseHit(lx,ly,q0,a0,cam,1.25))return true;
+    }
+    if(st.arm&&(st.arm.phase==='wind'||st.arm.phase==='fly')&&!st.arm.repelled){
+      const aa=sp.anchors[st.arm.i],qA=isoCtr(aa.x,aa.y);
+      let hit=mamoriEllipseHit(lx,ly,qA,aa,cam,1.25); // 号令=ねらわれた 施設を タップ(過渡だけ 1.25の寛容)
+      if(!hit&&st.arm.phase==='fly'){ // 飛行中の つばさ直タップも 成立(寛容の副経路)
+        const fp=mamoriFlyPt(cam,st,sp);
+        if(fp&&Math.hypot(lx-fp.x,ly-fp.y)<cam.TW*0.6)hit=true;
+      }
+      if(hit){mamoriRepel(st,sp,st.arm.i);return true;}
+    }
+    for(let i=0;i<sp.anchors.length;i++){ // 膜の 施設タップ=はらう
+      if(!st.boxed[i])continue;
+      const aa=sp.anchors[i],qB=isoCtr(aa.x,aa.y);
+      if(mamoriEllipseHit(lx,ly,qB,aa,cam,1)){mamoriHarai(i);return true;}
+    }
+    return false;
+  }
   if(st.arm&&st.arm.phase==='reach'){ // うでを はたきおとす(外しても 罰なし=ただの 歩きになる)
     const tip=shimaPlayArmTip(cam);
     if(tip&&Math.hypot(lx-tip.x,ly-tip.y)<cam.TW*0.9){
@@ -12540,6 +12756,7 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
 function shimaPlayOpenCount(){ // 開幕の芝居むけ: あいている数(0〜3)。しかけが 動いていなければ null
   const st=Game.shimaPlay,sp=shimaPlaySpec();
   if(!st||!sp)return null;
+  if(sp.mode==='mamori'){const h=(Game&&Game.hidden)||{};let n=0;for(let i=0;i<sp.anchors.length;i++)if(h[sp.anchors[i].need]&&!st.boxed[i])n++;return n;} // たっていて つつまれていない数(無効アンカーを 数えない)
   let n=0;for(const b of st.boxed)if(!b)n++;
   return n;
 }
@@ -12591,7 +12808,8 @@ function shimaPlayDraw(cam){ // 闇の うえに えがく。うで=線と多角
   if(!st||!sp||st.map!==Game.mapId)return;
   if(sp.mode==='huda'){shimaPlayDrawHuda(cam,st,sp);return;}
   if(sp.mode==='nomi'){shimaPlayDrawNomi(cam,st,sp);return;}
-  if(sp.mode==='tsumi'){shimaPlayDrawTsumi(cam,st,sp);return;} // つみばこは 別の絵 // うたのみは 別の絵(suckを くらの うで描画に 落とさない) // うそふだは 別の絵(phase'fly'を くらの うで描画に 落とさない)
+  if(sp.mode==='tsumi'){shimaPlayDrawTsumi(cam,st,sp);return;} // つみばこは 別の絵
+  if(sp.mode==='mamori'){shimaPlayDrawMamori(cam,st,sp);return;} // まもりは 別の絵 // うたのみは 別の絵(suckを くらの うで描画に 落とさない) // うそふだは 別の絵(phase'fly'を くらの うで描画に 落とさない)
   ctx.save();
   for(let i=0;i<sp.anchors.length;i++){ // なわの箱(盗られた もの)。点滅=「押せる」の合図(文字は 出さない)
     if(!st.boxed[i])continue;
@@ -17135,6 +17353,9 @@ async function runBattle(ref){
   if(foe===FOES.hitorijime&&!Game.bt.shin){ // つみばこ: くずし切っていない 塔の ない数だけ 開幕の芝居(SPEC_tsumibako_20260802)
     Game.bt.jimeOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
   }
+  if(foe===FOES.shioarashi&&!Game.bt.shin){ // まもり: たっていて つつまれていない数だけ 開幕の芝居(SPEC_mamori_20260803)
+    Game.bt.araOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
+  }
   if(foe===FOES.shioarashi){
     Game.bt.ch18Pier=!!Game.hidden.ch18BuiltPier;
     Game.bt.ch18Shelter=!!Game.hidden.ch18BuiltShelter;
@@ -17338,16 +17559,31 @@ async function runBattle(ref){
   }
   else if(foe===FOES.shioarashi){
     await say('くろい しぶきが いくつもの つばさに なり、できたばかりの 島へ おしよせる——！');
+    {const ao=Game.bt.araOpen,stM=Game.shimaPlay; // まもり: 盤の やり返しの分だけ 開幕の芝居(施設の効果・式は 不変)
+    if(typeof ao==='number'&&stM&&stM.threw&&!stM.arm){
+      const wrapped=((Game.bt.ch18Pier?1:0)+(Game.bt.ch18Shelter?1:0)+(Game.bt.ch18Beacon?1:0))-ao;
+      if(wrapped<=0){ // ぜんぶ まもった: むれは じぶんの しぶきを かぶる(ころばない)
+        await say('むれは ひときわ おおきな なみを ふりかぶった——が、\nはじかれた じぶんの しぶきを まともに かぶって ずぶぬれに！');
+        const epa=enemyPos();sfxSlash();flash('#cfe8ff',0.4,0.9);
+        Game.bt.recoil=2.2;Game.bt.hitStop=0.18;Game.bt.blink=1; // 見た目のみ=ダメージ0
+        puff(epa.x,epa.y-epa.s*50,'rgba(220,240,255,.9)',22,150,1.0,{up:true,s0:2,s1:5});
+        popup(epa.x,epa.y-epa.s*70,'ずぶぬれ！','crit');
+        await say('かげが 一瞬 ちいさな とりたちに ばらけ、あわてて あつまりなおすと、\nぷるぷると 身ぶるいして はねの みずを とばした。');
+      }else if(wrapped===1)await say('むれの つばさが しめって、おもそうに ばさばさと なった。');
+      else await say('むれは まんぞくげに、ぬれた つばさを ばさりと ならした。');
+    }}
     if(Game.bt.ch18Beacon){
+      await mamoriWetSay('Beacon');
       const id=foeId(foe);weakStore()[id]=(weakStore()[id]||0)|WEAK_BIT.fire;renderBattleWeakness();
       await say('かざみだいの 火が あらしを てらした！\n🔥 ひが よくきく。しぶきの みかわしも もう きかない！');
     }
     if(Game.bt.ch18Pier){
+      await mamoriWetSay('Pier');
       const opening=Math.max(1,Math.round(Game.bt.mhp*0.10));Game.bt.hp=Math.max(1,Game.bt.hp-opening);
       const ep18=enemyPos();sfxSlash();shakeBattle(12,0.45);popup(ep18.x,ep18.y-ep18.s*62,opening,'crit');
       await say('ふなつきばから 投網砲が はなたれた！\nさいしょの 大波を おしかえし、'+opening+'の ダメージ！');
     }
-    if(Game.bt.ch18Shelter)await say('かぜよけごやの あかりが こちらを てらしている。\nよわった時に、一度だけ くすりを とどけてくれる！');
+    if(Game.bt.ch18Shelter){await mamoriWetSay('Shelter');await say('かぜよけごやの あかりが こちらを てらしている。\nよわった時に、一度だけ くすりを とどけてくれる！');}
   }
   else if(foe===FOES.kiritoru){
     const f=CH19_FORMS[Game.bt.ch19Form];
