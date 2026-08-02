@@ -17009,6 +17009,8 @@ async function tryInflict(foe){
 // オートバトル：ため=ぼうぎょ／HP35%以下=回復（呪文→やくそう系）／どく=キアリー／それ以外=たたかう
 function autoDecide(){
   const p=Game.p,bt=Game.bt;
+  const kuseNoSpell=!!(bt&&(bt.kuseMouth||(bt.kuseSteal&&bt.kuseSteal.cmd==='spell'))); // ぬしの くせ: 封印中は そのカテゴリを 使わない
+  const kuseNoItem=!!(bt&&(bt.kuseMouth||(bt.kuseSteal&&bt.kuseSteal.cmd==='item')));
   if(bt&&bt.charge){ // ため中: 大技の期待ダメージを実式で見積り、素受けでも25%余裕が残るなら殴る(常時ぼうぎょの作業感を解消・危なければ従来どおり守る)
     const Dc=curDiff(),f=bt.foe;
     const ha=Math.round(f.atk*(bt.night?1.3:1)*diffEnemyAtk(f))*(f.nushi?3:2); // 見積りは本体のため倍率と同じ式(島のぬしは×3)
@@ -17020,14 +17022,14 @@ function autoDecide(){
     if(p.hp<=hd*1.25)return{kind:'guard'};
   }
   if(p.hp<=p.mhp*0.35){
-    if(p.lv>=11&&p.mp>=22)return{kind:'behoma'};
-    if(p.lv>=5&&p.mp>=8)return{kind:'behoimi'};
-    if(p.mp>=3)return{kind:'hoimi'};
-    if((Game.items.tokusen||0)>0)return{kind:'item',item:'tokusen'};
-    if((Game.items.iyakuso||0)>0)return{kind:'item',item:'iyakuso'};
-    if((Game.items.yakuso||0)>0)return{kind:'item',item:'yakuso'};
+    if(!kuseNoSpell&&p.lv>=11&&p.mp>=22)return{kind:'behoma'};
+    if(!kuseNoSpell&&p.lv>=5&&p.mp>=8)return{kind:'behoimi'};
+    if(!kuseNoSpell&&p.mp>=3)return{kind:'hoimi'};
+    if(!kuseNoItem&&(Game.items.tokusen||0)>0)return{kind:'item',item:'tokusen'};
+    if(!kuseNoItem&&(Game.items.iyakuso||0)>0)return{kind:'item',item:'iyakuso'};
+    if(!kuseNoItem&&(Game.items.yakuso||0)>0)return{kind:'item',item:'yakuso'};
   }
-  if(p.poison&&p.mp>=2)return{kind:'kiari'};
+  if(!kuseNoSpell&&p.poison&&p.mp>=2)return{kind:'kiari'};
   return{kind:'fight'};
 }
 async function commandPhase(){
@@ -17036,7 +17038,10 @@ async function commandPhase(){
     if(Game.autoBattle)return autoDecide();
     const cmds=[{id:'fight',label:'たたかう'}]; // ななつへんげ: へんげを 1つでも おぼえたら コマンドに 立つ
     if(hengeCount()>0)cmds.push({id:'henge',label:'👹へんしん'+(Game.bt&&Game.bt.hengeUsed?'（つかった）':''),dis:!!(Game.bt&&Game.bt.hengeUsed)});
-    cmds.push({id:'spell',label:'じゅもん'},{id:'item',label:'どうぐ'},{id:'guard',label:'ぼうぎょ'},{id:'run',label:'にげる'});
+    const kSeal=Game.bt&&Game.bt.kuseSteal,kMouth=Game.bt&&Game.bt.kuseMouth; // ぬしの くせ: 封印は 灰+わけ(押す前に わかる)
+    cmds.push({id:'spell',label:'じゅもん'+((kSeal&&kSeal.cmd==='spell')?'（ふくろの なか！ ⚔で とりかえせ）':(kMouth?'（おおくちに のまれる！）':'')),dis:!!((kSeal&&kSeal.cmd==='spell')||kMouth)},
+      {id:'item',label:'どうぐ'+((kSeal&&kSeal.cmd==='item')?'（ふくろの なか！ ⚔で とりかえせ）':(kMouth?'（おおくちに のまれる！）':'')),dis:!!((kSeal&&kSeal.cmd==='item')||kMouth)},
+      {id:'guard',label:'ぼうぎょ'},{id:'run',label:'にげる'});
     const c=await ask(cmds,'コマンド');
     if(c==='__auto__')continue;
     if(c==='fight')return{kind:'fight'};
@@ -17301,7 +17306,7 @@ async function playerAction(act){
     beginHeroStrike(bt);sfxSlash();
     await wait(0.08);
     const wfx=WEAPONFX[Game.weaponAtk]||{};
-    const crit=Math.random()<((curDiff().pcrit||0.1)+(wfx.critUp||0)+(kkOn('tsugu')?0.04:0));
+    const crit=(!!(bt.kuseMouth||(bt.charge&&bt.kuseFake)))||Math.random()<((curDiff().pcrit||0.1)+(wfx.critUp||0)+(kkOn('tsugu')?0.04:0)); // ぬしの くせ: 口内/うそ見抜きは かいしん保証
     const physRaw=foePhys(bt),physMul=battleAffinityMul('phys',physRaw);
     const dodgeP=(bt.tomoshibi>0||bt.ch18NoDodge||bt.tokiNoDodge)?0:(bt.soar?0.5:(bt.foe.dodge||0));
     if(!crit&&dodgeP&&Math.random()<dodgeP){
@@ -17344,6 +17349,17 @@ async function playerAction(act){
     }
     await wait(crit?0.08:0.12);
     await say(bt.foe.name+'に '+d+'の ダメージ！');
+    if(bt.kuseMouth&&d>0){bt.kuseMouth=false; // 口の中に 直撃(かいしんは 上で 保証)
+      await say('ひかる いちげきが くちの なかで さくれつした！');}
+    if(bt.kuseSteal&&d>0){bt.kuseSteal.hits=(bt.kuseSteal.hits||0)+1;
+      if(bt.kuseSteal.hits>=2){const scR=bt.kuseSteal.cmd;bt.kuseSteal=null;
+        sfxChest();flash('#ffe9b0',0.3,0.6);const pcR=playerChipPos();popup(pcR.x,pcR.y,'とりかえした！','sp');
+        await say('ふくろが やぶれた！ '+(scR==='item'?'どうぐ':'じゅもん')+'を とりかえした！');}
+      else await say('ふくろが おおきく やぶれかけている——もう ひといき！');}
+    if(bt.kuseEcho&&d>0&&p.hp>1){bt.kuseEcho=false;
+      const reflE=Math.min(p.hp-1,Math.max(1,Math.round(d*0.4)));p.hp-=reflE;updateBars();
+      sfxHit();flash('#8fa8e8',0.3,0.5);const pcE=playerChipPos();popup(pcE.x,pcE.y,reflE);
+      await say('かまえた こだまが いちげきを うちかえした！\nゆうしゃに '+reflE+'の ダメージ！');}
     if(wfx.drain&&d>0&&p.hp>0&&p.hp<p.mhp){const dr=Math.min(p.mhp-p.hp,Math.max(1,Math.round(d*wfx.drain)));p.hp+=dr;updateBars();const dc=playerChipPos();popup(dc.x,dc.y,'+'+dr,'heal');} // ぶきの こせい：すいとり
     if(wfx.venom&&bt.hp>0&&!bt.foePoison&&!(bt.foe.boss||bt.foe.mboss)&&Math.random()<wfx.venom){bt.foePoison=true;flash('#b06ae8',0.2,0.4);await say(bt.foe.name+'は どくに おかされた！');} // ぶきの こせい：どく（ボス・ぬしには きかない。通常敵は勝利文の有無で除外しない）
     if(bt.horaBig){bt.horaBig=0;await say('おおぼらの いきおいが せなかを おした！ いちげきが 2ばい！');}
@@ -18011,6 +18027,13 @@ async function ch18ShelterAid(){
 async function enemyAction(){
   const p=Game.p,bt=Game.bt,foe=bt.foe;
   bt.turn++;
+  // ぬしの くせ: まど(かまえ/おおくち/ふくろ)の 時間経過
+  if(bt.kuseEcho){bt.kuseEcho=false;await say('もとをただすものは こだまの かまえを といた。');}
+  if(bt.kuseMouth){bt.kuseMouth=false;await say('おおくちが ゆっくり とじた。');}
+  if(bt.kuseSteal){bt.kuseSteal.turns--;
+    if(bt.kuseSteal.turns<=0){const sc2=bt.kuseSteal.cmd;bt.kuseSteal=null;
+      const pc5=playerChipPos();popup(pc5.x,pc5.y,'もどってきた！','sp');sfxChest();
+      await say('ふくろの くちが ゆるみ、'+(sc2==='item'?'どうぐ':'じゅもん')+'が てもとへ もどってきた！');}}
   if(foe===FOES.kajiu&&bt.ch20Opening){bt.ch20Opening=null;renderBattleWeakness();} // 弱点は敵が動き始める直前まで
   // なきかげの こえ：てきは 1ターン うごけない
   if(bt.foeBind>0){
@@ -18097,6 +18120,30 @@ async function enemyAction(){
     await say(foe.name+'の ぼうぎょくずし！\nよろいの まもりが ゆるんだ…！（てきの こうげき3かいで もどる）');
     return;
   }
+  // ぬしの くせ(章13〜16): 発動。ための 手番(turn%3===2)とは 重ねない=1ターン1問
+  {const kk=nushiKuse(bt);
+  if(kk==='steal'&&!bt.charge&&bt.turn%3!==2&&!bt.kuseSteal&&(bt.kuseStealN||0)<2&&((bt.kuseStealN||0)===0||Math.random()<0.4)){
+    bt.kuseSteal={cmd:Math.random()<0.5?'item':'spell',hits:0,turns:2};
+    bt.kuseStealN=(bt.kuseStealN||0)+1;
+    sfxEnc();shakeBattle(10,0.4);flash('#c8a468',0.3,0.6);
+    const pcS=playerChipPos();puff(pcS.x,pcS.y,'rgba(150,110,64,.9)',18,140,0.8,{s0:2,s1:5});popup(pcS.x,pcS.y-24,'しまいこまれた！','sp');
+    await say('しまいこむものの おおきな ふくろが '+(bt.kuseSteal.cmd==='item'?'どうぐぶくろ':'じゅもんの ちから')+'を しまいこんだ！\n⚔こうげきで ふくろを やぶれば とりかえせる！');
+    return;
+  }
+  if(kk==='echo'&&!bt.charge&&bt.turn%3!==2&&!bt.kuseEcho&&((bt.kuseEchoN||0)===0||Math.random()<0.4)){
+    bt.kuseEcho=true;bt.kuseEchoN=(bt.kuseEchoN||0)+1;
+    sfxCharge();flash('#8fa8e8',0.3,0.6);
+    const eqE=enemyPos();puff(eqE.x,eqE.y-eqE.s*40,'rgba(143,168,232,.85)',16,150,0.8,{up:true,s0:2,s1:5});
+    await say('もとをただすものは こだまの かまえに 入った——！'+(bt.kuseEchoN<=1?'\n（かまえに うちこむと、いちげきが こだまで かえってくる…！）':''));
+    return;
+  }
+  if(kk==='mouth'&&!bt.charge&&bt.turn%3!==2&&!bt.kuseMouth&&((bt.kuseMouthN||0)===0||Math.random()<0.4)){
+    bt.kuseMouth=true;bt.kuseMouthN=(bt.kuseMouthN||0)+1;
+    sfxEnc();shakeBattle(8,0.4);flash('#b89fd8',0.3,0.6);
+    const eqM=enemyPos();puff(eqM.x,eqM.y-eqM.s*30,'rgba(184,159,216,.85)',18,150,0.9,{s0:2,s1:5});
+    await say('わすれられしものが おおくちを あけた——！'+(bt.kuseMouthN<=1?'\n（じゅもんも どうぐも のみこまれる。いまは ⚔で くちの なかを ねらえ！）':''));
+    return;
+  }}
   // まどうし系：ようすを みている（ターンスキップ＝ゆらぎ）
   if(foe.watch&&Math.random()<0.18){
     await say(foe.name+'は ようすを みている。');
@@ -18137,6 +18184,13 @@ async function enemyAction(){
     if(second)bt.shinVolley=2;
     sfxCharge();
     shakeBattle(4,0.4);
+    if(nushiKuse(bt)==='usotame'&&!second){ // うそのため(章15): ほのおの 色で 見抜ける。はじめは かならず うそ=読みを おしえる
+      bt.kuseFake=((bt.kuseFakeN||0)===0)?true:Math.random()<0.35;bt.kuseFakeN=(bt.kuseFakeN||0)+1;
+      const eqF=enemyPos();flash(bt.kuseFake?'#ffffff':'#f4a640',0.35,0.6);
+      puff(eqF.x,eqF.y-eqF.s*50,bt.kuseFake?'rgba(255,255,255,.92)':'rgba(244,166,64,.92)',16,160,0.8,{up:true,s0:2,s1:5});
+      await say(fname2+'は '+(foe.chargeMsg||'ちからを ためている')+'…！\n——ためる ほのおが '+(bt.kuseFake?'しろく ゆれている…？':'あかあかと もえている！'));
+      return;
+    }
     await say(second?fname2+'は まだ ためている——二はつめが くる！\n（ぼうぎょでは ふせげない。ころもや HPで そなえよ）'
       :fname2+'は '+(foe.chargeMsg||'ちからを ためている')+'…！'); // ぬしは 島ごとに ためる かたちが ちがう(2026-07-25・数値は不変)
     return;
@@ -18172,6 +18226,11 @@ async function enemyAction(){
     heavy=true;
   }else if(bt.charge){
     bt.charge=false;
+    if(bt.kuseFake){bt.kuseFake=false; // うそのため: だまされても くやしいだけ(罰なし)
+      const eqW=enemyPos();sfxRun();shakeBattle(8,0.35);puff(eqW.x,eqW.y-eqW.s*20,'rgba(230,226,208,.8)',14,140,0.7,{s0:2,s1:4});
+      await say('——いちげきは こなかった！ ためは うそっぱちだった！\nまことをせまるものは くすくすと わらっている。');
+      return;
+    }
     if(bt.shin){if(bt.shinVolley===2){bt.shinVolley=0;bt.shinPierce=true;}else{bt.shinVolley=1;bt.shinPierce=false;}} // 二連ための進行
     // 島のぬしだけ ため一撃を ×3 へ(2026-07-25 実測: ×2では38〜47%で、予告を無視して殴りつづけて576戦0敗だった)。
     // ×3で 大技の上限 capHeavy に張りつく＝2発つづけて素で受けたら たおれる。予告は1ターン前に必ず出るので不意打ちにはならない。
@@ -18380,6 +18439,16 @@ const KAGE={
 const HENGE_KEYS=['henge13','henge14','henge15','henge16','henge17','henge18','henge19'];
 function hengeCount(){return HENGE_KEYS.filter(k=>Game.hidden&&Game.hidden[k]).length;}
 function hengeMarks(){const n=hengeCount();return '●'.repeat(n)+'○'.repeat(7-n);}
+// ===== ぬしの くせ(章13〜16・SPEC_nushi_kuse_20260802) =====
+// 「これは、戦いのゲームだろ」(2026-08-02)。前半4体が 同じ戦いだったのを、島の物語と 同じ動詞で 別物にする。
+// 表を 空に すれば 現行と 完全一致。かげ戦(bt.shin)には 出ない。状態は すべて bt の 一時変数(保存しない)。
+const NUSHI_KUSE={
+  shimaikomu:{k:'steal'},   // しまいこむ: どうぐ/じゅもんを 袋に。⚔2回で やぶって とりかえす
+  mototadasu:{k:'echo'},    // こだまがえし: かまえに うちこむと いちげきが かえってくる
+  makoto:{k:'usotame'},     // うそのため: ほのおが しろい ときは うそ。見抜いて ⚔なら かいしん
+  wasurare:{k:'mouth'}      // まるのみ: おおくちの あいだ じゅもん・どうぐは のまれる。⚔は 口内かいしん
+};
+function nushiKuse(bt){if(!bt||bt.shin)return null;const e=NUSHI_KUSE[foeId(bt.foe)];return e?e.k:null;}
 // 潜り『のこりびの ふかみ』: ラン状態はセーブしない(CH21_REPLAYと同じ一時変数方式)
 let FUKAMI=null,FUKAMI_GO=false,VOLGA_GO=false;
 let ED_REPLAY=null; // 締めを もういちど 見る(保存しない・'kage'|'maou')
