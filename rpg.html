@@ -6405,6 +6405,13 @@ async function talkNpc(n){
   if(n.ch20Boat){await ch20TalkBoat(n);if(Game.talking)endTalk();saveGame();return;}
   if(n.ch19Clock){await ch19TalkClock();if(Game.talking)endTalk();saveGame();return;}
   if(n.ch19Person){await ch19TalkPerson(n.ch19Person);endTalk();saveGame();return;}
+  if(n.ch19Scene&&Game.shimaPlay&&Game.shimaPlay.map===Game.mapId){ // ときずらし: ずらされた 場面は 会話到達=めくりもどし成立
+    const spZ=shimaPlaySpec();
+    if(spZ&&spZ.mode==='zure'){
+      const zi=spZ.anchors.findIndex(a2=>a2.x===n.x&&a2.y===n.y);
+      if(zi>=0&&Game.shimaPlay.boxed[zi]){zurePeel(zi);endTalk();return;}
+    }
+  }
   if(n.ch19Scene){await ch19TalkScene(n.ch19Scene);endTalk();saveGame();return;}
   if(n.ch18Chief){await ch18TalkChief();if(Game.talking)endTalk();saveGame();return;}
   if(n.ch18Site&&Game.shimaPlay&&Game.shimaPlay.map===Game.mapId){ // まもり: しぶきに つつまれた 施設は 会話到達=はらい成立
@@ -11933,6 +11940,11 @@ const SHIMA_PLAY={
     nushi:'shioarashi', mode:'mamori',
     anchors:[{x:4,y:3,kind:'Pier',need:'ch18BuiltPier',ry:0.5,cy:0.30},{x:15,y:6,kind:'Shelter',need:'ch18BuiltShelter',ry:0.5,cy:0.30},{x:8,y:9,kind:'Beacon',need:'ch18BuiltBeacon',ry:0.6,cy:0.35}], // 建てた施設だけが 的(needを 毎回 生で見る)
     steals:2 // 計2投で 打ち止め
+  },
+  tokikasanebell:{ // ときかさね・かねの時「とき ずらしと めくりもどし」: きりとるものが 場面を べつの時へ ずらす(SPEC_zure_20260803・最終島=阻止が 7島初の主動詞)
+    nushi:'kiritoru', mode:'zure',
+    anchors:[{x:8,y:3,kind:'bird',ry:0.5,cy:0.30},{x:15,y:2,kind:'light',ry:0.6,cy:0.35}], // ch19scene 2つ(boat(4,9)は とまりどけいの縄張り=的にしない)
+    steals:2 // 計2回で 打ち止め
   }
 };
 function shimaPlaySpec(){return SHIMA_PLAY[Game.mapId]||null;}
@@ -11941,7 +11953,8 @@ function shimaPlayReady(){ // 発火条件: そろい済み+ぬしが盤上+か�
   const sp=shimaPlaySpec();if(!sp)return false;
   if(NUSHI_REPLAY&&NUSHI_REPLAY.shin)return false;
   if(!shimaPlayNushi())return false;
-  if(sp.mode==='mamori'){const h=(Game&&Game.hidden)||{};return sp.anchors.some(a=>!!h[a.need]);} // かぜまち: fxでなく 建てた旗で そろい(SPEC_mamori_20260803)
+  if(sp.mode==='mamori'){const h=(Game&&Game.hidden)||{};return sp.anchors.some(a=>!!h[a.need]);}
+  if(sp.mode==='zure'){const h=(Game&&Game.hidden)||{};return !!(h.ch19SeenDusk&&h.ch19SeenBell&&h.ch19SeenRain);} // ときかさね: 三つの時を 見た旗で そろい(SPEC_zure_20260803) // かぜまち: fxでなく 建てた旗で そろい(SPEC_mamori_20260803)
   const kinds={};
   for(const f of (Game.horaFx||[]))if(f.map===Game.mapId&&f.life>1e8)kinds[f.kind]=1;
   return sp.anchors.every(a=>kinds[a.kind]); // 2/3までは 起きない(v2038の境界)
@@ -12084,6 +12097,46 @@ function shimaPlayTick(dt){
     st.stealsLeft--;st.threw=true;
     st.arm={i:hb,t:0,dur:3.5,phase:'wind',repelled:false};
     sfxCharge(); // つばさを そろえる=戦闘の ため予告と 同一モチーフ
+    return;
+  }
+  if(sp.mode==='zure'){ // ときかさね「とき ずらしと めくりもどし」(SPEC_zure_20260803)
+    if(!st.zureTo)st.zureTo=sp.anchors.map(()=>null);
+    zureFxTick(st,dt); // 紙の吸い込み・時計の輪・くやしがり の前進(ぬしの生死に よらない)
+    if(!nu){st.arm=null;return;}
+    if(st.arm){
+      const a=st.arm;a.t+=dt;
+      if(a.phase==='frame'){ // 白い点線が 場面を 囲む(1.6秒=見る→気づく→指を 運べる ながさ)
+        if(a.t>=1.6){a.phase='paste';a.t=0;}
+      }else if(a.phase==='paste'){
+        if(a.t>=0.5){ // 時が ずれた(場面は 消えない・ただ 時が ちがう)
+          st.boxed[a.i]=true;
+          st.zureTo[a.i]=((st.zureN||0)%2===0)?'dusk':'rain';st.zureN=(st.zureN||0)+1;
+          if(Game.cam){const q=isoCtr(sp.anchors[a.i].x,sp.anchors[a.i].y);
+            puff(q.x,q.y-Game.cam.TW*0.4,'rgba(240,181,107,.8)',14,120,0.8,{s0:2,s1:4});}
+          sfxEnc();
+          if(!st.firstGrab){st.firstGrab=true;toast('ばめんの 時が ずらされた！');}
+          st.arm=null;st.cool=5.0;
+        }
+      }else if(a.phase==='foiled'&&a.t>=0.5){st.arm=null;st.cool=4.5;}
+      return;
+    }
+    if(st.stealsLeft<=0)return;
+    st.cool-=dt;
+    if(st.cool>0)return;
+    if(!Game.cam){st.cool=0.5;return;} // 待ち直しは 無音無光
+    let hb=-1,hd=1e9; // 的: まだ ずらされていない 場面のうち 勇者に近い方
+    for(let i=0;i<sp.anchors.length;i++){
+      if(st.boxed[i])continue;
+      const d=Math.hypot(sp.anchors[i].x-Game.p.px,sp.anchors[i].y-Game.p.py);
+      if(d<hd){hd=d;hb=i;}
+    }
+    if(hb<0){st.stealsLeft=0;return;}
+    {const mg=Game.cam.TW*0.6,nq=isoCtr(nu.px,nu.py),aq=isoCtr(sp.anchors[hb].x,sp.anchors[hb].y);
+     const sy3=nq.y-Game.cam.TW*0.95;
+     if(nq.x<mg||nq.x>W-mg||sy3<mg||sy3>H-mg||aq.x<mg||aq.x>W-mg||aq.y<mg||aq.y>H-mg){st.cool=0.5;return;}} // ぬしと 的の 両方が 画面内のときだけ
+    st.stealsLeft--;st.threw=true;
+    st.arm={i:hb,t:0,phase:'frame'};
+    sfxCharge();
     return;
   }
   if(st.arm&&!nu){st.arm=null;return;} // ぬしが たおれたら うでも きえる(箱は あけられる)
@@ -12342,6 +12395,126 @@ function tsumiFlyPt(cam,st,sp,j){ // とんでいく はこj の 画面座標(�
   const ee=k*k*(3-2*k);
   const arc=-Math.sin(ee*Math.PI)*cam.TW*0.8;
   return {x:s.x+(g.x-s.x)*ee,y:sy+((g.y-cam.TW*0.4)-sy)*ee+arc,k:ee};
+}
+function zureFxTick(st,dt){ // 紙の吸い込み・時計の輪・くやしがり の前進(ぬしの生死に よらず うごく)
+  if(st.papers){for(const pp of st.papers)pp.t+=dt;st.papers=st.papers.filter(pp=>pp.t<0.5);if(!st.papers.length)delete st.papers;}
+  if(st.ring){st.ring.t+=dt;if(st.ring.t>0.6)delete st.ring;}
+  if(st.rage){st.rage.t+=dt;if(st.rage.t>=st.rage.dur)delete st.rage;}
+}
+function zurePeel(i){ // ずらされた 場面を めくりもどす(タップ/会話到達の 両方から よぶ)。罰なし
+  const st=Game.shimaPlay,sp=shimaPlaySpec(),cam=Game.cam;
+  if(!st||!sp||!cam||!st.boxed[i])return false;
+  st.boxed[i]=false;
+  const to=st.zureTo?st.zureTo[i]:null;
+  if(st.zureTo)st.zureTo[i]=null;
+  const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+  const ck=smMapPtAbs(cam,10,7); // 大時計へ すいこまれる(kaneの波紋と 同一点=isoCtrは TH/2 ずれる)
+  st.papers=(st.papers||[]);
+  st.papers.push({x0:q.x,y0:q.y-cam.TW*0.5,x1:ck.x,y1:ck.y,to:to||'dusk',t:0});
+  st.ring={t:0}; // 青い時計の輪が ひとつ ひらく
+  puff(q.x,q.y-cam.TW*0.3,'rgba(190,220,255,.95)',18,140,0.9,{up:true,s0:2,s1:4});
+  popup(q.x,q.y-cam.TW*0.9,'時が もどった！','sp');
+  sfxChest();
+  return true;
+}
+function zurePaperColors(to){ // 紙の色は 行き先の時の 実装bgから 導く(dusk 2021/rain 2062)
+  return to==='rain'?{fill:'168,186,194',motif:'83,109,131'}:{fill:'240,181,107',motif:'185,95,84'};
+}
+function zurePaperRect(cam,a){ // 紙の寸法(drawCh19Sceneの実測: light=塔1.5ts・bird=よどりの群れ)
+  const ts=cam.TW*0.66*1.15,q=isoCtr(a.x,a.y),fy=q.y+cam.TH*0.22;
+  if(a.kind==='light')return {x:q.x,y:fy-ts*0.70,w:ts*0.78,h:ts*1.50};
+  return {x:q.x,y:fy-ts*0.52,w:ts*1.40,h:ts*0.60};
+}
+function shimaPlayDrawZure(cam,st,sp){ // ときずらし。白の点線=切り取り線(白flash・白ゆれ=うその記号とは 別)。勾配なし
+  ctx.save();
+  const tw=cam.TW,bl=st.blinkT;
+  const paper=(r,to,al,peel)=>{ // べつの時の 紙(色は 行き先のbg由来+モチーフ線+白点線ふち+めくれ角)
+    const c=zurePaperColors(to);
+    ctx.fillStyle='rgba('+c.fill+','+(0.75*al).toFixed(3)+')';
+    ctx.fillRect(r.x-r.w/2,r.y-r.h/2,r.w,r.h);
+    ctx.strokeStyle='rgba('+c.motif+','+(0.85*al).toFixed(3)+')';ctx.lineWidth=2.5;ctx.lineCap='round';
+    if(to==='rain'){for(let m2=0;m2<3;m2++){const mx=r.x-r.w*0.3+m2*r.w*0.3; // 雨すじ
+      ctx.beginPath();ctx.moveTo(mx,r.y-r.h*0.32);ctx.lineTo(mx-r.w*0.06,r.y+r.h*0.32);ctx.stroke();}}
+    else{for(let m2=0;m2<2;m2++){ // 日の帯
+      ctx.beginPath();ctx.moveTo(r.x-r.w*0.38,r.y-r.h*0.18+m2*r.h*0.3);ctx.lineTo(r.x+r.w*0.38,r.y-r.h*0.26+m2*r.h*0.3);ctx.stroke();}}
+    ctx.setLineDash([6,5]); // 白点線ふち(静的な手がかり)
+    ctx.strokeStyle='rgba(245,250,255,'+(0.9*al).toFixed(3)+')';ctx.lineWidth=2;
+    ctx.strokeRect(r.x-r.w/2,r.y-r.h/2,r.w,r.h);
+    ctx.setLineDash([]);
+    if(peel){ // めくれかけの 角(静的=さわれる印)
+      ctx.fillStyle='rgba(245,250,255,'+(0.85*al).toFixed(3)+')';
+      ctx.beginPath();ctx.moveTo(r.x+r.w/2,r.y-r.h/2);ctx.lineTo(r.x+r.w/2-r.w*0.22,r.y-r.h/2);ctx.lineTo(r.x+r.w/2,r.y-r.h/2+r.h*0.16);ctx.closePath();ctx.fill();
+    }
+  };
+  for(let i=0;i<sp.anchors.length;i++){ // ずらされた 場面(消えない・ただ 時が ちがう)
+    if(!st.boxed[i])continue;
+    const r=zurePaperRect(cam,sp.anchors[i]);
+    paper(r,(st.zureTo&&st.zureTo[i])||'dusk',1,true);
+    const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y); // 押せるの合図
+    const rr=tw*(0.42+0.08*Math.sin(bl*4.2+i));
+    ctx.strokeStyle='rgba(190,220,255,'+(0.35+0.25*(0.5+0.5*Math.sin(bl*4.2+i))).toFixed(3)+')';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.arc(q.x,q.y-tw*(sp.anchors[i].cy||0.3),rr,0,Math.PI*2);ctx.stroke();
+  }
+  const nuZ=shimaPlayNushi();
+  if(st.arm&&st.arm.phase==='frame'){ // 白い点線が 場面を 囲む+誘導糸+こわがり
+    const aa=sp.anchors[st.arm.i],r=zurePaperRect(cam,aa);
+    const k2=Math.min(1,st.arm.t/0.35);
+    ctx.setLineDash([6,5]);
+    ctx.strokeStyle='rgba(245,250,255,'+(0.9*k2).toFixed(3)+')';ctx.lineWidth=2.5;
+    ctx.strokeRect(r.x-r.w/2-3,r.y-r.h/2-3,(r.w+6)*k2,(r.h+6));
+    ctx.setLineDash([]);
+    const fl2=0.5+0.5*Math.sin(bl*10); // こわがり(場面の 明滅)
+    ctx.strokeStyle='rgba(255,238,180,'+(0.45*fl2).toFixed(3)+')';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(r.x,r.y,Math.max(r.w,r.h)*0.62,0,Math.PI*2);ctx.stroke();
+    if(nuZ){ // 誘導糸(白の点線・ひかえめ)
+      const nq=isoCtr(nuZ.px,nuZ.py);
+      ctx.setLineDash([4,7]);
+      ctx.strokeStyle='rgba(235,246,255,0.45)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(nq.x,nq.y-tw*0.9);ctx.lineTo(r.x,r.y);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+  if(st.arm&&st.arm.phase==='foiled'){ // 阻止=白線が ぐしゃり
+    const aa=sp.anchors[st.arm.i],r=zurePaperRect(cam,aa);
+    const al=Math.max(0,1-st.arm.t/0.5);
+    ctx.strokeStyle='rgba(245,250,255,'+(0.8*al).toFixed(3)+')';ctx.lineWidth=2;ctx.lineCap='round';
+    for(let g2=0;g2<4;g2++){
+      const a1=g2*1.7+st.arm.t*3;
+      ctx.beginPath();ctx.moveTo(r.x+Math.cos(a1)*r.w*0.4,r.y+Math.sin(a1)*r.h*0.3);
+      ctx.lineTo(r.x+Math.cos(a1+2.4)*r.w*0.5,r.y+Math.sin(a1+2.4)*r.h*0.42);ctx.stroke();
+    }
+  }
+  if(st.arm&&st.arm.phase==='paste'){ // かぶさる とちゅうの 紙
+    const aa=sp.anchors[st.arm.i],r=zurePaperRect(cam,aa);
+    const k3=Math.min(1,st.arm.t/0.5);
+    const to=((st.zureN||0)%2===0)?'dusk':'rain';
+    paper({x:r.x,y:r.y-(1-k3)*tw*0.8,w:r.w,h:r.h*k3+2},to,0.5+0.5*k3,false);
+  }
+  if(st.rage&&nuZ){ // くやしがり: ハサミを ふりまわす(白線2本のX+ジッタ)
+    const nq=isoCtr(nuZ.px,nuZ.py),jit=Math.sin(st.rage.t*40)*0.35;
+    const al=Math.max(0,1-st.rage.t/st.rage.dur);
+    ctx.save();ctx.translate(nq.x,nq.y-tw*1.15);ctx.rotate(jit);
+    ctx.strokeStyle='rgba(245,250,255,'+(0.9*al).toFixed(3)+')';ctx.lineWidth=3;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-tw*0.22,-tw*0.22);ctx.lineTo(tw*0.22,tw*0.22);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(tw*0.22,-tw*0.22);ctx.lineTo(-tw*0.22,tw*0.22);ctx.stroke();
+    ctx.restore();
+  }
+  for(const pp of (st.papers||[])){ // はがれた 紙が 大時計へ すいこまれる
+    const k4=pp.t/0.5,ee=k4*k4*(3-2*k4);
+    const px2=pp.x0+(pp.x1-pp.x0)*ee,py2=pp.y0+(pp.y1-pp.y0)*ee;
+    const c=zurePaperColors(pp.to),sc=1-ee*0.8;
+    ctx.save();ctx.translate(px2,py2);ctx.rotate(ee*4.5);
+    ctx.fillStyle='rgba('+c.fill+','+(0.85*(1-ee*0.4)).toFixed(3)+')';
+    ctx.fillRect(-tw*0.22*sc,-tw*0.16*sc,tw*0.44*sc,tw*0.32*sc);
+    ctx.restore();
+  }
+  if(st.ring){ // 青い時計の輪(kaneの金の波紋と 同一点・色で 区別)
+    const ck=smMapPtAbs(cam,10,7),k5=st.ring.t/0.6;
+    const rr2=tw*(0.4+k5*2.6),al=Math.max(0,0.7*(1-k5));
+    ctx.strokeStyle='rgba(150,205,255,'+al.toFixed(3)+')';ctx.lineWidth=3;
+    ctx.beginPath();ctx.ellipse(ck.x,ck.y,rr2,rr2*0.5,0,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.restore();
 }
 function mamoriEllipseHit(lx,ly,q,a,cam,mul){ // kind別の 縦楕円(0.55TWの円は 街道(9,10)を 0.500TWで 食う=SPEC_mamori 実測)
   const rx=cam.TW*0.42*(mul||1),ry=cam.TW*(a.ry||0.5)*(mul||1);
@@ -12726,6 +12899,25 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
     }
     return false;
   }
+  if(sp.mode==='zure'){ // ときかさね: さきに さわって 阻止/ずらされた 場面を めくりもどす(SPEC_zure_20260803)
+    if(st.arm&&st.arm.phase==='frame'){
+      const aa=sp.anchors[st.arm.i],qZ=isoCtr(aa.x,aa.y);
+      if(mamoriEllipseHit(lx,ly,qZ,aa,cam,1.25)){ // さきに さわった=切り取りは 失敗(罰なし)
+        st.arm.phase='foiled';st.arm.t=0;
+        st.rage={t:0,dur:0.5}; // ぬしが ハサミを ふりまわして くやしがる(笑いどころ)
+        puff(qZ.x,qZ.y-cam.TW*(aa.cy||0.3),'rgba(235,246,255,.95)',16,140,0.9,{up:true,s0:2,s1:4});
+        popup(qZ.x,qZ.y-cam.TW*1.0,'さきに さわった！','sp');
+        sfxSlash();
+        return true;
+      }
+    }
+    for(let i=0;i<sp.anchors.length;i++){ // ずらされた 場面=めくりもどし
+      if(!st.boxed[i])continue;
+      const aa=sp.anchors[i],qB=isoCtr(aa.x,aa.y);
+      if(mamoriEllipseHit(lx,ly,qB,aa,cam,1)){zurePeel(i);return true;}
+    }
+    return false;
+  }
   if(st.arm&&st.arm.phase==='reach'){ // うでを はたきおとす(外しても 罰なし=ただの 歩きになる)
     const tip=shimaPlayArmTip(cam);
     if(tip&&Math.hypot(lx-tip.x,ly-tip.y)<cam.TW*0.9){
@@ -12809,7 +13001,8 @@ function shimaPlayDraw(cam){ // 闇の うえに えがく。うで=線と多角
   if(sp.mode==='huda'){shimaPlayDrawHuda(cam,st,sp);return;}
   if(sp.mode==='nomi'){shimaPlayDrawNomi(cam,st,sp);return;}
   if(sp.mode==='tsumi'){shimaPlayDrawTsumi(cam,st,sp);return;} // つみばこは 別の絵
-  if(sp.mode==='mamori'){shimaPlayDrawMamori(cam,st,sp);return;} // まもりは 別の絵 // うたのみは 別の絵(suckを くらの うで描画に 落とさない) // うそふだは 別の絵(phase'fly'を くらの うで描画に 落とさない)
+  if(sp.mode==='mamori'){shimaPlayDrawMamori(cam,st,sp);return;} // まもりは 別の絵
+  if(sp.mode==='zure'){shimaPlayDrawZure(cam,st,sp);return;} // ときずらしは 別の絵 // うたのみは 別の絵(suckを くらの うで描画に 落とさない) // うそふだは 別の絵(phase'fly'を くらの うで描画に 落とさない)
   ctx.save();
   for(let i=0;i<sp.anchors.length;i++){ // なわの箱(盗られた もの)。点滅=「押せる」の合図(文字は 出さない)
     if(!st.boxed[i])continue;
@@ -17356,6 +17549,9 @@ async function runBattle(ref){
   if(foe===FOES.shioarashi&&!Game.bt.shin){ // まもり: たっていて つつまれていない数だけ 開幕の芝居(SPEC_mamori_20260803)
     Game.bt.araOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
   }
+  if(foe===FOES.kiritoru&&!Game.bt.shin){ // ときずらし: あいている 場面の数だけ 開幕の芝居(SPEC_zure_20260803)
+    Game.bt.zureOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
+  }
   if(foe===FOES.shioarashi){
     Game.bt.ch18Pier=!!Game.hidden.ch18BuiltPier;
     Game.bt.ch18Shelter=!!Game.hidden.ch18BuiltShelter;
@@ -17589,6 +17785,19 @@ async function runBattle(ref){
     const f=CH19_FORMS[Game.bt.ch19Form];
     enameEl.textContent=foe.name+'　'+f.icon;
     await say('割れた文字盤が、ゆうぐれ・鐘・雨の 三つの影へ ずれていく——');
+    {const zo=Game.bt.zureOpen,stZ=Game.shimaPlay; // ときずらし: 盤の やり返しの分だけ 開幕の芝居(三つの影・式は 不変)
+    if(typeof zo==='number'&&stZ&&stZ.threw&&!stZ.arm){ // frame/くやしがり中の開戦は 芝居なし(「何もしていない開戦」での誤爆を 塞ぐ)
+      const wrapped=2-zo;
+      if(wrapped<=0){ // ぜんぶ 守った/戻した: 切ることしか できない者が、はる はめになる
+        await say('きりとるものは あわてて つぎを 切ろうとして——\nじぶんの かげを、まちがえて きりとった！');
+        const epz=enemyPos();sfxSlash();flash('#cfe0ff',0.4,0.9);
+        Game.bt.recoil=2.0;Game.bt.hitStop=0.16;Game.bt.blink=1; // 見た目のみ=ダメージ0
+        puff(epz.x,epz.y-epz.s*50,'rgba(220,235,255,.9)',20,140,1.0,{up:true,s0:2,s1:5});
+        popup(epz.x,epz.y-epz.s*70,'ぺらり！','crit');
+        await say('かげが 紙のように ぺらりと めくれて、あわてて はりなおしている。\nものすごく きまりが わるそうだ。');
+      }else if(wrapped===1)await say('べつの時の 紙は、もう ひとつ のこっているだけだ——\nきりとるものの はさみが、ぎしりと ひくく きしんだ。');
+      else await say('きりとるものは まんぞくげに、はさみの 刃を かちりと ならした。');
+    }}
     await say('きりとるもの「ひとこまだけを 見ろ。\nつぎの姿も、その前のねがいも、ぜんぶ きりすてろ」');
     await say(f.icon+' '+f.name+'の影。'+f.tip+'\n姿は てきの手番ごとに 切りかわる。');
   }
