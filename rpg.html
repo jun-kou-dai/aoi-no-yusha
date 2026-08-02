@@ -16493,6 +16493,9 @@ async function runBattle(ref){
     Game.bt.shin=true;Game.bt.kage=KAGE[foeId(foe)];Game.bt.shinVolley=0;
     Game.bt.hp=Game.bt.mhp=Math.round(nhp*(1+((Game.bt.kage.hpMul||1.7)-1)*kageDiffK())); // KAGE表×難易度の効き(2026-07-29)
   }
+  if(foe===FOES.shimaikomu&&!Game.bt.shin){ // ぬしの しかけ 配信2: 盤で あけた数だけ 開幕の芝居(SPEC_nushi_shikake_20260802)
+    Game.bt.kuraOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
+  }
   if(foe===FOES.shioarashi){
     Game.bt.ch18Pier=!!Game.hidden.ch18BuiltPier;
     Game.bt.ch18Shelter=!!Game.hidden.ch18BuiltShelter;
@@ -16611,7 +16614,17 @@ async function runBattle(ref){
   else if(foe===FOES.shimaikomu){
     await say('くらの おくで、おびただしい はこの やまが うごめいて たちあがる——');
     await say('『……さわるな。ぜんぶ、わたしの たからだ。\nうしなうくらいなら、だれにも きかせない』');
-    await say('しまいこまれた こえたちが、はこの すきまから ひかりを もらしている…！');
+    if(Game.bt.kuraOpen>=3){ // ぬしの しかけ: 盤で ぜんぶ あけて 挑んだ=開幕の芝居のみ(ため一撃の重さ・式は 不変)
+      await say('しまいこむものは おおきな ふくろを さかさに ふった——\nなにも おちてこない。ぜんぶ あけられている！');
+      const epk=enemyPos();sfxSlash();shakeBattle(26,0.8);flash('#f6e8c0',0.5,0.9);
+      puff(epk.x,epk.y-epk.s*30,'rgba(214,178,120,.9)',24,150,1.0,{s0:2,s1:5});
+      popup(epk.x,epk.y-epk.s*70,'すってん！','sp');
+      await say('あわてて あしを すべらせ、すってんと ころんだ！\nものすごく くやしそうだ。');
+    }else{
+      await say('しまいこまれた こえたちが、はこの すきまから ひかりを もらしている…！');
+      if(Game.bt.kuraOpen===2)await say('しまいこむものは ふくろを のぞきこみ、けげんそうに かたむけた。\nなかみが たりない——');
+      else if(Game.bt.kuraOpen===1)await say('しまいこむものは ふくろを ちらりと みて、ふきげんに うなった。');
+    }
   }
   else if(foe===FOES.mototadasu){
     await say('がけの おもてが めくれ、いしの きょじんが たにを みおろす——');
