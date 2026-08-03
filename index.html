@@ -2,11 +2,48 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="refresh" content="0; url=./rpg.html?v=20260803_2204">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="ブラウザRPG「蒼の勇者」。二十一の章、八つの島、百九のまもの。">
 <title>蒼の勇者</title>
+<style>
+:root{--paper:#0b1130;--ink:#eef2f9;--sub:#b7c4dc;--faint:#8695b2;--rule:#2a3560;
+ --azure:#7fa8e8;--beacon:#e8c169;
+ --mincho:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
+ --gothic:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:linear-gradient(#0b1130,#17214b 62%,#233062);color:var(--ink);
+ font-family:var(--gothic);min-height:100vh;min-height:100svh;
+ display:flex;align-items:center;justify-content:center;padding:28px 20px}
+main{width:100%;max-width:430px;text-align:center}
+.en{font-size:11px;letter-spacing:.42em;color:var(--faint);margin-bottom:14px}
+h1{font-family:var(--mincho);font-weight:600;font-size:40px;letter-spacing:.16em;
+ margin:0 0 10px;text-indent:.16em}
+.sub{font-size:13px;color:var(--sub);letter-spacing:.06em;margin:0 0 34px;line-height:1.9}
+a.btn{display:block;text-decoration:none;border:1px solid var(--rule);background:rgba(255,255,255,.04);
+ padding:17px 18px;margin-bottom:12px;color:var(--ink);letter-spacing:.08em}
+a.btn b{display:block;font-family:var(--mincho);font-size:19px;font-weight:600}
+a.btn span{display:block;font-size:12px;color:var(--faint);margin-top:5px;letter-spacing:.04em}
+a.play{border-color:var(--beacon);background:rgba(232,193,105,.13);padding:25px 18px}
+a.play b{font-size:25px;color:var(--beacon)}
+a.play span{color:#d8c49a}
+a.btn:active{background:rgba(255,255,255,.11)}
+.foot{margin-top:26px;font-size:11px;color:var(--faint);letter-spacing:.08em;line-height:2.2}
+.foot a{color:var(--azure)}
+@media(max-width:360px){h1{font-size:33px}a.play b{font-size:22px}}
+</style>
 </head>
 <body>
-<p><a href="./rpg.html?v=20260803_2204">蒼の勇者をはじめる</a></p>
+<main>
+ <div class="en">A Z U R E　H E R O</div>
+ <h1>蒼の勇者</h1>
+ <p class="sub">二十一の章と、八つの島と、百九のまもの。<br>ブラウザだけで あそべます。</p>
+
+ <a class="btn play" href="./rpg.html?v=20260803_2204"><b>▶ ゲームを はじめる</b><span>つづきから／さいしょから</span></a>
+ <a class="btn" href="./guide/"><b>📖 攻略の書</b><span>三十六の ばしょ・島の あそび方・まもの図鑑・ぜんぶの じゅもんと ねだん</span></a>
+ <a class="btn" href="./shima/"><b>🏝 しまの あそび</b><span>直したところの「まえ／いま」の 写真</span></a>
+
+ <div class="foot"><a href="./rpg.html?v=20260803_2204">版 20260803_2204</a></div>
+</main>
 </body>
 </html>
