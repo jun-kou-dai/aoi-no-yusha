@@ -9819,7 +9819,9 @@ function questTextCore(){
       if(NUSHI_REPLAY&&Game.mapId===NUSHI_REPLAY.map){
         const n=NUSHI_AGAIN.find(x=>x.id===NUSHI_REPLAY.id);
         const nm=NUSHI_REPLAY.shin?((KAGE[NUSHI_REPLAY.id]&&KAGE[NUSHI_REPLAY.id].kname)||'かげまとう ぬし'):((n&&String(n.label).split(' ─ ')[0])||'しまの ぬし');
-        if(nushiReplayAlive())return 'もくてき：'+nm+'と '+(NUSHI_REPLAY.shin?'':'もういちど ')+'立ちあう（しまの おくに いる）';
+        if(nushiReplayAlive()){
+          if(!NUSHI_REPLAY.shin&&typeof shimaPlayBusy==='function'&&shimaPlayBusy())return 'もくてき：'+nm+'が しかけて きておる——タップで やりかえせ（ほうっておいても かてる）'; // 島あそびが先(SPEC_shima_junjo_20260803)
+          return 'もくてき：'+nm+'と '+(NUSHI_REPLAY.shin?'':'もういちど ')+'立ちあう（しまの おくに いる）';}
         // 倒したあと: ここに もう用は ない。出る道を 指す(2026-07-26 夕)
         // でぐちが 1つも 無い島(あらしのよる)も ある＝その時は どこでもドアを 案内する
         {const ex=exitToVillage();
@@ -11958,6 +11960,11 @@ function shimaPlayReady(){ // 発火条件: そろい済み+ぬしが盤上+か�
   const kinds={};
   for(const f of (Game.horaFx||[]))if(f.map===Game.mapId&&f.life>1e8)kinds[f.kind]=1;
   return sp.anchors.every(a=>kinds[a.kind]); // 2/3までは 起きない(v2038の境界)
+}
+function shimaPlayBusy(){ // 2026-08-03 発注者「島遊びが先か、目当てが先か、ちゃんとしろよ」→ 島あそびが先・めあては後(SPEC_shima_junjo_20260803)
+  // ぬしの しかけが まだ動く(のこり手数あり か 動作中)あいだ、再戦の金柱とバーは 順番を ゆずる。打ち止めで もどる。
+  const st=Game.shimaPlay;
+  return !!(st&&st.map===Game.mapId&&(st.stealsLeft>0||st.arm));
 }
 function shimaPlayTick(dt){
   const sp=shimaPlaySpec();
@@ -17183,6 +17190,7 @@ async function questGuide(){
 function questBeaconTargets(){
   const h=Game.hidden,w=WORLDS[Game.mapId],out=[];
   if(!w)return out;
+  if(NUSHI_REPLAY&&Game.mapId===NUSHI_REPLAY.map&&!NUSHI_REPLAY.shin&&typeof shimaPlayBusy==='function'&&shimaPlayBusy())return out; // 島あそびが先・めあては後(SPEC_shima_junjo_20260803)
   const push=(x,y)=>out.push({x,y});
   const foeB=(pred)=>{for(const e of Game.enemies)if(e.def&&pred(e))push(Math.round(e.px),Math.round(e.py));};
   // 最優先の救出導線は排他的に返す。後半章・石碑・初回案内の金柱を同時に混ぜない
