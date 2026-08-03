@@ -1,0 +1,752 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="ブラウザRPG「蒼の勇者」の公式解説書。八つの島、二十一の章、百九のまもの。">
+<title>蒼の勇者 ― 攻略の書</title>
+<style>:root{
+ /* 明けかけの空 ―― ゲームの sky から起こした 寒色の紙 */
+ --paper:#dfe5ef; --card:#f4f7fc; --ink:#0c1322; --sub:#4e5a72; --faint:#7b869d;
+ --rule:#a6b2c9; --hair:#c3ccdd;
+ --azure:#17407e;      /* たった一つのアクセント */
+ --beacon:#8a6512;     /* ゲームが金を使う場所にだけ */
+ --sheet:url(zukan.jpg);
+ --coverh:330px;
+ --mincho:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
+ --gothic:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--gothic);
+ font-size:15px;line-height:1.95;font-feature-settings:"palt";
+ background-image:
+  repeating-linear-gradient(26.565deg,rgba(23,64,126,.045) 0 1px,transparent 1px 34px),
+  repeating-linear-gradient(-26.565deg,rgba(23,64,126,.045) 0 1px,transparent 1px 34px);}
+
+/* ---- 表紙 ---- */
+.cover{position:relative;overflow:hidden}
+.cover img{display:block;width:100%;height:var(--coverh);object-fit:cover;object-position:50% 46%}
+.cover .veil{position:absolute;inset:0;
+ background:linear-gradient(180deg,rgba(8,14,30,0) 34%,rgba(8,14,30,.62) 76%,rgba(8,14,30,.86) 100%)}
+.cover .ttl{position:absolute;left:0;right:0;bottom:0;padding:0 20px 20px}
+.cover h1{font-family:var(--mincho);font-weight:600;color:#f2f5fb;margin:0;
+ font-size:clamp(30px,7.4vw,44px);letter-spacing:.16em;line-height:1.28;text-indent:.16em}
+.cover .en{font-family:var(--mincho);font-size:11px;letter-spacing:.5em;color:#b9c9e6;margin-bottom:9px;text-indent:.5em}
+.cover .sub{color:#cdd8ea;font-size:13px;margin-top:7px;letter-spacing:.06em}
+.cover .play{position:absolute;right:16px;top:16px;font-family:var(--mincho);font-size:13px;
+ letter-spacing:.12em;color:#f0d79a;border:1px solid rgba(240,215,154,.55);
+ padding:6px 14px;text-decoration:none;background:rgba(8,14,30,.42);backdrop-filter:blur(3px)}
+
+/* 引き方 以外では 表紙をたたむ ―― 毎回 大きな扉をまたがせない */
+.cover img,.cover h1,.cover .en,.cover .sub{transition:.3s cubic-bezier(.4,0,.2,1)}
+body.sub{--coverh:76px}
+body.sub .cover img{object-position:50% 40%}
+body.sub .cover .veil{background:linear-gradient(90deg,rgba(8,14,30,.86) 42%,rgba(8,14,30,.24))}
+body.sub .cover .ttl{padding:0 20px 13px}
+body.sub .cover h1{font-size:17px;letter-spacing:.13em;line-height:1}
+body.sub .cover h1 br{display:none}
+body.sub .cover h1::after{content:"　"}
+body.sub .cover .en{font-size:8.5px;letter-spacing:.4em;margin-bottom:4px}
+body.sub .cover .sub,body.sub .bar{display:none}
+body.sub .cover .play{top:50%;transform:translateY(-50%);padding:5px 12px;font-size:12px}
+
+.bar{display:flex;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+ background:var(--card)}
+.bar div{flex:1;padding:11px 4px;text-align:center;border-left:1px solid var(--hair)}
+.bar div:first-child{border-left:none}
+.bar b{display:block;font-family:var(--mincho);font-size:21px;font-weight:600;
+ font-variant-numeric:tabular-nums;line-height:1.2;letter-spacing:.02em}
+.bar span{font-size:10.5px;color:var(--faint);letter-spacing:.09em}
+
+/* ---- 目次（横罫のならび） ---- */
+nav{position:sticky;top:0;z-index:20;background:rgba(223,229,239,.95);
+ backdrop-filter:saturate(160%) blur(10px);border-bottom:1px solid var(--rule);
+ overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav b{display:inline-block;padding:12px 3px 10px;margin:0 15px;cursor:pointer;font-weight:500;
+ font-family:var(--mincho);font-size:15.5px;letter-spacing:.1em;color:var(--sub);
+ border-bottom:2px solid transparent;transition:.18s}
+nav b:first-child{margin-left:20px} nav b:last-child{margin-right:20px}
+nav b.on{color:var(--azure);border-bottom-color:var(--azure)}
+
+/* ---- 版面：左に罫が一本 ---- */
+main{max-width:860px;margin:0 auto;padding:0 20px 80px}
+section{display:none;animation:in .3s ease both}
+section.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){section{animation:none}
+ .cover img,.cover h1,.cover .en,.cover .sub{transition:none}}
+
+.hd{margin:34px 0 18px;padding-bottom:11px;border-bottom:1px solid var(--rule)}
+.hd h2{font-family:var(--mincho);font-weight:600;font-size:26px;margin:0;letter-spacing:.1em;line-height:1.4}
+.hd p{margin:9px 0 0;color:var(--sub);font-size:14px;line-height:1.9}
+
+.row2{display:grid;grid-template-columns:52px 1fr;gap:0 16px}
+.num{font-family:var(--mincho);font-size:26px;color:var(--rule);line-height:1;padding-top:3px;
+ font-variant-numeric:tabular-nums;text-align:right}
+.rail{border-left:1px solid var(--hair);padding:0 0 26px 16px;margin-left:-1px}
+.rail>h3:first-child{margin-top:0}
+
+h3{font-family:var(--mincho);font-weight:600;font-size:19px;margin:30px 0 10px;letter-spacing:.08em}
+h4{font-family:var(--mincho);font-weight:600;font-size:16px;margin:22px 0 8px;letter-spacing:.06em;color:var(--azure)}
+.lead{color:var(--sub);font-size:14.5px;margin:0 0 16px}
+p{margin:0 0 12px}
+.go{display:inline-block;font-family:var(--mincho);letter-spacing:.1em;color:var(--azure);
+ border:1px solid var(--azure);padding:7px 16px;text-decoration:none;font-size:14px;margin:2px 6px 8px 0}
+.go:hover{background:var(--azure);color:#eef2fa}
+
+/* ---- 島の図版 ---- */
+.plate-isle{margin:26px 0 0;position:relative;background:#0c1322}
+.plate-isle img{display:block;width:100%;height:auto}
+.plate-isle .cap{position:absolute;left:0;bottom:0;right:0;padding:26px 18px 13px;
+ background:linear-gradient(180deg,rgba(8,14,30,0),rgba(8,14,30,.82));color:#eef2f9}
+.plate-isle h4{font-family:var(--mincho);font-weight:600;margin:0;font-size:22px;letter-spacing:.12em;color:#eef2f9}
+.plate-isle .met{font-size:12px;color:#b7c4dc;margin-top:4px;letter-spacing:.05em}
+.verb{font-family:var(--mincho);font-size:12.5px;letter-spacing:.18em;color:#f0d79a;
+ border:1px solid rgba(240,215,154,.5);padding:2px 10px;margin-left:10px;vertical-align:3px;display:inline-block}
+
+dl.spec{margin:0;border-bottom:1px solid var(--hair)}
+dl.spec>div{display:grid;grid-template-columns:6.6em 1fr;gap:0 14px;padding:11px 2px;
+ border-top:1px solid var(--hair);font-size:14.5px}
+dl.spec dt{color:var(--faint);font-size:12.5px;letter-spacing:.08em;padding-top:3px}
+dl.spec dd{margin:0}
+dl.spec>div.key{background:linear-gradient(90deg,rgba(200,160,60,.13),transparent 82%)}
+dl.spec>div.key dt{color:var(--beacon)}
+dl.spec>div.key dd{color:#5b420a}
+dl.spec>div.key dd b{color:#4a3506}
+.shots{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);margin-top:14px}
+.shots figure{margin:0;background:var(--card)}
+.shots img{display:block;width:100%;height:92px;object-fit:cover}
+.shots figcaption{font-size:11px;color:var(--sub);padding:6px 6px;text-align:center;letter-spacing:.04em}
+.shots .none{grid-column:1/-1;background:var(--card);padding:20px;text-align:center;color:var(--faint);font-size:12.5px}
+
+/* ---- 表 ---- */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:8px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-family:var(--mincho);font-size:12.5px;letter-spacing:.12em;color:var(--sub);
+ font-weight:600;padding:0 10px 8px;white-space:nowrap;border-bottom:1px solid var(--rule)}
+td{padding:10px;border-bottom:1px solid var(--hair);vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td.nw{white-space:nowrap}
+tr.part td{background:var(--card);font-family:var(--mincho);letter-spacing:.14em;color:var(--azure);
+ font-size:13px;padding:7px 10px;border-bottom:1px solid var(--rule)}
+.ch{font-family:var(--mincho);font-size:16px;color:var(--azure);font-variant-numeric:tabular-nums}
+.sp{color:var(--azure);white-space:nowrap}
+
+/* ---- 図版のシート（敵） ---- */
+.tools{position:sticky;top:44px;z-index:10;background:rgba(223,229,239,.96);backdrop-filter:blur(9px);
+ padding:12px 0 11px;border-bottom:1px solid var(--rule)}
+input[type=search]{width:100%;padding:10px 13px;border:1px solid var(--rule);background:var(--card);
+ color:var(--ink);font:inherit;font-size:16px;outline:none;border-radius:0}
+input[type=search]:focus{border-color:var(--azure);box-shadow:inset 0 0 0 1px var(--azure)}
+.chips{display:flex;gap:0;margin-top:11px;overflow-x:auto;scrollbar-width:none;border:1px solid var(--rule);background:var(--card)}
+.chips::-webkit-scrollbar{display:none}
+.chips u{text-decoration:none;white-space:nowrap;font-size:13px;padding:7px 15px;color:var(--sub);
+ cursor:pointer;border-left:1px solid var(--hair);flex:0 0 auto}
+.chips u:first-child{border-left:none}
+.chips u.on{background:var(--azure);color:#eef2fa}
+.cnt{font-size:12px;color:var(--faint);margin:16px 0 10px;letter-spacing:.1em}
+.plates{display:grid;grid-template-columns:repeat(auto-fill,120px);gap:20px 14px;justify-content:space-between}
+.plate{position:relative;cursor:pointer}
+/* 額は「固定幅＋px」だけで組む。--cw を変えれば ずれずに 縮む
+   （% 指定は「画像と要素の差の50%」なので 使わない＝2026-08-03に踏んだ罠） */
+.art{--cw:120px;--c:0;--r:0;
+ width:var(--cw);height:calc(var(--cw)*0.9167);flex:0 0 var(--cw);
+ background-color:#0c1322;background-image:var(--sheet);background-repeat:no-repeat;
+ background-size:calc(var(--cw)*10) calc(var(--cw)*11);
+ background-position:calc(var(--c)*var(--cw)*-1) calc(var(--r)*var(--cw)*-1 - var(--cw)*0.0667);
+ border:1px solid var(--rule)}
+.plate h5{font-family:var(--mincho);font-weight:600;margin:8px 0 0;font-size:13px;line-height:1.5;letter-spacing:.03em}
+.plate .st{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;margin-top:2px}
+.plate .wk{margin-top:4px;min-height:16px}
+.plate .wk u{text-decoration:none;font-size:10px;padding:1px 5px;margin-right:3px;letter-spacing:.06em}
+.we{background:#f6dcdf;color:#8e2634} .wr{background:#dbe5f3;color:#1b4675}
+.plate .at{font-size:10.5px;color:var(--faint);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tagm{position:absolute;top:0;left:0;background:var(--azure);color:#eef2fa;font-size:10px;
+ padding:2px 7px;letter-spacing:.08em}
+
+/* ---- まもの一体の窓 ---- */
+#modal{position:fixed;inset:0;z-index:60;display:none;background:rgba(8,14,30,.6);
+ align-items:center;justify-content:center;padding:20px}
+#modal.on{display:flex}
+#modal .win{background:var(--paper);border:1px solid var(--ink);max-width:420px;width:100%;
+ max-height:86vh;overflow:auto;padding:0}
+#modal .top{display:flex;gap:14px;padding:16px;border-bottom:1px solid var(--rule);background:var(--card)}
+#modal h4{margin:0;font-size:19px;color:var(--ink)}
+#modal .x{position:absolute;top:0;right:0;padding:10px 16px;font-size:22px;color:var(--sub);cursor:pointer;line-height:1}
+#modal .body{padding:4px 16px 18px}
+
+details{border-top:1px solid var(--hair)}
+details:last-of-type{border-bottom:1px solid var(--hair)}
+summary{cursor:pointer;font-family:var(--mincho);font-size:15px;padding:11px 2px;list-style:none;letter-spacing:.06em}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"＋";float:right;color:var(--rule)}
+details[open] summary::after{content:"−"}
+details .in{padding:0 0 14px}
+.note{border-left:3px solid var(--beacon);background:rgba(200,160,60,.09);padding:13px 16px;margin:18px 0;font-size:14.5px}
+.note b{color:var(--beacon)}
+.warn{border:1px solid var(--rule);background:var(--card);padding:11px 14px;margin:18px 0;font-size:12.5px;color:var(--sub)}
+.foot{margin-top:52px;padding-top:18px;border-top:1px solid var(--rule);font-size:11.5px;color:var(--faint);letter-spacing:.08em;line-height:2}
+a{color:var(--azure)}
+a:focus-visible,summary:focus-visible,nav b:focus-visible,.plate:focus-visible{outline:2px solid var(--azure);outline-offset:2px}
+@media(max-width:430px){:root{--coverh:238px}
+ .plates{grid-template-columns:repeat(auto-fill,104px)}
+ .plate .art{--cw:104px}
+ .row2{grid-template-columns:34px 1fr;gap:0 10px}.num{font-size:20px}
+ dl.spec>div{grid-template-columns:1fr;gap:2px}
+ .cover .play{font-size:11px;padding:5px 10px}}
+.uicap{font-size:13px;color:var(--sub);line-height:1.9;margin:10px 0 0;padding:0 2px}
+.uicap b{display:inline-block;min-width:1.5em;text-align:center;background:var(--azure);color:#eef2fa;
+ font-size:11px;border-radius:50%;line-height:1.5em;height:1.5em;margin:0 2px}
+td.ttl{min-width:11em}
+td.nm{min-width:8.5em;line-height:1.7}
+.sub2{font-size:12px;color:var(--faint);line-height:1.75;margin-top:2px}
+td.nw,th.nw{white-space:nowrap}
+/* ---- 道のり（表にせず 左に番号の罫） ---- */
+.chpart{font-family:var(--mincho);letter-spacing:.16em;color:var(--azure);font-size:13.5px;
+ background:var(--card);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+ padding:8px 14px;margin:22px 0 0}
+.chrow{display:grid;grid-template-columns:56px 1fr;gap:0 14px;border-bottom:1px solid var(--hair);padding:13px 0}
+.chno{font-family:var(--mincho);font-size:23px;color:var(--azure);text-align:right;
+ font-variant-numeric:tabular-nums;line-height:1.35}
+.chbody{border-left:1px solid var(--hair);padding-left:16px}
+.chttl{font-family:var(--mincho);font-size:17px;letter-spacing:.05em;line-height:1.6}
+.chmeta{font-size:13px;color:var(--sub);margin-top:3px;line-height:1.8}
+.chsp{font-size:13px;color:var(--sub);margin-top:5px;line-height:1.8}
+@media(max-width:430px){.chrow{grid-template-columns:34px 1fr;gap:0 10px}.chno{font-size:19px}
+ .chbody{padding-left:11px}}
+</style></head><body>
+<header class="cover">
+ <img src="img/isle_ch15.jpg" alt="ほらふきじま">
+ <div class="veil"></div>
+ <a class="play" href="../rpg.html">▶ ゲームを ひらく</a>
+ <div class="ttl">
+  <div class="en">A Z U R E　H E R O</div>
+  <h1>蒼の勇者<br>攻略の書</h1>
+  <div class="sub">八つの島と、百九のまもの ― 遊びながら引く本</div>
+ </div>
+</header>
+<div class="bar" id="bar"></div>
+<nav id="nav"></nav>
+<main>
+
+<!-- ══════════ 0 引き方 ══════════ -->
+<section id="t0" class="on">
+ <div class="hd"><h2>この書の 引き方</h2>
+  <p>前から順に読む本ではありません。手が止まったところで、上の見出しから引いてください。数字・呪文の効果・値段・ボタンの名前は、すべて ゲーム本体の中身から そのまま写しています。</p></div>
+
+ <div class="row2"><div class="num">一</div><div class="rail">
+  <h3>はじめて 遊ぶ</h3>
+  <p class="lead">「さいしょの十分」へ。死なずに レベル四まで 行く道が、実際に 歩いた 時刻つきで 書いてあります。</p>
+  <a class="go" href="#" data-go="t1">さいしょの十分 へ</a></div></div>
+ <div class="row2"><div class="num">二</div><div class="rail">
+  <h3>いま 何を すれば いいのか わからない</h3>
+  <p class="lead">村の 北の丘の <b>フクロ</b>に 話しかけてください。「<span class="sp">✨ いま できること</span>」に、いま できることが 全部 ならびます。画面の 見方は「画面の見方」へ。</p>
+  <a class="go" href="#" data-go="t2">画面の見方 へ</a></div></div>
+ <div class="row2"><div class="num">三</div><div class="rail">
+  <h3>途中で 止まった</h3>
+  <p class="lead">「道のり」で 自分の章を さがしてください。全二十一章＋うら章が 一章一行です。舞台・しめの相手・もらえる呪文が 一目で 分かります。</p>
+  <a class="go" href="#" data-go="t3">道のり へ</a></div></div>
+ <div class="row2"><div class="num">四</div><div class="rail">
+  <h3>島で 何を するのか わからない</h3>
+  <p class="lead">「島の遊び」へ。七つの島に、島ごとに ちがう 遊びが あります。<b>ゲームの中では 文字で 教えません</b>——押す場所は この本にだけ 書いてあります。</p>
+  <a class="go" href="#" data-go="t4">島の遊び へ</a></div></div>
+ <div class="row2"><div class="num">五</div><div class="rail">
+  <h3>この敵の 弱点は</h3>
+  <p class="lead">「まもの図鑑」へ。百九体を 名前で さがせます。押すと 一体ぶんの 詳しい紙が ひらきます。</p>
+  <a class="go" href="#" data-go="t6">まもの図鑑 へ</a></div></div>
+
+ <h3>ことばの 覚え書き</h3>
+ <div class="tw"><table>
+ <tr><th>ことば</th><th>意味</th></tr>
+ <tr><td class="sp">ぬし</td><td>島の主。八つの島の 最後に 立ちはだかる（八体）。ふつうの 中ボスとは 別あつかいで、ためた 一撃が よろいでは 止まらない</td></tr>
+ <tr><td class="sp">蒼珠（そうじゅ）</td><td>章を おえた しるし。画面の上に 最大 二十こ ならぶ</td></tr>
+ <tr><td class="sp">章じゅもん</td><td>章を おえると 覚える 特別な呪文。全二十本。ふつうの呪文とは 別のリスト</td></tr>
+ <tr><td class="sp">⚒ いちざの したく</td><td>一座のふねで 買う 一点もの 八点。<b>その島へ 渡る前</b>に買う。ぬしの ためた一撃に 答えるための 品</td></tr>
+ <tr><td class="sp">かたみ</td><td>島を おえると もらう 品。館の かいろうで 実際に 使う</td></tr>
+ <tr><td class="sp">もくてきバー</td><td>画面の下の <b>金の帯</b>。押すと「次に すること」が ひらく</td></tr>
+ <tr><td class="sp">フクロ</td><td>村の <b>北の丘</b>の フクロウ。迷ったら ここ。「✨ いま できること」が 台帳</td></tr>
+ <tr><td class="sp">ほりだしもの</td><td>地面に うまった 隠し。全二十二か所</td></tr>
+ <tr><td class="sp">かげ編</td><td>物語を おえた あとの 続き。レベルの 上限が 十八から 二十五へ ひらく</td></tr>
+ </table></div>
+
+ <div class="note">この本の 数字は すべて <b>なんいど「ふつう」</b>のものです。ほかの きびしさでは 敵の HP と こうげきが 変わります（「画面の見方」に 換算の表）。</div>
+</section>
+
+<!-- ══════════ 1 さいしょの十分 ══════════ -->
+<section id="t1">
+ <div class="hd"><h2>さいしょの 十分</h2>
+  <p>新しく はじめて、なんいど「ふつう」で、実際に 歩いた ときの めやすです。この通りに 進めば <b>一度も 死なずに レベル四・三十二ゴールド</b>まで 届きます。</p></div>
+
+ <h3>実際に かかった 時間</h3>
+ <div class="tw"><table>
+ <tr><th>時刻</th><th>できごと</th></tr>
+ <tr><td class="nw ch">〇分</td><td>王の口上 → きびしさを えらぶ → 物語 → <b>王から やくそう 二つ</b>（この窓を 読みとばさない）</td></tr>
+ <tr><td class="nw ch">二分三十三秒</td><td>最初の 戦い（スライム）に やくそうを 二回 使って 勝ち、<b>レベル二</b>。HPと MPが 全部 もどる</td></tr>
+ <tr><td class="nw ch">四分半ごろ</td><td>夜に なる。きんのスライムに 逃げられる（これは そういう 敵）</td></tr>
+ <tr><td class="nw ch">五分五十六秒</td><td>夜の おおがらす（経験値が 増える）で <b>レベル三</b></td></tr>
+ <tr><td class="nw ch">八分十二秒</td><td><b>レベル四・三十二ゴールド</b>。むらの みせで <b>どうのつるぎ（三十ゴールド）</b>が 買える。金の帯が「みぎうえの でぐちから もりへ」に 変わる</td></tr>
+ </table></div>
+
+ <div class="note"><b>やくそうは 王が くれます。</b> 開幕の 口上の いちばん最後の 一窓で 二つ もらえます（新しく はじめた ときだけ）。レベル一の 手持ちは これだけで、宿は 三十ゴールド・所持金は ゼロから 始まります。</div>
+
+ <div class="note"><b>ホイミは 最初から 使えます。</b>レベル一で すでに <b>ホイミ</b>（MP三・HPが 十六ほど もどる）と <b>メラ</b>（MP三）を 覚えています。
+  HPが 半分を 切ると、戦いの <b>「じゅもん」→「かいふく・ほじょ」→「ホイミ」</b>の三つが 順に <b>金色に 光って</b> 教えてくれます（レベル四に なると 光らなく なります）。<b>光ったら ホイミ</b>——これだけで 序盤の 死は ほとんど 消えます。</div>
+
+ <h3>ここで つまずきます（二つ・ゲームの中では 教えてくれません）</h3>
+ <div class="row2"><div class="num">一</div><div class="rail">
+  <h3>夜の スライムは 昼と 別物</h3>
+  <p class="lead">夜に なると まものが 強くなります。レベル一の 夜は、光ったら ホイミを 使っても <b>勝ったり 負けたり（およそ 五分五分）</b>。ただ <b>押しっぱなしで 戦うと 九割 負けます</b>。<b>夜は 村に 帰るか、レベル二以上で 出る</b>のが 安全です。夜は 経験値が 増えるので、レベル二からは 稼ぎ時に 変わります。</p></div></div>
+ <div class="row2"><div class="num">二</div><div class="rail">
+  <h3>いわゴーレムは 警告なしで 強い</h3>
+  <p class="lead">そうげんの 奥に いる <b>いわゴーレム</b>は、レベル一では <b>三十戦中 二十九敗</b>。近づくと 戦いに なります。<b>レベル四くらいまで 手を 出さない</b>。ぶつりが 効きにくく（半分）、火が よく 効きます（一.三倍）。</p></div></div>
+
+ <div class="note"><b>逃げられなく なっています。</b>そうげんの まものが「にげだす」のは <b>レベル四から</b>。序盤で 追いかけ回されて 報酬ゼロに なることは ありません。</div>
+
+ <h3>最初に 出会う まもの</h3>
+ <div class="tw"><table id="tearly"></table></div>
+</section>
+
+<!-- ══════════ 2 画面の見方 ══════════ -->
+<section id="t2">
+ <div class="hd"><h2>画面の 見方</h2>
+  <p>迷ったら <b>下の金の帯</b>と <b>村の北の丘のフクロ</b>。この二つだけ 覚えれば 道に 迷いません。</p></div>
+
+ <div class="plate-isle" id="uiplate"></div>
+ <p class="uicap" id="uicap"></p>
+
+ <h3>画面の 部品</h3>
+ <div class="tw"><table>
+ <tr><th>どこ</th><th>なに</th></tr>
+ <tr><td class="sp nw">下の 金の帯</td><td><b>もくてきバー</b>。いま すべきことが 一行。<b>押せます</b>——押すと 行き先の 案内が ひらく</td></tr>
+ <tr><td class="sp nw">金の 光の柱</td><td>いまの <b>めあて</b>。そこへ 行けば 話が 進む</td></tr>
+ <tr><td class="sp nw">青い 光の柱</td><td><b>でぐち</b>。柱のそばに 行き先の 名前が 出る</td></tr>
+ <tr><td class="sp nw">上の 青い たま</td><td><b>蒼珠</b>。おえた章の 数。最大 二十</td></tr>
+ <tr><td class="sp nw">LV / HP / MP</td><td>レベル・体力・呪文の力</td></tr>
+ <tr><td class="sp nw">⚔ と 🛡 の数字</td><td>いま 持っている つるぎと よろいの つよさ。買い物のときは この数字と 見くらべる</td></tr>
+ <tr><td class="sp nw">☰</td><td>メニュー。つよさ・じゅもん・どうぐ・ずかん・たびのメモ・どこでもドア・とうめいマント</td></tr>
+ </table></div>
+
+ <h3>戦いの コマンド</h3>
+ <div class="tw"><table>
+ <tr><th>コマンド</th><th>中身</th></tr>
+ <tr><td class="sp nw">たたかう</td><td>つるぎで 斬る。かいしんが 出ると まもりを 無視して 大きく 入る</td></tr>
+ <tr><td class="sp nw">じゅもん</td><td>ふつうの呪文と <b>📖 ものがたりの じゅもん</b>（章じゅもん）。行ごとに 効果と、使えない ときは その わけが 出る</td></tr>
+ <tr><td class="sp nw">金色に 光る行</td><td><b>「いま これを 押すと 局面が 変わる」</b>という しるし。同時に 一行だけ。序盤の HPが へった ときの <b>ホイミ</b>が これ（レベル四で 消える）</td></tr>
+ <tr><td class="sp nw">どうぐ</td><td>やくそう など。行に 回復量が 出る</td></tr>
+ <tr><td class="sp nw">ぼうぎょ</td><td>その手番の いたみを 半分に。<b>ぬしの ためた一撃は これで 受ける</b></td></tr>
+ <tr><td class="sp nw">にげる</td><td>逃げる。ふかみの 中では 「本当に 降りるか」を 一度 たしかめてくる</td></tr>
+ <tr><td class="sp nw">👹 へんしん</td><td>かげ編の あと だけ。一戦に 一回、ぬしの 姿を 借りて 重い 一撃を 打つ</td></tr>
+ </table></div>
+
+ <h3>フクロ（村の 北の丘）</h3>
+ <p>この ゲームで いちばん 大事な NPC です。話しかけると、いまの 状況に 合わせて <b>きょうの ひとすじ</b>（今日 やること 一つ）を 名指しで 教え、「<b>▶ つれていって</b>」を 押すと その場所まで 連れて行ってくれます。</p>
+ <div class="tw"><table>
+ <tr><th>行</th><th>中身</th></tr>
+ <tr><td class="sp nw">❓ あそびかた</td><td>三つの きほんを いつでも 読み直せる</td></tr>
+ <tr><td class="sp nw">⚔ ぬしの こえを ききなおす（いま N/7）</td><td><b>島の遊びの 入口はここ</b>。倒した ぬしと もう一度 立ちあう</td></tr>
+ <tr><td class="sp nw">🚢 一座の ふね</td><td>⚒ したくを 買う・島へ 渡る</td></tr>
+ <tr><td class="sp nw">🪙 しまの ほりだしもの</td><td>いくつ 見つけたか。のこりの 島の 名前だけ ささやく</td></tr>
+ <tr><td class="sp nw">🌿 やまびこのたに</td><td>にげる こだまを おいかける（たにの 遊び）</td></tr>
+ <tr><td class="sp nw">🔥 のこりびの ふかみ</td><td>かげ編の あと。もぐって 稼ぐ</td></tr>
+ </table></div>
+ <p class="lead">（ならぶ 行は 進み具合で 変わります。上は クリア後の 例です。）</p>
+
+ <h3>なんいど 七段</h3>
+ <p class="lead">王に 話しかけると いつでも 変えられます。この本の 数字は すべて「ふつう」。ほかの きびしさでは 下の 倍率が かかります。</p>
+ <div class="tw"><table id="tdiff"></table></div>
+</section>
+
+<!-- ══════════ 3 道のり ══════════ -->
+<section id="t3">
+ <div class="hd"><h2>道のり</h2>
+  <p>全二十一章。自分が いまどこに いるかは、村の フクロか、下の金の帯が 教えてくれます。<b>物語の 結末は 書いていません</b>——舞台と、しめの相手と、もらえる呪文だけです。</p></div>
+ <div id="tchap"></div>
+
+ <h3>八つの島と、その ぬし</h3>
+ <p class="lead">第三部は 島めぐりです。それぞれの島の 最後に <b>ぬし</b>が います。ぬしは ふつうの中ボスとは 別あつかいで、<b>ためた 一撃は よろいでは 止まりません</b>——ぼうぎょ・章じゅもん・⚒したく で 答えます。</p>
+ <div class="tw"><table id="tnushi"></table></div>
+ <p class="lead">数字は なんいど「ふつう」。<span class="we">赤</span>＝よく効く／<span class="wr">青</span>＝効きにくい。</p>
+
+ <h3>その あとに あるもの</h3>
+ <div class="tw"><table>
+ <tr><th>名前</th><th>入口</th><th>中身</th></tr>
+ <tr><td class="sp nw">最終章 ほしのうみ</td><td>章二十の あと</td><td>「ほしのもんどう」＝かげの 困りごとを 見て、共鳴する カードを 三枚から えらぶ。被弾も MP消費も なし</td></tr>
+ <tr><td class="sp nw">うら章 ほしのみなもと</td><td>クリア後の村 →「はじまりの ほしあかり」</td><td>関門 三体（火・氷・ぶつりを 読み分ける）→ ボス。勝つと 呪文「みなもとのひかり」</td></tr>
+ <tr><td class="sp nw">かげ編</td><td>ぬしの こえ 七つを 集めて うら章を おえる</td><td>ぬし七体が かげを まとって 復活。倒すたび <b>へんしん</b>を 得る。レベル上限が 十八 → <b>二十五</b>へ</td></tr>
+ <tr><td class="sp nw">のこりびの ふかみ</td><td>かげ編の 途中から</td><td>もぐるほど 稼ぎが 二倍ずつ。降りるか 続けるかを 毎回 えらぶ。負けても 袋の中身だけ 失う</td></tr>
+ </table></div>
+</section>
+
+<!-- ══════════ 4 島の遊び ══════════ -->
+<section id="t4">
+ <div class="hd"><h2>島の 遊び ― 七つ</h2>
+  <p><b>ぬしは、戦う前から 島の上で しかけてきます。</b>一回 押せば やり返せます。<b>ゲームの中では 文字で 教えません</b>——押す場所は ここにだけ 書いてあります。</p></div>
+
+ <div class="note"><b>入口</b>：村の 北の丘の フクロ →「<b>✨ いま できること</b>」→「<b>⚔ ぬしの こえを ききなおす（いま N/7）</b>」→ 島を えらぶ。<br>
+ <b>再戦から 入るのが いちばん 早い</b>です。あらしのよる（かぜまち）は 再戦でしか 遊べません。やまびこのたには 台帳の「<b>🌿 やまびこのたに</b>」から。</div>
+
+ <div class="warn">共通の きまり：<b>罰は ありません。</b>ほうっておいても 勝てます。やり返した数だけ、戦いの <b>開幕の 芝居</b>が 変わります（つよさは 変わりません）。しかけが 動いている あいだは、めあての 金の柱が 消えて、金の帯が しかけを 指します。</div>
+
+ <div id="shima"></div>
+</section>
+
+<!-- ══════════ 5 強くなる ══════════ -->
+<section id="t5">
+ <div class="hd"><h2>強く なる</h2>
+  <p>のびるのは <b>レベル</b>・<b>じゅもん</b>・<b>そうび</b> の三つ。レベルの上限は 物語を おえた ところで 十八、かげ編に 入ると 二十五まで ひらきます。</p></div>
+
+ <h3>そうびの 入口は 四つ</h3>
+ <div class="row2"><div class="num">一</div><div class="rail">
+  <h3>まちの みせ</h3>
+  <p class="lead">むら・ゆきのまち・ちそこ・なかうみの うきみせ など。いちばん上に <b>「👑 いま かうなら これ」</b>の行が 出ます——<b>そのまま 押せば 買えます</b>。買う前に たしかめ窓が 出て、いまの 数字との 差が 読めます。</p></div></div>
+ <div class="row2"><div class="num">二</div><div class="rail">
+  <h3>⚒ いちざの したく（八点）</h3>
+  <p class="lead">一座のふねで 買う 一点もの。<b>その島へ 渡る前に 買う</b>のが 値打ちです。それぞれ 一つの島の ぬしの 手口に 答えるように 作られています。六千〜一万八千ゴールド。<b>ほしのてつ 一つが 三千ゴールドぶん</b>として 支払いに 使えます。</p></div></div>
+ <div class="row2"><div class="num">三</div><div class="rail">
+  <h3>⚒ かじ</h3>
+  <p class="lead">ちそこ、または 船の上。<b>ほしのてつ</b>で つるぎ・よろいを 打ち直します。かげ編に 入ると <b>かげいし 二つ＋二千ゴールドで たね 一つ</b>にも 交換できます。</p></div></div>
+ <div class="row2"><div class="num">四</div><div class="rail">
+  <h3>島の おくりもの（八点）</h3>
+  <p class="lead">島を おえると 自動で 手に入ります。買える品より 数が 上——第三部の そうびの 背骨です。</p></div></div>
+
+ <h3>⚒ いちざの したく ― 八点</h3>
+ <div class="tw"><table id="tshitaku"></table></div>
+
+ <h3>じゅもん ― ふつうの 二十四本</h3>
+ <p class="lead">レベルで 覚えます。ホイミは <b>さいしょから</b> 持っています（ゲームの中で 知らされません）。みなもとのひかり は うら章の ごほうび。</p>
+ <div class="tw"><table id="tspell"></table></div>
+
+ <h3>じゅもん ― 章じゅもん 二十本</h3>
+ <p class="lead">章を おえると 覚えます。戦いの「じゅもん」→「📖 ものがたりの じゅもん」に ならびます。一つの戦いで 一本ずつ。</p>
+ <div class="tw"><table id="tchapspell"></table></div>
+
+ <h3>レベル 一〜二十五</h3>
+ <p class="lead">物語を おえた ところの 上限が <b>十八</b>。かげ編に 入ると <b>二十五</b>まで のびます。</p>
+ <div class="tw"><table id="tlv"></table></div>
+
+ <h3>どうぐ</h3>
+ <div class="tw"><table id="titem"></table></div>
+
+ <h3>みせの 品</h3>
+ <div id="tshop"></div>
+
+ <h3>そうびの こせい</h3>
+ <p class="lead">つるぎ・よろいには 数字の ほかに <b>こせい</b>が つきます。数が 下でも こせいで 上回ることが あります。</p>
+ <div class="tw"><table>
+ <tr><th>こせい</th><th>中身</th></tr>
+ <tr><td class="sp nw">かいしん</td><td>まもりを 無視する 一撃の 出やすさ</td></tr>
+ <tr><td class="sp nw">どく</td><td>斬ると 相手が 毒に なる</td></tr>
+ <tr><td class="sp nw">きゅうしゅう</td><td>あたえた いたみの 何割かを HPへ</td></tr>
+ <tr><td class="sp nw">きょじん特効</td><td>大きい相手（ぬし・きょじん）に 一.六〜一.七倍</td></tr>
+ <tr><td class="sp nw">二かい斬り</td><td>一手番に 二回 斬る</td></tr>
+ <tr><td class="sp nw">大技やわらげ</td><td><b>ぬしの ためた一撃</b>を 何割か やわらげる。したくの よろい だけが 持つ</td></tr>
+ <tr><td class="sp nw">かわす／たちなおり</td><td>攻撃を かわす／毎ターン HPが もどる</td></tr>
+ </table></div>
+</section>
+
+<!-- ══════════ 6 まもの図鑑 ══════════ -->
+<section id="t6">
+ <div class="hd"><h2>まもの図鑑</h2>
+  <p>百九体。数字は なんいど「ふつう」。押すと 一体ぶんの 紙が ひらきます。</p></div>
+ <div class="tools">
+  <input type="search" id="q" placeholder="名前で さがす" autocomplete="off">
+  <div class="chips" id="chips"></div>
+ </div>
+ <div class="cnt" id="cnt"></div>
+ <div class="plates" id="grid"></div>
+</section>
+
+<!-- ══════════ 7 かくし ══════════ -->
+<section id="t7">
+ <div class="hd"><h2>かくし</h2>
+  <p>答えを 先に 見せません。島の名前だけ ならべてあります。押すと 場所が ひらきます。</p></div>
+
+ <h3>ほりだしもの ― 二十二か所</h3>
+ <p class="lead">地面の どこかに うまっています。そのマスに 立って <b>足もとを 押す</b>と 出ます。フクロの 台帳の「🪙 しまの ほりだしもの」で いくつ 見つけたかが 分かります（場所は 教えてくれません）。</p>
+ <div id="thid"></div>
+
+ <h3>ぬしの くせ ― 戦い方</h3>
+ <p class="lead">章十三〜十六の ぬしは、戦いの 中で その島の 動詞を 仕掛けてきます。一つの手番に 一つだけ。かげ編の 戦いでは 出ません。</p>
+ <div class="tw"><table>
+ <tr><th>ぬし</th><th>くせ</th><th>こたえ</th></tr>
+ <tr><td class="sp nw">しまいこむもの</td><td><b>しまいこむ</b>——初手で どうぐ か じゅもんを 袋に しまう（コマンドが 灰色に なる）</td><td><b>⚔ を 二回</b>で 破って とりかえす。相手が 二手番 うてば 自然に 戻る。一戦に 二回まで</td></tr>
+ <tr><td class="sp nw">もとをただすもの</td><td><b>こだまがえし</b>——かまえた ところへ 打ちこむと、あたえた いたみの 四割が はねかえる</td><td>かまえている 手番は <b>ぼうぎょ か じゅもん</b>。残りHP一で 必ず 止まるので 死にません</td></tr>
+ <tr><td class="sp nw">まことをせまるもの</td><td><b>うそのため</b>——ためる ほのおが <b>白い</b> ときは うそ（一撃は 来ない）</td><td>白ければ <b>見抜いて ⚔</b>＝かいしん確定。だまされても 罰は なし。<b>一回目は 必ず うそ</b></td></tr>
+ <tr><td class="sp nw">わすれられしもの</td><td><b>まるのみ</b>——おおくちの あいだ じゅもんと どうぐが 灰色（のまれる。ただし 減らない）</td><td>口の 中へ <b>⚔</b>＝かいしん確定</td></tr>
+ </table></div>
+
+ <h3>クリア後に できること</h3>
+ <div class="tw"><table>
+ <tr><th>名前</th><th>中身</th></tr>
+ <tr><td class="sp nw">⚔ ぬしの こえを ききなおす</td><td>倒した ぬしと もう一度。勝つたび「物語の はじまる前」を 一言ずつ 語る（七つ）。<b>島の遊びの 入口でもある</b></td></tr>
+ <tr><td class="sp nw">🌌 はじまりの ほしあかり</td><td>七つの こえが そろうと ひらく うら章</td></tr>
+ <tr><td class="sp nw">⚔ かげまとう ぬし</td><td>かげ編。七体を 倒すと <b>へんしん</b>が 七つ そろう</td></tr>
+ <tr><td class="sp nw">🔥 のこりびの ふかみ</td><td>もぐるほど 稼ぎが 二倍ずつ。届いた階の 次から もぐり直せる</td></tr>
+ <tr><td class="sp nw">👑 ヴォルガと もういちど</td><td>かげ編の 最後。七枚の かげを 一枚ずつ はがす</td></tr>
+ <tr><td class="sp nw">🎭 いちざの ぶたい</td><td>「けいこ」＝ものがたりの こだま。何度でも。勝っても 負けても 何も 失わない</td></tr>
+ <tr><td class="sp nw">👁 めぐりのけしん</td><td>なんいど「しんぱん」のときだけ 現れる</td></tr>
+ <tr><td class="sp nw">👑 つよくて はじめから</td><td>王から。そうびと 覚えた呪文を 持ち越して 最初から</td></tr>
+ </table></div>
+
+ <h3>かげ編の 七体</h3>
+ <p class="lead">倒した ぬしが かげを まとって 戻ってきます。HPと こうげきが 大きく 上がります。倒すと その姿に <b>へんしん</b>できるように なります（一戦に 一回）。</p>
+ <div class="tw"><table id="tkage"></table></div>
+
+ <h3>めずらしい まもの</h3>
+ <div class="tw"><table>
+ <tr><th>名前</th><th>出かた</th></tr>
+ <tr><td class="sp nw">メタルスライム</td><td><b>夜の 草地</b>に まれに 現れる。二十二〜四十秒に 一度の 抽選で、同時に 一体だけ、十八秒で 消える。守備 六十・かわす 三割五分——<b>ばくだんいし・いなずまだま は 一しか 通らない</b></td></tr>
+ <tr><td class="sp nw">きんのスライム</td><td>すぐ 逃げる。倒すと お金が 大きい</td></tr>
+ <tr><td class="sp nw">ものがたりの こだま</td><td>旅芸人の ぶたいで「けいこ」。何度でも 呼べる</td></tr>
+ <tr><td class="sp nw">ヴォルガ しんのすがた</td><td>やみのおう ヴォルガを 倒すと この姿に なる</td></tr>
+ </table></div>
+</section>
+
+<div class="foot" id="foot"></div>
+</main>
+
+<div id="modal"><div class="win" style="position:relative"><span class="x" id="mx">×</span><div id="mbody"></div></div></div>
+
+<script>
+const D={"foes":[{"id":"slime","name":"スライム","hp":28,"atk":7,"def":2,"exp":11,"g":4,"p":1,"fi":1,"ic":1,"dg":0,"dr":"やくそう","c":0,"r":0,"tag":[],"at":["そうげん"],"sp":0},{"id":"crow","name":"おおがらす","hp":27,"atk":7,"def":3,"exp":16,"g":6,"p":1,"fi":1,"ic":1,"dg":0.18,"dr":"","c":1,"r":0,"tag":[],"at":["そうげん"],"sp":0},{"id":"golem","name":"いわゴーレム","hp":32,"atk":10,"def":5,"exp":26,"g":10,"p":0.5,"fi":1.5,"ic":1,"dg":0,"dr":"","c":2,"r":0,"tag":[],"at":["そうげん"],"sp":0},{"id":"bat","name":"どくこうもり","hp":85,"atk":23,"def":4,"exp":22,"g":9,"p":1,"fi":1,"ic":1,"dg":0.22,"dr":"どくけしそう","c":3,"r":0,"tag":[],"at":["どうくつ"],"sp":0},{"id":"skel","name":"ほねゴーレム","hp":105,"atk":25,"def":6,"exp":36,"g":15,"p":0.7,"fi":1.4,"ic":1,"dg":0,"dr":"","c":4,"r":0,"tag":[],"at":["どうくつ"],"sp":0},{"id":"hslime","name":"ホイミスライム","hp":95,"atk":21,"def":5,"exp":34,"g":14,"p":1,"fi":1.2,"ic":1,"dg":0.1,"dr":"やくそう","c":5,"r":0,"tag":[],"at":["どうくつ"],"sp":0},{"id":"mboss","name":"くろがねゴーレム","hp":220,"atk":33,"def":9,"exp":85,"g":100,"p":0.6,"fi":1.25,"ic":1,"dg":0,"dr":"","c":6,"r":0,"tag":["中ボス"],"at":["どうくつ"],"sp":0},{"id":"dslime","name":"やみスライム","hp":210,"atk":62,"def":8,"exp":50,"g":20,"p":1,"fi":1,"ic":1.4,"dg":0.1,"dr":"まほうのせいすい","c":7,"r":0,"tag":[],"at":["まおうのしろ"],"sp":0},{"id":"dcrow","name":"じごくがらす","hp":230,"atk":60,"def":9,"exp":64,"g":25,"p":1,"fi":0,"ic":1.5,"dg":0.25,"dr":"どくけしそう","c":8,"r":0,"tag":[],"at":["まおうのしろ"],"sp":0},{"id":"boss","name":"やみのおう ヴォルガ","hp":300,"atk":56,"def":10,"exp":0,"g":0,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":9,"r":0,"tag":["ボス"],"at":["まおうのしろ（クリアするまで）"],"sp":0},{"id":"boss2","name":"ヴォルガ しんのすがた","hp":220,"atk":65,"def":11,"exp":0,"g":0,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":0,"r":1,"tag":["ボス"],"at":["まおうのしろ ― やみのおう ヴォルガを たおすと この すがたに なる"],"sp":1},{"id":"gslime","name":"きんのスライム","hp":8,"atk":0,"def":14,"exp":25,"g":65,"p":1,"fi":1,"ic":1,"dg":0.4,"dr":"","c":1,"r":1,"tag":["きんいろ"],"at":["そうげん"],"sp":0},{"id":"metal","name":"メタルスライム","hp":6,"atk":10,"def":60,"exp":60,"g":10,"p":1,"fi":1,"ic":1,"dg":0.35,"dr":"","c":2,"r":1,"tag":["メタル"],"at":["よるの くさち ― 22〜40びょうに いちど、しずかに あらわれる（同時に 1たい・18びょうで きえる）"],"sp":1},{"id":"mslime","name":"もりスライム","hp":75,"atk":12,"def":4,"exp":18,"g":7,"p":1,"fi":1.3,"ic":1,"dg":0,"dr":"やくそう","c":3,"r":1,"tag":[],"at":["もり"],"sp":0},{"id":"yamabato","name":"やまばと","hp":56,"atk":12,"def":5,"exp":28,"g":11,"p":1,"fi":1,"ic":1,"dg":0.2,"dr":"","c":4,"r":1,"tag":[],"at":["もり"],"sp":0},{"id":"ent","name":"もりの ぬし","hp":130,"atk":23,"def":7,"exp":70,"g":45,"p":1,"fi":1.25,"ic":0.6,"dg":0,"dr":"","c":5,"r":1,"tag":["中ボス"],"at":["もり"],"sp":0},{"id":"islime","name":"こおりスライム","hp":260,"atk":39,"def":6,"exp":30,"g":12,"p":1,"fi":1.8,"ic":0.3,"dg":0.05,"dr":"やくそう","c":6,"r":1,"tag":[],"at":["こおりのしま"],"sp":0},{"id":"scrow","name":"ゆきがらす","hp":230,"atk":39,"def":7,"exp":40,"g":16,"p":1,"fi":1.7,"ic":0.4,"dg":0.24,"dr":"","c":7,"r":1,"tag":[],"at":["こおりのしま"],"sp":0},{"id":"fgolem","name":"こおりの きょじん","hp":240,"atk":45,"def":11,"exp":90,"g":60,"p":0.7,"fi":1.25,"ic":0,"dg":0,"dr":"","c":8,"r":1,"tag":["中ボス"],"at":["こおりのしま"],"sp":0},{"id":"lslime","name":"ようがんスライム","hp":260,"atk":57,"def":7,"exp":34,"g":13,"p":1,"fi":0.3,"ic":1.8,"dg":0.05,"dr":"やくそう","c":9,"r":1,"tag":[],"at":["かざん"],"sp":0},{"id":"ecrow","name":"ほのおがらす","hp":250,"atk":56,"def":8,"exp":44,"g":18,"p":1,"fi":0.4,"ic":1.7,"dg":0.22,"dr":"","c":0,"r":2,"tag":[],"at":["かざん"],"sp":0},{"id":"mgolem","name":"ようがんの きょじん","hp":260,"atk":53,"def":12,"exp":96,"g":66,"p":0.7,"fi":0,"ic":1.25,"dg":0,"dr":"","c":1,"r":2,"tag":["中ボス"],"at":["かざん"],"sp":0},{"id":"frostlord","name":"さまよう ひょうじん","hp":300,"atk":48,"def":10,"exp":95,"g":55,"p":0.8,"fi":1.9,"ic":0,"dg":0,"dr":"","c":2,"r":2,"tag":["きょじん","追ってくる"],"at":["こおりのしま"],"sp":0},{"id":"magmalord","name":"さまよう マグマじん","hp":330,"atk":62,"def":12,"exp":120,"g":70,"p":0.8,"fi":0,"ic":1.9,"dg":0,"dr":"","c":3,"r":2,"tag":["きょじん","追ってくる"],"at":["かざん"],"sp":0},{"id":"icewarden","name":"こおりの ばんへい","hp":155,"atk":39,"def":13,"exp":110,"g":80,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":4,"r":2,"tag":["中ボス","追ってくる"],"at":["こおりのしま（ある条件のあいだ）"],"sp":0},{"id":"chaoslord","name":"こんとんの きょじん","hp":400,"atk":70,"def":14,"exp":200,"g":150,"p":0.8,"fi":1.2,"ic":1.2,"dg":0,"dr":"","c":5,"r":2,"tag":["きょじん","追ってくる"],"at":["まおうのしろ（二周目だけ）"],"sp":0},{"id":"dbat","name":"やみこうもり","hp":150,"atk":45,"def":6,"exp":38,"g":15,"p":1,"fi":1.3,"ic":1,"dg":0.28,"dr":"どくけしそう","c":6,"r":2,"tag":[],"at":["ちそこ"],"sp":0},{"id":"gskel","name":"がいこつけんし","hp":180,"atk":48,"def":8,"exp":52,"g":22,"p":0.6,"fi":1.5,"ic":1,"dg":0,"dr":"","c":7,"r":2,"tag":[],"at":["ちそこ"],"sp":0},{"id":"bonewarden","name":"ほねの きょへい","hp":260,"atk":48,"def":11,"exp":115,"g":95,"p":0.6,"fi":1.6,"ic":0.8,"dg":0,"dr":"","c":8,"r":2,"tag":["中ボス"],"at":["ちそこ"],"sp":0},{"id":"kagehito","name":"かげびと","hp":185,"atk":63,"def":20,"exp":90,"g":45,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":9,"r":2,"tag":[],"at":["しずみのさと"],"sp":0},{"id":"nakikage","name":"なきかげ","hp":170,"atk":66,"def":22,"exp":120,"g":60,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":0,"r":3,"tag":[],"at":["しずみのさと"],"sp":0},{"id":"kagekishi","name":"かげの きし","hp":220,"atk":61,"def":26,"exp":150,"g":80,"p":0.7,"fi":1,"ic":1,"dg":0,"dr":"","c":1,"r":3,"tag":[],"at":["しずみのさと"],"sp":0},{"id":"satonushi","name":"さとぬしの かげ","hp":730,"atk":68,"def":30,"exp":600,"g":500,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":2,"r":3,"tag":["中ボス"],"at":["しずみのさと（ある条件のあいだ）"],"sp":0},{"id":"uminokage","name":"うみのかげ","hp":280,"atk":82,"def":24,"exp":130,"g":65,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":3,"r":3,"tag":[],"at":["わすれのうみ"],"sp":0},{"id":"kirinokage","name":"きりのかげ","hp":300,"atk":81,"def":22,"exp":110,"g":55,"p":1,"fi":1,"ic":1,"dg":0.15,"dr":"","c":4,"r":3,"tag":[],"at":["わすれのうみ"],"sp":0},{"id":"nukegara","name":"やみの ぬけがら","hp":810,"atk":86,"def":34,"exp":900,"g":800,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":5,"r":3,"tag":["中ボス"],"at":["まおうのしろ（その章のあいだ）"],"sp":0},{"id":"komari","name":"ひかりのまり","hp":270,"atk":100,"def":26,"exp":150,"g":70,"p":1,"fi":0.85,"ic":0.85,"dg":0.08,"dr":"","c":6,"r":3,"tag":[],"at":["みなもとのもり"],"sp":0},{"id":"kodamadori","name":"こだまどり","hp":250,"atk":99,"def":24,"exp":125,"g":60,"p":1,"fi":0.85,"ic":0.85,"dg":0.18,"dr":"","c":7,"r":3,"tag":[],"at":["みなもとのもり"],"sp":0},{"id":"hikarinokodama","name":"ひかりの こだま","hp":880,"atk":95,"def":36,"exp":1200,"g":1000,"p":1,"fi":0.75,"ic":0.75,"dg":0,"dr":"","c":8,"r":3,"tag":["中ボス"],"at":["みなもとのもり（その章のあいだ）"],"sp":0},{"id":"towakage","name":"とわのかけら","hp":370,"atk":111,"def":30,"exp":220,"g":110,"p":0.8,"fi":1.1,"ic":1.1,"dg":0,"dr":"","c":9,"r":3,"tag":[],"at":["とわのふち"],"sp":0},{"id":"jigencho","name":"じげんちょう","hp":350,"atk":108,"def":26,"exp":180,"g":90,"p":1,"fi":1,"ic":1,"dg":0.22,"dr":"","c":0,"r":4,"tag":[],"at":["とわのふち"],"sp":0},{"id":"mugenslime","name":"むげんスライム","hp":360,"atk":106,"def":28,"exp":200,"g":100,"p":1,"fi":1.15,"ic":1.15,"dg":0.1,"dr":"","c":1,"r":4,"tag":[],"at":["とわのふち"],"sp":0},{"id":"koborebi","name":"こぼれびの けしん","hp":880,"atk":96,"def":38,"exp":1400,"g":1200,"p":1,"fi":0.75,"ic":0.75,"dg":0,"dr":"","c":2,"r":4,"tag":["中ボス"],"at":["みなもとのもり（その章のあいだ）"],"sp":0},{"id":"toikeshin","name":"といの けしん","hp":1020,"atk":97,"def":40,"exp":1500,"g":1500,"p":1,"fi":0.75,"ic":0.75,"dg":0,"dr":"","c":3,"r":4,"tag":["中ボス"],"at":["とわのふち（一度 たおすまで）"],"sp":0},{"id":"tozasu","name":"とざすもの","hp":960,"atk":98,"def":40,"exp":1500,"g":1300,"p":1,"fi":0.75,"ic":0.75,"dg":0,"dr":"","c":4,"r":4,"tag":["中ボス"],"at":["こころのにわ（その章のあいだ）"],"sp":0},{"id":"nanomu","name":"なまえをのむ もの","hp":1000,"atk":99,"def":38,"exp":1600,"g":1200,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":5,"r":4,"tag":["中ボス"],"at":["わすれのうみ（その章のあいだ）"],"sp":0},{"id":"kobamu","name":"おわりを こばむもの","hp":1050,"atk":100,"def":40,"exp":1800,"g":1500,"p":1,"fi":0.75,"ic":0.75,"dg":0,"dr":"","c":6,"r":4,"tag":["中ボス"],"at":["はてのしま（その章のあいだ）"],"sp":0},{"id":"meguri","name":"めぐりのけしん","hp":3000,"atk":160,"def":70,"exp":5000,"g":5000,"p":1,"fi":0.75,"ic":0.75,"dg":0,"dr":"","c":7,"r":4,"tag":["中ボス"],"at":["とわのふち（一度 たおすまで）"],"sp":0},{"id":"kagimushi","name":"かぎむし","hp":600,"atk":140,"def":52,"exp":300,"g":150,"p":1,"fi":1.2,"ic":1,"dg":0,"dr":"","c":8,"r":4,"tag":[],"at":["くらのしま"],"sp":0},{"id":"oisugaru","name":"おいすがる はこ","hp":900,"atk":150,"def":60,"exp":520,"g":300,"p":0.7,"fi":1.4,"ic":1,"dg":0,"dr":"","c":9,"r":4,"tag":["追ってくる"],"at":["くらのしま"],"sp":0},{"id":"hakomori","name":"はこもり","hp":720,"atk":144,"def":58,"exp":340,"g":170,"p":0.5,"fi":1.3,"ic":1.1,"dg":0,"dr":"","c":0,"r":5,"tag":[],"at":["くらのしま"],"sp":0},{"id":"shiorikage","name":"しおりのかげ","hp":560,"atk":138,"def":50,"exp":280,"g":140,"p":1,"fi":1.2,"ic":0.9,"dg":0.22,"dr":"","c":1,"r":5,"tag":[],"at":["くらのしま"],"sp":0},{"id":"shimaikomu","name":"しまいこむもの","hp":1500,"atk":148,"def":64,"exp":2200,"g":1800,"p":0.6,"fi":1.2,"ic":0.9,"dg":0,"dr":"","c":2,"r":5,"tag":["ぬし"],"at":["くらのしま（その章のあいだ）"],"sp":0},{"id":"manebi","name":"まねびのかげ","hp":580,"atk":144,"def":50,"exp":300,"g":150,"p":1,"fi":1.1,"ic":1.1,"dg":0.18,"dr":"","c":3,"r":5,"tag":[],"at":["やまびこのたに"],"sp":0},{"id":"yamabiko","name":"やまびこどり","hp":640,"atk":146,"def":54,"exp":320,"g":160,"p":1,"fi":1.2,"ic":0.9,"dg":0,"dr":"","c":4,"r":5,"tag":[],"at":["やまびこのたに"],"sp":0},{"id":"kuchibue","name":"いわのくちぶえ","hp":800,"atk":150,"def":60,"exp":360,"g":185,"p":1,"fi":0.8,"ic":1.3,"dg":0,"dr":"","c":5,"r":5,"tag":[],"at":["やまびこのたに"],"sp":0},{"id":"mototadasu","name":"もとをただすもの","hp":1600,"atk":152,"def":64,"exp":2400,"g":2000,"p":1,"fi":0.9,"ic":1.3,"dg":0,"dr":"","c":6,"r":5,"tag":["ぬし"],"at":["やまびこのたに（その章のあいだ）"],"sp":0},{"id":"yadokari","name":"ほらがいやどかり","hp":620,"atk":148,"def":52,"exp":330,"g":165,"p":1,"fi":1.1,"ic":1.1,"dg":0,"dr":"","c":7,"r":5,"tag":[],"at":["ほらふきじま"],"sp":0},{"id":"kazesarai","name":"かぜさらい","hp":680,"atk":150,"def":56,"exp":350,"g":175,"p":1,"fi":1.2,"ic":0.9,"dg":0.2,"dr":"","c":8,"r":5,"tag":[],"at":["ほらふきじま"],"sp":0},{"id":"usofuda","name":"うそふだのやま","hp":840,"atk":152,"def":62,"exp":380,"g":195,"p":1,"fi":1.4,"ic":0.8,"dg":0,"dr":"","c":9,"r":5,"tag":[],"at":["ほらふきじま"],"sp":0},{"id":"makoto","name":"まことをせまるもの","hp":1700,"atk":156,"def":66,"exp":2600,"g":2200,"p":1,"fi":1.3,"ic":0.9,"dg":0,"dr":"","c":0,"r":6,"tag":["ぬし"],"at":["ほらふきじま（その章のあいだ）"],"sp":0},{"id":"utawasure","name":"うたわすれ","hp":660,"atk":152,"def":54,"exp":360,"g":180,"p":1,"fi":1.1,"ic":1.1,"dg":0,"dr":"","c":1,"r":6,"tag":[],"at":["わすれうたのしま"],"sp":0},{"id":"otomodoki","name":"おともどき","hp":720,"atk":154,"def":58,"exp":380,"g":190,"p":1,"fi":0.9,"ic":1.2,"dg":0.18,"dr":"","c":2,"r":6,"tag":[],"at":["わすれうたのしま"],"sp":0},{"id":"wasureishi","name":"わすれいし","hp":900,"atk":156,"def":64,"exp":410,"g":210,"p":0.5,"fi":1.2,"ic":1,"dg":0,"dr":"","c":3,"r":6,"tag":[],"at":["わすれうたのしま"],"sp":0},{"id":"wasurare","name":"わすれられしもの","hp":1800,"atk":160,"def":68,"exp":2800,"g":2400,"p":1,"fi":0.9,"ic":0.9,"dg":0.2,"dr":"","c":4,"r":6,"tag":["ぬし"],"at":["わすれうたのしま（その章のあいだ）"],"sp":0},{"id":"yokubarite","name":"よくばりて","hp":700,"atk":154,"def":56,"exp":380,"g":195,"p":1,"fi":1.1,"ic":1.1,"dg":0,"dr":"","c":5,"r":6,"tag":[],"at":["あつめのやかた・はこのへや","あつめのやかた・おおひろま"],"sp":0},{"id":"kaginomure","name":"かぎのむれ","hp":760,"atk":156,"def":60,"exp":400,"g":205,"p":1,"fi":1.2,"ic":0.9,"dg":0.2,"dr":"","c":6,"r":6,"tag":[],"at":["あつめのやかた・はこのへや","あつめのやかた・くさりのかいろう"],"sp":0},{"id":"tsumibako","name":"つみあげばこ","hp":950,"atk":158,"def":66,"exp":430,"g":225,"p":1,"fi":1.4,"ic":0.9,"dg":0,"dr":"","c":7,"r":6,"tag":[],"at":["あつめのやかた・くさりのかいろう","あつめのやかた・おおひろま"],"sp":0},{"id":"monoecho","name":"ものがたりの こだま","hp":1500,"atk":104,"def":44,"exp":0,"g":0,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":8,"r":6,"tag":["中ボス"],"at":["旅芸人の ぶたい ― 「けいこ」で なんどでも よべる。かっても まけても なにも うしなわない"],"sp":1},{"id":"hitorijime","name":"ひとりじめのもの","hp":2400,"atk":164,"def":70,"exp":3400,"g":3000,"p":1,"fi":1.1,"ic":1.1,"dg":0,"dr":"","c":9,"r":6,"tag":["ぬし"],"at":["あつめのやかた・おおひろま（その章のあいだ）"],"sp":0},{"id":"sukuwarenu","name":"すくわれなかったもの","hp":9999,"atk":172,"def":999,"exp":0,"g":0,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":0,"r":7,"tag":["中ボス"],"at":["ほしのうみ（その章のあいだ）"],"sp":0},{"id":"shioarashi","name":"しおあらしの むれ","hp":2300,"atk":166,"def":68,"exp":3500,"g":2800,"p":0.8,"fi":1.6,"ic":0.55,"dg":0.12,"dr":"","c":1,"r":7,"tag":["ぬし"],"at":["かぜまちじま・あらしのよる（その章のあいだ）"],"sp":0},{"id":"kiritoru","name":"きりとるもの","hp":2700,"atk":170,"def":72,"exp":3800,"g":3200,"p":0.75,"fi":0.85,"ic":0.85,"dg":0.35,"dr":"","c":2,"r":7,"tag":["ぬし"],"at":["ときかさねじま・かねの時（その章のあいだ）"],"sp":0},{"id":"kagevolga","name":"ななつのかげを まとう ヴォルガ","hp":6800,"atk":186,"def":88,"exp":0,"g":4000,"p":0.8,"fi":1,"ic":1,"dg":0,"dr":"","c":3,"r":7,"tag":["ぬし"],"at":["かげ編の さいご ― フクロの台帳「👑 ななつのかげを まとう ヴォルガ」から"],"sp":1},{"id":"nagaregi","name":"ながれぎ","hp":820,"atk":160,"def":62,"exp":450,"g":235,"p":1,"fi":1.4,"ic":0.9,"dg":0,"dr":"","c":4,"r":7,"tag":[],"at":["かぜまちじま"],"sp":0},{"id":"tobiyane","name":"とびやね","hp":800,"atk":162,"def":62,"exp":470,"g":245,"p":1,"fi":1.2,"ic":0.9,"dg":0.2,"dr":"","c":5,"r":7,"tag":[],"at":["かぜまちじま"],"sp":0},{"id":"kuzureishi","name":"くずれいしがき","hp":1000,"atk":162,"def":70,"exp":500,"g":260,"p":0.5,"fi":0.9,"ic":1.3,"dg":0,"dr":"","c":6,"r":7,"tag":[],"at":["かぜまちじま"],"sp":0},{"id":"kirinuki","name":"きりぬきのかげ","hp":880,"atk":164,"def":66,"exp":520,"g":270,"p":1,"fi":1.1,"ic":1.1,"dg":0,"dr":"","c":7,"r":7,"tag":[],"at":["ときかさねじま・ゆうぐれ","ときかさねじま・かねの時"],"sp":0},{"id":"hitokomadori","name":"ひとこまどり","hp":860,"atk":166,"def":66,"exp":540,"g":280,"p":1,"fi":0.9,"ic":1.25,"dg":0.22,"dr":"","c":8,"r":7,"tag":[],"at":["ときかさねじま・かねの時","ときかさねじま・雨あがり"],"sp":0},{"id":"tomaribari","name":"とまりばり","hp":1050,"atk":166,"def":72,"exp":570,"g":300,"p":0.55,"fi":1.3,"ic":0.9,"dg":0,"dr":"","c":9,"r":7,"tag":[],"at":["ときかさねじま・ゆうぐれ","ときかさねじま・雨あがり"],"sp":0},{"id":"johikage","name":"じょの かげ","hp":1400,"atk":176,"def":70,"exp":0,"g":900,"p":1,"fi":1.5,"ic":0.7,"dg":0,"dr":"","c":0,"r":8,"tag":[],"at":["ほしのみなもと"],"sp":0},{"id":"hakage","name":"はの かげ","hp":1350,"atk":180,"def":68,"exp":0,"g":900,"p":1,"fi":0.7,"ic":1.5,"dg":0.25,"dr":"","c":1,"r":8,"tag":[],"at":["ほしのみなもと"],"sp":0},{"id":"kyukage","name":"きゅうの かげ","hp":1650,"atk":178,"def":84,"exp":0,"g":1100,"p":0.5,"fi":1.1,"ic":1.1,"dg":0,"dr":"","c":2,"r":8,"tag":[],"at":["ほしのみなもと"],"sp":0},{"id":"hajimarazu","name":"かたられなかった はじまり","hp":6000,"atk":185,"def":92,"exp":0,"g":5000,"p":0.55,"fi":0.8,"ic":0.8,"dg":0,"dr":"","c":3,"r":8,"tag":["中ボス"],"at":["ほしのみなもと（一度 たおすまで）"],"sp":0},{"id":"kajiu","name":"かじをうばうもの","hp":3100,"atk":178,"def":76,"exp":4200,"g":3600,"p":0.82,"fi":0.82,"ic":0.82,"dg":0.18,"dr":"","c":4,"r":8,"tag":["ぬし"],"at":["しおわかれのかいきょう（その章のあいだ）"],"sp":0},{"id":"namigarasu","name":"なみがらす","hp":520,"atk":136,"def":52,"exp":270,"g":135,"p":1,"fi":1.2,"ic":0.8,"dg":0.3,"dr":"","c":5,"r":8,"tag":[],"at":["ひとつのうみ"],"sp":0},{"id":"shiouzu","name":"しおのうず","hp":600,"atk":139,"def":56,"exp":320,"g":160,"p":0.7,"fi":0.6,"ic":1.5,"dg":0,"dr":"","c":6,"r":8,"tag":[],"at":["ひとつのうみ"],"sp":0},{"id":"uminohebi","name":"おおうみへび","hp":680,"atk":142,"def":54,"exp":360,"g":180,"p":1,"fi":1.2,"ic":1.2,"dg":0.1,"dr":"","c":7,"r":8,"tag":[],"at":["ひとつのうみ"],"sp":0},{"id":"hudanomure","name":"ふだの むれ","hp":950,"atk":152,"def":62,"exp":560,"g":320,"p":0.85,"fi":1.6,"ic":0.9,"dg":0,"dr":"","c":8,"r":8,"tag":["追ってくる"],"at":["ほらふきじま"],"sp":0},{"id":"tomaridokei","name":"とまり どけい","hp":1000,"atk":156,"def":64,"exp":600,"g":340,"p":0.9,"fi":0.9,"ic":1.4,"dg":0,"dr":"","c":9,"r":8,"tag":["追ってくる"],"at":["ときかさねじま・かねの時"],"sp":0},{"id":"shionokiba","name":"しおの きば","hp":1000,"atk":160,"def":66,"exp":640,"g":360,"p":0.8,"fi":1.3,"ic":0.7,"dg":0,"dr":"","c":0,"r":9,"tag":["追ってくる"],"at":["かぜまちじま"],"sp":0},{"id":"hedatsu","name":"へだつもの","hp":1400,"atk":144,"def":62,"exp":2600,"g":2000,"p":1,"fi":0.75,"ic":0.75,"dg":0,"dr":"","c":1,"r":9,"tag":["中ボス","追ってくる"],"at":["ひとつのうみ（その章のあいだ）"],"sp":0},{"id":"wasuredori","name":"わすれどり","hp":500,"atk":134,"def":52,"exp":260,"g":130,"p":1,"fi":1.2,"ic":1.2,"dg":0.25,"dr":"","c":2,"r":9,"tag":[],"at":["かたりのおか"],"sp":0},{"id":"katarikuzushi","name":"かたりくずし","hp":560,"atk":138,"def":56,"exp":300,"g":150,"p":0.7,"fi":1.3,"ic":1.1,"dg":0,"dr":"","c":3,"r":9,"tag":[],"at":["かたりのおか"],"sp":0},{"id":"kataranu","name":"かたられぬもの","hp":1300,"atk":140,"def":60,"exp":2200,"g":1800,"p":0.55,"fi":1,"ic":1,"dg":0,"dr":"","c":4,"r":9,"tag":["中ボス"],"at":["かたりのおか（その章のあいだ）"],"sp":0},{"id":"hikabake","name":"ひかりのばけもの","hp":400,"atk":120,"def":48,"exp":300,"g":150,"p":1,"fi":0.8,"ic":0.8,"dg":0,"dr":"","c":5,"r":9,"tag":[],"at":["みなもとのもり（その章のあいだ）"],"sp":0},{"id":"nanashi","name":"なまえなきもの","hp":430,"atk":124,"def":52,"exp":320,"g":170,"p":1,"fi":1,"ic":1,"dg":0.2,"dr":"","c":6,"r":9,"tag":[],"at":["わすれのうみ（その章のあいだ）"],"sp":0},{"id":"owarika","name":"おわりのかけら","hp":450,"atk":128,"def":54,"exp":350,"g":190,"p":0.9,"fi":1.1,"ic":1.1,"dg":0,"dr":"","c":7,"r":9,"tag":[],"at":["はてのしま（ある条件のあいだ）"],"sp":0},{"id":"tozakage","name":"とざしのかげ","hp":380,"atk":116,"def":50,"exp":280,"g":140,"p":1,"fi":1,"ic":1,"dg":0,"dr":"","c":8,"r":9,"tag":[],"at":["こころのにわ（その章のあいだ）"],"sp":0},{"id":"nagorikage","name":"なごりのかげ","hp":420,"atk":122,"def":50,"exp":310,"g":160,"p":1,"fi":1,"ic":1,"dg":0.15,"dr":"","c":9,"r":9,"tag":[],"at":["みおくりのみさき"],"sp":0},{"id":"shionomukuro","name":"しおのむくろ","hp":460,"atk":126,"def":54,"exp":340,"g":200,"p":0.9,"fi":1,"ic":1,"dg":0,"dr":"","c":0,"r":10,"tag":[],"at":["みおくりのみさき"],"sp":0},{"id":"miokure","name":"みおくれぬもの","hp":1100,"atk":132,"def":56,"exp":2200,"g":1600,"p":1,"fi":0.8,"ic":0.8,"dg":0,"dr":"","c":1,"r":10,"tag":["中ボス"],"at":["みおくりのみさき（その章のあいだ）"],"sp":0},{"id":"iwanuke","name":"いわのぬけがら","hp":480,"atk":130,"def":58,"exp":340,"g":180,"p":0.5,"fi":1.2,"ic":1.2,"dg":0,"dr":"ほしのてつ","c":2,"r":10,"tag":[],"at":["おおほりあと"],"sp":0},{"id":"fukayami","name":"ふかやみこうもり","hp":430,"atk":128,"def":50,"exp":320,"g":170,"p":1,"fi":1,"ic":1,"dg":0.22,"dr":"ほしのてつ","c":3,"r":10,"tag":[],"at":["おおほりあと"],"sp":0},{"id":"yamihori","name":"やみをほるもの","hp":1200,"atk":136,"def":58,"exp":2600,"g":1800,"p":1,"fi":0.9,"ic":0.9,"dg":0,"dr":"","c":4,"r":10,"tag":["中ボス"],"at":["おおほりあと（その章のあいだ）"],"sp":0},{"id":"wslime","name":"まどうスライム","hp":65,"atk":12,"def":7,"exp":55,"g":24,"p":1,"fi":1.2,"ic":1.2,"dg":0.08,"dr":"","c":5,"r":10,"tag":[],"at":["もり"],"sp":0},{"id":"cuslime","name":"のろいスライム","hp":200,"atk":62,"def":9,"exp":78,"g":34,"p":1,"fi":1.3,"ic":1.3,"dg":0.12,"dr":"","c":6,"r":10,"tag":[],"at":["まおうのしろ"],"sp":0},{"id":"niseyusha","name":"ぶたいの にせもの勇者","hp":920,"atk":112,"def":46,"exp":0,"g":0,"p":0.7,"fi":1.6,"ic":0.9,"dg":0,"dr":"","c":7,"r":10,"tag":["中ボス"],"at":["旅芸人の ぶたい ― 章12の こうえん"],"sp":1},{"id":"kotae","name":"こたえなき もの","hp":820,"atk":104,"def":18,"exp":400,"g":300,"p":1,"fi":0.5,"ic":0.5,"dg":0,"dr":"","c":8,"r":10,"tag":["中ボス"],"at":["はてのしま"],"sp":0}],"chap":[{"no":1,"title":"ひかりのたまを とりもどす","spell":"ひかりのさとり","cost":4,"icon":"✦","desc":"いちばん とどきそうな こうげきを よそうする","stage":"もり・こおりのしま・まおうのしろ","boss":"やみのおう ヴォルガ","bhp":300,"batk":56,"bid":"boss"},{"no":2,"title":"ひかりを つぐもの","spell":"かげはらい","cost":6,"icon":"◐","desc":"どくと まもりダウンを はらい、わざわいを ふせぐ","stage":"しずみのさと・まおうのしろ","boss":"やみの ぬけがら","bhp":810,"batk":86,"bid":"nukegara"},{"no":3,"title":"ひかりは うけとめる こころに やどる","spell":"うけとめるひかり","cost":8,"icon":"◇","desc":"うけた いたみを MPへ かえる","stage":"みなもとのもり","boss":"ひかりの こだま","bhp":880,"batk":95,"bid":"hikarinokodama"},{"no":4,"title":"わたす ひかり","spell":"わたすひかり","cost":9,"icon":"↝","desc":"つぎの 火・氷じゅもんを 4分の3の つよさで もういちど とどける","stage":"みなもとのもり","boss":"こぼれびの けしん","bhp":880,"batk":96,"bid":"koborebi"},{"no":5,"title":"となりに いる こと","spell":"とわのまもり","cost":10,"icon":"🛡","desc":"てきの こうげき3かいを やわらげる","stage":"こころのにわ","boss":"とざすもの","bhp":960,"batk":98,"bid":"tozasu"},{"no":6,"title":"なまえを よぶ こえ","spell":"ソラのよびごえ","cost":12,"icon":"🕊","desc":"てきの うごきを とめる","stage":"わすれのうみ","boss":"なまえをのむ もの","bhp":1000,"batk":99,"bid":"nanomu"},{"no":7,"title":"ながいきの やくめ","spell":"つぐものがたり","cost":25,"icon":"📖","desc":"おおわざと じぶんの かいふく","stage":"はてのしま","boss":"おわりを こばむもの","bhp":1050,"batk":100,"bid":"kobamu"},{"no":8,"title":"みおくりの ふね","spell":"ナギのうた","cost":16,"icon":"🌊","desc":"てきの こうげきを 3わり さげる","stage":"みおくりのみさき・みおくりのふね","boss":"みおくれぬもの","bhp":1100,"batk":132,"bid":"miokure"},{"no":9,"title":"ほりびとの ともしび","spell":"ともしびのみち","cost":18,"icon":"🔥","desc":"つぎの3回、かわされず たいせいを みちにする","stage":"おおほりあと・ともしびのま","boss":"やみをほるもの","bhp":1200,"batk":136,"bid":"yamihori"},{"no":10,"title":"となりを あるく ものがたり","spell":"ふたりがたり","cost":16,"icon":"👥","desc":"このターン こどもが 2回 こうどうする","stage":"かたりのおか","boss":"かたられぬもの","bhp":1300,"batk":140,"bid":"kataranu"},{"no":11,"title":"ひとつの うみ","spell":"ひとつのうみ","cost":24,"icon":"◎","desc":"ちがう こうげきを つなぎ MPを めぐらせる","stage":"ひとつのうみ","boss":"へだつもの","bhp":1400,"batk":144,"bid":"hedatsu"},{"no":12,"title":"ものがたりは、だれの ものか","spell":"みんなのこえ","cost":18,"icon":"🎭","desc":"ほんとうの こえで相性をあかし、つぎの弱点を強める","stage":"旅芸人の ぶたい","boss":"ぶたいの にせもの勇者","bhp":920,"batk":112,"bid":"niseyusha"},{"no":13,"title":"しまいこまれた ものがたり","spell":"ひらくことば","cost":14,"icon":"🗝","desc":"かたい まもりと ぶつりたいせいを ひらく","stage":"くらのしま","boss":"しまいこむもの","bhp":1500,"batk":148,"bid":"shimaikomu"},{"no":14,"title":"かたちを かえる ものがたり","spell":"こだまがえし","cost":15,"icon":"🔔","desc":"つぎに うけた いちげきを こだまにして うちかえす","stage":"やまびこのたに","boss":"もとをただすもの","bhp":1600,"batk":152,"bid":"mototadasu"},{"no":15,"title":"うそと よばれた ものがたり","spell":"ほらがいのこえ","cost":16,"icon":"🐚","desc":"つぎの こうげきが 2ばいに、きき入る てきの いちげきが よわまる","stage":"ほらふきじま","boss":"まことをせまるもの","bhp":1700,"batk":156,"bid":"makoto"},{"no":16,"title":"はじまりを わすれた ものがたり","spell":"はじまりのうた","cost":18,"icon":"🎵","desc":"つかいおえた 章じゅもんが めを さます（みんなのものがたりは のぞく）","stage":"わすれうたのしま","boss":"わすれられしもの","bhp":1800,"batk":160,"bid":"wasurare"},{"no":17,"title":"わけあう ものがたり","spell":"みんなのものがたり","cost":20,"icon":"📚","desc":"あつめた 蒼珠の かずだけ ひかりが ふりそそぐ（まもりも たいせいも つらぬく）","stage":"あつめのやかた・はこのへや・あつめのやかた・くさりのかいろう・あつめのやかた・おおひろま","boss":"ひとりじめのもの","bhp":2400,"batk":164,"bid":"hitorijime"},{"no":18,"title":"はじめる しま","spell":"あしたをえらぶ","cost":20,"icon":"🌅","desc":"⚔・🔥・❄から一つを選び、弱点なら同じ一撃をもう一度とどける","stage":"かぜまちじま・かぜまちじま・あらしのよる","boss":"しおあらしの むれ","bhp":2300,"batk":166,"bid":"shioarashi"},{"no":19,"title":"つなげて みえる もの","spell":"ときをつなぐ","cost":20,"icon":"🕰","desc":"切りかわる時をつなぎ、つぎの姿と弱点を見通して回避を封じる","stage":"ときかさねじま・ゆうぐれ・ときかさねじま・かねの時・ときかさねじま・雨あがり","boss":"きりとるもの","bhp":2700,"batk":170,"bid":"kiritoru"},{"no":20,"title":"さいごの ふねまで","spell":"こえをまわす","cost":22,"icon":"🚢","desc":"三艘へ危険のこえをまわし、正しい隊列で弱点をひらく","stage":"しおわかれのかいきょう","boss":"かじをうばうもの","bhp":3100,"batk":178,"bid":"kajiu"}],"isles":[{"no":13,"map":"kura","mname":"くらのしま","img":"isle_ch13","id":"shimaikomu","name":"しまいこむもの","hp":1500,"atk":148,"def":64,"exp":2200,"g":1800,"p":0.6,"fi":1.2,"ic":0.9,"charge":"うでを ひろげ、しまいこむ かたちを つくった","heavy":"しまいこむ ひとしめ"},{"no":14,"map":"tani","mname":"やまびこのたに","img":"isle_ch14","id":"mototadasu","name":"もとをただすもの","hp":1600,"atk":152,"def":64,"exp":2400,"g":2000,"p":1,"fi":0.9,"ic":1.3,"charge":"がけの こだまを ひとつに あつめている","heavy":"もとへ もどす ひとこえ"},{"no":15,"map":"hora","mname":"ほらふきじま","img":"isle_ch15","id":"makoto","name":"まことをせまるもの","hp":1700,"atk":156,"def":66,"exp":2600,"g":2200,"p":1,"fi":1.3,"ic":0.9,"charge":"しろい ふだを 一まい、たかく かかげた","heavy":"にげ道を ふさぐ ひとこと"},{"no":16,"map":"uta","mname":"わすれうたのしま","img":"isle_ch16","id":"wasurare","name":"わすれられしもの","hp":1800,"atk":160,"def":68,"exp":2800,"g":2400,"p":1,"fi":0.9,"ic":0.9,"charge":"うたの きれはしを のみこんで ふくらんだ","heavy":"わすれさせる ひとふり"},{"no":17,"map":"yakata3","mname":"あつめのやかた・おおひろま","img":"isle_ch17","id":"hitorijime","name":"ひとりじめのもの","hp":2400,"atk":164,"def":70,"exp":3400,"g":3000,"p":1,"fi":1.1,"ic":1.1,"charge":"","heavy":"ひとりじめの ひとおし"},{"no":18,"map":"kazemachiNight","mname":"かぜまちじま・あらしのよる","img":"isle_ch18","id":"shioarashi","name":"しおあらしの むれ","hp":2300,"atk":166,"def":68,"exp":3500,"g":2800,"p":0.8,"fi":1.6,"ic":0.55,"charge":"つばさを そろえ、うみを もちあげはじめた","heavy":"たかなみの ひとおし"},{"no":19,"map":"tokikasanebell","mname":"ときかさねじま・かねの時","img":"isle_ch19","id":"kiritoru","name":"きりとるもの","hp":2700,"atk":170,"def":72,"exp":3800,"g":3200,"p":0.75,"fi":0.85,"ic":0.85,"charge":"三つの文字ばんが かさなり、はりが とまった","heavy":"きりとる 一分"},{"no":20,"map":"shiowakare","mname":"しおわかれのかいきょう","img":"isle_ch20","id":"kajiu","name":"かじをうばうもの","hp":3100,"atk":178,"def":76,"exp":4200,"g":3600,"p":0.82,"fi":0.82,"ic":0.82,"charge":"","heavy":""}],"spells":[{"id":"hoimi","name":"ホイミ","mp":3,"fx":"HPを 16ほど かいふく","get":"さいしょから","lv":0},{"id":"mera","name":"メラ","mp":3,"fx":"ほのお・小","get":"レベル 1","lv":1},{"id":"kiari","name":"キアリー","mp":2,"fx":"どくを なおす","get":"レベル 2","lv":2},{"id":"gira","name":"ギラ","mp":7,"fx":"ほのお・中","get":"レベル 3","lv":3},{"id":"hyado","name":"ヒャド","mp":5,"fx":"こおり・小","get":"レベル 4","lv":4},{"id":"behoimi","name":"ベホイミ","mp":8,"fx":"HPを 44ほど かいふく","get":"レベル 5","lv":5},{"id":"baikiruto","name":"バイキルト","mp":6,"fx":"こうげきが 1.5ばいに なる（きびしさが 上がるほど よわまる）","get":"レベル 6","lv":6},{"id":"begirama","name":"ベギラマ","mp":12,"fx":"ほのお・大","get":"レベル 7","lv":7},{"id":"hyadaruko","name":"ヒャダルコ","mp":12,"fx":"こおり・大","get":"レベル 8","lv":8},{"id":"rukani","name":"ルカニ","mp":4,"fx":"てきの まもりを はんぶんに（ぶつりの こうげきだけ）","get":"レベル 9","lv":9},{"id":"sukara","name":"スカラ","mp":4,"fx":"じぶんの まもりを 1.5ばいに","get":"レベル 10","lv":10},{"id":"behoma","name":"ベホマ","mp":22,"fx":"HPを ぜんぶ かいふく","get":"レベル 11","lv":11},{"id":"begiragon","name":"ベギラゴン","mp":20,"fx":"ほのお・特大","get":"レベル 12","lv":12},{"id":"mahyado","name":"マヒャド","mp":20,"fx":"こおり・特大","get":"レベル 13","lv":13},{"id":"merazoma","name":"メラゾーマ","mp":26,"fx":"ほのお・さいだい","get":"レベル 14","lv":14},{"id":"rariho","name":"ラリホー","mp":8,"fx":"ふつうの まものを 6わり5ぶで ねむらせる（ボス・ぬし・きょじんなどには きかない）","get":"レベル 15","lv":15},{"id":"mahyadedos","name":"マヒャデドス","mp":28,"fx":"こおり・さいだい","get":"レベル 16","lv":16},{"id":"gigadein","name":"ギガデイン","mp":32,"fx":"いかずち・あいしょうに よらない","get":"レベル 17","lv":17},{"id":"minadein","name":"ミナデイン","mp":40,"fx":"蒼珠の かずだけ つよくなる","get":"レベル 18","lv":18},{"id":"kagenui","name":"ぬいとめ","mp":12,"fx":"てきの つぎの「ため」を 1かい ぬいとめる","get":"レベル 19","lv":19},{"id":"nokoribi","name":"ふみとどまり","mp":16,"fx":"たおれる いちげきを HP1で こらえる(1戦1回)","get":"レベル 21","lv":21},{"id":"hikarituru","name":"つらぬきのひかり","mp":30,"fx":"まもり半分つらぬきの 大ダメージ","get":"レベル 23","lv":23},{"id":"kagebarai","name":"かげきり","mp":32,"fx":"かげ・ぬしのたぐいに 1.6ばいの 大ダメージ","get":"レベル 25","lv":25},{"id":"urahikari","name":"みなもとのひかり","mp":50,"fx":"まもり半分つらぬき＋じぶんも かいふく","get":"うら章の ごほうび","lv":99}],"lvs":[{"lv":1,"exp":0,"hp":26,"mp":8,"atk":7,"def":4},{"lv":2,"exp":18,"hp":34,"mp":12,"atk":10,"def":6},{"lv":3,"exp":44,"hp":44,"mp":17,"atk":14,"def":8},{"lv":4,"exp":80,"hp":56,"mp":24,"atk":18,"def":11},{"lv":5,"exp":128,"hp":70,"mp":32,"atk":22,"def":14},{"lv":6,"exp":188,"hp":84,"mp":40,"atk":26,"def":17},{"lv":7,"exp":262,"hp":98,"mp":50,"atk":31,"def":20},{"lv":8,"exp":350,"hp":115,"mp":62,"atk":36,"def":24},{"lv":9,"exp":474,"hp":133,"mp":73,"atk":41,"def":28},{"lv":10,"exp":652,"hp":152,"mp":84,"atk":46,"def":32},{"lv":11,"exp":904,"hp":172,"mp":95,"atk":51,"def":36},{"lv":12,"exp":1266,"hp":193,"mp":106,"atk":57,"def":41},{"lv":13,"exp":1770,"hp":216,"mp":117,"atk":63,"def":46},{"lv":14,"exp":2490,"hp":240,"mp":128,"atk":69,"def":51},{"lv":15,"exp":3510,"hp":265,"mp":139,"atk":76,"def":56},{"lv":16,"exp":4960,"hp":291,"mp":150,"atk":83,"def":62},{"lv":17,"exp":7020,"hp":318,"mp":161,"atk":91,"def":68},{"lv":18,"exp":9960,"hp":346,"mp":172,"atk":99,"def":75},{"lv":19,"exp":12360,"hp":362,"mp":181,"atk":103,"def":78},{"lv":20,"exp":15060,"hp":378,"mp":190,"atk":107,"def":81},{"lv":21,"exp":17960,"hp":394,"mp":199,"atk":111,"def":84},{"lv":22,"exp":21060,"hp":410,"mp":208,"atk":115,"def":87},{"lv":23,"exp":24760,"hp":426,"mp":217,"atk":119,"def":90},{"lv":24,"exp":28660,"hp":442,"mp":226,"atk":123,"def":93},{"lv":25,"exp":32960,"hp":460,"mp":236,"atk":128,"def":97}],"shop":[{"town":"むらの みせ","id":"w1","label":"どうのつるぎ","cost":30,"atk":5,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"むらの みせ","id":"w2","label":"はがねのつるぎ","cost":90,"atk":12,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"むらの みせ","id":"w3","label":"ほのおのつるぎ","cost":200,"atk":20,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"むらの みせ","id":"wmikiri","label":"みきりのこだち","cost":420,"atk":24,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"ゆきのまち","id":"w4","label":"ふぶきのつるぎ","cost":550,"atk":36,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"ゆきのまち","id":"w5","label":"らいめいのつるぎ","cost":1250,"atk":48,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"ゆきのまち","id":"wshippu","label":"しっぷうのつるぎ","cost":1650,"atk":30,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"ゆきのまち","id":"wmadara","label":"まだらのやいば","cost":900,"atk":34,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"ゆきのまち","id":"wkyuketsu","label":"きゅうけつのやいば","cost":1900,"atk":42,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"むらの みせ","id":"a1","label":"かわのよろい","cost":40,"atk":0,"armor":4,"shield":0,"kind":"よろい"},{"town":"むらの みせ","id":"a2","label":"くさりかたびら","cost":120,"atk":0,"armor":9,"shield":0,"kind":"よろい"},{"town":"むらの みせ","id":"a3","label":"はがねのよろい","cost":260,"atk":0,"armor":16,"shield":0,"kind":"よろい"},{"town":"むらの みせ","id":"akaze","label":"かぜのマント","cost":240,"atk":0,"armor":12,"shield":0,"kind":"よろい"},{"town":"むらの みせ","id":"adokuyoke","label":"どくよけのころも","cost":620,"atk":0,"armor":18,"shield":0,"kind":"よろい"},{"town":"ゆきのまち","id":"a4","label":"まほうのよろい","cost":600,"atk":0,"armor":24,"shield":0,"kind":"よろい"},{"town":"ゆきのまち","id":"a5","label":"ひかりのよろい","cost":1350,"atk":0,"armor":34,"shield":0,"kind":"よろい"},{"town":"ゆきのまち","id":"ayukiyoke","label":"ゆきよけのがいとう","cost":1600,"atk":0,"armor":30,"shield":0,"kind":"よろい"},{"town":"ゆきのまち","id":"ainori","label":"いのりのころも","cost":3800,"atk":0,"armor":44,"shield":0,"kind":"よろい"},{"town":"ちそこ","id":"wgoroshi","label":"きょじんごろし","cost":3400,"atk":46,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"ちそこ","id":"w6","label":"ちそこのつるぎ","cost":4800,"atk":64,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"ちそこ","id":"wtsukikage","label":"つきかげのつるぎ","cost":9800,"atk":76,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"ちそこ","id":"w7","label":"ほしくだきのつるぎ","cost":12000,"atk":82,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"ちそこ","id":"a6c","label":"ほりびとのころも","cost":5200,"atk":0,"armor":46,"shield":0,"kind":"よろい"},{"town":"ちそこ","id":"aryukishi","label":"りゅうきしのよろい","cost":6800,"atk":0,"armor":52,"shield":0,"kind":"よろい"},{"town":"ちそこ","id":"a7h","label":"ほしのよろい","cost":13000,"atk":0,"armor":60,"shield":0,"kind":"よろい"},{"town":"ちそこ","id":"atsukikage","label":"つきかげのころも","cost":16000,"atk":0,"armor":68,"shield":0,"kind":"よろい"},{"town":"ちそこ","id":"shield2","label":"ひかりのたて","cost":3000,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"ちそこ","id":"inochi","label":"いのちのしずく","cost":600,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"ちそこ","id":"hoshikake","label":"ほしのかけら","cost":1200,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"なかうみの うきみせ","id":"umichizu","label":"うみのちず","cost":1500,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"なかうみの うきみせ","id":"funauta","label":"ふなうたのふえ","cost":2500,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"なかうみの うきみせ","id":"w8u","label":"うみなりのつるぎ","cost":6800,"atk":60,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"なかうみの うきみせ","id":"a8u","label":"しおかぜのころも","cost":6400,"atk":0,"armor":40,"shield":0,"kind":"よろい"},{"town":"なかうみの うきみせ","id":"inochi3","label":"いのちのしずく","cost":600,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"なかうみの うきみせ","id":"hoshikake3","label":"ほしのかけら","cost":1200,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"ぶたいの きねんひん","id":"troupeMask","label":"にせもの勇者の おめん","cost":300,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"ぶたいの きねんひん","id":"troupeScript","label":"ほんとうのこえの だいほん","cost":600,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"むらの みせ","id":"w9f","label":"ほしのはしのつるぎ","cost":26000,"atk":136,"armor":0,"shield":0,"kind":"つるぎ"},{"town":"むらの みせ","id":"a9f","label":"よあけのよろい","cost":28000,"atk":0,"armor":108,"shield":0,"kind":"よろい"},{"town":"むらの みせ","id":"nkw","label":"ものがたりのつえ","cost":4800,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"むらの みせ","id":"nka","label":"かたりべのマント","cost":5200,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"みさきの みせ","id":"inochi2","label":"いのちのしずく","cost":600,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"みさきの みせ","id":"hoshikake2","label":"ほしのかけら","cost":1200,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"ゆきのまち","id":"seisui2","label":"まほうのせいすい","cost":80,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"ゆきのまち","id":"tokusen","label":"とくせんやくそう","cost":250,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"ゆきのまち","id":"inazuma","label":"いなずまだま","cost":400,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"ゆきのまち","id":"mkey","label":"まほうのかぎ","cost":300,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"くらのしま","id":"seisui_k","label":"まほうのせいすい","cost":80,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"くらのしま","id":"tokusen_k","label":"とくせんやくそう","cost":250,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"ほらふきじま","id":"inazuma_h","label":"いなずまだま","cost":400,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"ほらふきじま","id":"inochi_h","label":"いのちのしずく","cost":600,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"わすれうたのしま","id":"seisui_u","label":"まほうのせいすい","cost":80,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"わすれうたのしま","id":"hoshikake_u","label":"ほしのかけら","cost":1200,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"かぜまちじま","id":"tetsu_z","label":"ほしのてつ","cost":500,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"},{"town":"かぜまちじま","id":"inochi_z","label":"いのちのしずく","cost":600,"atk":0,"armor":0,"shield":0,"kind":"どうぐ"}],"shitaku":[{"no":13,"id":"stk13","label":"あけはなちの やいば","cost":6000,"atk":102,"armor":0,"tip":"くらのしまの ぬしは、うでを ひろげて『しまいこむ ひとしめ』を うつ。\nいわの ような からだで、ひとふりが なかなか とおらない。\nこの やいばは 1ターンに 2かい きる——手かずで けずりな。"},{"no":14,"id":"stk14","label":"こだまうつしの ころも","cost":7000,"atk":0,"armor":80,"tip":"やまびこのたには こだまを ひとつに あつめて『もとへ もどす ひとこえ』を うつ。\nためた いちげきは、よろいの あつさでは どうにも ならない。\nこの ころもは、その 大きな いちげき だけを やわらげる。"},{"no":15,"id":"stk15","label":"おおぼらの ほこさき","cost":8000,"atk":110,"armor":0,"tip":"ほらふきじまの ぬしは しろい ふだを かかげ『にげ道を ふさぐ ひとこと』を うつ。\nこの ほこさきは きょじんや ぬしなど 大きい あいてに 1.6ばい——\nおおぼらは、大きい あいてほど よく きく。"},{"no":16,"id":"stk16","label":"ねむりうたの ころも","cost":9000,"atk":0,"armor":86,"tip":"わすれうたのしまの ぬしは、うたを のみこんで『わすれさせる ひとふり』を うつ。\nむこうも よく かわす あいてだ。\nこの ころもを きれば こちらも 5かいに 1かいは かわし、\nためた いちげきも 24% やわらぐ。"},{"no":17,"id":"stk17","label":"わけへだてぬ やいば","cost":11000,"atk":118,"armor":0,"tip":"あつめのやかたの ぬしは、すがたを かえると まいターン ためてくる。\nやすむ ひまが ない あいてだ。\nこの やいばは あたえた いたみの 4わりを こちらへ かえす——うちながら 立てなおせ。"},{"no":18,"id":"stk18","label":"あらしよけの ころも","cost":13000,"atk":0,"armor":92,"tip":"かぜまちじまの ぬしは つばさを そろえ『たかなみの ひとおし』を たたきつける。\nいきと つうこんが とんでくる島だ。\nこの ころもは 数ではなく 種類に つよい——そのうえ ためた いちげきも 3わり ちかく やわらぐ。"},{"no":19,"id":"stk19","label":"ひとこまの こだち","cost":15000,"atk":126,"armor":0,"tip":"ときかさねじまの ぬしは 三つの文字盤を かさね『きりとる 一分』を うつ。\n三たびに 一たびは ひらりと かわす あいてだ。\nかいしんの いちげきは かわしも まもりも つらぬく——この こだちは それを ふやす。"},{"no":20,"id":"stk20","label":"なぎわたりの ころも","cost":18000,"atk":0,"armor":98,"tip":"しおわかれの海峡では、三つの危険が まとめて おそってくる。\nうけ方を まちがえると、いちばん 重い ひと当たりに なる。\nこの ころもは 大きな いちげきを 34% やわらげる——さいごの したくだ。"}],"funami":[{"label":"うみなりのつるぎ","cost":6800,"atk":60,"armor":0},{"label":"つきかげのつるぎ","cost":9800,"atk":76,"armor":0},{"label":"ほしくだきのつるぎ","cost":12000,"atk":82,"armor":0},{"label":"しおかぜのころも","cost":6400,"atk":0,"armor":40},{"label":"ほしのよろい","cost":13000,"atk":0,"armor":60},{"label":"つきかげのころも","cost":16000,"atk":0,"armor":68},{"label":"やくそう","cost":8,"atk":0,"armor":0},{"label":"いいやくそう","cost":60,"atk":0,"armor":0},{"label":"とくせんやくそう","cost":250,"atk":0,"armor":0},{"label":"まほうのせいすい","cost":80,"atk":0,"armor":0},{"label":"いのちのしずく","cost":600,"atk":0,"armor":0},{"label":"ほしのかけら","cost":1200,"atk":0,"armor":0}],"hid":[{"map":"そうげん","x":8,"y":3,"what":"50 ゴールド","msg":"みずうみの ひがしの くさむらに ふくろが うまっていた！"},{"map":"どうくつ","x":18,"y":10,"what":"まほうのせいすい","msg":"いわかげに まほうのせいすいが おちていた！"},{"map":"そうげん","x":16,"y":8,"what":"35 ゴールド","msg":"くさむらの おくで キラリ… ちいさな ふくろだ！"},{"map":"もり","x":16,"y":9,"what":"やくそう ×2","msg":"きの ねもとに たびびとの わすれもの…"},{"map":"どうくつ","x":16,"y":3,"what":"まほうのせいすい","msg":"いわの すきまが あおく ひかっている…"},{"map":"こおりのしま","x":7,"y":11,"what":"MPが 6","msg":"ゆきの したから ふしぎなたねが…！"},{"map":"かざん","x":11,"y":10,"what":"80 ゴールド","msg":"ようがんの そばに とけのこった ふくろ…"},{"map":"まおうのしろ","x":2,"y":3,"what":"120 ゴールド","msg":"いにしえの ゆうしゃの さいふだ…！"},{"map":"ちそこ","x":2,"y":11,"what":"100 ゴールド","msg":"ほねの やまの かげに ふるびた ふくろが…"},{"map":"ちそこ","x":16,"y":5,"what":"150 ゴールド","msg":"とびらの おくの こばこに 150ゴールドも はいっていた！"},{"map":"しずみのさと","x":2,"y":10,"what":"250 ゴールド","msg":"しずんだ いえの かげに ぬれた かわぶくろ…"},{"map":"わすれのうみ","x":2,"y":2,"what":"300 ゴールド","msg":"きりの おくの いわだなに ふるい はこ…"},{"map":"みなもとのもり","x":1,"y":11,"what":"400 ゴールド","msg":"おおきの うろに きんかが かくされていた…！"},{"map":"とわのふち","x":17,"y":6,"what":"500 ゴールド","msg":"とわの ほとりに、いにしえの たびびとの ざいふ…"},{"map":"くらのしま","x":2,"y":2,"what":"600 ゴールド","msg":"はこの やまの おくに、うけとられなかった あずかりもの…"},{"map":"やまびこのたに","x":7,"y":7,"what":"700 ゴールド","msg":"かわらの いしの したに、ふるい ぬのづつみ…"},{"map":"ほらふきじま","x":3,"y":10,"what":"800 ゴールド","msg":"らくがきの とおりだ…！ みなみへ ななつめの すなの したに"},{"map":"わすれうたのしま","x":2,"y":5,"what":"MPが 6","msg":"いしぶみの ねもとに、ちいさな つぼが うまっていた…"},{"map":"あつめのやかた・くさりのかいろう","x":16,"y":10,"what":"500 ゴールド","msg":"くさりの かげに ちいさな ふくろ。ふだに「かえす ひの ために」…"},{"map":"かぜまちじま","x":17,"y":9,"what":"ほしのてつ","msg":"なみうちぎわに、あらしの はこんだ ながれもの…"},{"map":"ときかさねじま・かねの時","x":12,"y":10,"what":"ほしのかけら","msg":"とまった かねの よる、ほしあかりの さす つちの したから…"},{"map":"ときかさねじま・雨あがり","x":12,"y":9,"what":"900 ゴールド","msg":"あめあがりの つちが キラリ… うもれていた こばこに"}],"diff":[{"n":1,"name":"やさしい","ehp":0.9,"eatk":0.95,"exp":1.25,"gold":1.15},{"n":2,"name":"ふつう","ehp":1,"eatk":1,"exp":1,"gold":1},{"n":3,"name":"むずかしい","ehp":1.12,"eatk":1,"exp":0.95,"gold":0.95},{"n":4,"name":"ごくむず","ehp":1.25,"eatk":1,"exp":0.85,"gold":0.9},{"n":5,"name":"でんせつ","ehp":1.4,"eatk":1.02,"exp":0.8,"gold":0.85},{"n":6,"name":"しんわ","ehp":1.6,"eatk":1.04,"exp":0.55,"gold":0.6},{"n":7,"name":"しんぱん","ehp":1.9,"eatk":1.05,"exp":0.4,"gold":0.5}],"kage":[{"no":13,"base":"しまいこむもの","name":"ひゃっぽんうでの くらおう","taunt":"「こんどは しまごと、しまってやる！」","hp":5400,"atk":252},{"no":14,"base":"もとをただすもの","name":"ひとつごえの おおやまびこ","taunt":"「たにの こえは、ぜんぶ わしに なった！」","hp":6240,"atk":258},{"no":15,"base":"まことをせまるもの","name":"せんまいふだの しばりぬし","taunt":"「にげみちは、ぜんぶ ふうじた！」","hp":6460,"atk":265},{"no":16,"base":"わすれられしもの","name":"うたまるのみの おおぐち","taunt":"「つぎは おまえの なまえを のむ」","hp":6120,"atk":264},{"no":17,"base":"ひとりじめのもの","name":"こがねの ひとりじめおう","taunt":"「おまえの けんも たても、わしの ものだ！」","hp":6000,"atk":262},{"no":18,"base":"しおあらしの むれ","name":"くろつばさの だいしおあらし","taunt":"「うみよ、たて！ そらよ、おちろ！」","hp":6210,"atk":266},{"no":19,"base":"きりとるもの","name":"ときとめの おおはさみ","taunt":"「おまえの つぎの 一ターン、きりとった！」","hp":5400,"atk":272}],"items":[{"name":"やくそう","fx":"HPが 28〜34 かいふく"},{"name":"いいやくそう","fx":"HPが 90〜110 かいふく"},{"name":"とくせんやくそう","fx":"HPが 200〜240 かいふく"},{"name":"ばくだんいし","fx":"てきに 80（ボス・ぬしには 40・メタルには 1）"},{"name":"いなずまだま","fx":"てきに 160（ボス・ぬしには 80・メタルには 1）"},{"name":"まほうのせいすい","fx":"MPが 14〜18 かいふく"},{"name":"どくけしそう","fx":"どくを なおす"},{"name":"いのちのしずく","fx":"HPが ぜんぶ かいふく"},{"name":"ほしのかけら","fx":"MPが ぜんぶ かいふく"},{"name":"ほしのてつ","fx":"⚒かじの ざいりょう。⚒したくの 支払いに 一つ 三千ゴールドぶんとして 使える"},{"name":"かげいし","fx":"かげ編の ざいりょう。⚒かじで 二つ＋二千ゴールドで たね 一つ"},{"name":"ちからのたね","fx":"つかうと こうげき か まもりが 永く のびる"}],"SHIMA":[{"no":13,"map":"kura","verb":"はたく","title":"ぬすみと はたき","what":"ぬしが うでを のばして、島の 上の ものを 目の前で 三つ ぬすむ（二回で 打ち止め）。うでは 白く ふちどられ、ねらわれた ところが 金色に またたく。","tap":"のびてくる \u003cb>うでの 先\u003c/b>、または \u003cb>金色に またたく ところ\u003c/b>を タップ＝はたきおとし。ぬすまれた あとは、足もとに \u003cb>金の わ\u003c/b>が ともった \u003cb>箱\u003c/b>を タップ＝とりかえし。","miss":"ほうっておいても 勝てる。とられたままでも 戦いは 一つも 不利に ならない。","prize":"三つとも あけて いどむと、開幕——ふくろを さかさに ふって \u003cb>なにも おちず、すってん ころぶ\u003c/b>。二つ＝けげん、一つ＝ふきげん。","shots":[["asobi_ude","うでが のびる"],["asobi_hako","ぬすまれた 箱"],["asobi_suten","すってん"]]},{"no":14,"map":"tani","verb":"追う","title":"こだま おいかけ","what":"こだまのいしに ふれると、こえが \u003cb>蒼い ひかりの たま\u003c/b>に なって とびだし、谷を にげる。","tap":"たまの \u003cb>となりの マス\u003c/b>まで 行くと、谷の むこうへ ひとはね。\u003cb>三たび はねると いきを きらして とどまる\u003c/b>——かならず つかまえられる。","miss":"時間の かぎりも 罰も ない。追いかけている あいだは まものが 来ない。","prize":"はねる たびに こえの きれはしが こぼれる。三つ つかまえると ぬしが 目を さます。","entry":"フクロの 台帳に \u003cb>🌿 やまびこのたに ─ にげる こだまを おいかける\u003c/b> の 行が ある。","shots":[]},{"no":15,"map":"hora","verb":"見抜く","title":"うそふだと はがし","what":"ぬしが 白く ひかって \u003cb>ふだを 三枚\u003c/b> とばす。ほんものの「うそつき」の ふだは \u003cb>一枚だけ\u003c/b>——\u003cb>白く ゆれて 点滅\u003c/b>する。のこり二枚（かみきれ）は 動かない。","tap":"\u003cb>ゆれて 点滅する ふだ\u003c/b>を タップ＝はがし。話しかけても はがせる。","miss":"かみきれを 押しても ちるだけ。罰は ない。二回で 打ち止め。ふだが ついた ものがたりは 灰色の 残像に なって のこる。","prize":"三枚とも はがして いどむと、開幕——ふだを 勇者に たたきつけ、\u003cb>すべって じぶんの ひとみに ぺたり、ころぶ\u003c/b>。","shots":[["huda_mae","ふだが とぶ まえ"],["huda_sealed","ふだが ついた"],["huda_hagashi","はがす"]]},{"no":16,"map":"uta","verb":"歌わせる","title":"うたのみと うたいかえし","what":"ぬしが \u003cb>おおくちを あける\u003c/b>（むらさきの ひかり）。島じゅうの うたの えんしゅつ——ただよう ひかり・帆・雨——が、そのまま 口へ ながれこむ（およそ 二秒半）。","tap":"すいこみの あいだに \u003cb>あいた くち\u003c/b>を タップ＝むせさせる。のまれて しまったら \u003cb>いしぶみ\u003c/b>を タップ＝石が うたいだしを うたい、ぬしが むせて はきだす。","miss":"罰は ない。二回で 打ち止め。勝てば のまれた うたは いっせいに 解放される。","prize":"三つとも 守って いどむと、開幕——なにも 入って こず、\u003cb>のどの おくから ぽろん と うたが こぼれて、りょうてで 口を ふさぐ\u003c/b>。","shots":[["uta_suikomi","すいこみ"],["uta_nomare","のまれた"],["uta_utaikaeshi","うたいかえし"]]},{"no":17,"map":"yakata3","verb":"くずす","title":"つみばこと くずし","what":"ぬしが \u003cb>はこを 三つ\u003c/b> つぎつぎ 投げて、大広間の はこの 上に \u003cb>つみあげる\u003c/b>。塔の すきまから 光の 帯が もれる。","tap":"とんでくる \u003cb>はこ\u003c/b>は タップで 一つ はたける。つみあがった \u003cb>塔\u003c/b>は \u003cb>どこを 押しても\u003c/b> いちばん 上の はこが ぽんと とぶ——三回で くずし切れる。話しかければ まるごと くずれる。","miss":"罰は ない。塔を のこしたままでも 戦える。","prize":"くずし切ると 光が あふれて 咲きなおす。勝つと 全部 はじけて \u003cb>ひかりの とり\u003c/b>が とぶ。開幕——投げる はこが なく \u003cb>じぶんの おうかんを お手玉\u003c/b>。","shots":[["y3_tsumi","つみあげ"],["y3_kuzushi","くずし"],["y3_tori","ひかりの とり"]]},{"no":18,"map":"kazemachiNight","verb":"守らせる","title":"たてたものの まもり","what":"むれが ふくらんで \u003cb>白く さかだつ\u003c/b>（合図。およそ 〇.六秒）→ \u003cb>しぶきの つばさ\u003c/b>が 弧を えがいて とぶ。ねらわれた \u003cb>施設\u003c/b>（章18で あなたが えらんで 建てた もの）が こわがって またたく。","tap":"\u003cb>施設\u003c/b>を タップ＝号令。ふなつきばは 投網、かざみだいは 火、かぜよけごやは 風で そらす。とんでくる \u003cb>つばさ\u003c/b>を じかに タップしても 落とせる。","miss":"まにあわないと 泡の 膜に つつまれるが、タップか 話しかけで はらえる。\u003cb>戦いでの 施設の はたらきは 一つも 変わらない\u003c/b>。","prize":"守るたび \u003cb>しずくあかり\u003c/b>が 灯る。全部 守って いどむと、開幕——ずぶぬれに なり \u003cb>いっしゅん 小さな とりたちに ばらけて\u003c/b>、あつまりなおして 身ぶるい。","note":"この 島だけ \u003cb>再戦せんよう\u003c/b>。はじめての 章18は あらしが まったなしで、遊ぶ まが ない。","shots":[["kz_tsubasa","つばさが とぶ"],["kz_maku","泡の 膜"],["kz_gekitai","号令で 撃退"]]},{"no":19,"map":"tokikasanebell","verb":"先回りする","title":"とき ずらしと めくりもどし","what":"ぬしが \u003cb>白い 点線\u003c/b>（きりとり線）で 島の 場面——よどりの 木・ともしびの 塔——を ゆっくり 囲みはじめる（およそ 一.六秒）。","tap":"\u003cb>囲みおわる まえに、その 場面を タップ\u003c/b>＝さきに さわった。切り取りは 失敗し、ぬしは ハサミを ふりまわして くやしがる。","miss":"まにあわないと \u003cb>べつの 時の 紙\u003c/b>（ゆうぐれの 橙・雨あがりの 水色）が かぶさる。タップか 話しかけで \u003cb>めくりもどし\u003c/b>——紙は 大時計へ すいこまれ、\u003cb>青い 時計の わ\u003c/b>が ひらく。罰は ない。","prize":"全部 守って いどむと、開幕——\u003cb>じぶんの かげを まちがえて きりとり\u003c/b>、紙のように めくれた かげを あわてて はりなおす。","shots":[["tk_kakomi","点線が 囲む"],["tk_zure","ずらされた"],["tk_modoru","めくりもどし"]]}],"n":{"foes":109,"chap":21,"isle":8,"spell":44,"hid":22}};
+const VER="20260803_2106";
+/* ── 共通 ── */
+const $ = id => document.getElementById(id);
+const E = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const KAN = ['〇','一','二','三','四','五','六','七','八','九','十'];
+const kan = n => n <= 10 ? KAN[n] : n < 20 ? '十' + (n % 10 ? KAN[n % 10] : '')
+  : KAN[Math.floor(n / 10)] + '十' + (n % 10 ? KAN[n % 10] : '');
+/* シート原寸 800x880（80px角・10列×11行）。額の幅 --cw だけで 位置が 決まる */
+const art = f => `--c:${f.c};--r:${f.r}`;
+
+/* 弱点のしるし */
+function weak(f) {
+  const o = [];
+  const one = (v, n) => { if (v > 1) o.push(`<u class="we">${n}弱</u>`); else if (v < 1) o.push(`<u class="wr">${n}耐</u>`); };
+  one(f.p, '物'); one(f.fi, '火'); one(f.ic, '氷');
+  return o.join('');
+}
+
+/* ── 見出しの数字 ── */
+$('bar').innerHTML = [[D.n.foes,'まもの'],[D.n.chap,'章'],[D.n.isle,'しま'],[D.n.spell,'じゅもん'],[D.n.hid,'かくし']]
+  .map(([v, k]) => `<div><b>${v}</b><span>${k}</span></div>`).join('');
+
+/* ── 目次 ── */
+const TABS = [['t0','引き方'],['t1','さいしょの十分'],['t2','画面の見方'],['t3','道のり'],
+  ['t4','島の遊び'],['t5','強くなる'],['t6','まもの図鑑'],['t7','かくし']];
+function go(id) {
+  document.querySelectorAll('nav b').forEach(x => x.classList.toggle('on', x.dataset.t === id));
+  document.querySelectorAll('main>section').forEach(s => s.classList.toggle('on', s.id === id));
+  document.body.classList.toggle('sub', id !== 't0');
+  scrollTo(0, 0);
+  try { history.replaceState(null, '', '#' + id); } catch (e) {}
+}
+const navEl = $('nav');
+TABS.forEach(([id, label], i) => {
+  const b = document.createElement('b'); b.textContent = label; b.dataset.t = id; b.tabIndex = 0;
+  if (i === 0) b.className = 'on';
+  b.onclick = () => go(id);
+  b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(id); } };
+  navEl.appendChild(b);
+});
+document.querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); go(a.dataset.go); });
+
+/* ══ 1 さいしょの十分：最初に出会う まもの ══ */
+{
+  const first = ['slime','crow','golem','gslime','metal'];
+  const rows = first.map(id => D.foes.find(f => f.id === id)).filter(Boolean);
+  $('tearly').innerHTML = '<tr><th>まもの</th><th class="n">HP</th><th class="n">こうげき</th>'
+    + '<th class="n">けいけんち</th><th class="n">ゴールド</th><th>よわてん</th></tr>'
+    + rows.map(f => `<tr><td class="nw">${E(f.name)}</td><td class="n">${f.hp}</td><td class="n">${f.atk}</td>`
+      + `<td class="n">${f.exp}</td><td class="n">${f.g}</td><td class="nw">${weak(f) || '—'}</td></tr>`).join('');
+}
+
+/* ══ 2 画面の見方：注釈つきの一枚 ══ */
+$('uiplate').innerHTML = `<img src="img/ui.jpg" alt="むらの画面。金の光の柱・青の光の柱・もくてきバー・メニューの位置に番号がふってある">`;
+$('uicap').innerHTML = 'むらの 画面（なんいど「ふつう」・物語を おえた ところ）。'
+ + '<b>1</b> LV・HP・MP・お金・きびしさ・つるぎとよろいの数字　<b>2</b> ☰メニュー　'
+ + '<b>3</b> どうぐ　<b>4</b> 蒼珠　<b>5</b> もくてきバー（金の帯）。'
+ + '盤の上の <b>金の柱</b>＝めあて、<b>青の柱</b>＝でぐち。';
+
+/* ══ 2 なんいど ══ */
+$('tdiff').innerHTML = '<tr><th>きびしさ</th><th class="n">敵のHP</th><th class="n">敵のこうげき</th>'
+  + '<th class="n">けいけんち</th><th class="n">ゴールド</th></tr>'
+  + D.diff.map(d => `<tr><td class="nw${d.n === 2 ? ' sp' : ''}">${E(d.name)}${d.n === 2 ? '（この本の 基準）' : ''}</td>`
+    + `<td class="n">×${d.ehp}</td><td class="n">×${d.eatk}</td><td class="n">×${d.exp}</td><td class="n">×${d.gold}</td></tr>`).join('');
+
+/* ══ 3 道のり ══ */
+{
+  // 表にすると 章題が 1文字ずつ 縦に割れる（iPad縦で実測）。左に番号の罫、右に積む 版面へ。
+  const part = n => n <= 7 ? '第一部　ひかりの たま' : n <= 12 ? '第二部　となりを あるく' : '第三部　八つの しま';
+  const row = (no, title, stage, boss, spell, cost, desc) =>
+    `<div class="chrow"><div class="chno">${no}</div><div class="chbody">
+      <div class="chttl">${E(title)}</div>
+      <div class="chmeta">${E(stage)}${boss ? '　／　しめ＝<b>' + E(boss) + '</b>' : ''}</div>
+      ${spell ? `<div class="chsp"><span class="sp">${E(spell)}</span>　MP${cost}　${E(desc)}</div>` : ''}
+    </div></div>`;
+  let last = '', h = '';
+  D.chap.forEach(c => {
+    const p = part(c.no);
+    if (p !== last) { h += `<div class="chpart">${p}</div>`; last = p; }
+    h += row(c.no, c.title, c.stage, c.boss, c.spell, c.cost, c.desc);
+  });
+  h += `<div class="chpart">おえた あと</div>`
+    + row(21, 'ほしのうみ', 'ほしのうみ', 'すくわれなかったもの', '', null, '')
+    + row('うら', 'かたられなかった はじまり', 'ほしのみなもと', 'はじまらざるもの', 'みなもとのひかり', 50, 'まもり半分つらぬき＋じぶんも かいふく');
+  $('tchap').innerHTML = h;
+}
+
+/* ══ 3 八つの ぬし ══ */
+$('tnushi').innerHTML = '<tr><th>章</th><th>しま</th><th>ぬし</th><th class="n">HP</th><th class="n">こうげき</th>'
+  + '<th class="n">まもり</th><th>よわてん</th><th>ためた 一撃</th></tr>'
+  + D.isles.map(i => `<tr><td class="ch nw">${i.no}</td><td class="nw">${E(i.mname)}</td>`
+    + `<td class="nm sp">${E(i.name)}</td><td class="n">${i.hp}</td><td class="n">${i.atk}</td><td class="n">${i.def}</td>`
+    + `<td class="nw">${weak(i) || '—'}</td><td class="nm" style="font-size:13px">${E(i.heavy) || '—'}</td></tr>`).join('');
+
+/* ══ 4 島の遊び ══ */
+$('shima').innerHTML = D.SHIMA.map(s => {
+  const isle = D.isles.find(x => x.no === s.no);
+  const shots = s.shots.length
+    ? `<div class="shots">${s.shots.map(([f, c]) => `<figure><img src="img/${f}.jpg" alt="${E(c)}"><figcaption>${E(c)}</figcaption></figure>`).join('')}</div>`
+    : `<div class="shots"><div class="none">この島の 写真は まだ ありません</div></div>`;
+  return `<div class="plate-isle"><img src="img/${isle.img}.jpg" alt="${E(isle.mname)}">
+   <div class="cap"><h4>${E(isle.mname)}<span class="verb">${E(s.verb)}</span></h4>
+   <div class="met">第${kan(s.no)}章　ぬし＝${E(isle.name)}　―　${E(s.title)}</div></div></div>
+  <dl class="spec">
+   <div><dt>何が おきる</dt><dd>${s.what}</dd></div>
+   <div class="key"><dt>どこを 押す</dt><dd>${s.tap}</dd></div>
+   <div><dt>押さないと</dt><dd>${s.miss}</dd></div>
+   <div><dt>ごほうび</dt><dd>${s.prize}</dd></div>
+   ${s.entry ? `<div><dt>入口</dt><dd>${s.entry}</dd></div>` : ''}
+   ${s.note ? `<div><dt>ただし</dt><dd>${s.note}</dd></div>` : ''}
+  </dl>${shots}`;
+}).join('');
+
+/* ══ 5 したく ══ */
+$('tshitaku').innerHTML = '<tr><th>渡る しま</th><th>しなもの</th><th class="n">数字</th><th class="n">ねだん</th><th>なぜ 効くのか</th></tr>'
+  + D.shitaku.map(s => { const isle = D.isles.find(x => x.no === s.no);
+    return `<tr><td class="ch nm">${s.no}　${E(isle ? isle.mname : '')}</td><td class="nm sp">${E(s.label)}</td>`
+      + `<td class="n nw">${s.atk ? '⚔ ' + s.atk : '🛡 ' + s.armor}</td><td class="n nw">${s.cost.toLocaleString()}G</td>`
+      + `<td style="font-size:13px;min-width:20em">${E(s.tip).replace(/\n/g, '<br>')}</td></tr>`; }).join('');
+
+/* ══ 5 じゅもん ══ */
+$('tspell').innerHTML = '<tr><th>じゅもん</th><th class="n">おぼえる</th><th class="n">MP</th><th>はたらき</th></tr>'
+  + D.spells.map(s => `<tr><td class="nw sp">${E(s.name)}</td><td class="n nw">${E(s.get)}</td>`
+    + `<td class="n">${s.mp}</td><td>${E(s.fx)}</td></tr>`).join('');
+
+$('tchapspell').innerHTML = '<tr><th>章</th><th>じゅもん</th><th class="n">MP</th><th>はたらき</th></tr>'
+  + D.chap.map(c => `<tr><td class="ch nw">${c.no}</td><td class="nw sp">${E(c.icon)} ${E(c.spell)}</td>`
+    + `<td class="n">${c.cost}</td><td>${E(c.desc)}</td></tr>`).join('');
+
+/* ══ 5 レベル ══ */
+$('tlv').innerHTML = '<tr><th class="n">レベル</th><th class="n">ひつような けいけんち</th><th class="n">HP</th>'
+  + '<th class="n">MP</th><th class="n">こうげき</th><th class="n">まもり</th><th>おぼえる</th></tr>'
+  + D.lvs.map(l => {
+    const sp = D.spells.filter(s => s.lv === l.lv).map(s => s.name).join('・');
+    const cap = l.lv === 18 ? ' style="background:rgba(200,160,60,.10)"' : '';
+    return `<tr${cap}><td class="n ch">${l.lv}</td><td class="n">${l.exp.toLocaleString()}</td><td class="n">${l.hp}</td>`
+      + `<td class="n">${l.mp}</td><td class="n">${l.atk}</td><td class="n">${l.def}</td>`
+      + `<td class="nw sp" style="font-size:13px">${E(sp)}${l.lv === 18 ? '<span style="color:var(--beacon)">ここが 物語の 上限</span>' : ''}</td></tr>`;
+  }).join('');
+
+/* ══ 5 どうぐ ══ */
+$('titem').innerHTML = '<tr><th>どうぐ</th><th>はたらき</th></tr>'
+  + D.items.map(i => `<tr><td class="nw sp">${E(i.name)}</td><td>${E(i.fx)}</td></tr>`).join('');
+
+/* ══ 5 みせ ══ */
+{
+  const by = {};
+  D.shop.forEach(s => (by[s.town] = by[s.town] || []).push(s));
+  $('tshop').innerHTML = Object.entries(by).map(([town, list]) =>
+    `<details><summary>${E(town)}　<span style="color:var(--faint);font-size:13px">${list.length}品</span></summary>
+     <div class="in tw"><table><tr><th>しなもの</th><th class="n">数字</th><th class="n">ねだん</th></tr>`
+    + list.map(s => `<tr><td class="nw">${E(s.label)}</td>`
+      + `<td class="n nw">${s.atk ? '⚔ ' + s.atk : s.armor ? '🛡 ' + s.armor : s.shield ? 'たて ' + s.shield : '—'}</td>`
+      + `<td class="n nw">${s.cost.toLocaleString()}G</td></tr>`).join('')
+    + '</table></div></details>').join('');
+}
+
+/* ══ 6 まもの図鑑 ══ */
+const CHIPS = [['','ぜんぶ'],['ぬし','ぬし'],['ボス','ボス'],['中ボス','中ボス'],
+  ['追ってくる','追ってくる'],['きょじん','きょじん'],['メタル','めずらしい']];
+let filt = '', qs = '';
+$('chips').innerHTML = CHIPS.map(([v, l], i) => `<u data-v="${E(v)}"${i === 0 ? ' class="on"' : ''}>${E(l)}</u>`).join('');
+$('chips').onclick = e => {
+  const u = e.target.closest('u'); if (!u) return;
+  filt = u.dataset.v;
+  $('chips').querySelectorAll('u').forEach(x => x.classList.toggle('on', x === u));
+  draw();
+};
+$('q').oninput = () => { qs = $('q').value.trim(); draw(); };
+function draw() {
+  const list = D.foes.filter(f => {
+    if (qs && f.name.indexOf(qs) < 0) return false;
+    if (!filt) return true;
+    if (filt === 'メタル') return f.tag.includes('メタル') || f.tag.includes('きんいろ');
+    return f.tag.includes(filt);
+  });
+  $('cnt').textContent = list.length + ' 体';
+  $('grid').innerHTML = list.map((f, i) => {
+    const m = f.tag.find(t => t === 'ぬし' || t === 'ボス' || t === '中ボス' || t === 'きょじん' || t === 'メタル' || t === 'きんいろ');
+    return `<div class="plate" tabindex="0" data-id="${E(f.id)}">
+     ${m ? `<span class="tagm">${E(m)}</span>` : ''}
+     <div class="art" style="${art(f)}"></div>
+     <h5>${E(f.name)}</h5><div class="st">HP ${f.hp}　攻 ${f.atk}</div>
+     <div class="wk">${weak(f)}</div><div class="at">${E(f.at[0] || '')}</div></div>`;
+  }).join('') || '<p class="lead">見つかりません。</p>';
+}
+draw();
+
+/* まもの 一体の窓 */
+$('grid').onclick = e => { const p = e.target.closest('.plate'); if (p) open(p.dataset.id); };
+$('grid').onkeydown = e => { const p = e.target.closest('.plate');
+  if (p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(p.dataset.id); } };
+function open(id) {
+  const f = D.foes.find(x => x.id === id); if (!f) return;
+  const mul = v => v === 1 ? 'ふつう' : (v > 1 ? 'よく きく（×' + v + '）' : 'きき にくい（×' + v + '）');
+  $('mbody').innerHTML = `<div class="top"><div class="art" style="${art(f)}"></div>
+   <div><h4>${E(f.name)}</h4>
+   <div style="font-size:12px;color:var(--sub);margin-top:4px">${f.tag.map(E).join('・') || 'ざこ'}</div></div></div>
+   <div class="body"><dl class="spec">
+    <div><dt>HP</dt><dd>${f.hp}</dd></div>
+    <div><dt>こうげき</dt><dd>${f.atk}</dd></div>
+    <div><dt>まもり</dt><dd>${f.def}</dd></div>
+    <div><dt>けいけんち</dt><dd>${f.exp}</dd></div>
+    <div><dt>ゴールド</dt><dd>${f.g}</dd></div>
+    <div><dt>ぶつり</dt><dd>${mul(f.p)}</dd></div>
+    <div><dt>ほのお</dt><dd>${mul(f.fi)}</dd></div>
+    <div><dt>こおり</dt><dd>${mul(f.ic)}</dd></div>
+    ${f.dg ? `<div><dt>かわす</dt><dd>${Math.round(f.dg * 100)}%</dd></div>` : ''}
+    ${f.dr ? `<div><dt>おとす</dt><dd>${E(f.dr)}</dd></div>` : ''}
+    <div class="key"><dt>出る ところ</dt><dd>${f.at.length ? f.at.map(E).join('<br>') : '—'}</dd></div>
+   </dl></div>`;
+  $('modal').classList.add('on');
+}
+$('mx').onclick = () => $('modal').classList.remove('on');
+$('modal').onclick = e => { if (e.target === $('modal')) $('modal').classList.remove('on'); };
+addEventListener('keydown', e => { if (e.key === 'Escape') $('modal').classList.remove('on'); });
+
+/* ══ 7 ほりだしもの ══ */
+{
+  const by = {};
+  D.hid.forEach(h => (by[h.map] = by[h.map] || []).push(h));
+  $('thid').innerHTML = Object.entries(by).map(([m, list]) =>
+    `<details><summary>${E(m)}　<span style="color:var(--faint);font-size:13px">${list.length}か所</span></summary>
+     <div class="in tw"><table><tr><th>ばしょ（よこ・たて）</th><th>なかみ</th></tr>`
+    + list.map(h => `<tr><td class="n nw ch">${h.x} , ${h.y}</td><td>${E(h.what)}</td></tr>`).join('')
+    + '</table></div></details>').join('');
+}
+
+/* ══ 7 かげ編 ══ */
+$('tkage').innerHTML = '<tr><th>もとの ぬし</th><th>かげの すがた</th><th class="n">HP</th><th class="n">こうげき</th><th>ひとこと</th></tr>'
+  + D.kage.map(k => `<tr><td class="nw">${E(k.base)}</td><td class="nw sp">${E(k.name)}</td>`
+    + `<td class="n">${k.hp.toLocaleString()}</td><td class="n">${k.atk}</td>`
+    + `<td style="font-size:13px">${E(k.taunt)}</td></tr>`).join('');
+
+/* ══ おくづけ ══ */
+$('foot').innerHTML = `蒼の勇者 攻略の書　―　数字・呪文の効果・値段・ボタンの名前は すべて ゲーム本体（rpg.html）の実装から 機械で 取り出しています。<br>
+ この書の 数字は なんいど「ふつう」。版 ${E(VER)}　<a href="../rpg.html">▶ ゲームを ひらく</a>　<a href="../shima/">しまの あそび</a>`;
+
+/* URLの # から開く */
+if (location.hash && TABS.some(t => '#' + t[0] === location.hash)) go(location.hash.slice(1));
+
+</script></body></html>
