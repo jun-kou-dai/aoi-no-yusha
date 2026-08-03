@@ -184,6 +184,8 @@ body{
 .mi.cur{ background:rgba(255,217,122,.10); box-shadow:inset 0 0 0 1px rgba(255,217,122,.26), inset 0 0 14px rgba(255,217,122,.08); }
 .mi.cur::before{ opacity:1; }
 .mi.dis .mlabel,.mi.dis .mcost{ opacity:.42; }
+.mi.osu{ animation:osupulse 1.6s ease-in-out infinite; }
+@keyframes osupulse{ 0%,100%{ box-shadow:inset 0 0 0 1px rgba(255,205,110,.45), 0 0 10px rgba(255,190,90,.35);} 50%{ box-shadow:inset 0 0 0 2px rgba(255,225,150,.85), 0 0 20px rgba(255,205,110,.7);} }
 #ui-battle.shake{ animation:uishake .32s linear; }
 @keyframes uishake{ 0%{transform:translate(0,0)} 20%{transform:translate(-7px,4px)} 40%{transform:translate(6px,-4px)}
   60%{transform:translate(-4px,-3px)} 80%{transform:translate(3px,2px)} 100%{transform:translate(0,0)} }
@@ -945,12 +947,12 @@ grass:{
   {x:2,y:1,to:'oka',tx:10,ty:11,need:'ch10w',msg:'きたの さかみちを のぼった——ゆうやけの かたりのおか だ。'},
   {x:11,y:13,to:'umi',tx:10,ty:3,need:'ch11a',msg:'みなみの はまから ふねを こぎだした——ひとつの うみへ！'}],
  npcs:[
-  {x:7,y:10,kind:'ojii',col:'#d8a86a',msgFinal:['じいさん「……ほしのうみまで のぼったか。\nわしの おとうとも、そこまでは いけなんだ。」','じいさん「ものがたりは おわらん。かたる ものが おる かぎりな。\n……よい たびじゃった。」'],msgCh6:['じいさん「はずれの おひと——ソラどの、と いうそうじゃの。\nそらを みあげる ひと、か。……ぴったりじゃわい。」','じいさん「なまえを よぶ。たった それだけで、ひとは\nひとりで なくなる。……よい ことを おしえて もろうたわい。」'],msgCh5:['じいさん「はずれの あの おひと、かたの ちからが すっかり ぬけての。\nけさは そらを みあげて おったわい。」','じいさん「わたすでも なく、こじあけるでも なく——となりに おる。\n……わしには できなんだ ことじゃ。かなわんのう。」'],msgCh4:['じいさん「むらの あさが、いちだんと あかるく なっての。\nあの この むねに、ひかりが やどって おるからかのう。」','じいさん「わしの やくめは もう おわった。……いや、\nひとつ のこっとるわい。ながいきを する ことじゃ。」'],msgKataribe:['じいさん「そなた… よう ここまで 世の こえを ひろい あつめたのう。」','じいさん「はかいしも たてふだも たきびの あとも──\nみな、だれかが いきた しるしじゃ。」','じいさん「よんで くれる ものが おる かぎり、この よは わすれられん。\n…ありがとうよ、かたりべどの。」'],msgElder:['じいさん「…そなたには はなしておこう。\nあの 5つの せきひを たてたのは、この わしじゃ。」','じいさん「ヴォルガ── あやつは わしの おとうとじゃ。\nふたりで たまを まもる けいしょうしゃ じゃった。」','じいさん「『なぜ ひかりは すべてを すくわぬのか』──\nあの といに、わしは こたえて やれなんだ。」','じいさん「もし あやつと あいまみえたら…… たのむ。\nにくまないで やって くれ。」'],msgCleared:['じいさん「よあけの かぜが、こんなにも あたたかいとは のう…。\nながい よるは ほんとうに おわったんじゃ。」','じいさん「おとうとの こと…… ありがとう。\nあとは わしが、ちゃんと おぼえておいて やるわい。」'],msg:['じいさん「たまが うばわれた あの よる… わしは そらに\nやみの かげを みた。どこか… なつかしい かげ じゃった。」','むらびと「きんいろの スライムは おかねもちだ。\nにげられる まえに たおすんだぞ！」','むらびと「わしの へそくり？ みずうみの ひがしの くさむらに\nうめたんじゃが… どこ じゃったかのう。」'],
+  {x:7,y:10,kind:'ojii',col:'#d8a86a',msgFinal:['じいさん「……ほしのうみまで のぼったか。\nわしの おとうとも、そこまでは いけなんだ。」','じいさん「ものがたりは おわらん。かたる ものが おる かぎりな。\n……よい たびじゃった。」'],msgCh6:['じいさん「はずれの おひと——ソラどの、と いうそうじゃの。\nそらを みあげる ひと、か。……ぴったりじゃわい。」','じいさん「なまえを よぶ。たった それだけで、ひとは\nひとりで なくなる。……よい ことを おしえて もろうたわい。」'],msgCh5:['じいさん「はずれの あの おひと、かたの ちからが すっかり ぬけての。\nけさは そらを みあげて おったわい。」','じいさん「わたすでも なく、こじあけるでも なく——となりに おる。\n……わしには できなんだ ことじゃ。かなわんのう。」'],msgCh4:['じいさん「むらの あさが、いちだんと あかるく なっての。\nあの この むねに、ひかりが やどって おるからかのう。」','じいさん「わしの やくめは もう おわった。……いや、\nひとつ のこっとるわい。ながいきを する ことじゃ。」'],msgKataribe:['じいさん「そなた… よう ここまで 世の こえを ひろい あつめたのう。」','じいさん「はかいしも たてふだも たきびの あとも──\nみな、だれかが いきた しるしじゃ。」','じいさん「よんで くれる ものが おる かぎり、この よは わすれられん。\n…ありがとうよ、かたりべどの。」'],msgElder:['じいさん「…そなたには はなしておこう。\nあの 5つの せきひを たてたのは、この わしじゃ。」','じいさん「ヴォルガ── あやつは わしの おとうとじゃ。\nふたりで たまを まもる けいしょうしゃ じゃった。」','じいさん「『なぜ ひかりは すべてを すくわぬのか』──\nあの といに、わしは こたえて やれなんだ。」','じいさん「もし あやつと あいまみえたら…… たのむ。\nにくまないで やって くれ。」'],msgCleared:['じいさん「よあけの かぜが、こんなにも あたたかいとは のう…。\nながい よるは ほんとうに おわったんじゃ。」','じいさん「おとうとの こと…… ありがとう。\nあとは わしが、ちゃんと おぼえておいて やるわい。」'],msg:['じいさん「たまが うばわれた あの よる… わしは そらに\nやみの かげを みた。どこか… なつかしい かげ じゃった。」','じいさん「わしの へそくり？ みずうみの ひがしの くさむらに\nうめたんじゃが… どこ じゃったかのう。」'], // 一声一窓: 1タップ=2窓・話者一致(SPEC_hajimari2_20260803)・へそくり=h1(8,3)と照合済み
    msg2:['むらびと「くろがねの ゴーレムを たおしたんだってな！\nむらは その うわさで もちきりだぞ！」','むらびと「よるに でる ぎんいろの スライムは けいけんちの\nかたまり らしいぞ。にげあしは はやいがな！」'],
    msg3:['むらびと「かざんには ようがんの きょじんが おるらしい。\nこおりの じゅもんを わすれるでないぞ！」','むらびと「さまよう おおきな かげを みたら にげるんじゃ。\nいや… そなたなら たおせるかも しれんな！」'],
    msg4:['むらびと「ついに まおうの しろまで いったのか…！\nむらの みんなが おうえんしとるぞ！」'],
    msgNight:['むらびと「よるは まものが つよくなる…。\nじゃが けいけんちも おおい らしいぞ。ふふ。」']},
-  {x:11,y:5,kind:'musume',goneKid:true,msgFinal:['むすめ「ほしのうみまで いって、かえって きたのね。\nそらが しずかなのは、あなたが のぼった あとだから。」','むすめ「あのかたの ことも、いまは にくくないの。\n……ものがたりに なったから、かな。」'],msgCleared:['むすめ「そらの いろが かわったの、きづいてた？\nあさが ちゃんと、あさの いろを してるのよ。」','むすめ「あのかたが さいごに なにを おもったのか……\nいまなら すこし、わかる きが するの。」'],msgRescued:['むすめ「たすけてくれて ほんとうに ありがとう…！」','むすめ「あのかた… たまを 『とりもどす』と いっていたわ。\nまるで もともと じぶんの ものだった みたいに…」'],col:'#9ad0c0',msg:['むらびと「どうくつの ほねの まものは\nほのおの じゅもんが にがて らしい。」'],
+  {x:11,y:5,kind:'musume',goneKid:true,msgFinal:['むすめ「ほしのうみまで いって、かえって きたのね。\nそらが しずかなのは、あなたが のぼった あとだから。」','むすめ「あのかたの ことも、いまは にくくないの。\n……ものがたりに なったから、かな。」'],msgCleared:['むすめ「そらの いろが かわったの、きづいてた？\nあさが ちゃんと、あさの いろを してるのよ。」','むすめ「あのかたが さいごに なにを おもったのか……\nいまなら すこし、わかる きが するの。」'],msgRescued:['むすめ「たすけてくれて ほんとうに ありがとう…！」','むすめ「あのかた… たまを 『とりもどす』と いっていたわ。\nまるで もともと じぶんの ものだった みたいに…」'],col:'#9ad0c0',msg:['むらびと「どうくつの ほねの まものは\nほのおの じゅもんが にがて らしい。」','むらびと「きんいろの スライムは おかねもちだ。\nにげられる まえに たおすんだぞ！」'], // 金スラ豆知識の移設(じいさんの3窓連鎖の解体=SPEC_hajimari2_20260803)
    msg2:['むらびと「しろには やみの まものが うようよ いるって…。\nやくそうを わすれずに ね！」'],
    msg3:['むらびと「こおりの せかいには さまよう きょじんが いるって…。\nちかづくと おいかけて くるらしいわ！」'],
    msg4:['むらびと「ヴォルガって もとは わるいひとじゃ なかったって\nおばあちゃんが いってたけど… ほんとう かしら。」'],
@@ -5621,7 +5623,7 @@ function ask(items,title){
     mlistEl.innerHTML='';mexitEl.innerHTML='';
     items.forEach((it,i)=>{
       const d=document.createElement('div');
-      d.className='mi'+(it.dis?' dis':'');
+      d.className='mi'+(it.dis?' dis':'')+(it.osu?' osu':''); // 金の脈動=押せ(SPEC_hajimari2_20260803)
       d.setAttribute('aria-disabled',it.dis?'true':'false');
       d.innerHTML='<span class="mlabel"></span>'+(it.cost?'<span class="mcost">MP '+it.cost+'</span>':'');
       d.querySelector('.mlabel').textContent=it.label;
@@ -18182,6 +18184,7 @@ function autoDecide(){
   if(!kuseNoSpell&&p.poison&&p.mp>=2)return{kind:'kiari'};
   return{kind:'fight'};
 }
+function hoimiMichi(){const p=Game.p;return !!(p&&p.lv<4&&p.hp<=p.mhp*0.5&&p.mp>=3);} // ホイミの道: 序盤だけ 金の脈動で「じゅもん」を さす(SPEC_hajimari2_20260803・Lv4で恒久消灯=保存キー0・付与経路は この1本だけ)
 async function commandPhase(){
   const p=Game.p;
   while(true){
@@ -18189,7 +18192,7 @@ async function commandPhase(){
     const cmds=[{id:'fight',label:'たたかう'}]; // ななつへんげ: へんげを 1つでも おぼえたら コマンドに 立つ
     if(hengeCount()>0)cmds.push({id:'henge',label:'👹へんしん'+(Game.bt&&Game.bt.hengeUsed?'（つかった）':''),dis:!!(Game.bt&&Game.bt.hengeUsed)});
     const kSeal=Game.bt&&Game.bt.kuseSteal,kMouth=Game.bt&&Game.bt.kuseMouth; // ぬしの くせ: 封印は 灰+わけ(押す前に わかる)
-    cmds.push({id:'spell',label:'じゅもん'+((kSeal&&kSeal.cmd==='spell')?'（ふくろの なか！ ⚔で とりかえせ）':(kMouth?'（おおくちに のまれる！）':'')),dis:!!((kSeal&&kSeal.cmd==='spell')||kMouth)},
+    cmds.push({id:'spell',label:'じゅもん'+((kSeal&&kSeal.cmd==='spell')?'（ふくろの なか！ ⚔で とりかえせ）':(kMouth?'（おおくちに のまれる！）':'')),dis:!!((kSeal&&kSeal.cmd==='spell')||kMouth),osu:!((kSeal&&kSeal.cmd==='spell')||kMouth)&&hoimiMichi()},
       {id:'item',label:'どうぐ'+((kSeal&&kSeal.cmd==='item')?'（ふくろの なか！ ⚔で とりかえせ）':(kMouth?'（おおくちに のまれる！）':'')),dis:!!((kSeal&&kSeal.cmd==='item')||kMouth)},
       {id:'guard',label:'ぼうぎょ'},{id:'run',label:'にげる'});
     const c=await ask(cmds,'コマンド');
@@ -18225,7 +18228,7 @@ async function commandPhase(){
       // じゅもんは 3つに わける(1がめんに おさめる=「もどる」まで タップできる)
       const storyList=CHAPTER_PROOF.filter(ss=>hasStorySpell(ss.no));
       const cat=await ask([{id:'atk',label:'⚔ こうげき'},
-                           {id:'sup',label:'✚ かいふく・ほじょ'},
+                           {id:'sup',label:'✚ かいふく・ほじょ',osu:hoimiMichi()},
                            {id:'sto',label:'📖 ものがたり（'+storyList.length+'）',dis:!storyList.length},
                            {id:'back',label:'もどる'}],'じゅもん');
       if(cat==='back')continue;
@@ -18248,7 +18251,7 @@ async function commandPhase(){
         if(Game.hidden&&Game.hidden.uraSpell)list.push({id:'urahikari',label:(Game.hidden.uraSpellNew?'✨':'')+'みなもとのひかり',cost:50,dis:p.mp<50});
       }else if(cat==='sup'){
         mt='✚ かいふく・ほじょ';
-        list=[{id:'hoimi',label:'ホイミ',cost:3,dis:p.mp<3}];
+        list=[{id:'hoimi',label:'ホイミ',cost:3,dis:p.mp<3,osu:hoimiMichi()}];
         if(p.lv>=5)list.push({id:'behoimi',label:'ベホイミ',cost:8,dis:p.mp<8});
         if(p.lv>=11)list.push({id:'behoma',label:'ベホマ',cost:22,dis:p.mp<22});
         if(p.lv>=6)list.push({id:'baikiruto',label:'バイキルト',cost:6,dis:p.mp<6});
