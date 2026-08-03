@@ -16821,14 +16821,22 @@ function drawFieldFoe(e){
   const k=TW*(def.huge?0.0105:boss?0.0058:def.mboss?0.0048:0.0038);
   const t=TM*1.2+e.seed;
   const hop=(def.draw==='slime')?Math.abs(Math.sin(TM*3.2+e.seed))*TW*0.045:0;
+  // よるの かたち（SPEC_yoru_no_katachi_20260803）：そうげんの よるは まものが つよい
+  // （HP1.35ばい 17566 ／ こうげき1.3ばい 19356 ／ ほうしゅう1.6ばい 19934）のに、
+  // 見た目が ひるまと 同じだった＝さわる まえに「べつのもの」と わかる手がかりが 画面に なかった。
+  // ★判定は isNightNow() 一本（mapId==='grass' ゲートごと）。式を 複製すると 島でも 印が 出る。
+  // ★のぞく相手は 17565 の night から 写す（mboss は のぞかない＝中ボスも よる補正を うける）。
+  const yoru=isNightNow()&&!def.boss&&!def.stage;
+  const kB=yoru?k*1.18:k; // 体だけ ひとまわり。接地影と はつこうは TW ぶんなので さわらない（足は うかない）
   // 接地影
   ctx.fillStyle='rgba(8,14,28,0.32)';
   ctx.beginPath();ctx.ellipse(ct.x+TW*0.02,fy,TW*(boss?0.30:0.21),TW*0.065,0,0,Math.PI*2);ctx.fill();
-  // ほのかな はつこう（くらやみでも みえる）
+  // ほのかな はつこう（くらやみでも みえる）／よるは つめたい つきあかりの いろへ（グラデは ふやさない）
   ctx.save();ctx.globalCompositeOperation='lighter';
-  const gg=ctx.createRadialGradient(ct.x,fy-TW*0.26,2,ct.x,fy-TW*0.26,TW*0.55);
-  gg.addColorStop(0,def.col+(boss?'40':'26'));gg.addColorStop(1,def.col+'00');
-  ctx.fillStyle=gg;ctx.beginPath();ctx.arc(ct.x,fy-TW*0.26,TW*0.55,0,Math.PI*2);ctx.fill();
+  const gg=ctx.createRadialGradient(ct.x,fy-TW*0.26,2,ct.x,fy-TW*0.26,TW*(yoru?0.70:0.55));
+  if(yoru){gg.addColorStop(0,'rgba(196,224,255,0.40)');gg.addColorStop(0.55,'rgba(150,192,255,0.16)');gg.addColorStop(1,'rgba(140,185,255,0)');}
+  else{gg.addColorStop(0,def.col+(boss?'40':'26'));gg.addColorStop(1,def.col+'00');}
+  ctx.fillStyle=gg;ctx.beginPath();ctx.arc(ct.x,fy-TW*0.26,TW*(yoru?0.70:0.55),0,Math.PI*2);ctx.fill();
   ctx.restore();
   if(def.hunter){
     const pulse=e.alert?(0.5+0.5*Math.sin(TM*8)):0;
@@ -16846,9 +16854,12 @@ function drawFieldFoe(e){
     ctx.translate(ct.x,fy);ctx.scale(1,0.4);ctx.fillStyle=rg;ctx.beginPath();ctx.arc(0,0,aR*0.95,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
-  if(def.tint){
+  // よるは 体そのものに つめたい いろを かぶせる（tintの しくみを そのまま つかう＝輪郭に そうので
+  // 「目を どこに おくか」の 推測が いらない。まものごとに 外れる問題を 実画面で 見て こちらへ かえた）
+  const yTint=yoru?'rgba(122,176,255,0.46)':null;
+  if(def.tint||yTint){
     const dpr2=Math.min(2,window.devicePixelRatio||1);
-    const wL=Math.ceil(310*k),hL=Math.ceil(330*k),fo=Math.ceil(18*k);
+    const wL=Math.ceil(310*kB),hL=Math.ceil(330*kB),fo=Math.ceil(18*kB);
     const wp=Math.ceil(wL*dpr2),hp=Math.ceil(hL*dpr2);
     if(miniCv.width!==wp||miniCv.height!==hp){miniCv.width=wp;miniCv.height=hp;}
     miniCtx.setTransform(dpr2,0,0,dpr2,0,0);
@@ -16856,15 +16867,15 @@ function drawFieldFoe(e){
     miniCtx.clearRect(0,0,wL,hL);
     const keep=ctx;ctx=miniCtx;
     try{
-      ctx.save();ctx.translate(wL/2,hL-fo);drawMiniFoe(def,t,k);ctx.restore();
+      ctx.save();ctx.translate(wL/2,hL-fo);drawMiniFoe(def,t,kB);ctx.restore();
     }finally{ctx=keep;}
     miniCtx.globalCompositeOperation='source-atop';
-    miniCtx.fillStyle=def.tint;
-    miniCtx.fillRect(0,0,wL,hL);
+    if(def.tint){miniCtx.fillStyle=def.tint;miniCtx.fillRect(0,0,wL,hL);}
+    if(yTint){miniCtx.fillStyle=yTint;miniCtx.fillRect(0,0,wL,hL);} // かげ族は 二重がけ（よるは さらに つめたく）
     miniCtx.globalCompositeOperation='source-over';
     ctx.drawImage(miniCv,0,0,wp,hp,ct.x-wL/2,fy-hop-(hL-fo),wL,hL);
   }else{
-    ctx.save();ctx.translate(ct.x,fy-hop);drawMiniFoe(def,t,k);ctx.restore();
+    ctx.save();ctx.translate(ct.x,fy-hop);drawMiniFoe(def,t,kB);ctx.restore();
   }
   if(def.hunter&&e.alert){
     const by=fy-hop-TW*(def.huge?1.78:0.9)+Math.sin(TM*10)*TW*0.045;
