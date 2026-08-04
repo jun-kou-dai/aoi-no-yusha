@@ -665,8 +665,8 @@ $('tdiff').innerHTML = '<tr><th>きびしさ</th><th class="n">敵のHP</th><th 
     h += row(c.no, c.title, c.stage, c.boss, c.spell, c.cost, c.desc);
   });
   h += `<div class="chpart">おえた あと</div>`
-    // ぬしの名・じゅもん・MP・はたらきは すべて 実装から（旧: うら章のぬしを「はじまらざるもの」と
-    // 手打ちしていたが、その名前は rpg.html に 一度も 出てこない＝でっちあげだった 2026-08-04）
+    // ぬしの名・じゅもん・MP・はたらきは すべて 実装から。
+    // 旧: うら章の ぬし名を 手打ちしていて、rpg.html に 一度も 出てこない 名前だった(2026-08-04)
     + row(21, 'ほしのうみ', 'ほしのうみ', foeOf('sukuwarenu').name, '', null, '')
     + row('うら', 'はじまりの ほしあかり', 'ほしのみなもと', foeOf('hajimarazu').name, M.uraSpell, M.uraSpellMp, M.uraSpellFx);
   $('tchap').innerHTML = h;
