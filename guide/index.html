@@ -254,7 +254,7 @@ td.nw,th.nw{white-space:nowrap}
   <a class="go" href="#" data-go="t2">画面の見方 へ</a></div></div>
  <div class="row2"><div class="num">三</div><div class="rail">
   <h3>途中で 止まった</h3>
-  <p class="lead">「道のり」で 自分の章を さがしてください。全二十一章＋うら章が 一章一行です。舞台・しめの相手・もらえる呪文が 一目で 分かります。</p>
+  <p class="lead">「道のり」で 自分の章を さがしてください。全<b data-n="chapAll">二十一</b>章＋うら章が 一章一行です。舞台・しめの相手・もらえる呪文が 一目で 分かります。</p>
   <a class="go" href="#" data-go="t3">道のり へ</a></div></div>
  <div class="row2"><div class="num">四</div><div class="rail">
   <h3>島で 何を するのか わからない</h3>
@@ -377,7 +377,7 @@ td.nw,th.nw{white-space:nowrap}
 <!-- ══════════ 3 道のり ══════════ -->
 <section id="t3">
  <div class="hd"><h2>道のり</h2>
-  <p>全二十一章。自分が いまどこに いるかは、村の フクロか、下の金の帯が 教えてくれます。<b>物語の 結末は 書いていません</b>——舞台と、しめの相手と、もらえる呪文だけです。</p></div>
+  <p>全<b data-n="chapAll">二十一</b>章。自分が いまどこに いるかは、村の フクロか、下の金の帯が 教えてくれます。<b>物語の 結末は 書いていません</b>——舞台と、しめの相手と、もらえる呪文だけです。</p></div>
  <div id="tchap"></div>
 
  <h3>八つの島と、その ぬし</h3>
@@ -589,6 +589,7 @@ const NUM = {
   shitakuN: () => kan(D.shitaku.length), soujuN: () => kan(D.chap.length), kageN: () => kan(D.kage.length),
   spellN: () => kan(D.spells.length), chapSpellN: () => kan(D.chap.length),
   hidN: () => kan(D.hid.length), uraGateN: () => kan(D.uraGate),
+  chapAll: () => kan(D.chap.length + 1), // 章1〜20＋最終章21（うら章は 別ぐくり）
   capHeavy: () => wari(D.capH), fukamiMul: () => kan(M.fukamiMul), innG: () => kan(M.innDefault),
   vsGiantMin: () => kanN(M.vsGiantMin), vsGiantMax: () => kanN(M.vsGiantMax),
 };
