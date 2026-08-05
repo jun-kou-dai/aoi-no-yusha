@@ -11923,7 +11923,8 @@ const SHIMA_PLAY={
   kura:{ // くらのしま「ぬすみと はたき」: しまいこむものが そろえた三つを 盗みにくる
     nushi:'shimaikomu',
     anchors:[{x:7,y:4,kind:'tegami'},{x:13,y:4,kind:'hana'},{x:10,y:9,kind:'warai'}],
-    steals:2 // 盗みは 計2回で 打ち止め(3回目は 間延び)
+    steals:2, // 盗みは 計2回で 打ち止め(3回目は 間延び)
+    swerveAt:1.2, swerveDur:0.45 // 2回目だけ うでが 別の ものへ はらう(たに=4→5→6 と同じ「あとほど むずかしい」)。swerveAt:99 で 従来と 一字一句 同じ
   },
   hora:{ // ほらふきじま「うそふだと はがし」: まことをせまるものが 三つの ものがたりに「うそつき」の ふだを はる(SPEC_huda_hagashi_20260802)
     nushi:'makoto', mode:'huda',
@@ -12204,6 +12205,20 @@ function shimaPlayTick(dt){
   }
   if(st.arm){
     const a=st.arm;a.t+=dt;
+    if(a.phase==='reach'){ // 2回目だけ 的を かえる=「待って押す」から「追って押す」へ(1回目は 直進で 動詞を教える・2026-08-05)
+      if(a.sw!=null&&a.sw<1)a.sw=Math.min(1,a.sw+dt/(sp.swerveDur||0.45)); // A から B へ 弧で はらう(跳ばすと バグに 見える)
+      else if(a.sw==null&&st.stealsLeft===1&&a.t>=(sp.swerveAt||99)&&Game.cam){ // stealsLeftは 決着で 減る(12209/12948)=1 は 2回目のさなか
+        const mg=Game.cam.TW*0.6;let fj=-1,fd=-1;
+        for(let j=0;j<sp.anchors.length;j++){
+          if(j===a.i||st.boxed[j])continue;
+          const jq=isoCtr(sp.anchors[j].x,sp.anchors[j].y);
+          if(jq.x<mg||jq.x>W-mg||jq.y<mg||jq.y>H-mg)continue; // 画面外へは はらわない(気づけない はらいを 作らない=12234と同じ掟)
+          const d=Math.hypot(sp.anchors[j].x-sp.anchors[a.i].x,sp.anchors[j].y-sp.anchors[a.i].y);
+          if(d>fd){fd=d;fj=j;} // いちばん 遠いもの=はらいが 画面で いちばん 大きい(乱数は つかわない=検証が 安定する)
+        }
+        if(fj>=0){a.i0=a.i;a.i=fj;a.sw=0;sfxRun();} // 金の輪・動詞・ふるえは st.arm.i を 読むので 自動で ついてくる(13161/13037/13123)
+      }
+    }
     if(a.phase==='reach'&&a.t>=a.dur){ // 間に合わなかった=しまいこまれた
       a.phase='grab';a.t=0;
       st.boxed[a.i]=true;st.stealsLeft--;
@@ -12240,7 +12255,12 @@ function shimaPlayArmTip(cam){ // うでの先端の画面座標
   if(!st||!st.arm||!sp)return null;
   const nu=shimaPlayNushi();if(!nu)return null;
   const a=st.arm,an=sp.anchors[a.i];
-  const s=isoCtr(nu.px,nu.py),g=isoCtr(an.x,an.y);
+  let gx=an.x,gy=an.y;
+  if(a.sw!=null&&a.sw<1&&Number.isInteger(a.i0)){ // はらいの さいちゅう: タイル座標で ならす(画面座標だと カメラが 動いた ときに 破綻する)
+    const b0=sp.anchors[a.i0],sm=a.sw*a.sw*(3-2*a.sw);
+    gx=b0.x+(an.x-b0.x)*sm;gy=b0.y+(an.y-b0.y)*sm;
+  }
+  const s=isoCtr(nu.px,nu.py),g=isoCtr(gx,gy);
   const sy=s.y-cam.TW*0.95; // かたの たかさ
   let k=0;
   if(a.phase==='reach')k=Math.min(1,a.t/a.dur);
