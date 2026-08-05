@@ -11931,12 +11931,14 @@ const SHIMA_PLAY={
     anchors:[{x:4,y:3,kind:'niji'},{x:15,y:6,kind:'hoshi'},{x:7,y:9,kind:'kaze'}], // ほらがい3体の上=紙が 口を ふさぐ
     decoys:[[[5,2],[5,3]],[[14,5],[16,7]],[[8,8],[6,9]]], // かみきれ2枚の着地先(walkable・吸着から2マス以上を機械検算済み)
     steals:2, // しかけは 計2回で 打ち止め(くらと同じ裁定)
-    swerveAt:0.40, swerveDur:0.28 // 2回目だけ 本物の ふだが 行き先を かえる(かみきれは 最初の 先へ 飛ぶ=うそだった あかし)。窓=1.4−0.40=1.0秒。99 で 従来と同じ
+    fly:2.6, // 2回目の ふだは 三つを 順に ねらいなおすので 飛行を のばす(1回目は 1.4 のまま=軽い)
+    swerveAt:[0.7,1.6], swerveDur:0.35 // 本物の ふだが 二たび 行き先を かえる(かみきれは 最初の 先へ 飛ぶ=うそだった あかし)。窓は 0.9/1.0秒。99 で 従来と同じ
   },
   uta:{ // うたのしま「うたのみと うたいかえし」: わすれられしものが そろった三つの うたを のみこみにくる(SPEC_utanomi_20260802)
     nushi:'wasurare', mode:'nomi',
     anchors:[{x:3,y:4,kind:'komori'},{x:16,y:4,kind:'hokake'},{x:10,y:9,kind:'ame'}], // うたのかけらの いしぶみ3体の上=うたの 出どころ
     steals:2, // しかけは 計2回で 打ち止め(くら・ほらと同じ裁定)
+    swerveAt:[0.7,1.6], swerveDur:0.35, // 2回目の おおくちは 三つの うたを 順に ねらいなおす(窓は 0.9/1.0秒)。99 で 従来と同じ
     motifs:{komori:[64,67,64,72],hokake:[62,66,69,74],ame:[60,64,67,64]} // 石が うたう おと(こもりは 章17の うたひと同源)
   },
   yakata3:{ // やかた3(おおひろま)「つみばこと くずし」: ひとりじめのものが めざめた ものに はこを つみあげる(SPEC_tsumibako_20260802)
@@ -11995,8 +11997,27 @@ function shimaPlayTick(dt){
     if(st.arm){
       const a=st.arm;a.t+=dt;
       if(a.phase==='suck'){
+        {const SU=Array.isArray(sp.swerveAt)?sp.swerveAt:[sp.swerveAt||99]; // 2回目の おおくちは 的を かえる=「待って押す」から「追って押す」へ
+         if((a.swN||0)<SU.length&&st.stealsLeft===0&&a.t>=SU[a.swN||0]&&Game.cam){ // uta も 発射で stealsLeft を 減らす=2回目のさなかは 0
+           const mg=Game.cam.TW*0.6;
+           const pick=(skipPrev)=>{let bj=-1,bd=-1;
+             for(let j=0;j<sp.anchors.length;j++){
+               if(j===a.i||st.boxed[j])continue;
+               if(skipPrev&&j===a.i0)continue; // 直前の うたへは 戻らない=A→B→C
+               const jq=isoCtr(sp.anchors[j].x,sp.anchors[j].y);
+               if(jq.x<mg||jq.x>W-mg||jq.y<mg||jq.y>H-mg)continue; // 画面外の うたは ねらわない
+               const d=Math.hypot(sp.anchors[j].x-sp.anchors[a.i].x,sp.anchors[j].y-sp.anchors[a.i].y);
+               if(d>bd){bd=d;bj=j;}
+             }
+             return bj;};
+           let fj=pick(true);if(fj<0)fj=pick(false);
+           if(fj>=0){
+             for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===sp.anchors[a.i].kind)delete f.suck; // まえの うたは 吸い込みを やめて もどる
+             a.i0=a.i;a.i=fj;a.sT=a.t;a.swN=(a.swN||0)+1;sfxEnc();
+           }else a.swN=SU.length;
+         }}
         const mp=nomiMouthPt();
-        if(mp){const ee=Math.min(1,a.t/a.dur),e2=ee*ee*(3-2*ee);
+        if(mp){const s0=a.sT||0,ee=Math.min(1,(a.t-s0)/Math.max(0.1,a.dur-s0)),e2=ee*ee*(3-2*ee); // 的を かえたら 吸い込みは 0から やりなおす
           for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===sp.anchors[a.i].kind)f.suck={x:mp.x,y:mp.y,k:e2};}
         if(a.t>=a.dur){ // ごくん=のまれた(演出は 灰の余韻で のこる=因果)
           a.phase='gulp';a.t=0;
@@ -12178,17 +12199,23 @@ function shimaPlayTick(dt){
       const a=st.arm;a.t+=dt;
       if(a.dodgeT>0)a.dodgeT-=dt;
       if(a.phase==='fly'&&!a.sealed){ // 2回目だけ 本物の ふだが 行き先を かえる=「見て押す」から「追って押す」へ(2026-08-05)
-        if(a.sw!=null&&a.sw<1)a.sw=Math.min(1,a.sw+dt/(sp.swerveDur||0.28));
-        else if(a.sw==null&&st.stealsLeft===0&&a.t>=(sp.swerveAt||99)&&Game.cam){ // hora は 発射で stealsLeft を 減らす=2回目のさなかは 0
-          const mg=Game.cam.TW*0.6;let fj=-1,fd=-1;
-          for(let j=0;j<sp.anchors.length;j++){
-            if(j===a.i||st.boxed[j])continue;
-            const jq=isoCtr(sp.anchors[j].x,sp.anchors[j].y);
-            if(jq.x<mg||jq.x>W-mg||jq.y<mg||jq.y>H-mg)continue; // 画面外へは 飛ばさない
-            const d=Math.hypot(sp.anchors[j].x-sp.anchors[a.i].x,sp.anchors[j].y-sp.anchors[a.i].y);
-            if(d>fd){fd=d;fj=j;} // 乱数は つかわない
-          }
-          if(fj>=0){a.i0=a.i;a.i=fj;a.sw=0;sfxRun();} // 金の輪・動詞・ひらり判定は st.arm.i 経由=自動で ついてくる
+        const SH=Array.isArray(sp.swerveAt)?sp.swerveAt:[sp.swerveAt||99];
+        if(a.sw!=null&&a.sw<1)a.sw=Math.min(1,a.sw+dt/(sp.swerveDur||0.35));
+        else if((a.swN||0)<SH.length&&st.stealsLeft===0&&a.t>=SH[a.swN||0]&&Game.cam){ // hora は 発射で stealsLeft を 減らす=2回目のさなかは 0
+          const mg=Game.cam.TW*0.6;
+          const pick=(skipPrev)=>{let bj=-1,bd=-1;
+            for(let j=0;j<sp.anchors.length;j++){
+              if(j===a.i||st.boxed[j])continue;
+              if(skipPrev&&j===a.i0)continue; // 直前の先へは 戻らない=A→B→C
+              const jq=isoCtr(sp.anchors[j].x,sp.anchors[j].y);
+              if(jq.x<mg||jq.x>W-mg||jq.y<mg||jq.y>H-mg)continue; // 画面外へは 飛ばさない
+              const d=Math.hypot(sp.anchors[j].x-sp.anchors[a.i].x,sp.anchors[j].y-sp.anchors[a.i].y);
+              if(d>bd){bd=d;bj=j;} // 乱数は つかわない
+            }
+            return bj;};
+          let fj=pick(true);if(fj<0)fj=pick(false);
+          if(fj>=0){a.i0=a.i;a.i=fj;a.sw=0;a.swN=(a.swN||0)+1;sfxRun();} // 金の輪・動詞・ひらり判定は st.arm.i 経由=自動で ついてくる
+          else a.swN=SH.length; // 行き先が 無い=打ち止め
         }
       }
       if(!a.sealed&&a.t>=a.dur){ // 本物が ぺたり=ほらがいの こえが ふさがれ、ものがたりの いろが ふだへ すわれる
@@ -12223,7 +12250,7 @@ function shimaPlayTick(dt){
      const syH=nq.y-Game.cam.TW*0.95;
      if(nq.x<mg||nq.x>W-mg||syH<mg||syH>H-mg||aq.x<mg||aq.x>W-mg||aq.y<mg||aq.y>H-mg){st.cool=0.5;return;}} // ぬしと 的の 両方が 画面内のときだけ(気づけない ふだはりを 作らない)＝ほらだけ 無かった 2026-08-04
     st.stealsLeft--;
-    st.arm={i:hb,t:0,dur:1.4,phase:'fly',dodged:false,dodgeT:0,sealed:false};
+    st.arm={i:hb,t:0,dur:(st.stealsLeft===0&&sp.fly)?sp.fly:1.4,phase:'fly',dodged:false,dodgeT:0,sealed:false}; // 2回目だけ 飛行を のばす=三つを 順に ねらいなおす ぶんの 窓
     flash('#ffffff',0.35,0.6); // かかげの 白=戦闘の うそのためと 同じ記号
     if(Game.cam){const nq=isoCtr(nu.px,nu.py);puff(nq.x,nq.y-Game.cam.TW*1.1,'rgba(255,255,255,.9)',12,110,0.7,{up:true,s0:2,s1:4});}
     sfxRun();
