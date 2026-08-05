@@ -11924,7 +11924,7 @@ const SHIMA_PLAY={
     nushi:'shimaikomu',
     anchors:[{x:7,y:4,kind:'tegami'},{x:13,y:4,kind:'hana'},{x:10,y:9,kind:'warai'}],
     steals:2, // 盗みは 計2回で 打ち止め(3回目は 間延び)
-    swerveAt:1.2, swerveDur:0.45 // 2回目だけ うでが 別の ものへ はらう(たに=4→5→6 と同じ「あとほど むずかしい」)。swerveAt:99 で 従来と 一字一句 同じ
+    swerveAt:[1.0,2.0], swerveDur:0.40 // 2回目の うでは 三つを 順に ねらいなおす(たに=こだま3はねと 同じ骨格。窓は 1.0秒/1.0秒)。swerveAt:99 で 従来と 一字一句 同じ
   },
   hora:{ // ほらふきじま「うそふだと はがし」: まことをせまるものが 三つの ものがたりに「うそつき」の ふだを はる(SPEC_huda_hagashi_20260802)
     nushi:'makoto', mode:'huda',
@@ -12237,17 +12237,23 @@ function shimaPlayTick(dt){
   if(st.arm){
     const a=st.arm;a.t+=dt;
     if(a.phase==='reach'){ // 2回目だけ 的を かえる=「待って押す」から「追って押す」へ(1回目は 直進で 動詞を教える・2026-08-05)
-      if(a.sw!=null&&a.sw<1)a.sw=Math.min(1,a.sw+dt/(sp.swerveDur||0.45)); // A から B へ 弧で はらう(跳ばすと バグに 見える)
-      else if(a.sw==null&&st.stealsLeft===1&&a.t>=(sp.swerveAt||99)&&Game.cam){ // stealsLeftは 決着で 減る(12209/12948)=1 は 2回目のさなか
-        const mg=Game.cam.TW*0.6;let fj=-1,fd=-1;
-        for(let j=0;j<sp.anchors.length;j++){
-          if(j===a.i||st.boxed[j])continue;
-          const jq=isoCtr(sp.anchors[j].x,sp.anchors[j].y);
-          if(jq.x<mg||jq.x>W-mg||jq.y<mg||jq.y>H-mg)continue; // 画面外へは はらわない(気づけない はらいを 作らない=12234と同じ掟)
-          const d=Math.hypot(sp.anchors[j].x-sp.anchors[a.i].x,sp.anchors[j].y-sp.anchors[a.i].y);
-          if(d>fd){fd=d;fj=j;} // いちばん 遠いもの=はらいが 画面で いちばん 大きい(乱数は つかわない=検証が 安定する)
-        }
-        if(fj>=0){a.i0=a.i;a.i=fj;a.sw=0;sfxRun();} // 金の輪・動詞・ふるえは st.arm.i を 読むので 自動で ついてくる(13161/13037/13123)
+      const SA=Array.isArray(sp.swerveAt)?sp.swerveAt:[sp.swerveAt||99];
+      if(a.sw!=null&&a.sw<1)a.sw=Math.min(1,a.sw+dt/(sp.swerveDur||0.40)); // A から B へ 弧で はらう(跳ばすと バグに 見える)
+      else if((a.swN||0)<SA.length&&st.stealsLeft===1&&a.t>=SA[a.swN||0]&&Game.cam){ // stealsLeftは 決着で 減る(12209/12948)=1 は 2回目のさなか
+        const mg=Game.cam.TW*0.6;
+        const pick=(skipPrev)=>{let bj=-1,bd=-1;
+          for(let j=0;j<sp.anchors.length;j++){
+            if(j===a.i||st.boxed[j])continue;
+            if(skipPrev&&j===a.i0)continue; // 直前の的へは 戻らない=A→B→C(同じ2つの 往復は 追った感じが しない)
+            const jq=isoCtr(sp.anchors[j].x,sp.anchors[j].y);
+            if(jq.x<mg||jq.x>W-mg||jq.y<mg||jq.y>H-mg)continue; // 画面外へは はらわない(気づけない はらいを 作らない=12234と同じ掟)
+            const d=Math.hypot(sp.anchors[j].x-sp.anchors[a.i].x,sp.anchors[j].y-sp.anchors[a.i].y);
+            if(d>bd){bd=d;bj=j;} // いちばん 遠いもの=はらいが 画面で いちばん 大きい(乱数は つかわない=検証が 安定する)
+          }
+          return bj;};
+        let fj=pick(true);if(fj<0)fj=pick(false); // よそに 行けなければ 戻ってもよい
+        if(fj>=0){a.i0=a.i;a.i=fj;a.sw=0;a.swN=(a.swN||0)+1;sfxRun();} // 金の輪・動詞・ふるえは st.arm.i を 読むので 自動で ついてくる(13161/13037/13123)
+        else a.swN=SA.length; // 行き先が 無い=打ち止め(毎コマ 探しなおさない)
       }
     }
     if(a.phase==='reach'&&a.t>=a.dur){ // 間に合わなかった=しまいこまれた
