@@ -9822,7 +9822,7 @@ function questTextCore(){
         const n=NUSHI_AGAIN.find(x=>x.id===NUSHI_REPLAY.id);
         const nm=NUSHI_REPLAY.shin?((KAGE[NUSHI_REPLAY.id]&&KAGE[NUSHI_REPLAY.id].kname)||'かげまとう ぬし'):((n&&String(n.label).split(' ─ ')[0])||'しまの ぬし');
         if(nushiReplayAlive()){
-          if(!NUSHI_REPLAY.shin&&typeof shimaPlayBusy==='function'&&shimaPlayBusy())return 'もくてき：'+nm+'が しかけて きておる——タップで やりかえせ（ほうっておいても かてる）'; // 島あそびが先(SPEC_shima_junjo_20260803)
+          if(!NUSHI_REPLAY.shin&&typeof shimaPlayBusy==='function'&&shimaPlayBusy())return 'もくてき：'+nm+'が しかけて きておる——タップで やりかえせ（しまが こたえる）'; // 島あそびが先(SPEC_shima_junjo_20260803)
           return 'もくてき：'+nm+'と '+(NUSHI_REPLAY.shin?'':'もういちど ')+'立ちあう（しまの おくに いる）';}
         // 倒したあと: ここに もう用は ない。出る道を 指す(2026-07-26 夕)
         // でぐちが 1つも 無い島(あらしのよる)も ある＝その時は どこでもドアを 案内する
@@ -12196,6 +12196,11 @@ function shimaPlayTick(dt){
     sfxRun();
     return;
   }
+  if(!st.arm&&st.stealsLeft<=0&&!st.boxed.some(Boolean)&&!st.cheerDone){ // みっつ とも まもりぬいた=しまが こたえる(盗みの ロジック・戦闘式・報酬は 不変。祝いは 描画の こさだけ・2026-08-05)
+    st.cheerDone=true;
+    for(const f of (Game.horaFx||[]))if(f.map===st.map)f.cheerT=f.t;
+    toast('みっつ とも まもりぬいた！');
+  }
   if(st.arm){
     const a=st.arm;a.t+=dt;
     if(a.phase==='reach'&&a.t>=a.dur){ // 間に合わなかった=しまいこまれた
@@ -12939,7 +12944,7 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
   if(st.arm&&st.arm.phase==='reach'){ // うでを はたきおとす(外しても 罰なし=ただの 歩きになる)
     const tip=shimaPlayArmTip(cam);
     if(tip&&Math.hypot(lx-tip.x,ly-tip.y)<cam.TW*0.9){
-      st.arm.phase='slapped';st.arm.t=0;st.stealsLeft--;
+      st.arm.phase='slapped';st.arm.t=0;st.stealsLeft--;(st.savedAt||(st.savedAt=[-9,-9,-9]))[st.arm.i]=st.blinkT; // まもれた しるしの 起点(描画のみ)
       puff(tip.x,tip.y,'rgba(255,226,150,.95)',20,140,0.9,{up:true,s0:2,s1:4});
       popup(tip.x,tip.y-14,'はたきおとした！','sp');
       sfxSlash();
@@ -12950,7 +12955,7 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
     // D: ねらわれた アンカーへの タップ=はたきおとし=光る所を押せば 答えが返る(SPEC_kura_osubeki_20260803 D)
     {const anD=sp.anchors[st.arm.i],qD=isoCtr(anD.x,anD.y);
      if(tip&&Math.hypot(lx-qD.x,ly-(qD.y-cam.TW*0.18))<cam.TW*0.8){
-      st.arm.phase='slapped';st.arm.t=0;st.stealsLeft--;
+      st.arm.phase='slapped';st.arm.t=0;st.stealsLeft--;(st.savedAt||(st.savedAt=[-9,-9,-9]))[st.arm.i]=st.blinkT; // まもれた しるしの 起点(描画のみ)
       puff(tip.x,tip.y,'rgba(255,226,150,.95)',20,140,0.9,{up:true,s0:2,s1:4});
       popup(tip.x,tip.y-14,'はたきおとした！','sp');
       sfxSlash();
@@ -13081,6 +13086,27 @@ function shimaPlayDrawHuda(cam,st,sp){ // うそふだ(ほらふきじま)。紙
   }
   ctx.restore();
 }
+function drawKuraMono(cam,kind,x,y,a,shake){ // くら: まもる もの(てがみ/はな/わらい)の 実体。線と多角形と まるだけ(勾配なし=描画負荷の掟)
+  const s=cam.TW*0.2, dx=shake?Math.sin(shake*22)*cam.TW*0.035:0;
+  ctx.save();ctx.globalAlpha=a;ctx.translate(x+dx,y-cam.TW*0.2);
+  if(kind==='tegami'){ // おられた かみ
+    ctx.fillStyle='rgba(244,236,214,0.95)';ctx.strokeStyle='rgba(110,92,64,0.95)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.rect(-s,-s*0.62,s*2,s*1.24);ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-s,-s*0.62);ctx.lineTo(0,s*0.12);ctx.lineTo(s,-s*0.62);ctx.stroke();
+  }else if(kind==='hana'){ // ひとつの はな
+    ctx.strokeStyle='rgba(150,190,140,0.95)';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(0,s*1.0);ctx.lineTo(0,s*0.1);ctx.stroke();
+    ctx.fillStyle='rgba(214,196,246,0.96)';ctx.strokeStyle='rgba(140,112,186,0.95)';ctx.lineWidth=1.6;
+    for(let i=0;i<5;i++){const th=i*Math.PI*0.4-Math.PI/2;
+      ctx.beginPath();ctx.ellipse(Math.cos(th)*s*0.4,Math.sin(th)*s*0.4-s*0.16,s*0.3,s*0.19,th,0,Math.PI*2);ctx.fill();ctx.stroke();}
+    ctx.fillStyle='rgba(255,244,190,0.98)';ctx.beginPath();ctx.arc(0,-s*0.16,s*0.15,0,Math.PI*2);ctx.fill();
+  }else{ // わらい = ちいさな ともしび(同心の まる3つ=勾配なし)
+    ctx.fillStyle='rgba(255,200,120,0.20)';ctx.beginPath();ctx.arc(0,0,s*1.05,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,222,150,0.40)';ctx.beginPath();ctx.arc(0,0,s*0.62,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,246,206,0.98)';ctx.beginPath();ctx.ellipse(0,0,s*0.24,s*0.34,0,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
 function shimaPlayDraw(cam){ // 闇の うえに えがく。うで=線と多角形のみ(勾配なし=描画負荷の掟)
   const st=Game.shimaPlay,sp=shimaPlaySpec();
   if(!st||!sp||st.map!==Game.mapId)return;
@@ -13090,6 +13116,15 @@ function shimaPlayDraw(cam){ // 闇の うえに えがく。うで=線と多角
   if(sp.mode==='mamori'){shimaPlayDrawMamori(cam,st,sp);shimaPlayActionHint(cam,st,sp);return;} // まもりは 別の絵
   if(sp.mode==='zure'){shimaPlayDrawZure(cam,st,sp);shimaPlayActionHint(cam,st,sp);return;} // ときずらしは 別の絵
   ctx.save();
+  for(let i=0;i<sp.anchors.length;i++){ // まもる もの(まだ 盗られていない)=「何を まもる島か」を 島の うえに 立てる(画面ぜんたいに ちる horaFx とは別・2026-08-05)
+    if(st.boxed[i])continue;
+    const qm=isoCtr(sp.anchors[i].x,sp.anchors[i].y);
+    const tgt=!!(st.arm&&st.arm.phase==='reach'&&st.arm.i===i); // ねらわれている 1個だけ ふるえる
+    const sv=(st.savedAt&&st.blinkT-st.savedAt[i]<0.9)?1-(st.blinkT-st.savedAt[i])/0.9:0; // はたきおとした 直後=まもれた しるし
+    drawKuraMono(cam,sp.anchors[i].kind,qm.x,qm.y,Math.min(1,0.74+0.26*sv),tgt?st.blinkT:0);
+    if(sv>0){ctx.strokeStyle='rgba(226,244,255,'+(0.9*sv).toFixed(3)+')';ctx.lineWidth=3; // ひろがる わ=まもった
+      ctx.beginPath();ctx.ellipse(qm.x,qm.y,cam.TW*(0.3+0.4*(1-sv)),cam.TW*(0.15+0.2*(1-sv)),0,0,Math.PI*2);ctx.stroke();}
+  }
   for(let i=0;i<sp.anchors.length;i++){ // なわの箱(盗られた もの)。点滅=「押せる」の合図(文字は 出さない)
     if(!st.boxed[i])continue;
     const q=isoCtr(sp.anchors[i].x,sp.anchors[i].y),bw=cam.TW*0.42,bh=cam.TW*0.34,by=q.y-bh;
@@ -13141,7 +13176,8 @@ function horaFxDraw(cam){
 function horaFxOne(cam,f){
   const k=Math.min(1,f.t/0.8), fade=Math.min(1,Math.max(0,(f.life-f.t)/2.2));
   const SOLID={ishibashi:1,iwabashi:1,hobashira:1}; // 橋は 建造物=常設でも うすくしない
-  const quiet=(f.life>1e8&&!SOLID[f.kind])?0.35:1; // 常設は 余韻の こさまで 落とす(2026-08-02)
+  const ch=(f.cheerT!=null)?Math.max(0,1-(f.t-f.cheerT)/1.6):0; // まもりぬいた 祝い(くら)=常設の しずけさを 1.6秒だけ もどす。上限1=もとの こさを こえない
+  const quiet=(f.life>1e8&&!SOLID[f.kind])?(0.35+0.65*ch):1; // 常設は 余韻の こさまで 落とす(2026-08-02)
   const uso=f.uso?Math.max(0.4,1-((f.t-f.usoT)/0.5)*0.6):1; // うそふだに いろを すわれた 灰の残像(消さない=因果が 画面に のこる)
   const nom=f.nomare?0.4:1; // 灰の余韻(うた=のまれ/やかた3=つみ 共用・kind非依存。消さない=因果。0.4×常設0.35=0.14=ほらの灰と同じ床。set/deleteは必ず f.map===st.map ガード)
   const a=k*fade*quiet*uso*nom;if(a<=0.01)return;
