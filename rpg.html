@@ -11945,11 +11945,15 @@ const SHIMA_PLAY={
     nushi:'hitorijime', mode:'tsumi',
     anchors:[{x:17,y:2,kind:'hikari'},{x:3,y:2,kind:'genpon'}], // はこNPC2体の上=会話到達の実体・(17,2)は立て札「まだ、いきている」の箱
     steals:2 // しかけは 計2回で 打ち止め
+    // ★はらい(的が 途中で かわる)は やかたには 入れない: アンカーが2つ しか なく、1回目で 片方が 塔に なると
+    //   移り先が 残らない。入れると TL12/TL14/TL15(2本目の塔・会話到達・開幕の芝居)が 割れた(実測 2026-08-05)
   },
   kazemachiNight:{ // かぜまち・あらしのよる「たてたものの まもり」: むれが しぶきの つばさで たてた施設を つつみにくる(SPEC_mamori_20260803・再戦専用=初回は強制戦闘で窓ゼロ)
     nushi:'shioarashi', mode:'mamori',
     anchors:[{x:4,y:3,kind:'Pier',need:'ch18BuiltPier',ry:0.5,cy:0.30},{x:15,y:6,kind:'Shelter',need:'ch18BuiltShelter',ry:0.5,cy:0.30},{x:8,y:9,kind:'Beacon',need:'ch18BuiltBeacon',ry:0.6,cy:0.35}], // 建てた施設だけが 的(needを 毎回 生で見る)
     steals:2 // 計2投で 打ち止め
+    // ★はらい(的が 途中で かわる)は あらしには 入れない: 章18の けんちくけんは 2まい しか なく(ch18TicketLeft)
+    //   施設は 最大2つ。1回目で 片方が つつまれると 移り先が 残らない=一度も 発火しない 死にコードになる
   },
   tokikasanebell:{ // ときかさね・かねの時「とき ずらしと めくりもどし」: きりとるものが 場面を べつの時へ ずらす(SPEC_zure_20260803・最終島=阻止が 7島初の主動詞)
     nushi:'kiritoru', mode:'zure',
