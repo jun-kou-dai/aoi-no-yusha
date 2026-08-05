@@ -199,6 +199,7 @@ body{
 .dmg.player{ color:#ffb1a0; }
 .dmg.heal{ color:#b8f0c0; }
 .dmg.sp{ color:#ffd9a8; }
+.dmg.long:not(.crit){ font-size:clamp(20px,3.4vmin,30px); } /* ながい ことばだけ 小さく。crit(すってん等)は 大きいまま */
 .dmg.crit{ color:#ffd86b; font-size:clamp(42px,7.6vmin,66px);
   text-shadow:0 4px 0 rgba(60,30,0,.85), 0 2px 16px rgba(0,0,0,.7), 0 0 40px rgba(255,205,100,.9);
   animation:dmgcrit 1.05s cubic-bezier(.2,.7,.3,1) forwards; }
@@ -5347,7 +5348,7 @@ function openBook(){
 function closeBook(){const w=document.getElementById('bookwin');if(w)w.classList.remove('show');Game.bookOpen=false;hidePanScroll();}
 function popup(x,y,txt,cls){
   const d=document.createElement('div');
-  d.className='dmg'+(cls?' '+cls:'');d.textContent=txt;
+  d.className='dmg'+(cls?' '+cls:'')+(txt.length>=6?' long':'');d.textContent=txt; // 6文字以上の ことばは 小さく(数字と同じ 46px だと 画面の1/3を おおって、うしろの 島が 見えない・2026-08-05)
   d.style.left=x+'px';d.style.top=y+'px';
   fxL.appendChild(d);setTimeout(()=>d.remove(),1000);
 }
@@ -12972,7 +12973,7 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
       const k=sp.anchors[i].kind;
       for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===k){f.boxed=false;f.t=0;} // 立ちあがりから もういちど 咲く
       puff(q.x,q.y-cam.TW*0.2,'rgba(190,232,255,.95)',24,150,1.0,{up:true,s0:2,s1:5});
-      popup(q.x,q.y-cam.TW*0.5,'とりかえした！','sp');
+      popup(q.x,q.y-cam.TW*1.15,'とりかえした！','sp'); // もどってきた ものの 上へ 逃がす(重ねると「もどった」が 見えない・2026-08-05)
       sfxChest();flash('#d8e2ff',0.25,0.6);
       return true;
     }
