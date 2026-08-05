@@ -12972,12 +12972,12 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
     return false;
   }
   if(sp.mode==='tsumi'){ // やかた3: とんでくる はこを はたく/塔は どこを 押しても 上の はこが ぽん(SPEC_tsumibako_20260802)
-    if(st.arm&&st.arm.phase==='fly'&&!st.arm.slapped&&st.arm.n>2){
+    if(st.arm&&st.arm.phase==='fly'&&st.arm.n>1){ // とんでくる はこは 1つずつ はたける(3→2→1)=手数を ふやす。塔は かならず 1段 のこる(2026-08-05)
       for(let j=0;j<st.arm.n;j++){
         const fp=tsumiFlyPt(cam,st,sp,j);
         if(!fp||fp.k<=0||fp.k>=1)continue;
-        if(Math.hypot(lx-fp.x,ly-fp.y)<cam.TW*0.55){ // 1塔1回・罰なし
-          st.arm.slapped=true;st.arm.n=2;
+        if(Math.hypot(lx-fp.x,ly-fp.y)<cam.TW*0.55){ // 外しても 罰なし
+          st.arm.slapped=true;st.arm.n--;
           const tp=tsumiFlyPt(cam,st,sp,st.arm.n)||fp;
           puff(tp.x,tp.y,'rgba(255,226,150,.95)',14,130,0.8,{up:true,s0:2,s1:4});
           popup(fp.x,fp.y-14,'はたきおとした！','sp');
