@@ -18736,7 +18736,7 @@ async function playerAction(act){
       sfxHit();shakeBattle(8,0.3);
       const epB=enemyPos();puff(epB.x,epB.y-epB.s*10,'rgba(200,160,64,.9)',16,160,0.7,{s0:2,s1:5});
       popup(epB.x,epB.y-epB.s*40,'くずれた！','sp');
-      await say('はこが こうげきを うけとめた！——が、その はこも くずれおちた。\nひとりじめのものが むきだしに なった！');
+      await say('つみあげた はこが こうげきを うけとめ、いっせいに くずれおちた！\nひとりじめのものが むきだしに なった！');
       return;
     }
     let d;
@@ -21279,6 +21279,7 @@ function drawBattleScene(){
   if(bt.foe.boss)bossBack(bt,ep);
   if(bt.foe.tint||bt.blink>0)drawFoeTinted(bt,ep);
   else drawFoe(bt,ep);
+  drawKuseBox(bt,ep); // つみあげ(章17): はこの塔は ぬしの まえ=こうげきを うけとめる位置
   drawEnemyStrikeFx(bt,ep,'trail');
   if(bt.critShock)drawCritShock(bt.critShock.t,ep); // 大リングは勇者の後ろ、剣先の衝突光は前へ
   if(!(bt.mateHit>0))drawMateBattle(bt);
@@ -21288,10 +21289,52 @@ function drawBattleScene(){
   if(bt.slash)drawSlash(bt.slash,ep,bt.heroBlade);
   if(bt.spellFx)drawSpellFx(bt.spellFx,ep);
   drawP();
+  drawKuseFoam(bt); // つつみ(章18): あわの膜は 勇者の まえ=つつまれて いるのが 見える
   drawBattleFore(th.bokeh);
   ctx.restore();
   if(bt.foe.boss)bossFront(bt);
   drawVignette();
+}
+// ===== ぬしの くせ 第2弾の 絵(SPEC_nushi_kuse2_20260806 §10-4) =====
+// ことばだけでは 子どもに とどかない。**島と 同じ 絵の ことば**を 戦いの 画面へ:
+// はこ=茶の箱+こげ茶の輪郭+なわの縦線+すきまの 光の帯(島の shimaPlayDrawTsumi の boxDraw と 同じ)
+// 膜=水色の 楕円+脈動する ふち+下から 上へ ながれる 泡粒(島の shimaPlayDrawMamori の 膜と 同じ)
+// 勾配は つかわない(描画負荷の掟)。どちらも 深さ±0(save/restore の 対)。
+function drawKuseBox(bt,ep){ // つみあげ(章17): ぬしの まえに つみあがった はこの塔
+  if(!(bt.kuseBox>0))return;
+  ctx.save();
+  const s=ep.s,py=ep.y+s*108,t=bt.t||0;
+  const wob=Math.sin(t*3.2)*s*1.6; // かすかな ゆれ=まだ 立っている
+  // ★3だんでは ぬしの 顔が 隠れた(実画面で 王冠と 目しか 見えなかった=誰と 戦っているか わからない)。
+  //   2だんに 下げて「はこの かべごしに ぬしが 見える」高さへ(2026-08-06)
+  for(let j=0;j<2;j++){ // ⚔1回で いっせいに くずれる
+    const w=s*(134-j*16),h=s*44,x=ep.x+wob*(j+1)*0.35,y=py-j*s*42;
+    ctx.fillStyle='rgba(96,72,40,0.95)';
+    ctx.fillRect(x-w/2,y-h,w,h);
+    ctx.strokeStyle='rgba(46,32,18,0.90)';ctx.lineWidth=2.5;
+    ctx.strokeRect(x-w/2,y-h,w,h);
+    ctx.strokeStyle='rgba(214,178,120,0.80)';ctx.lineWidth=2.5; // なわ
+    ctx.beginPath();ctx.moveTo(x,y-h-2);ctx.lineTo(x,y+2);ctx.stroke();
+    ctx.fillStyle='rgba(255,214,110,0.72)'; // すきまから もれる 光
+    ctx.fillRect(x-w/2+3,y-3,w-6,3);
+  }
+  ctx.restore();
+}
+function drawKuseFoam(bt){ // つつみ(章18): 勇者を つつむ あわの 膜
+  if(!(bt.kuseFoam>0)||!bt.heroPos)return;
+  const hp=bt.heroPos,u=hp.u||1,t=bt.t||0;
+  ctx.save();
+  const rx=u*84,ry=u*114,cy=hp.y-u*96;
+  ctx.fillStyle='rgba(150,200,235,0.30)';
+  ctx.beginPath();ctx.ellipse(hp.x,cy,rx,ry,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(210,238,255,'+(0.55+0.25*Math.sin(t*4.2)).toFixed(3)+')';ctx.lineWidth=3;
+  ctx.beginPath();ctx.ellipse(hp.x,cy,rx,ry,0,0,Math.PI*2);ctx.stroke();
+  for(let b=0;b<6;b++){ // 泡粒(下から 上へ ながれる)
+    const ba=((t*0.5+b*0.17)%1);
+    ctx.strokeStyle='rgba(226,244,255,'+(0.55*(1-ba)).toFixed(3)+')';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(hp.x+Math.sin(b*2.1)*rx*0.6,cy+ry*0.72-ba*ry*1.45,Math.max(2,u*3+b),0,Math.PI*2);ctx.stroke();
+  }
+  ctx.restore();
 }
 // 敵の先端から固定した接触点までを、背面の速度線と前面の結果火花に分けて描く。
 // Math.random は使わず、演出がダメージ乱数へ干渉しないようにする。
