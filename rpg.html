@@ -18444,9 +18444,12 @@ async function commandPhase(){
     if(Game.autoBattle)return autoDecide();
     const cmds=[{id:'fight',label:'たたかう'}]; // ななつへんげ: へんげを 1つでも おぼえたら コマンドに 立つ
     if(hengeCount()>0)cmds.push({id:'henge',label:'👹へんしん'+(Game.bt&&Game.bt.hengeUsed?'（つかった）':''),dis:!!(Game.bt&&Game.bt.hengeUsed)});
-    const kSeal=Game.bt&&Game.bt.kuseSteal,kMouth=Game.bt&&Game.bt.kuseMouth; // ぬしの くせ: 封印は 灰+わけ(押す前に わかる)
-    cmds.push({id:'spell',label:'じゅもん'+((kSeal&&kSeal.cmd==='spell')?'（ふくろの なか！ ⚔で とりかえせ）':(kMouth?'（おおくちに のまれる！）':'')),dis:!!((kSeal&&kSeal.cmd==='spell')||kMouth),osu:!((kSeal&&kSeal.cmd==='spell')||kMouth)&&hoimiMichi()},
-      {id:'item',label:'どうぐ'+((kSeal&&kSeal.cmd==='item')?'（ふくろの なか！ ⚔で とりかえせ）':(kMouth?'（おおくちに のまれる！）':'')),dis:!!((kSeal&&kSeal.cmd==='item')||kMouth)},
+    const kSeal=Game.bt&&Game.bt.kuseSteal,kMouth=Game.bt&&Game.bt.kuseMouth,kCut=Game.bt&&Game.bt.kuseCut; // ぬしの くせ: 封印は 灰+わけ(押す前に わかる)
+    // ときとめ(章19)の かこみは 灰に しない=まだ つかえる。「さきに つかえ」と 書くのが 答えそのもの
+    const kWhy=c=>(kSeal&&kSeal.cmd===c)?(Game.bt.kuseStealVia==='cut'?'（きりとられた！ ⚔で きりくちを つなげ）':'（ふくろの なか！ ⚔で とりかえせ）')
+      :(kMouth?'（おおくちに のまれる！）':((kCut&&kCut.cmd===c)?'（はさみに かこまれた！ さきに つかえ）':''));
+    cmds.push({id:'spell',label:'じゅもん'+kWhy('spell'),dis:!!((kSeal&&kSeal.cmd==='spell')||kMouth),osu:!((kSeal&&kSeal.cmd==='spell')||kMouth)&&hoimiMichi()},
+      {id:'item',label:'どうぐ'+kWhy('item'),dis:!!((kSeal&&kSeal.cmd==='item')||kMouth)},
       {id:'guard',label:'ぼうぎょ'},{id:'run',label:'にげる'});
     const c=await ask(cmds,'コマンド');
     if(c==='__auto__')continue;
@@ -18674,6 +18677,11 @@ function markHeroStrikeImpact(bt,result){
   }
 }
 async function playerAction(act){
+  // ときとめ(章19): かこまれた 一手を さきに つかったか。commandPhase と autoDecide の 両方を ここ1箇所で 拾う
+  // (act.kind は fight/guard/run/henge/item/呪文id の どれか＝それ以外は じゅもん)
+  {const bt0=Game.bt,ak=act&&act.kind;
+   if(bt0&&bt0.kuseCut&&!bt0.kuseCut.used&&ak&&ak!=='fight'&&ak!=='guard'&&ak!=='run'&&ak!=='henge'
+      &&(ak==='item')===(bt0.kuseCut.cmd==='item'))bt0.kuseCut.used=true;}
   const p=Game.p,bt=Game.bt,ep=enemyPos();
   bt.guard=false;
   if(bt.finale&&!bt.finDone&&act.kind!=='guard'&&act.kind!=='item'){
@@ -18719,7 +18727,7 @@ async function playerAction(act){
     beginHeroStrike(bt);sfxSlash();
     await wait(0.08);
     const wfx=WEAPONFX[Game.weaponAtk]||{};
-    const crit=(!!(bt.kuseMouth||(bt.charge&&bt.kuseFake)))||Math.random()<((curDiff().pcrit||0.1)+(wfx.critUp||0)+(kkOn('tsugu')?0.04:0)); // ぬしの くせ: 口内/うそ見抜きは かいしん保証
+    const crit=(!!(bt.kuseMouth||(bt.charge&&bt.kuseFake)))||Math.random()<((curDiff().pcrit||0.1)+(wfx.critUp||0)+(kkOn('tsugu')?0.04:0)+(bt.kuseCutWin?0.30:0)); // ぬしの くせ: 口内/うそ見抜きは かいしん保証
     const physRaw=foePhys(bt),physMul=battleAffinityMul('phys',physRaw);
     const dodgeP=(bt.tomoshibi>0||bt.ch18NoDodge||bt.tokiNoDodge)?0:(bt.soar?0.5:(bt.foe.dodge||0));
     if(!crit&&dodgeP&&Math.random()<dodgeP){
@@ -18774,11 +18782,13 @@ async function playerAction(act){
     await say(bt.foe.name+'に '+d+'の ダメージ！');
     if(bt.kuseMouth&&d>0){bt.kuseMouth=false; // 口の中に 直撃(かいしんは 上で 保証)
       await say('ひかる いちげきが くちの なかで さくれつした！');}
+    if(bt.kuseCutWin&&d>0){bt.kuseCutWin=false; // さきに つかって かまえを くずした あと(上で かいしん率+0.30)
+      if(crit)await say('くずれた かまえの ど真ん中へ、ひかる いちげきが とどいた！');}
     if(bt.kuseSteal&&d>0){bt.kuseSteal.hits=(bt.kuseSteal.hits||0)+1;
-      if(bt.kuseSteal.hits>=2){const scR=bt.kuseSteal.cmd;bt.kuseSteal=null;
+      if(bt.kuseSteal.hits>=2){const scR=bt.kuseSteal.cmd,vaR=bt.kuseStealVia;bt.kuseSteal=null;bt.kuseStealVia=null;
         sfxChest();flash('#ffe9b0',0.3,0.6);const pcR=playerChipPos();popup(pcR.x,pcR.y,'とりかえした！','sp');
-        await say('ふくろが やぶれた！ '+(scR==='item'?'どうぐ':'じゅもん')+'を とりかえした！');}
-      else await say('ふくろが おおきく やぶれかけている——もう ひといき！');}
+        await say((vaR==='cut'?'きりくちが つながった！ ':'ふくろが やぶれた！ ')+(scR==='item'?'どうぐ':'じゅもん')+'を とりかえした！');}
+      else await say(bt.kuseStealVia==='cut'?'きりくちが なかばまで つながった——もう ひといき！':'ふくろが おおきく やぶれかけている——もう ひといき！');}
     if(bt.kuseEcho&&d>0&&p.hp>1){bt.kuseEcho=false;
       const reflE=Math.min(p.hp-1,Math.max(1,Math.round(d*0.4)));p.hp-=reflE;updateBars();
       sfxHit();flash('#8fa8e8',0.3,0.5);const pcE=playerChipPos();popup(pcE.x,pcE.y,reflE);
@@ -19458,7 +19468,21 @@ async function enemyAction(){
   if(bt.kuseSteal){bt.kuseSteal.turns--;
     if(bt.kuseSteal.turns<=0){const sc2=bt.kuseSteal.cmd;bt.kuseSteal=null;
       const pc5=playerChipPos();popup(pc5.x,pc5.y,'もどってきた！','sp');sfxChest();
-      await say('ふくろの くちが ゆるみ、'+(sc2==='item'?'どうぐ':'じゅもん')+'が てもとへ もどってきた！');}}
+      await say((bt.kuseStealVia==='cut'?'きりくちが しずかに つながり、':'ふくろの くちが ゆるみ、')+(sc2==='item'?'どうぐ':'じゅもん')+'が てもとへ もどってきた！');
+      bt.kuseStealVia=null;}}
+  // ときとめ(章19)の 決着: さきに つかったか どうか。★kuseSteal の 時間経過より 後に 置く
+  // (前に 置くと ここで 立てた turns:2 が 同じ手番で 1 へ 減り、しまいこむ より 1ターン 短くなる)
+  if(bt.kuseCut){const cc=bt.kuseCut;bt.kuseCut=null;
+    const cn=cc.cmd==='item'?'どうぐ':'じゅもん';
+    if(cc.used){ // 島の「さきに さわる」と 同じ=阻止(罰なし)。正解には ごほうび=前半4体と 同じ型
+      bt.kuseCutWin=true; // つぎの ⚔ が かいしん保証(うそ見抜き・口内直撃と 同じ)
+      sfxChest();flash('#ffe9b0',0.28,0.55);const pcU=playerChipPos();popup(pcU.x,pcU.y,'さきに つかった！','sp');
+      await say('はさみが 点線を きった——けれど '+cn+'は もう つかわれた あとだった！\nきりとるものの かまえが くずれている——いちげきが とおりやすい！');
+    }else{ // まにあわなかった: 一枚の 紙に なって はがれる(⚔2回で きりくちを つなげば もどる=しまいこむと 同じ答え)
+      bt.kuseSteal={cmd:cc.cmd,hits:0,turns:2};bt.kuseStealVia='cut';
+      sfxSlash();flash('#e87ab0',0.3,0.6);const pcX=playerChipPos();popup(pcX.x,pcX.y-24,'きりとられた！','sp');
+      await say('はさみが 点線を きりぬいた！ '+cn+'が 一枚の 紙に なって はがれおちた…！\n⚔こうげきで きりくちを つなげば とりかえせる！');
+    }}
   if(foe===FOES.kajiu&&bt.ch20Opening){bt.ch20Opening=null;renderBattleWeakness();} // 弱点は敵が動き始める直前まで
   // なきかげの こえ：てきは 1ターン うごけない
   if(bt.foeBind>0){
@@ -19607,6 +19631,19 @@ async function enemyAction(){
     const pcF=playerChipPos();puff(pcF.x,pcF.y,'rgba(159,216,232,.9)',20,150,0.9,{s0:2,s1:6});popup(pcF.x,pcF.y-24,'つつまれた！','sp');
     await say('しおあらしの むれが、あわの まくで ゆうしゃを つつんだ！'+(bt.kuseFoamN<=1?'\n（うでが おもい。ぼうぎょで はらえる！）':''));
     return;
+  }
+  // 章19 ときとめ: つぎの 一手を 先に かこむ。囲まれた 手番に つかえば 阻止(島の「さきに さわる」と 同じ答え)。
+  // 決着は つぎの 敵の手番の あたま(時間経過ブロック)。勇者の 手番は 1つも 減らない=ため周期の 契約は 不変。
+  // ★ここだけ return しない(他の6体は 癖の手番に 攻撃しない): 切り取りの 罰は じゅもん・どうぐを つかう子にしか
+  //   効かないので、攻撃を 1手番 とばすと **連打だけの子が タダで 得をする**。実測で 敗27.1%(従来)→11.7%
+  //   ＝4.27シグマ の 悪化ならぬ「楽になりすぎ」が 出た(2026-08-06)。囲みながら 斬る=手番の 損得ゼロへ。
+  if(kk==='cut'&&!bt.charge&&bt.turn%3!==2&&!bt.kuseCut&&!bt.kuseSteal&&(bt.kuseCutN||0)<2&&((bt.kuseCutN||0)===0||Math.random()<0.4)){
+    bt.kuseCut={cmd:(bt.kuseCutN||0)===0?'spell':'item',used:false}; // 乱数なし=1回目は じゅもん・2回目は どうぐ
+    bt.kuseCutN=(bt.kuseCutN||0)+1;
+    sfxEnc();shakeBattle(8,0.4);flash('#e87ab0',0.3,0.6);
+    const pcC=playerChipPos();puff(pcC.x,pcC.y,'rgba(232,122,176,.9)',18,150,0.85,{s0:2,s1:5});popup(pcC.x,pcC.y-24,'かこまれた！','sp');
+    await say('きりとるものは、ゆうしゃの '+(bt.kuseCut.cmd==='item'?'どうぐぶくろ':'じゅもんの ちから')+'を しろい 点線で かこんだ——！'+(bt.kuseCutN<=1?'\n（つぎの 手番で きりとられる。さきに つかえば きりとられない！）':''));
+    // ここで return しない=かこみながら そのまま 斬ってくる(上の ★の 理由)
   }
   }
   // まどうし系：ようすを みている（ターンスキップ＝ゆらぎ）
@@ -19915,11 +19952,13 @@ const NUSHI_KUSE={
   // 第2弾(章17〜19・SPEC_nushi_kuse2_20260806): 島で「つみあげ/つつみ/きりとり」を やらせておいて
   // 戦いは ただの 殴り合いだった 3体に、島と 同じ動詞を つける
   hitorijime:{k:'box'},     // つみあげ: はこの塔が こうげきを うけとめる。⚔で くずせる
-  shioarashi:{k:'foam'}     // つつみ: 泡の膜で こうげきが 半分。ぼうぎょで はらえる
-  // ★kiritoru(章19・きりとり=手番を 1つ 奪う)は 実装して 実測し、外した(2026-08-06):
-  //   章19の 戦闘は CH19_FORMS の 三つの姿を 順に 見せる 進行を 持っており、手番を 奪うと それが 壊れる
-  //   (release の ch19-battle が 割れた。kiritoru を 外すと 576/0 へ 戻ることを A/B で 確認)。
-  //   次に 同じ案を 出す人へ: ときかさねの ぬしには「手番を 奪う」形は 入らない。別の 動詞が いる。
+  shioarashi:{k:'foam'},    // つつみ: 泡の膜で こうげきが 半分。ぼうぎょで はらえる
+  // 第3弾(章19・SPEC_kiritoru_kuse_20260806): 7島で ここだけ 戦いに 島の動詞が 無かった
+  kiritoru:{k:'cut'}        // ときとめ: つぎの 一手を 先に かこむ。さきに つかえば きりとられない
+  // ★「手番を 1つ 奪う」形は 実装して 実測し、外した(2026-08-06):
+  //   enemyAction が 早期returnして「ためは 決まった手番に 必ず来る」を 崩し release の ch19-battle が 割れる。
+  //   さらに へんしん(おおはさみ)が すでに『てきの つぎの 1ターンを きりとる』を 持つ=勇者側と 動詞が 重複。
+  //   → 採用したのは 島と 同じ「先回りして 阻止する」。勇者の 手番は 1つも 減らない。
 };
 function nushiKuse(bt){if(!bt||bt.shin)return null;const e=NUSHI_KUSE[foeId(bt.foe)];return e?e.k:null;}
 // ===== しまいこまれた ものが 戦いに 出てくる(くら・SPEC_kura_fukuro_20260806) =====
@@ -21290,6 +21329,7 @@ function drawBattleScene(){
   if(bt.spellFx)drawSpellFx(bt.spellFx,ep);
   drawP();
   drawKuseFoam(bt); // つつみ(章18): あわの膜は 勇者の まえ=つつまれて いるのが 見える
+  drawKuseCut(bt);  // ときとめ(章19): かこみの 点線と きりとられた 紙は 勇者の まわり
   drawBattleFore(th.bokeh);
   ctx.restore();
   if(bt.foe.boss)bossFront(bt);
@@ -21333,6 +21373,36 @@ function drawKuseFoam(bt){ // つつみ(章18): 勇者を つつむ あわの �
     const ba=((t*0.5+b*0.17)%1);
     ctx.strokeStyle='rgba(226,244,255,'+(0.55*(1-ba)).toFixed(3)+')';ctx.lineWidth=2;
     ctx.beginPath();ctx.arc(hp.x+Math.sin(b*2.1)*rx*0.6,cy+ry*0.72-ba*ry*1.45,Math.max(2,u*3+b),0,Math.PI*2);ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawKuseCut(bt){ // ときとめ(章19): 白の 点線の かこみ／きりとられた 一枚の 紙
+  if(!bt.heroPos)return;
+  const cut=bt.kuseCut,pap=!!(bt.kuseSteal&&bt.kuseStealVia==='cut');
+  if(!cut&&!pap)return;
+  const hp=bt.heroPos,u=hp.u||1,t=bt.t||0;
+  ctx.save();
+  if(cut){ // かこみ=島の 切り取り線と 同じ 白の 点線(ゆっくり まわる)
+    // ★実寸(930x1160)で 撮って 直した: h=172/cy=-96 では 勇者の あたまが 枠から はみ出た(2026-08-06)
+    const w=u*124,h=u*206,cy=hp.y-u*112;
+    ctx.setLineDash([u*9,u*7]);ctx.lineDashOffset=-t*u*22;
+    ctx.strokeStyle='rgba(255,255,255,'+(0.66+0.24*Math.sin(t*4.6)).toFixed(3)+')';ctx.lineWidth=3;
+    ctx.strokeRect(hp.x-w/2,cy-h/2,w,h);
+    ctx.setLineDash([]);
+  }
+  if(pap){ // きりとられた もの=一枚の 紙(白点線の ふち＋めくれかけの 角。島の「べつの時の紙」と 同じ記号)
+    // ★実寸で 撮って 直した: x=+84/y=-132 では つるぎに 重なり、紙に 見えなかった(2026-08-06)
+    const px=hp.x+u*152,py=hp.y-u*186,w=u*58,h=u*76,sw=Math.sin(t*2.2)*u*3.4;
+    ctx.beginPath();ctx.moveTo(px-w/2+sw,py-h/2);ctx.lineTo(px+w/2+sw,py-h/2);
+    ctx.lineTo(px+w/2,py+h/2-u*12);ctx.lineTo(px-w/2,py+h/2);ctx.closePath();
+    ctx.fillStyle='rgba(240,238,230,0.94)';ctx.fill();
+    ctx.setLineDash([u*5,u*4]);ctx.strokeStyle='rgba(255,255,255,0.88)';ctx.lineWidth=2;ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle='rgba(150,146,136,0.80)';ctx.lineWidth=1.6; // もじの 行=じゅもん/どうぐが 紙に なった しるし
+    for(let r=0;r<3;r++){const ry=py-h*0.22+r*h*0.20,ix=sw*(1-(ry-py+h/2)/h);
+      ctx.beginPath();ctx.moveTo(px-w*0.30+ix,ry);ctx.lineTo(px+w*0.30+ix,ry);ctx.stroke();}
+    ctx.fillStyle='rgba(194,190,178,0.95)'; // めくれかけの 角
+    ctx.beginPath();ctx.moveTo(px+w/2,py+h/2-u*12);ctx.lineTo(px+w/2-u*17,py+h/2-u*3);ctx.lineTo(px+w/2-u*3,py+h/2-u*26);ctx.closePath();ctx.fill();
   }
   ctx.restore();
 }
