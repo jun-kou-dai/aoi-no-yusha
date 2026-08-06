@@ -11951,9 +11951,11 @@ const SHIMA_PLAY={
   kazemachiNight:{ // かぜまち・あらしのよる「たてたものの まもり」: むれが しぶきの つばさで たてた施設を つつみにくる(SPEC_mamori_20260803・再戦専用=初回は強制戦闘で窓ゼロ)
     nushi:'shioarashi', mode:'mamori',
     anchors:[{x:4,y:3,kind:'Pier',need:'ch18BuiltPier',ry:0.5,cy:0.30},{x:15,y:6,kind:'Shelter',need:'ch18BuiltShelter',ry:0.5,cy:0.30},{x:8,y:9,kind:'Beacon',need:'ch18BuiltBeacon',ry:0.6,cy:0.35}], // 建てた施設だけが 的(needを 毎回 生で見る)
-    steals:2 // 計2投で 打ち止め
-    // ★はらい(的が 途中で かわる)は あらしには 入れない: 章18の けんちくけんは 2まい しか なく(ch18TicketLeft)
-    //   施設は 最大2つ。1回目で 片方が つつまれると 移り先が 残らない=一度も 発火しない 死にコードになる
+    steals:2, // 計2投で 打ち止め
+    rebound:2.0 // ★なみは うちかえす: はらわれた つばさは 消えず、むきを かえて もう ひとつの あかりへ(1投につき1回)。0/無しで 従来と 一字一句 同じ
+    // ★飛行中の はらい(くら・ほらの swerveAt)は あらしには 入れない: 章18の けんちくけんは 2まい しか なく(ch18TicketLeft)
+    //   施設は 最大2つ。1回目で 片方が つつまれると 移り先が 残らない=一度も 発火しない 死にコードになる。
+    //   跳ね返りは その裏を つく: はらった しゅんかんは 施設が 両方とも 無事=移り先が かならず ある(2026-08-06)
   },
   tokikasanebell:{ // ときかさね・かねの時「とき ずらしと めくりもどし」: きりとるものが 場面を べつの時へ ずらす(SPEC_zure_20260803・最終島=阻止が 7島初の主動詞)
     nushi:'kiritoru', mode:'zure',
@@ -12115,7 +12117,15 @@ function shimaPlayTick(dt){
           if(!st.firstGrab){st.firstGrab=true;toast('たてた ものが しぶきに つつまれた！');}
           st.arm=null;st.cool=5.0;
         }
-      }else if(a.phase==='shot'&&a.t>=0.4){st.arm=null;st.cool=4.5;}
+      }else if(a.phase==='shot'&&a.t>=0.4){
+        const rj=mamoriReboundPick(st,sp,a); // なみは うちかえす: はらった つばさが むきを かえる(1投につき1回)
+        if(rj>=0){
+          a.from={x:sp.anchors[a.i].x,y:sp.anchors[a.i].y}; // はらわれた しせつが 新しい 起点(タイル座標)
+          a.i=rj;a.t=0;a.dur=sp.rebound;a.phase='fly';a.rb=1;a.repelled=false; // 金の輪・動詞ラベル・タップは st.arm.i を 読む=自動で ついてくる
+          sfxCharge();
+          if(!st.firstRb){st.firstRb=true;toast('はらった つばさが、むきを かえた！');}
+        }else{st.arm=null;st.cool=4.5;}
+      }
       return;
     }
     if(st.stealsLeft<=0)return;
@@ -12651,11 +12661,24 @@ function mamoriFxTick(st,dt){ // 撃退の絵(とあみ/ひ/かぜ)の前進
 function mamoriFlyPt(cam,st,sp){ // とんでいく つばさの 画面座標(弧・ゆっくり)
   const a=st.arm;if(!a||a.phase!=='fly')return null;
   const nu=shimaPlayNushi(),np=nu?{x:nu.px,y:nu.py}:{x:10,y:5};
-  const sPt=isoCtr(np.x,np.y),aa=sp.anchors[a.i],g=isoCtr(aa.x,aa.y);
-  const sy=sPt.y-cam.TW*0.9;
+  const sPt=a.from?isoCtr(a.from.x,a.from.y):isoCtr(np.x,np.y),aa=sp.anchors[a.i],g=isoCtr(aa.x,aa.y); // むきを かえた つばさは はらわれた しせつから 飛ぶ
+  const sy=sPt.y-cam.TW*(a.from?0.5:0.9);
   const k=Math.min(1,a.t/a.dur),ee=k*k*(3-2*k);
   const arc=-Math.sin(ee*Math.PI)*cam.TW*1.1;
   return {x:sPt.x+(g.x-sPt.x)*ee,y:sy+((g.y-cam.TW*(aa.cy||0.3))-sy)*ee+arc,k:ee};
+}
+function mamoriReboundPick(st,sp,a){ // むきを かえる先: たっていて まだ つつまれていない べつの施設(画面内・乱数は つかわない=検証が 安定する)
+  if(!sp.rebound||a.rb||!Game.cam)return -1;
+  const h=(Game&&Game.hidden)||{},mg=Game.cam.TW*0.6;
+  let bj=-1,bd=-1;
+  for(let j=0;j<sp.anchors.length;j++){
+    if(j===a.i||st.boxed[j]||!h[sp.anchors[j].need])continue;
+    const q=isoCtr(sp.anchors[j].x,sp.anchors[j].y);
+    if(q.x<mg||q.x>W-mg||q.y<mg||q.y>H-mg)continue; // 画面外へは むかわない(気づけない 跳ね返りを 作らない)
+    const d=Math.hypot(sp.anchors[j].x-sp.anchors[a.i].x,sp.anchors[j].y-sp.anchors[a.i].y);
+    if(d>bd){bd=d;bj=j;}
+  }
+  return bj;
 }
 function mamoriRepel(st,sp,i){ // 号令: たてた ものが じぶんの持ち技で つばさを 追いはらう(罰なし)
   const a=st.arm,cam=Game.cam;if(!a||!cam)return false;
