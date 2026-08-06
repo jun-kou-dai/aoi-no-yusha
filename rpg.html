@@ -12431,6 +12431,18 @@ function nomiReleaseAll(st,sp){ // ぬしが ほどけ、のまれた うたが 
   }
   if(done){sfxChest();flash('#ffeed0',0.3,0.8);}
 }
+function nomiChoke(st,sp,cam){ // むせさせる: くちタップ / ねらわれた いしぶみタップ の 両方から よぶ(結果は 同じ)
+  const mp=nomiMouthPt();if(!mp||!st.arm)return false;
+  st.arm.phase='choked';st.arm.t=0;
+  const ai=st.arm.i;
+  for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===sp.anchors[ai].kind)delete f.suck;
+  puff(mp.x,mp.y,'rgba(255,226,150,.95)',18,140,0.9,{up:true,s0:2,s1:4});
+  popup(mp.x,mp.y-cam.TW*0.3,'むせた！','sp');
+  sfxSlash();
+  st.melody={notes:nomiMotif(sp,ai),i:0,t:0}; // もどる うたの おと
+  nomiFlowNotes(st,sp,ai,mp,cam);
+  return true;
+}
 function shimaPlaySing(i){ // のまれた うたを うたいかえす(タップ/会話到達の 両方から よぶ)。罰なし
   const st=Game.shimaPlay,sp=shimaPlaySpec(),cam=Game.cam;
   if(!st||!sp||!cam||!st.boxed[i])return false;
@@ -12975,17 +12987,11 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
   if(sp.mode==='nomi'){ // うたのみ: あいた くちを むせさせる/のまれた いしぶみを うたいかえす(SPEC_utanomi_20260802)
     if(st.arm&&st.arm.phase==='suck'){
       const mp=nomiMouthPt();
-      if(mp&&Math.hypot(lx-mp.x,ly-mp.y)<cam.TW*0.55){ // 半径0.55TW上限=ぬしの体タップ(たたかいに行く)を 殺さない
-        st.arm.phase='choked';st.arm.t=0;
-        const ai=st.arm.i;
-        for(const f of (Game.horaFx||[]))if(f.map===st.map&&f.kind===sp.anchors[ai].kind)delete f.suck;
-        puff(mp.x,mp.y,'rgba(255,226,150,.95)',18,140,0.9,{up:true,s0:2,s1:4});
-        popup(mp.x,mp.y-cam.TW*0.3,'むせた！','sp');
-        sfxSlash();
-        st.melody={notes:nomiMotif(sp,ai),i:0,t:0}; // もどる うたの おと
-        nomiFlowNotes(st,sp,ai,mp,cam);
-        return true;
-      }
+      if(mp&&Math.hypot(lx-mp.x,ly-mp.y)<cam.TW*0.55)return nomiChoke(st,sp,cam); // 半径0.55TW上限=ぬしの体タップ(たたかいに行く)を 殺さない
+      // ★ねらわれた いしぶみを かばう(2026-08-06): 押す場所が 的と いっしょに 動く=「まって押す」から「追って押す」へ。
+      //   くちタップ(上)は 一字も 変えていない=どちらでも 成立する(罰なし)
+      {const ai=st.arm.i,q=isoCtr(sp.anchors[ai].x,sp.anchors[ai].y);
+       if(Math.hypot(lx-q.x,ly-q.y)<cam.TW*0.45)return nomiChoke(st,sp,cam);} // 半径は 解放タップ(下)と 同値
     }
     for(let i=0;i<sp.anchors.length;i++){ // のまれた いしぶみ=うたいかえし(えがく中心=あたり判定の中心・オフセット0)
       if(!st.boxed[i])continue;
@@ -13149,7 +13155,8 @@ function shimaPlayActionHint(cam,st,sp){
   const tw=cam.TW,fi=shimaPlayFocusIndex(st,sp);let p=null,label='ここを タップ';
   if(st.arm){
     if(sp.mode==='huda'&&st.arm.phase==='fly'&&!st.arm.dodged){p=shimaPlayHudaPos(cam,st,sp,0);label='タップして ひらり';}
-    else if(sp.mode==='nomi'&&st.arm.phase==='suck'){p=nomiMouthPt();label='タップして むせさせる';}
+    else if(sp.mode==='nomi'&&st.arm.phase==='suck'){ // ★的の いしぶみを さす=押す場所が 動く(くちは nomiMouthPt で 動かない)
+      const a=sp.anchors[fi],q=isoCtr(a.x,a.y);p={x:q.x,y:q.y-tw*0.18};label='タップして かばう';}
     else if(sp.mode==='tsumi'&&st.arm.phase==='fly'){
       for(let j=0;j<st.arm.n&&!p;j++){const q=tsumiFlyPt(cam,st,sp,j);if(q&&q.k>0&&q.k<1)p=q;}
       label='タップして はたく';
