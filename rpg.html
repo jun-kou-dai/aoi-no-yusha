@@ -18704,6 +18704,13 @@ async function playerAction(act){
     bt.guard=true;
     sfxSel();
     flash('#9fb6ff',0.16,0.4);
+    if(bt.kuseFoam>0){ // つつみ(章18)の 答え: ぼうぎょで 泡の膜を はらう(島の「号令」と 同じ)
+      bt.kuseFoam=0;
+      sfxSlash();flash('#9fd8e8',0.3,0.5);
+      const pcG=playerChipPos();puff(pcG.x,pcG.y,'rgba(159,216,232,.95)',22,200,0.7,{s0:2,s1:6});popup(pcG.x,pcG.y,'はらった！','sp');
+      await say('ゆうしゃは みを まもりながら、あわの まくを はらいのけた！');
+      return;
+    }
     await say('ゆうしゃは みを まもっている！');
     return;
   }
@@ -18724,6 +18731,14 @@ async function playerAction(act){
       else await say(bt.foe.name+'は ひらりと みをかわした！');
       return;
     }
+    if(bt.kuseBox>0){ // つみあげ(章17)の 答え: ⚔が はこの塔に あたる。2回で くずれる(ぬしには とどかない)
+      bt.kuseBox--;
+      sfxHit();shakeBattle(8,0.3);
+      const epB=enemyPos();puff(epB.x,epB.y-epB.s*10,'rgba(200,160,64,.9)',16,160,0.7,{s0:2,s1:5});
+      popup(epB.x,epB.y-epB.s*40,'くずれた！','sp');
+      await say('はこが こうげきを うけとめた！——が、その はこも くずれおちた。\nひとりじめのものが むきだしに なった！');
+      return;
+    }
     let d;
     if(crit){
       // かいしん：ぼうぎょ・いわのからだ・きんのからだを つらぬく
@@ -18733,6 +18748,7 @@ async function playerAction(act){
       if(wfx.vsKage&&bt.foe.kage)d=Math.round(d*wfx.vsKage);
       if(wfx.vsGiant&&(bt.foe.giant||bt.foe.huge))d=Math.round(d*wfx.vsGiant);
       if(bt.horaHit){d=Math.round(d*2);bt.horaHit=0;bt.horaBig=1;}
+      if(bt.kuseFoam>0)d=Math.max(1,Math.round(d*0.5)); // つつみ(章18): あわの まくで こうげきが 半分(ぼうぎょで はらえる)
       markHeroStrikeImpact(bt,'crit');
       bt.hp=Math.max(0,bt.hp-d);
       sfxCrit();bt.flash=1;bt.hitStop=0.16;bt.recoil=1.35;bt.blink=1;shakeBattle(18,0.5);bt.critShock={t:0};
@@ -18747,6 +18763,7 @@ async function playerAction(act){
       if(wfx.vsKage&&bt.foe.kage){d=Math.round(d*wfx.vsKage);}
       if(wfx.vsGiant&&(bt.foe.giant||bt.foe.huge))d=Math.round(d*wfx.vsGiant);
       if(bt.horaHit){d=Math.round(d*2);bt.horaHit=0;bt.horaBig=1;}
+      if(bt.kuseFoam>0)d=Math.max(1,Math.round(d*0.5)); // つつみ(章18): あわの まくで こうげきが 半分(ぼうぎょで はらえる)
       markHeroStrikeImpact(bt,'hit');
       bt.hp=Math.max(0,bt.hp-d);
       sfxHit();bt.flash=1;bt.hitStop=0.08;bt.recoil=1;bt.blink=1;shakeBattle(10,0.3);
@@ -19436,6 +19453,8 @@ async function enemyAction(){
   // ぬしの くせ: まど(かまえ/おおくち/ふくろ)の 時間経過
   if(bt.kuseEcho){bt.kuseEcho=false;await say('もとをただすものは こだまの かまえを といた。');}
   if(bt.kuseMouth){bt.kuseMouth=false;await say('おおくちが ゆっくり とじた。');}
+  if(bt.kuseFoam>0){bt.kuseFoam--; // つつみ(章18): 2ターンで 自然に とける(ぼうぎょなら すぐ はらえる)
+    if(bt.kuseFoam<=0)await say('あわの まくが はじけ、うでが かるく なった。');}
   if(bt.kuseSteal){bt.kuseSteal.turns--;
     if(bt.kuseSteal.turns<=0){const sc2=bt.kuseSteal.cmd;bt.kuseSteal=null;
       const pc5=playerChipPos();popup(pc5.x,pc5.y,'もどってきた！','sp');sfxChest();
@@ -19571,7 +19590,25 @@ async function enemyAction(){
     const eqM=enemyPos();puff(eqM.x,eqM.y-eqM.s*30,'rgba(184,159,216,.85)',18,150,0.9,{s0:2,s1:5});
     await say('わすれられしものが おおくちを あけた——！'+(bt.kuseMouthN<=1?'\n（じゅもんも どうぐも のみこまれる。いまは ⚔で くちの なかを ねらえ！）':''));
     return;
-  }}
+  }
+  // 章17 つみあげ: はこの塔が こうげきを うけとめる。⚔2回で くずせる(jimeP===2=毎ターンための段は 出さない=1ターン1問)
+  if(kk==='box'&&!bt.charge&&bt.turn%3!==2&&bt.jimeP!==2&&!bt.kuseBox&&(bt.kuseBoxN||0)<2&&((bt.kuseBoxN||0)===0||Math.random()<0.4)){
+    // ★2 では ない: 塔が こうげきを 2回 吸うと 手番を 4つ 奪い、連打だけの子が 敗23%→47% へ 悪化した(実測 2026-08-06)
+    bt.kuseBox=1;bt.kuseBoxN=(bt.kuseBoxN||0)+1;
+    sfxChest();shakeBattle(8,0.4);flash('#c8a040',0.3,0.6);
+    const eqB=enemyPos();puff(eqB.x,eqB.y-eqB.s*20,'rgba(200,160,64,.9)',18,150,0.9,{s0:2,s1:5});
+    await say('ひとりじめのものは、めのまえに はこを つみあげた！'+(bt.kuseBoxN<=1?'\n（はこが こうげきを うけとめる。⚔で くずせ！）':''));
+    return;
+  }
+  // 章18 つつみ: 泡の膜が 勇者を つつむ。ぼうぎょで はらえる(島の「号令」と 同じ答え)
+  if(kk==='foam'&&!bt.charge&&bt.turn%3!==2&&!bt.kuseFoam&&(bt.kuseFoamN||0)<2&&((bt.kuseFoamN||0)===0||Math.random()<0.4)){
+    bt.kuseFoam=2;bt.kuseFoamN=(bt.kuseFoamN||0)+1;
+    sfxSoar();shakeBattle(8,0.35);flash('#9fd8e8',0.3,0.6);
+    const pcF=playerChipPos();puff(pcF.x,pcF.y,'rgba(159,216,232,.9)',20,150,0.9,{s0:2,s1:6});popup(pcF.x,pcF.y-24,'つつまれた！','sp');
+    await say('しおあらしの むれが、あわの まくで ゆうしゃを つつんだ！'+(bt.kuseFoamN<=1?'\n（うでが おもい。ぼうぎょで はらえる！）':''));
+    return;
+  }
+  }
   // まどうし系：ようすを みている（ターンスキップ＝ゆらぎ）
   if(foe.watch&&Math.random()<0.18){
     await say(foe.name+'は ようすを みている。');
@@ -19874,7 +19911,15 @@ const NUSHI_KUSE={
   shimaikomu:{k:'steal'},   // しまいこむ: どうぐ/じゅもんを 袋に。⚔2回で やぶって とりかえす
   mototadasu:{k:'echo'},    // こだまがえし: かまえに うちこむと いちげきが かえってくる
   makoto:{k:'usotame'},     // うそのため: ほのおが しろい ときは うそ。見抜いて ⚔なら かいしん
-  wasurare:{k:'mouth'}      // まるのみ: おおくちの あいだ じゅもん・どうぐは のまれる。⚔は 口内かいしん
+  wasurare:{k:'mouth'},     // まるのみ: おおくちの あいだ じゅもん・どうぐは のまれる。⚔は 口内かいしん
+  // 第2弾(章17〜19・SPEC_nushi_kuse2_20260806): 島で「つみあげ/つつみ/きりとり」を やらせておいて
+  // 戦いは ただの 殴り合いだった 3体に、島と 同じ動詞を つける
+  hitorijime:{k:'box'},     // つみあげ: はこの塔が こうげきを うけとめる。⚔で くずせる
+  shioarashi:{k:'foam'}     // つつみ: 泡の膜で こうげきが 半分。ぼうぎょで はらえる
+  // ★kiritoru(章19・きりとり=手番を 1つ 奪う)は 実装して 実測し、外した(2026-08-06):
+  //   章19の 戦闘は CH19_FORMS の 三つの姿を 順に 見せる 進行を 持っており、手番を 奪うと それが 壊れる
+  //   (release の ch19-battle が 割れた。kiritoru を 外すと 576/0 へ 戻ることを A/B で 確認)。
+  //   次に 同じ案を 出す人へ: ときかさねの ぬしには「手番を 奪う」形は 入らない。別の 動詞が いる。
 };
 function nushiKuse(bt){if(!bt||bt.shin)return null;const e=NUSHI_KUSE[foeId(bt.foe)];return e?e.k:null;}
 // ===== しまいこまれた ものが 戦いに 出てくる(くら・SPEC_kura_fukuro_20260806) =====
