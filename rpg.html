@@ -13116,6 +13116,14 @@ function shimaPlayOpenCount(){ // 開幕の芝居むけ: あいている数(0〜
   let n=0;for(const b of st.boxed)if(!b)n++;
   return n;
 }
+function shimaPlayTookKinds(){ // しまいこまれた ものが 戦いに 出てくる(くら・SPEC_kura_fukuro_20260806)
+  // 盗られた アンカーの kind を index順で(乱数なし=検証が 安定する)。
+  // null=しかけが 動いていない→従来のまま / []=ぜんぶ まもりきった=ぬしの 袋は 空
+  const st=Game.shimaPlay,sp=shimaPlaySpec();
+  if(!st||!sp||!st.boxed)return null;
+  const out=[];for(let i=0;i<sp.anchors.length;i++)if(st.boxed[i])out.push(sp.anchors[i].kind);
+  return out;
+}
 function shimaPlayFocusIndex(st,sp){ // 同時に取り返せる物が複数あっても、金の合図は勇者に近い1個だけ
   if(st&&st.arm&&Number.isInteger(st.arm.i))return st.arm.i;
   if(!st||!sp||!Game.p)return -1;
@@ -17816,6 +17824,8 @@ async function runBattle(ref){
   }
   if(foe===FOES.shimaikomu&&!Game.bt.shin){ // ぬしの しかけ 配信2: 盤で あけた数だけ 開幕の芝居(SPEC_nushi_shikake_20260802)
     Game.bt.kuraOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
+    // しまいこまれた ものが 戦いに 出てくる(SPEC_kura_fukuro_20260806): 島で 通した ものが ぬしの 袋に 入ったまま 来る
+    Game.bt.kuraTook=(typeof shimaPlayTookKinds==='function')?shimaPlayTookKinds():null; // null=触れていない / []=まもりきった
   }
   if(foe===FOES.makoto&&!Game.bt.shin){ // うそふだ 配信2: 見えている ものがたりの数だけ 開幕の芝居(SPEC_huda_hagashi_20260802)
     Game.bt.horaOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
@@ -19518,6 +19528,28 @@ async function enemyAction(){
   }
   // ぬしの くせ(章13〜16): 発動。ための 手番(turn%3===2)とは 重ねない=1ターン1問
   {const kk=nushiKuse(bt);
+  // しまいこまれた ものが 戦いに 出てくる(くら・SPEC_kura_fukuro_20260806): 島で 通した ものを ぬしが 袋から とりだして つかう。
+  // 乱数なし=条件を みたした 最初の手番で かならず 出る。1戦1回(kuraUsed)。まもりきった([])・島に 触れていない(null)なら 出ない。
+  // ★ゲートに bt.turn>=2 を 入れてはいけない: ため手番(turn%3===2)と ため中(charge)を よけると 最速が turn4 になり、
+  //   この戦いは 4ターンで 終わるので 12戦中4戦は 一度も 出なかった(実測 2026-08-06)。最初の手番で とりだす。
+  if(kk==='steal'&&!bt.charge&&bt.turn%3!==2&&!bt.kuraUsed&&!bt.kuseSteal&&bt.kuraTook&&bt.kuraTook.length&&KURA_TOOK[bt.kuraTook[0]]){
+    const tk=KURA_TOOK[bt.kuraTook[0]];
+    bt.kuraUsed=1;
+    sfxChest();shakeBattle(8,0.35);flash('#c8a468',0.3,0.6);
+    const eqK=enemyPos();puff(eqK.x,eqK.y-eqK.s*30,'rgba(214,178,120,.9)',18,150,0.9,{s0:2,s1:5});
+    let tail='';
+    if(tk.heal){ // はな: ぬしの きずが ふさがる(ため一撃の 天井242より 軽い=§8)
+      const hb=bt.hp,add=Math.max(1,Math.round(bt.mhp*tk.heal));bt.hp=Math.min(bt.mhp,bt.hp+add);
+      popup(eqK.x,eqK.y-eqK.s*70,'+'+(bt.hp-hb),'heal');
+      tail='\nしまいこむものの きずが すこし ふさがった！';
+    }else{ // てがみ・わらい: 既存の しまいこみ(⚔2回で やぶれる)を その中身で 起こす
+      bt.kuseSteal={cmd:tk.cmd,hits:0,turns:2};
+      const pcK=playerChipPos();popup(pcK.x,pcK.y-24,'しまいこまれた！','sp');
+      tail='\n'+(tk.cmd==='item'?'どうぐぶくろ':'じゅもんの ちから')+'を しまいこんだ！\n⚔こうげきで ふくろを やぶれば とりかえせる！';
+    }
+    await say('しまいこむものは ふくろから、しまの 「'+tk.n+'」を とりだし '+tk.v+'——'+tail);
+    return;
+  }
   if(kk==='steal'&&!bt.charge&&bt.turn%3!==2&&!bt.kuseSteal&&(bt.kuseStealN||0)<2&&((bt.kuseStealN||0)===0||Math.random()<0.4)){
     bt.kuseSteal={cmd:Math.random()<0.5?'item':'spell',hits:0,turns:2};
     bt.kuseStealN=(bt.kuseStealN||0)+1;
@@ -19845,6 +19877,14 @@ const NUSHI_KUSE={
   wasurare:{k:'mouth'}      // まるのみ: おおくちの あいだ じゅもん・どうぐは のまれる。⚔は 口内かいしん
 };
 function nushiKuse(bt){if(!bt||bt.shin)return null;const e=NUSHI_KUSE[foeId(bt.foe)];return e?e.k:null;}
+// ===== しまいこまれた ものが 戦いに 出てくる(くら・SPEC_kura_fukuro_20260806) =====
+// 島で 通したまま 挑むと、ぬしが 袋から その ものを 取り出して 一手 打つ。まもりきれば 袋は 空=出ない。
+// 1戦に 1回だけ・乱数なし・ため一撃には 一切 触れない。表を 空に すれば 従来と 一字一句 同じ。
+const KURA_TOOK={
+  tegami:{n:'おられた かみ',    v:'ひらいて よみあげた', cmd:'spell'}, // ことば→じゅもんを 2ターン ふさぐ(⚔2回で やぶれる)
+  hana:  {n:'ひとつの はな',    v:'そっと かざした',     heal:0.08},   // いのち→ぬしの HPが さいだいの 8% もどる
+  warai: {n:'ちいさな ともしび',v:'ふっと ともした',     cmd:'item'}   // わたす もの→どうぐぶくろを 2ターン ふさぐ
+};
 // 潜り『のこりびの ふかみ』: ラン状態はセーブしない(CH21_REPLAYと同じ一時変数方式)
 let FUKAMI=null,FUKAMI_GO=false,VOLGA_GO=false;
 let ED_REPLAY=null; // 締めを もういちど 見る(保存しない・'kage'|'maou')
