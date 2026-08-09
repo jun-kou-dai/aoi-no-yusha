@@ -4650,6 +4650,10 @@ function sfxDanger(){ // ドキドキ: HPが 25%(バーが 赤に なる 線と 
   note('sine',41,t,0.09,0.34,sfxBus);noiseHit(t,0.04,0.10,220,1.4);   // ドッ(87Hz=iPadでも 聞こえる)
   note('sine',38,t+0.17,0.11,0.26,sfxBus);noiseHit(t+0.17,0.04,0.08,190,1.4); // ドッ(73Hz・すこし よわく)
 }
+function sfxOsu(){ // 押す合図(SPEC_osu_aizu_20260809): しかけの窓が ひらいた 瞬間の「ここ!」。1窓1回・約0.2秒・sfxBus直結=音量系 不変
+  if(!actx)return;const t=actx.currentTime;
+  note('triangle',88,t,0.06,0.11,sfxBus);note('triangle',93,t+0.07,0.09,0.13,sfxBus);
+}
 function sfxHeavyHit(){ // ドキドキ: ため一撃・大技の 被弾(sfxHit=4層より 一まわり ふかい 地ひびき。ふだんの 一撃は 不変)
   if(!actx)return;const t=actx.currentTime;
   noiseHit(t,0.05,0.55,1900,2.5);noiseHit(t+0.015,0.32,0.5,340,1.1);
@@ -12050,6 +12054,7 @@ const SHIMA_PLAY={
 //    ★isles を 空にすれば 従来と 一字一句 同じ(2窓・台帳の行・褒美の 全部が 消える)。額の調整は amount の 数字 2つだけ。
 //    鍵=ch13c(最初の ぬしを 倒した)。鍵の前は 1Gも 出ない・カウンタも 進めない(知ってから 14回 まるごと もらえる)。
 //    保存は Game.hidden.hobi/hobiTold のみ(h15〜h22 と 同じ型=セーブの器は 不変・NG+では 持ち越さない)。
+let SHIMA_OSU=true; // 押す合図をひとつに(SPEC_osu_aizu_20260809): 案内箱の👆+窓びらきの合図音。false で v20260809_1416 と同一
 const SHIMA_HOBI={amount:[2000,5000],cap:2,
   isles:['kura','tani','hora','uta','yakata3','kazemachiNight','tokikasanebell']};
 function shimaHobiCount(){const hb=(Game.hidden&&Game.hidden.hobi)||{};let n=0;for(const m of SHIMA_HOBI.isles)n+=Math.min(SHIMA_HOBI.cap,hb[m]||0);return n;}
@@ -13256,18 +13261,19 @@ function drawShimaActionMark(x,y,label,tw,rx,ry){ // 7島共通: 金=いま押�
   ctx.save();
   ctx.strokeStyle='rgba(255,226,150,'+(0.72+0.24*pulse).toFixed(3)+')';ctx.lineWidth=Math.max(3,tw*0.055);
   ctx.beginPath();ctx.ellipse(x,y,rxx*(0.94+0.08*pulse),ryy*(0.94+0.08*pulse),0,0,Math.PI*2);ctx.stroke();
+  const disp=(typeof SHIMA_OSU!=='undefined'&&SHIMA_OSU?'👆 ':'')+label; // もくてきバー(金の枠+👆)と 同じ「押せるボタン」の記号(SPEC_osu_aizu_20260809)
   const fs=Math.max(15,Math.min(22,Math.round(tw*0.34)));ctx.font='bold '+fs+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-  const pad=10,bw=Math.min(W-16,ctx.measureText(label).width+pad*2),bh=fs+12;
+  const pad=10,bw=Math.min(W-16,ctx.measureText(disp).width+pad*2),bh=fs+12;
   let by=y-ryy-bh-12;if(by<104)by=y+ryy+12;
   const bx=Math.max(8,Math.min(W-bw-8,x-bw/2));
   ctx.fillStyle='rgba(10,15,30,0.92)';ctx.fillRect(bx,by,bw,bh);
   ctx.strokeStyle='rgba(255,226,150,0.95)';ctx.lineWidth=2;ctx.strokeRect(bx,by,bw,bh);
-  ctx.fillStyle='#ffe296';ctx.fillText(label,bx+bw/2,by+bh/2+1);
+  ctx.fillStyle='#ffe296';ctx.fillText(disp,bx+bw/2,by+bh/2+1);
   ctx.restore();
 }
 function shimaPlayActionHint(cam,st,sp){
   if(!cam||!st||!sp)return;
-  const tw=cam.TW,fi=shimaPlayFocusIndex(st,sp);let p=null,label='ここを タップ';
+  const tw=cam.TW,fi=shimaPlayFocusIndex(st,sp);let p=null,label='ここを タップ',fromBox=false;
   if(st.arm){
     if(sp.mode==='huda'&&st.arm.phase==='fly'&&!st.arm.dodged){p=shimaPlayHudaPos(cam,st,sp,0);label='タップして ひらり';}
     else if(sp.mode==='nomi'&&st.arm.phase==='suck'){ // ★的の いしぶみを さす=押す場所が 動く(くちは nomiMouthPt で 動かない)
@@ -13283,10 +13289,11 @@ function shimaPlayActionHint(cam,st,sp){
       const a=sp.anchors[fi],q=isoCtr(a.x,a.y);p={x:q.x,y:q.y-tw*0.18};label='タップして はたく';
     }
   }
-  if(!p&&fi>=0&&st.boxed[fi]){
+  if(!p&&fi>=0&&st.boxed[fi]){fromBox=true; // とりかえしマーク(常設)=窓びらきの合図は 鳴らさない
     const a=sp.anchors[fi],q=isoCtr(a.x,a.y);p={x:q.x,y:q.y-tw*(sp.mode==='mamori'||sp.mode==='zure'?(a.cy||0.3):sp.mode==='huda'||!sp.mode?0.18:0)};
     label=sp.mode==='huda'?'タップして はがす':sp.mode==='nomi'?'タップして うたいかえす':sp.mode==='tsumi'?'タップして くずす':sp.mode==='mamori'?'タップして はらう':sp.mode==='zure'?'タップして めくりもどす':'タップして とりかえす';
   }
+  if(typeof SHIMA_OSU!=='undefined'&&SHIMA_OSU&&p&&!fromBox&&st.arm&&!st.arm.osuCue){st.arm.osuCue=1;sfxOsu();} // 窓びらきの合図=1窓1回(osuCueは 非保存の st.arm 内)
   if(p)drawShimaActionMark(p.x,p.y,label,tw);
 }
 function shimaPlayDrawHuda(cam,st,sp){ // うそふだ(ほらふきじま)。紙=多角形と線だけ(勾配なし=描画負荷の掟)
