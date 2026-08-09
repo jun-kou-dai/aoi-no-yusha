@@ -906,7 +906,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260809_2016'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260809_2023'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -12187,6 +12187,9 @@ function shimaGoldDraw(cam){
       Game._goldPiles=rem;
       const pk=(Game._goldPoke&&TM-Game._goldPoke.t0<0.45)?Math.sin(TM*42)*cam.TW*0.05*(1-(TM-Game._goldPoke.t0)/0.45):0; // ちょっかいの ふるえ(SPEC_gold_tap3)
       for(let i=0;i<rem;i++){const q=isoCtr(pt.x+i*0.55,pt.y+i*0.28);drawGoldPile(cam,q.x+pk,q.y,i);}
+      {const stP=Game.shimaPlay; // 山の「押せる印」(SPEC_gold_tap3 §6): うでが 出ていない 待ち窓だけ=1画面で 光る 押し場所は 常に 1つ
+       if(rem>0&&stP&&stP.map===Game.mapId&&!stP.arm&&stP.stealsLeft>0&&typeof shimaGoldFeteOn==='function'&&!shimaGoldFeteOn()&&typeof drawShimaActionMark==='function'){
+         const q0=isoCtr(pt.x,pt.y);drawShimaActionMark(q0.x+pk,q0.y-cam.TW*0.30,'💰 タップして つつく',cam.TW);}}
     }
   }else Game._goldPiles=0;
   shimaGoldFeteDraw(cam); // 金の祭り(SPEC_gold_matsuri_20260809): 目撃者→金貨の雨→回るカウンタの 順で 後段に
