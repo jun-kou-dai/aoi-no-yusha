@@ -130,6 +130,9 @@ body{
 #ename{ font-size:clamp(13px,2.2vmin,17px); letter-spacing:.08em; }
 #fastbtn,#autobtn{ cursor:pointer; pointer-events:auto; font-size:clamp(11px,1.9vmin,14px); align-self:flex-start; opacity:.85; } /* .chipのpointer-events:noneを上書き=実タップ必須 */
 #fastbtn.on,#autobtn.on{ color:#ffd86b; border-color:rgba(255,216,107,.6); opacity:1; }
+#enamewrap,#bstat{ cursor:pointer; pointer-events:auto; position:relative; } /* パネル自体が 畳むボタン(SPEC_tatami_gold_20260809: 発注者「表示が邪魔。畳むとかできるよね」) */
+#ui-battle.btfold #weakclue,#ui-battle.btfold #eweak,#ui-battle.btfold #bproofhud,#ui-battle.btfold #weakrecord,#ui-battle.btfold #bgear{ display:none; }
+#bfoldmark{ position:absolute; right:7px; top:4px; font-size:11px; color:#ffe9b0; opacity:.8; pointer-events:none; }
 #enamewrap{ display:flex; flex-direction:column; gap:4px; min-width:120px; max-width:min(360px,100%); position:relative; }
 #ehpbar{ width:100%; height:6px; background:rgba(255,255,255,.16); border-radius:3px; overflow:hidden; }
 #ehpfill{ display:block; height:100%; width:100%; background:#8fd0a0; border-radius:3px; transition:width .25s ease, background .25s ease; }
@@ -794,7 +797,7 @@ body{
 
   <div id="ui-battle" class="ui">
     <div class="b-top">
-      <div class="chip glass" id="enamewrap"><div id="ename">スライム</div><div id="ehpbar"><i id="ehpfill"></i></div><div id="weakclue"></div><div id="eweak"></div><div id="bproofhud"></div><div id="weakrecord"></div></div>
+      <div class="chip glass" id="enamewrap"><div id="ename">スライム</div><div id="ehpbar"><i id="ehpfill"></i></div><div id="weakclue"></div><div id="eweak"></div><div id="bproofhud"></div><div id="weakrecord"></div><div id="bfoldmark">▾</div></div>
       <div class="chip glass" id="fastbtn">⚡ はやさ ×1</div>
       <div class="chip glass" id="autobtn">🤖 オート OFF</div>
       <div class="chip glass" id="bstat">
@@ -4654,6 +4657,11 @@ function sfxOsu(){ // 押す合図(SPEC_osu_aizu_20260809): しかけの窓が �
   if(!actx)return;const t=actx.currentTime;
   note('triangle',88,t,0.06,0.11,sfxBus);note('triangle',93,t+0.07,0.09,0.13,sfxBus);
 }
+function sfxGoldJingle(big){ // ゴールドの ごほうびの みじかい ファンファーレ(SPEC_tatami_gold_20260809)。約0.4秒・ピークは かいしん以下=騒々しくしない
+  if(!actx)return;const t=actx.currentTime;
+  [[76,0],[80,0.09],[83,0.18],[88,0.27]].forEach(q=>note('triangle',q[0],t+q[1],0.10,0.12,sfxBus));
+  if(big)[[95,0.38],[100,0.50]].forEach(q=>note('triangle',q[0],t+q[1],0.16,0.13,sfxBus));
+}
 function sfxHeavyHit(){ // ドキドキ: ため一撃・大技の 被弾(sfxHit=4層より 一まわり ふかい 地ひびき。ふだんの 一撃は 不変)
   if(!actx)return;const t=actx.currentTime;
   noiseHit(t,0.05,0.55,1900,2.5);noiseHit(t+0.015,0.32,0.5,340,1.1);
@@ -4779,6 +4787,7 @@ function weakClueText(foe){
   return 'すがたと うごきを よく みて、こうげきを ためそう';
 }
 function renderBattleWeakness(){
+  if(typeof applyBtFold==='function')applyBtFold(); // 畳みの記憶を 戦いごとに 復元(SPEC_tatami_gold_20260809)
   const bt=Game.bt;if(!bt)return;const id=foeId(bt.foe);if(!id)return;
   const c=document.getElementById('weakclue'),w=document.getElementById('eweak');
   if(c)c.innerHTML='<b>手がかり</b>'+weakClueText(bt.foe);
@@ -6238,6 +6247,15 @@ function toggleTalkOff(){
   toast(Game.talkOff?'はなしかけない モード。あるいても むらびとに はなしかけない（タップで えらべば はなせる）':'はなしかけ できるように もどした。');
   saveGame();
 }
+(function(){ // たたかいの情報を タップで 畳む(SPEC_tatami_gold_20260809)。パネル自体がボタン=チップは 増やさない
+  const ap=()=>{const on=!!(Game.hidden&&Game.hidden.btFold);battleUiEl.classList.toggle('btfold',on);
+    const m=document.getElementById('bfoldmark');if(m)m.textContent=on?'▸':'▾';};
+  window.applyBtFold=ap;
+  const tg=e=>{e.stopPropagation();if(!Game.hidden)return;Game.hidden.btFold=Game.hidden.btFold?0:1;sfxSel();ap();};
+  const en=document.getElementById('enamewrap'),bs=document.getElementById('bstat');
+  if(en)en.addEventListener('pointerdown',tg);
+  if(bs)bs.addEventListener('pointerdown',tg);
+})();
 (function(){const fb=document.getElementById('fastbtn');
   if(fb)fb.addEventListener('pointerdown',e=>{e.stopPropagation();
     Game.fastBattle=!Game.fastBattle;sfxSel();
@@ -12064,9 +12082,10 @@ function shimaHobiGive(mapId,x,y){
   const n=hb[mapId]||0;if(n>=SHIMA_HOBI.cap)return; // 打ち止め(押し返しの 演出は 既存のまま 出る=無反応には ならない)
   const amt=SHIMA_HOBI.amount[Math.min(n,SHIMA_HOBI.amount.length-1)]||0;
   Game.gold+=amt;hb[mapId]=n+1;updateBars(); // HUDの所持金も その場で 動かす(金の増減は updateBars を 呼ぶ 既存の型)
-  if(x!=null&&y!=null)popup(x,y,'+'+amt+'G',n?'crit':'sp'); // 2回目(打ち止め)は かいしんと 同じ 大きな金(crit=long縮小の 対象外)
+  if(x!=null&&y!=null){popup(x,y,'+'+amt+'G',n?'crit':'sp'); // 2回目(打ち止め)は かいしんと 同じ 大きな金(crit=long縮小の 対象外)
+    const gNow=Game.gold;setTimeout(()=>{try{popup(x,y+34,'ぜんぶで '+gNow+'G','sp');}catch(e){}},560);} // いま 何Gかを その場で(発注者 2026-08-09「今、なんゴルドとか、見せたら」)
   if(n)flash('#ffe9b0',0.28,0.7); // 2回目だけ 金の ひかり 1枚(ここぞの時だけ 大きく)
-  sfxCoin(!!n);
+  sfxCoin(!!n);sfxGoldJingle(!!n); // 音楽もつけて(同・ピークは かいしん以下)
   saveGame(); // 褒美は その場で 帳面へ(hidden は まるごと 保存される 既存の器)
 }
 function shimaPlaySpec(){return SHIMA_PLAY[Game.mapId]||null;}
@@ -20481,7 +20500,7 @@ async function victory(){
   }else if(ggold){
     Game.gold+=ggold;updateBars();
     popup(ep.x,ep.y+ep.s*14,'+'+ggold+' G','sp');
-    await say(ggold+'ゴールドを てにいれた！');
+    await say(ggold+'ゴールドを てにいれた！（ぜんぶで '+Game.gold+'G）');
   }
   if(nkFollowing()&&Game.hidden.ch10a&&!Game.hidden.ch10w){ // 章10 ためし: ともに 3たい
     Game.hidden.ch10bt=(Game.hidden.ch10bt||0)+1;
