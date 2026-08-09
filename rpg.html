@@ -906,7 +906,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260809_2100'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260809_2109'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -12166,7 +12166,7 @@ function shimaGoldPilePt(){ // 山の たもと(ぬしの となり)。ぬしが
   return {x:e.px+0.9,y:e.py+0.35};
 }
 function drawGoldPile(cam,x,y,seed){ // まる・楕円のみ(勾配なし=描画負荷の掟)
-  const s=cam.TW*0.42; // 主役の 大きさ(0.30では 小ぶりだった=実寸で 見て 直した)
+  const s=cam.TW*0.42*(1+0.035*Math.sin(TM*2.1+seed*1.7)); // 呼吸=触ったら 零れそう(SPEC_gold_tap3 §7)
   ctx.save();ctx.translate(x,y-cam.TW*0.10);
   ctx.fillStyle='rgba(8,14,28,0.30)';ctx.beginPath();ctx.ellipse(0,s*0.30,s*1.05,s*0.34,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#b8862e';ctx.beginPath();ctx.ellipse(0,s*0.18,s*0.95,s*0.40,0,0,Math.PI*2);ctx.fill();
@@ -12188,7 +12188,16 @@ function shimaGoldDraw(cam){
       const rem=SHIMA_HOBI.cap-(hb[Game.mapId]||0);
       Game._goldPiles=rem;
       const pk=(Game._goldPoke&&TM-Game._goldPoke.t0<0.45)?Math.sin(TM*42)*cam.TW*0.05*(1-(TM-Game._goldPoke.t0)/0.45):0; // ちょっかいの ふるえ(SPEC_gold_tap3)
-      for(let i=0;i<rem;i++){const q=isoCtr(pt.x+i*0.55,pt.y+i*0.28);drawGoldPile(cam,q.x+pk,q.y,i);}
+      for(let i=0;i<rem;i++){const q=isoCtr(pt.x+i*0.55,pt.y+i*0.28);drawGoldPile(cam,q.x+pk,q.y,i);
+        const ph=((TM*0.24+i*0.47)%1); // ちら見せ: 約4秒に 1枚、金貨が 顔を 出して 跳ねて もどる(SPEC_gold_tap3 §7・乱数なし)
+        if(ph<0.16){const u=ph/0.16,hj=Math.sin(Math.PI*u),cy=q.y-cam.TW*(0.30+0.42*hj),cx2=q.x+pk+cam.TW*(0.18+0.42*u)*(i%2?-1:1); // 横へ こぼれて もどる(輪や 看板と かぶらない)
+          const cr=Math.max(3,cam.TW*0.11);
+          ctx.save();ctx.fillStyle='#ffd86b';ctx.strokeStyle='rgba(150,104,26,0.9)';ctx.lineWidth=1.5;
+          ctx.beginPath();ctx.arc(cx2,cy,cr,0,Math.PI*2);ctx.fill();ctx.stroke();
+          ctx.fillStyle='rgba(255,246,214,0.9)';ctx.beginPath();ctx.arc(cx2-cr*0.3,cy-cr*0.32,cr*0.34,0,Math.PI*2);ctx.fill();
+          if(hj>0.86){ctx.strokeStyle='rgba(255,246,214,'+(0.9*(hj-0.86)/0.14).toFixed(2)+')';ctx.lineWidth=Math.max(1.5,cam.TW*0.03); // 頂点で きらり
+            ctx.beginPath();ctx.moveTo(cx2-cr*1.7,cy);ctx.lineTo(cx2+cr*1.7,cy);ctx.moveTo(cx2,cy-cr*1.7);ctx.lineTo(cx2,cy+cr*1.7);ctx.stroke();}
+          ctx.restore();}}
       {const stP=Game.shimaPlay; // 山の「押せる印」(SPEC_gold_tap3 §6): うでが 出ていない 待ち窓だけ=1画面で 光る 押し場所は 常に 1つ
        if(rem>0&&stP&&stP.map===Game.mapId&&!stP.arm&&stP.stealsLeft>0&&typeof shimaGoldFeteOn==='function'&&!shimaGoldFeteOn()&&typeof drawShimaActionMark==='function'){
          const q0=isoCtr(pt.x,pt.y);drawShimaActionMark(q0.x+pk,q0.y-cam.TW*0.30,'💰 タップして つつく',cam.TW);}}
