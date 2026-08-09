@@ -12079,7 +12079,10 @@ function shimaHobiCount(){const hb=(Game.hidden&&Game.hidden.hobi)||{};let n=0;f
 function shimaHobiGive(mapId,x,y){
   if(!Game.hidden||!Game.hidden.ch13c||SHIMA_HOBI.isles.indexOf(mapId)<0)return; // 鍵の前は 1Gも 出ない・カウンタも 進めない(発注者「知らない奴は もらえない」)
   const hb=Game.hidden.hobi=Game.hidden.hobi||{};
-  const n=hb[mapId]||0;if(n>=SHIMA_HOBI.cap)return; // 打ち止め(押し返しの 演出は 既存のまま 出る=無反応には ならない)
+  const n=hb[mapId]||0;
+  if(n>=SHIMA_HOBI.cap){ // 打ち止め(押し返しの 演出は 既存のまま 出る)。★無言に しない(発注者「機能がなくなっている」2026-08-09=0Gの わけを 画面に 出す)
+    if(x!=null&&y!=null)popup(x,y+34,'この しまの ゴールドは とりきった！','sp'); // +34=「はたきおとした！」と 重ねない(実画面で 確認)
+    return;}
   const amt=SHIMA_HOBI.amount[Math.min(n,SHIMA_HOBI.amount.length-1)]||0;
   Game.gold+=amt;hb[mapId]=n+1;updateBars(); // HUDの所持金も その場で 動かす(金の増減は updateBars を 呼ぶ 既存の型)
   if(x!=null&&y!=null){popup(x,y,'+'+amt+'G',n?'crit':'sp'); // 2回目(打ち止め)は かいしんと 同じ 大きな金(crit=long縮小の 対象外)
