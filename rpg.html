@@ -11927,6 +11927,7 @@ function drawFieldScene(){
   drawQuestBeacons(); // めあての 金の光柱も どのoverlayにも つぶされない
   drawShimaPlayShade(); // 島あそび中は 盤の常灯を沈め、「いま押す1個」をこの後段だけで立てる
   if(Game.kodama)drawKodama(); // こだまは めあての 金の柱に のまれないよう さいごに(章14)
+  if(typeof shimaGoldDraw==='function')shimaGoldDraw(Game.cam); // 金の山(SPEC_gold_shuyaku §3)。たに=shimaPlay無しでも 出る
   if(Game.shimaPlay)shimaPlayDraw(Game.cam); // ぬしの しかけ: うでと 箱も おなじ 後段(闇に つぶされない)
   drawChapterCard(); // しょうタイトルは さいじょうそう
   drawMinimap(); // ちいさな ちず（あかるい しまだけ・かいわちゅうは けす）
@@ -12098,6 +12099,8 @@ function shimaHobiGive(mapId,x,y){
     return;}
   const amt=SHIMA_HOBI.amount[Math.min(n,SHIMA_HOBI.amount.length-1)]||0;
   Game.gold+=amt;hb[mapId]=n+1;updateBars(); // HUDの所持金も その場で 動かす(金の増減は updateBars を 呼ぶ 既存の型)
+  {const ppG=(typeof shimaGoldPilePt==='function')?shimaGoldPilePt():null; // 山から 金貨が 勇者へ 飛ぶ(SPEC_gold_shuyaku §3)
+   if(ppG){Game._goldFx=Game._goldFx||[];for(let i=0;i<10;i++)Game._goldFx.push({fx:ppG.x,fy:ppG.y,tx:Game.p.tx,ty:Game.p.ty,t0:TM,delay:i*0.05,dur:0.55,h:(i%5)*0.08});}}
   if(x!=null&&y!=null){popup(x,y,'+'+amt+'G',n?'crit':'sp'); // 2回目(打ち止め)は かいしんと 同じ 大きな金(crit=long縮小の 対象外)
     puff(x,y-8,'rgba(255,222,120,.95)',24,170,0.9,{up:true,s0:2,s1:6}); // 金の はじけ(SPEC_gold_shuyaku_20260809)
     const gNow=Game.gold;setTimeout(()=>{try{popup(x,y+34,'ぜんぶで '+gNow+'G','sp');}catch(e){}},560);} // いま 何Gかを その場で(発注者 2026-08-09「今、なんゴルドとか、見せたら」)
@@ -12107,6 +12110,52 @@ function shimaHobiGive(mapId,x,y){
 }
 function shimaPlaySpec(){return SHIMA_PLAY[Game.mapId]||null;}
 function shimaPlayNushi(){const sp=shimaPlaySpec();return (sp&&Game.enemies)?Game.enemies.find(e=>(e.sp&&e.sp.id)===sp.nushi):null;}
+// ゴールドが 主役・第2弾「金の山」(SPEC_gold_shuyaku_20260809 §3): ぬしが ためこんだ 島の金が 盤の上に 見える。
+// のこり回数ぶん(2→1→0)・とりきれば 消える。押し返し成立で 山から 金貨が 勇者へ 飛ぶ(タイル座標=カメラ移動で 破綻しない)。
+const NUSHI_GOLD_ID={kura:'shimaikomu',tani:'mototadasu',hora:'makoto',uta:'wasurare',yakata3:'hitorijime',kazemachiNight:'shioarashi',tokikasanebell:'kiritoru'};
+function shimaGoldPilePt(){ // 山の たもと(ぬしの となり)。ぬしが 盤に いなければ null(山は 再戦の場の絵)
+  const id=NUSHI_GOLD_ID[Game.mapId];if(!id)return null;
+  const e=(Game.enemies||[]).find(x=>(x.sp&&x.sp.id)===id);if(!e)return null;
+  return {x:e.px+0.9,y:e.py+0.35};
+}
+function drawGoldPile(cam,x,y,seed){ // まる・楕円のみ(勾配なし=描画負荷の掟)
+  const s=cam.TW*0.42; // 主役の 大きさ(0.30では 小ぶりだった=実寸で 見て 直した)
+  ctx.save();ctx.translate(x,y-cam.TW*0.10);
+  ctx.fillStyle='rgba(8,14,28,0.30)';ctx.beginPath();ctx.ellipse(0,s*0.30,s*1.05,s*0.34,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#b8862e';ctx.beginPath();ctx.ellipse(0,s*0.18,s*0.95,s*0.40,0,0,Math.PI*2);ctx.fill();
+  const C=[[-0.45,0.02],[0.02,-0.08],[0.45,0.04],[-0.22,-0.30],[0.26,-0.30],[0,-0.52],[-0.50,-0.14],[0.50,-0.16]];
+  ctx.fillStyle='#ffd86b';ctx.strokeStyle='rgba(150,104,26,0.9)';ctx.lineWidth=1.5;
+  for(const cc of C){ctx.beginPath();ctx.ellipse(cc[0]*s,cc[1]*s,s*0.30,s*0.20,0,0,Math.PI*2);ctx.fill();ctx.stroke();}
+  const g=(Math.sin(TM*2.4+seed*2.1)+1)/2; // しずかな きらめき(常設は 濃度ひかえめ=v1502の裁定)
+  if(g>0.62){ctx.fillStyle='rgba(255,244,200,'+(0.5*(g-0.62)/0.38).toFixed(2)+')';
+    ctx.beginPath();ctx.arc(-s*0.10,-s*0.55,s*0.10,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(s*0.38,-s*0.20,s*0.07,0,Math.PI*2);ctx.fill();}
+  ctx.restore();
+}
+function shimaGoldDraw(cam){
+  if(typeof shimaHobiReady==='function'&&shimaHobiReady(Game.mapId)){
+    const pt=shimaGoldPilePt();
+    if(!pt)Game._goldPiles=0;
+    else{
+      const hb=(Game.hidden&&Game.hidden.hobi)||{};
+      const rem=SHIMA_HOBI.cap-(hb[Game.mapId]||0);
+      Game._goldPiles=rem;
+      for(let i=0;i<rem;i++){const q=isoCtr(pt.x+i*0.55,pt.y+i*0.28);drawGoldPile(cam,q.x,q.y,i);}
+    }
+  }else Game._goldPiles=0;
+  const fxA=Game._goldFx;if(!fxA||!fxA.length)return;
+  ctx.save();
+  for(let i=fxA.length-1;i>=0;i--){
+    const c2=fxA[i],k=(TM-c2.t0-c2.delay)/c2.dur;
+    if(k>=1){fxA.splice(i,1);continue;}
+    if(k<0)continue;
+    const a=isoCtr(c2.fx,c2.fy),b=isoCtr(c2.tx,c2.ty);
+    const x=lerp(a.x,b.x,k),y=lerp(a.y,b.y,k)-Math.sin(k*Math.PI)*cam.TW*(0.9+c2.h);
+    ctx.fillStyle='#ffd86b';ctx.strokeStyle='rgba(150,104,26,0.9)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(x,y-cam.TW*0.15,Math.max(2.5,cam.TW*0.055),0,Math.PI*2);ctx.fill();ctx.stroke();
+  }
+  ctx.restore();
+}
 function shimaPlayReady(){ // 発火条件: そろい済み+ぬしが盤上+かげ編でない(かげ狩り1体目が 同じ島・同じ敵)
   const sp=shimaPlaySpec();if(!sp)return false;
   if(NUSHI_REPLAY&&NUSHI_REPLAY.shin)return false;
