@@ -906,7 +906,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260809_1947'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260809_2016'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -12153,6 +12153,11 @@ function shimaPlayNushi(){const sp=shimaPlaySpec();return (sp&&Game.enemies)?Gam
 // ゴールドが 主役・第2弾「金の山」(SPEC_gold_shuyaku_20260809 §3): ぬしが ためこんだ 島の金が 盤の上に 見える。
 // のこり回数ぶん(2→1→0)・とりきれば 消える。押し返し成立で 山から 金貨が 勇者へ 飛ぶ(タイル座標=カメラ移動で 破綻しない)。
 const NUSHI_GOLD_ID={kura:'shimaikomu',tani:'mototadasu',hora:'makoto',uta:'wasurare',yakata3:'hitorijime',kazemachiNight:'shioarashi',tokikasanebell:'kiritoru'};
+function shimaGoldFeteOn(){ // 金の祭りの あいだ true=めあて・でぐちが ひっこむ 窓(SPEC_gold_focus_20260809・発注者「ゴールドが出ている時は、目当てとか出ちゃダメ」)
+  if(Game._goldFete&&TM-Game._goldFete.t0<2.4)return true;
+  if(Game._goldCnt)return true;
+  const fx=Game._goldFx;return !!(fx&&fx.length);
+}
 function shimaGoldPilePt(){ // 山の たもと(ぬしの となり)。ぬしが 盤に いなければ null(山は 再戦の場の絵)
   const id=NUSHI_GOLD_ID[Game.mapId];if(!id)return null;
   const e=(Game.enemies||[]).find(x=>(x.sp&&x.sp.id)===id);if(!e)return null;
@@ -17462,6 +17467,7 @@ function drawExitBeacons(){
   const wx=WORLDS[Game.mapId];
   if(!Game.cam||!Game.p)return;
   if(typeof shimaPlayActionOn==='function'&&shimaPlayActionOn())return; // 7島共通: いま押す1個だけを光らせ、終われば出口を自動復帰
+  if(typeof shimaGoldFeteOn==='function'&&shimaGoldFeteOn())return; // 金の祭りの あいだ でぐちも ひっこむ(SPEC_gold_focus_20260809)
   const dim=1;
   if(Game.mapId==='umi'&&Game.hidden.umichizu){ // うみのちず: たからの ありか
     for(const c of CHESTS){
@@ -17796,6 +17802,7 @@ async function questGuide(){
 function questBeaconTargets(){
   const h=Game.hidden,w=WORLDS[Game.mapId],out=[];
   if(!w)return out;
+  if(typeof shimaGoldFeteOn==='function'&&shimaGoldFeteOn())return out; // 金の祭りの あいだ めあては ひっこむ(柱も 吸着も。SPEC_gold_focus_20260809)
   if(NUSHI_REPLAY&&Game.mapId===NUSHI_REPLAY.map&&!NUSHI_REPLAY.shin&&typeof shimaPlayBusy==='function'&&shimaPlayBusy()&&typeof nushiReplayAlive==='function'&&nushiReplayAlive())return out; // 島あそびが先・めあては後(SPEC_shima_junjo_20260803)——ぬしを たおしたら 金柱は すぐ もどる(SPEC_kura_osubeki_20260803)
   const push=(x,y)=>out.push({x,y});
   const foeB=(pred)=>{for(const e of Game.enemies)if(e.def&&pred(e))push(Math.round(e.px),Math.round(e.py));};
