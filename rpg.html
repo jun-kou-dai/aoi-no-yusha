@@ -904,6 +904,27 @@ const cv=$('#cv');let ctx=cv.getContext('2d');
 const stage=$('#stage'), fxL=$('#fx'), flashEl=$('#flashfx'), fadeEl=$('#fade');
 const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talkskipEl=$('#talkskip'), cmdwinEl=$('#cmdwin'), mlistEl=$('#mlist'), mexitEl=$('#mexit'), mtitleEl=$('#mtitle');
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
+// 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
+// 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
+const BUILD_V='20260809_1800'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+let UPD_V=null;
+async function checkUpdate(){
+  try{
+    const t=await (await fetch('index.html?upd='+Date.now(),{cache:'no-store'})).text();
+    const m=t.match(/rpg\.html\?v=([0-9_]+)/);
+    if(m&&m[1]!==BUILD_V&&m[1]>BUILD_V)UPD_V=m[1];
+  }catch(e){}
+  if(UPD_V&&Game&&Game.scene==='field'&&!Game.battling&&!Game.talking&&!Game.transiting)showUpdateChip();
+}
+function showUpdateChip(){
+  if(document.getElementById('updchip')||!UPD_V)return;
+  const d=document.createElement('div');d.id='updchip';
+  d.textContent='✨ あたらしい 版が とどいた——タップで きろくして いれかえ';
+  d.style.cssText='position:absolute;left:50%;transform:translateX(-50%);bottom:86px;z-index:60;background:rgba(20,26,48,.95);color:#ffe9b0;border:2px solid rgba(255,216,107,.8);border-radius:12px;padding:9px 14px;font-size:13px;cursor:pointer;pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.4);';
+  d.addEventListener('pointerdown',e=>{e.stopPropagation();try{saveGame();}catch(e2){}location.replace(location.pathname+'?v='+UPD_V);});
+  document.body.appendChild(d);
+}
+setTimeout(checkUpdate,20000);setInterval(checkUpdate,180000);
 let W=0,H=0,TM=0;
 
 // ============================================================
@@ -4657,10 +4678,13 @@ function sfxOsu(){ // 押す合図(SPEC_osu_aizu_20260809): しかけの窓が �
   if(!actx)return;const t=actx.currentTime;
   note('triangle',88,t,0.06,0.11,sfxBus);note('triangle',93,t+0.07,0.09,0.13,sfxBus);
 }
-function sfxGoldJingle(big){ // ゴールドの ごほうびの みじかい ファンファーレ(SPEC_tatami_gold_20260809)。約0.4秒・ピークは かいしん以下=騒々しくしない
+function sfxGoldJingle(big){ // ゴールド獲得の 音(発注者「叩いたら、ゴールド獲得って、音が 出るんじゃないのか」2026-08-09)
+  // ここぞ=まわりの 曲を 一瞬 しずめて 差で 立てる(件3の掟)。初版は ピークが かいしんの16%=主役に 聞こえなかった→主役の 音量へ。
   if(!actx)return;const t=actx.currentTime;
-  [[76,0],[80,0.09],[83,0.18],[88,0.27]].forEach(q=>note('triangle',q[0],t+q[1],0.10,0.12,sfxBus));
-  if(big)[[95,0.38],[100,0.50]].forEach(q=>note('triangle',q[0],t+q[1],0.16,0.13,sfxBus));
+  duckMusic(0.5,0.55);
+  [[93,0,0.04],[98,0.05,0.04],[103,0.10,0.05]].forEach(q=>note('square',q[0],t+q[1],q[2],0.055,sfxBus)); // コインの じゃら(高く みじかく)
+  [[76,0.14],[80,0.23],[83,0.32],[88,0.41]].forEach(q=>note('triangle',q[0],t+q[1],0.13,0.26,sfxBus)); // ファンファーレ
+  if(big)[[95,0.54],[100,0.66]].forEach(q=>note('triangle',q[0],t+q[1],0.20,0.30,sfxBus)); // 2回目(+5000)は ひとまわり 上へ
 }
 function sfxHeavyHit(){ // ドキドキ: ため一撃・大技の 被弾(sfxHit=4層より 一まわり ふかい 地ひびき。ふだんの 一撃は 不変)
   if(!actx)return;const t=actx.currentTime;
@@ -8847,7 +8871,7 @@ function tamesuList(){
   // ゴールドの七ツ島(SPEC_shima_hobi_20260807): とっておきの秘密=鍵(ch13c)の前は 行ごと 無い(秘密が バレない)。14/14 で 行ごと 消える
   if(h.ch13c&&SHIMA_HOBI.isles.length){const _hb=shimaHobiCount(),_hbt=SHIMA_HOBI.isles.length*SHIMA_HOBI.cap;
    if(_hb<_hbt)out.push({id:'hobi',label:'💰 ゴールドの七ツ島（いま '+_hb+' / '+_hbt+'）',
-    line:'ぬしの しかけを じぶんの てで うまく おしかえすと、その ばで おかねが とびだす。\nひとつの しまで 2かいまで——2かいめが おおきい。',hobi:true});}
+    line:'ぬしの しかけを じぶんの てで うまく おしかえすと、その ばで おかねが とびだす。\nおおきな やまは ひとつの しまで 2かい——そのあとも すこしずつ とびだす。',hobi:true});}
   if(h.ch12c)out.push({id:'butai',label:'🎭 いちざの ぶたい ─ こだまと けいこする',
     line:'みなみひがしの あかい テントから ぶたいへ。だんちょうに たのめば、\n「ものがたりの こだま」と なんども けいこできる——きずも ついえも のこらぬ 手あわせじゃ。',at:{x:17,y:12}});
   if(h.ch14c)out.push({id:'tani',label:'🌿 やまびこのたに ─ にげる こだまを おいかける',
@@ -9451,7 +9475,7 @@ async function gunshiTalk(){
   if(SHIMA_HOBI.isles.length&&h.ch13c&&!h.hobiTold){
     h.hobiTold=true;
     await say('フクロ「……そなたにだけ、だれにも 言うて おらぬ ことを おしえよう。\nななつの しまの、とっておきの ひみつ じゃ。」');
-    await say('フクロ「しまで ぬしの しかけを、じぶんの てで うまく おしかえすと——\nその ばで おかねが とびだす。ひとつの しまで 2かいまで、2かいめが おおきい。\nなづけて『ゴールドの七ツ島』。しらぬ ものは、もらえぬ ぞ。」');
+    await say('フクロ「しまで ぬしの しかけを、じぶんの てで うまく おしかえすと——\nその ばで おかねが とびだす。おおきな やまは ひとつの しまで 2かい、2かいめが おおきい。\nそのあとも すこしずつ とびだす。なづけて『ゴールドの七ツ島』。しらぬ ものは、もらえぬ ぞ。」');
     saveGame();
   }
   // クリア後は まず「きょうの ひとすじ」(2026-07-27 一本道化)。📜で 従来の一覧へ
@@ -12079,13 +12103,12 @@ const SHIMA_PLAY={
 //    鍵=ch13c(最初の ぬしを 倒した)。鍵の前は 1Gも 出ない・カウンタも 進めない(知ってから 14回 まるごと もらえる)。
 //    保存は Game.hidden.hobi/hobiTold のみ(h15〜h22 と 同じ型=セーブの器は 不変・NG+では 持ち越さない)。
 let SHIMA_OSU=true; // 押す合図をひとつに(SPEC_osu_aizu_20260809): 案内箱の👆+窓びらきの合図音。false で v20260809_1416 と同一
-const SHIMA_HOBI={amount:[2000,5000],cap:2,
+const SHIMA_HOBI={amount:[2000,5000],cap:2,trickle:200, // trickle=3回目からの 毎回の 小さな 金(発注者「毎回 喜ばせろ」2026-08-09。0で 旧仕様=打ち止めに 戻る)
   isles:['kura','tani','hora','uta','yakata3','kazemachiNight','tokikasanebell']};
 function shimaHobiCount(){const hb=(Game.hidden&&Game.hidden.hobi)||{};let n=0;for(const m of SHIMA_HOBI.isles)n+=Math.min(SHIMA_HOBI.cap,hb[m]||0);return n;}
-function shimaHobiReady(mapId){ // この島に まだ 褒美が ねむっているか(💰の気配・鍵つき=SPEC_gold_shuyaku_20260809)
+function shimaHobiReady(mapId){ // 💰の気配(SPEC_gold_shuyaku §4): 成功した タップは 毎回 払うので、鍵(ch13c)さえ あれば 常時
   if(!Game.hidden||!Game.hidden.ch13c)return false;
-  if(SHIMA_HOBI.isles.indexOf(mapId)<0)return false;
-  const hb=Game.hidden.hobi||{};return (hb[mapId]||0)<SHIMA_HOBI.cap;
+  return SHIMA_HOBI.isles.indexOf(mapId)>=0&&((SHIMA_HOBI.trickle||0)>0||((Game.hidden.hobi||{})[mapId]||0)<SHIMA_HOBI.cap);
 }
 function shimaPlayCalm(){ // しかけが 動く あいだ=まものは 邪魔しない(こだま・スライムつかまえと 同じ型。boxedのこりでは 止めない=ぬしと すぐ 戦える)
   const st=Game.shimaPlay;return !!(st&&st.map===Game.mapId&&(st.stealsLeft>0||st.arm));
@@ -12094,18 +12117,20 @@ function shimaHobiGive(mapId,x,y){
   if(!Game.hidden||!Game.hidden.ch13c||SHIMA_HOBI.isles.indexOf(mapId)<0)return; // 鍵の前は 1Gも 出ない・カウンタも 進めない(発注者「知らない奴は もらえない」)
   const hb=Game.hidden.hobi=Game.hidden.hobi||{};
   const n=hb[mapId]||0;
-  if(n>=SHIMA_HOBI.cap){ // 打ち止め(押し返しの 演出は 既存のまま 出る)。★無言に しない(発注者「機能がなくなっている」2026-08-09=0Gの わけを 画面に 出す)
-    if(x!=null&&y!=null)popup(x,y+34,'この しまの ゴールドは とりきった！','sp'); // +34=「はたきおとした！」と 重ねない(実画面で 確認)
-    return;}
-  const amt=SHIMA_HOBI.amount[Math.min(n,SHIMA_HOBI.amount.length-1)]||0;
-  Game.gold+=amt;hb[mapId]=n+1;updateBars(); // HUDの所持金も その場で 動かす(金の増減は updateBars を 呼ぶ 既存の型)
+  // ★打ち止めは 廃止(SPEC_gold_shuyaku §4・発注者「そういう仕様じゃないの」2026-08-09): 成功した タップは 毎回 かならず ゴールド+音。
+  //   おおきな 山(2000/5000)は 2回まで・台帳のN/14も その勘定のまま。3回目からは 毎回 trickle(+200G)。trickle:0 で 旧仕様へ 戻る。
+  const big=n<SHIMA_HOBI.cap;
+  const amt=big?(SHIMA_HOBI.amount[Math.min(n,SHIMA_HOBI.amount.length-1)]||0):(SHIMA_HOBI.trickle||0);
+  if(!amt)return;
+  Game.gold+=amt;if(big)hb[mapId]=n+1;updateBars(); // HUDの所持金も その場で 動かす(金の増減は updateBars を 呼ぶ 既存の型)
   {const ppG=(typeof shimaGoldPilePt==='function')?shimaGoldPilePt():null; // 山から 金貨が 勇者へ 飛ぶ(SPEC_gold_shuyaku §3)
    if(ppG){Game._goldFx=Game._goldFx||[];for(let i=0;i<10;i++)Game._goldFx.push({fx:ppG.x,fy:ppG.y,tx:Game.p.tx,ty:Game.p.ty,t0:TM,delay:i*0.05,dur:0.55,h:(i%5)*0.08});}}
-  if(x!=null&&y!=null){popup(x,y,'+'+amt+'G',n?'crit':'sp'); // 2回目(打ち止め)は かいしんと 同じ 大きな金(crit=long縮小の 対象外)
+  const critMo=big&&n>0; // かいしん級の 大きな金は「おおきな 山の 2回目」だけ(trickleは ふつうの 金)
+  if(x!=null&&y!=null){popup(x,y,'+'+amt+'G',critMo?'crit':'sp'); // crit=long縮小の 対象外
     puff(x,y-8,'rgba(255,222,120,.95)',24,170,0.9,{up:true,s0:2,s1:6}); // 金の はじけ(SPEC_gold_shuyaku_20260809)
     const gNow=Game.gold;setTimeout(()=>{try{popup(x,y+34,'ぜんぶで '+gNow+'G','sp');}catch(e){}},560);} // いま 何Gかを その場で(発注者 2026-08-09「今、なんゴルドとか、見せたら」)
-  if(n)flash('#ffe9b0',0.28,0.7); // 2回目だけ 金の ひかり 1枚(ここぞの時だけ 大きく)
-  sfxCoin(!!n);sfxGoldJingle(!!n); // 音楽もつけて(同・ピークは かいしん以下)
+  if(critMo)flash('#ffe9b0',0.28,0.7); // 大きな金の 2回目だけ 金の ひかり 1枚(ここぞの時だけ 大きく)
+  sfxCoin(critMo);sfxGoldJingle(critMo); // 毎回 鳴る(音の約束)。大きい方は 2回目だけ
   saveGame(); // 褒美は その場で 帳面へ(hidden は まるごと 保存される 既存の器)
 }
 function shimaPlaySpec(){return SHIMA_PLAY[Game.mapId]||null;}
