@@ -17957,6 +17957,8 @@ async function runBattle(ref){
   if(foe===FOES.kiritoru&&!Game.bt.shin){ // ときずらし: あいている 場面の数だけ 開幕の芝居(SPEC_zure_20260803)
     Game.bt.zureOpen=(typeof shimaPlayOpenCount==='function')?shimaPlayOpenCount():null; // null=しかけが 動いていない→従来のまま
   }
+  {const moF=(typeof SHIMA_MOCHI!=='undefined')&&!Game.bt.shin&&Object.keys(SHIMA_MOCHI).find(k=>FOES[k]===foe); // しまの もちこみ(SPEC_shima_mochikomi_20260809)
+   if(moF)Game.bt.mochiTook=(typeof shimaPlayTookKinds==='function')?shimaPlayTookKinds():null;} // null=触れていない / []=まもりきった(くらの kuraTook と 同じ口)
   if(foe===FOES.shioarashi){
     Game.bt.ch18Pier=!!Game.hidden.ch18BuiltPier;
     Game.bt.ch18Shelter=!!Game.hidden.ch18BuiltShelter;
@@ -19710,6 +19712,28 @@ async function enemyAction(){
     await say('しまいこむものは ふくろから、しまの 「'+tk.n+'」を とりだし '+tk.v+'——'+tail);
     return;
   }
+  // しまの もちこみ(SPEC_shima_mochikomi_20260809): 島で 通した ものを、ぬしが 名指しで 戦いへ もちこむ(残り5島)。
+  // くらと 同じ型: 乱数なし=条件を みたした 最初の 手番で かならず 出る・1戦1回(mochiUsed)・まもりきり([])と 未訪(null)は 出ない。
+  // ★ときだけ return しない(かこみながら 斬る)=kiritoru本体と 同じ理由: 罰は どうぐを つかう子にしか 効かないので、
+  //   returnすると 連打だけの子が タダで 得をする(敗27.1%→11.7%=4.27シグマの 前例・2026-08-06)。
+  {const mo=(typeof SHIMA_MOCHI!=='undefined')&&SHIMA_MOCHI[foeId(bt.foe)];
+   const mk0=(mo&&bt.mochiTook&&bt.mochiTook.length)?bt.mochiTook[0]:null;
+   if(mo&&mk0&&!bt.shin&&!bt.mochiUsed&&!bt.charge&&bt.turn%3!==2
+      &&!(mo.eff==='soar'&&bt.soar)
+      &&!(mo.eff==='box'&&(bt.kuseBox||bt.jimeP===2))
+      &&!(mo.eff==='foam'&&bt.kuseFoam)
+      &&!(mo.eff==='sealItemCut'&&(bt.kuseSteal||bt.kuseCut))){
+     bt.mochiUsed=1;
+     sfxChest();shakeBattle(8,0.35);flash(mo.fl,0.3,0.6);
+     const eqMo=enemyPos();puff(eqMo.x,eqMo.y-eqMo.s*30,'rgba(214,178,120,.85)',18,150,0.9,{s0:2,s1:5});
+     if(mo.eff==='heal'){const hbMo=bt.hp,addMo=Math.max(1,Math.round(bt.mhp*mo.heal));bt.hp=Math.min(bt.mhp,bt.hp+addMo);popup(eqMo.x,eqMo.y-eqMo.s*70,'+'+(bt.hp-hbMo),'heal');}
+     else if(mo.eff==='soar'){bt.soar=true;}
+     else if(mo.eff==='box'){bt.kuseBox=1;}
+     else if(mo.eff==='foam'){bt.kuseFoam=2;const pcMo=playerChipPos();popup(pcMo.x,pcMo.y-24,'つつまれた！','sp');}
+     else if(mo.eff==='sealItemCut'){bt.kuseSteal={cmd:'item',hits:0,turns:2};bt.kuseStealVia='cut';const pcMo2=playerChipPos();popup(pcMo2.x,pcMo2.y-24,'きりとられた！','sp');}
+     await say(mo.say(mo.names[mk0]||mk0));
+     if(mo.eff!=='sealItemCut')return; // ときだけ かこみながら 斬る
+   }}
   if(kk==='steal'&&!bt.charge&&bt.turn%3!==2&&!bt.kuseSteal&&(bt.kuseStealN||0)<2&&((bt.kuseStealN||0)===0||Math.random()<0.4)){
     bt.kuseSteal={cmd:Math.random()<0.5?'item':'spell',hits:0,turns:2};
     bt.kuseStealN=(bt.kuseStealN||0)+1;
@@ -20086,6 +20110,21 @@ const KURA_TOOK={
   tegami:{n:'おられた かみ',    v:'ひらいて よみあげた', cmd:'spell'}, // ことば→じゅもんを 2ターン ふさぐ(⚔2回で やぶれる)
   hana:  {n:'ひとつの はな',    v:'そっと かざした',     heal:0.08},   // いのち→ぬしの HPが さいだいの 8% もどる
   warai: {n:'ちいさな ともしび',v:'ふっと ともした',     cmd:'item'}   // わたす もの→どうぐぶくろを 2ターン ふさぐ
+};
+// しまの もちこみ(SPEC_shima_mochikomi_20260809): 島で 通した ものを、ぬしが 名指しで 戦いへ もちこむ(残り5島・くらの KURA_TOOK と 同型)。
+// ★空に すれば 従来と 一字一句 同じ。効果は 既存機構の 再利用のみ(soar/heal/kuseBox/kuseFoam/kuseSteal+via'cut')=追加ダメージなし。
+// たには 入れない: こだまは かならず つかまる(通した状態が 構造に 無い)+島の動詞は こだまがえし癖で 戦いに 出ている。
+const SHIMA_MOCHI={
+  makoto:{eff:'soar',fl:'#f0ecdc',names:{niji:'にじの ほらばなし',hoshi:'ほしの ほらばなし',kaze:'かぜの ほらばなし'},
+    say:n=>'まことをせまるものは、はりつけた 「'+n+'」の ふだを ひらりと かかげた——\nつぎの こうげきは ふだが すいとって しまう！'},
+  wasurare:{eff:'heal',heal:0.08,fl:'#b89fd8',names:{komori:'こもりうた',hokake:'ほかけうた',ame:'あめごいうた'},
+    say:n=>'わすれられしものは、のみこんだ 「'+n+'」を ひとくち くちずさんだ——\nのどが うるおい、きずが すこし ふさがった！'},
+  hitorijime:{eff:'box',fl:'#c8a040',names:{hikari:'ひかりの もれる はこ',genpon:'げんぽんの やま'},
+    say:n=>'ひとりじめのものは、しまの 「'+n+'」に つみのこした はこを かかえてきた——\nめのまえに つみあげた！（はこが こうげきを うけとめる。⚔で くずせ！）'},
+  shioarashi:{eff:'foam',fl:'#9fd8e8',names:{Pier:'ふなつきば',Shelter:'かぜよけごや',Beacon:'かざみだい'},
+    say:n=>'しおあらしの むれは、しまの 「'+n+'」を つつんだ あわを もぎとり——\nゆうしゃへ なげつけた！（うでが おもい。ぼうぎょで はらえる！）'},
+  kiritoru:{eff:'sealItemCut',fl:'#e87ab0',names:{bird:'よどりの そら',light:'とうの あかり'},
+    say:n=>'きりとるものは、しまの 「'+n+'」に かぶせた べつの時の 紙を——\nゆうしゃの どうぐぶくろへ かぶせた！（⚔こうげき 2かいで きりくちを つなげば もどる！）'}
 };
 // 潜り『のこりびの ふかみ』: ラン状態はセーブしない(CH21_REPLAYと同じ一時変数方式)
 let FUKAMI=null,FUKAMI_GO=false,VOLGA_GO=false;
