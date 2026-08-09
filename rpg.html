@@ -9926,7 +9926,7 @@ function questTextCore(){
           if(!NUSHI_REPLAY.shin&&typeof shimaPlayBusy==='function'&&shimaPlayBusy()){ // 島あそびが先(SPEC_shima_junjo_20260803)
             const stB=Game.shimaPlay;
             if(stB&&stB.stealsLeft<=0&&!stB.arm)return 'もくてき：しかけの あとが のこって おる——ひかる ところを タップ'; // あとしまつの 声(SPEC_hobi_capword 続き・2026-08-09)
-            return 'もくてき：'+nm+'が しかけて きておる——タップで やりかえせ（しまが こたえる）';}
+            return 'もくてき：'+nm+'が しかけて きておる——'+((typeof shimaHobiReady==='function'&&shimaHobiReady(Game.mapId))?'💰':'')+'タップで やりかえせ（しまが こたえる）';}
           return 'もくてき：'+nm+'と '+(NUSHI_REPLAY.shin?'':'もういちど ')+'立ちあう（しまの おくに いる）';}
         // 倒したあと: ここに もう用は ない。出る道を 指す(2026-07-26 夕)
         // でぐちが 1つも 無い島(あらしのよる)も ある＝その時は どこでもドアを 案内する
@@ -10256,7 +10256,7 @@ function updateHunter(e,p,dt){
   const pd=Math.abs(p.tx-e.tx)+Math.abs(p.ty-e.ty);
   // 勝った あとの ひといき(2026-07-29): 追ってくる まものは 6マス先から 寄ってくるので、
   // 戦いの すぐあと 出口へ 歩く あいだに また つかまっていた。数歩ぶんだけ 追わない。
-  if(Game.huntCalm>0)e.alert=false;
+  if(Game.huntCalm>0||(typeof shimaPlayCalm==='function'&&shimaPlayCalm()))e.alert=false; // しかけ中も 気づかない(SPEC_gold_shuyaku_20260809)
   else if(!e.alert&&pd<6)e.alert=true; else if(e.alert&&pd>9)e.alert=false;
   if(e.alert){
     const sx=Math.sign(p.tx-e.tx), sy=Math.sign(p.ty-e.ty);
@@ -10620,6 +10620,8 @@ function updateField(dt){
       if(Game.cam){const q=isoCtr(TAMESU_AT.x,TAMESU_AT.y);tapMove(q.x,q.y-Game.cam.TH*0.45);}}
     if(Math.max(Math.abs(Game.p.tx-TAMESU_AT.x),Math.abs(Game.p.ty-TAMESU_AT.y))<=1){TAMESU_AT=null;Game._qt=null;}
   }
+  // ゴールドが主役(SPEC_gold_shuyaku_20260809): ぬしの しかけが 動く あいだ、ほかの まものは 邪魔しない(こだま・スライムつかまえと 同じ 1行の型)
+  if(Game.scene==='field'&&!Game.talking&&!Game.battling&&!Game.transiting&&typeof shimaPlayCalm==='function'&&shimaPlayCalm())Game.grace=Math.max(Game.grace,0.5);
   // やまびこ おいかけ(章14): となりまで 行くと こだまは 谷の むこうへ ひとはね。三たび はねたら つかれて とどまる=かならず つかまる
   if(Game.kodama&&Game.scene==='field'&&Game.mapId==='tani'&&!Game.talking&&!Game.battling&&!Game.transiting){
     const ko=Game.kodama;
@@ -12079,6 +12081,14 @@ let SHIMA_OSU=true; // 押す合図をひとつに(SPEC_osu_aizu_20260809): 案�
 const SHIMA_HOBI={amount:[2000,5000],cap:2,
   isles:['kura','tani','hora','uta','yakata3','kazemachiNight','tokikasanebell']};
 function shimaHobiCount(){const hb=(Game.hidden&&Game.hidden.hobi)||{};let n=0;for(const m of SHIMA_HOBI.isles)n+=Math.min(SHIMA_HOBI.cap,hb[m]||0);return n;}
+function shimaHobiReady(mapId){ // この島に まだ 褒美が ねむっているか(💰の気配・鍵つき=SPEC_gold_shuyaku_20260809)
+  if(!Game.hidden||!Game.hidden.ch13c)return false;
+  if(SHIMA_HOBI.isles.indexOf(mapId)<0)return false;
+  const hb=Game.hidden.hobi||{};return (hb[mapId]||0)<SHIMA_HOBI.cap;
+}
+function shimaPlayCalm(){ // しかけが 動く あいだ=まものは 邪魔しない(こだま・スライムつかまえと 同じ型。boxedのこりでは 止めない=ぬしと すぐ 戦える)
+  const st=Game.shimaPlay;return !!(st&&st.map===Game.mapId&&(st.stealsLeft>0||st.arm));
+}
 function shimaHobiGive(mapId,x,y){
   if(!Game.hidden||!Game.hidden.ch13c||SHIMA_HOBI.isles.indexOf(mapId)<0)return; // 鍵の前は 1Gも 出ない・カウンタも 進めない(発注者「知らない奴は もらえない」)
   const hb=Game.hidden.hobi=Game.hidden.hobi||{};
@@ -12089,6 +12099,7 @@ function shimaHobiGive(mapId,x,y){
   const amt=SHIMA_HOBI.amount[Math.min(n,SHIMA_HOBI.amount.length-1)]||0;
   Game.gold+=amt;hb[mapId]=n+1;updateBars(); // HUDの所持金も その場で 動かす(金の増減は updateBars を 呼ぶ 既存の型)
   if(x!=null&&y!=null){popup(x,y,'+'+amt+'G',n?'crit':'sp'); // 2回目(打ち止め)は かいしんと 同じ 大きな金(crit=long縮小の 対象外)
+    puff(x,y-8,'rgba(255,222,120,.95)',24,170,0.9,{up:true,s0:2,s1:6}); // 金の はじけ(SPEC_gold_shuyaku_20260809)
     const gNow=Game.gold;setTimeout(()=>{try{popup(x,y+34,'ぜんぶで '+gNow+'G','sp');}catch(e){}},560);} // いま 何Gかを その場で(発注者 2026-08-09「今、なんゴルドとか、見せたら」)
   if(n)flash('#ffe9b0',0.28,0.7); // 2回目だけ 金の ひかり 1枚(ここぞの時だけ 大きく)
   sfxCoin(!!n);sfxGoldJingle(!!n); // 音楽もつけて(同・ピークは かいしん以下)
@@ -13321,7 +13332,9 @@ function shimaPlayActionHint(cam,st,sp){
     label=sp.mode==='huda'?'タップして はがす':sp.mode==='nomi'?'タップして うたいかえす':sp.mode==='tsumi'?'タップして くずす':sp.mode==='mamori'?'タップして はらう':sp.mode==='zure'?'タップして めくりもどす':'タップして とりかえす';
   }
   if(typeof SHIMA_OSU!=='undefined'&&SHIMA_OSU&&p&&!fromBox&&st.arm&&!st.arm.osuCue){st.arm.osuCue=1;sfxOsu();} // 窓びらきの合図=1窓1回(osuCueは 非保存の st.arm 内)
-  if(p)drawShimaActionMark(p.x,p.y,label,tw);
+  if(p){const pkMo=(sp.mode==='huda'||sp.mode==='tsumi')?'box':'arm'; // 金の出る側(ほら=はがし・やかた=くずし/ほかは 窓)=SPEC_gold_shuyaku_20260809
+    const payMo=(typeof shimaHobiReady==='function')&&shimaHobiReady(Game.mapId)&&(pkMo==='box'?fromBox:(!fromBox&&!!st.arm));
+    drawShimaActionMark(p.x,p.y,(payMo?'💰 ':'')+label,tw);}
 }
 function shimaPlayDrawHuda(cam,st,sp){ // うそふだ(ほらふきじま)。紙=多角形と線だけ(勾配なし=描画負荷の掟)
   ctx.save();
@@ -16748,7 +16761,7 @@ function drawKodama(){ // にげる こだま=ひかりの たま。足もと基
   ctx.fillStyle=ko.tired?'#eaf8ff':'#bfe6ff';
   ctx.fillText('♪',0,-ts*0.44);
   ctx.restore();
-  drawShimaActionMark(c.x,fy-ts*0.44-fl-hop,ko.tired?'タップして つかまえる':'タップして おいかける',cam.TW);
+  drawShimaActionMark(c.x,fy-ts*0.44-fl-hop,((typeof shimaHobiReady==='function'&&shimaHobiReady('tani'))?'💰 ':'')+(ko.tired?'タップして つかまえる':'タップして おいかける'),cam.TW); // 💰=たにの 金の気配(SPEC_gold_shuyaku_20260809)
 }
 // ついてくる みちづれ（こどものかげ：ふわりと うかぶ 影の子）
 function drawMateField(){
