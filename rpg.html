@@ -9923,7 +9923,10 @@ function questTextCore(){
         const n=NUSHI_AGAIN.find(x=>x.id===NUSHI_REPLAY.id);
         const nm=NUSHI_REPLAY.shin?((KAGE[NUSHI_REPLAY.id]&&KAGE[NUSHI_REPLAY.id].kname)||'かげまとう ぬし'):((n&&String(n.label).split(' ─ ')[0])||'しまの ぬし');
         if(nushiReplayAlive()){
-          if(!NUSHI_REPLAY.shin&&typeof shimaPlayBusy==='function'&&shimaPlayBusy())return 'もくてき：'+nm+'が しかけて きておる——タップで やりかえせ（しまが こたえる）'; // 島あそびが先(SPEC_shima_junjo_20260803)
+          if(!NUSHI_REPLAY.shin&&typeof shimaPlayBusy==='function'&&shimaPlayBusy()){ // 島あそびが先(SPEC_shima_junjo_20260803)
+            const stB=Game.shimaPlay;
+            if(stB&&stB.stealsLeft<=0&&!stB.arm)return 'もくてき：しかけの あとが のこって おる——ひかる ところを タップ'; // あとしまつの 声(SPEC_hobi_capword 続き・2026-08-09)
+            return 'もくてき：'+nm+'が しかけて きておる——タップで やりかえせ（しまが こたえる）';}
           return 'もくてき：'+nm+'と '+(NUSHI_REPLAY.shin?'':'もういちど ')+'立ちあう（しまの おくに いる）';}
         // 倒したあと: ここに もう用は ない。出る道を 指す(2026-07-26 夕)
         // でぐちが 1つも 無い島(あらしのよる)も ある＝その時は どこでもドアを 案内する
@@ -12105,8 +12108,10 @@ function shimaPlayReady(){ // 発火条件: そろい済み+ぬしが盤上+か�
 }
 function shimaPlayBusy(){ // 2026-08-03 発注者「島遊びが先か、目当てが先か、ちゃんとしろよ」→ 島あそびが先・めあては後(SPEC_shima_junjo_20260803)
   // ぬしの しかけが まだ動く(のこり手数あり か 動作中)あいだ、再戦の金柱とバーは 順番を ゆずる。打ち止めで もどる。
+  // ★2026-08-09 発注者「なぜ、目当てと、お宝が一緒に出ているの」: しかけの あとしまつ(とりかえしの 箱=金の輪+👆)が
+  //   のこっている あいだも ゆずる=一度に 出す 声は 一つ(めあて⇔お宝の 同時を やめる)。回収は となりの 1タップ・罰なし。
   const st=Game.shimaPlay;
-  return !!(st&&st.map===Game.mapId&&(st.stealsLeft>0||st.arm));
+  return !!(st&&st.map===Game.mapId&&(st.stealsLeft>0||st.arm||(st.boxed&&st.boxed.some(Boolean))));
 }
 function shimaPlayTick(dt){
   const sp=shimaPlaySpec();
