@@ -3752,7 +3752,7 @@ function loadGame(){
 // ============================================================
 // サウンド（Web Audio API・全部コードで生成）
 // ============================================================
-let actx=null,master=null,musicIn=null,musLp=null,sfxBus=null,noiseBuf=null,echoIn=null,muted=false;
+let actx=null,master=null,musicIn=null,musLp=null,sfxBus=null,noiseBuf=null,echoIn=null,muted=false,musTense=null,musDuck=null; // musTense/musDuck=音で感情(SPEC_oto_kanjo_20260809)
 const mfreq=m=>440*Math.pow(2,(m-69)/12);
 function initAudio(){
   if(actx)return;
@@ -3761,7 +3761,9 @@ function initAudio(){
   const comp=actx.createDynamicsCompressor();
   comp.threshold.value=-14;comp.knee.value=24;comp.ratio.value=5;comp.attack.value=0.004;comp.release.value=0.22;
   master.connect(comp);comp.connect(actx.destination);
-  musLp=actx.createBiquadFilter();musLp.type='lowpass';musLp.frequency.value=3400;musLp.connect(master);
+  musLp=actx.createBiquadFilter();musLp.type='lowpass';musLp.frequency.value=3400;
+  musTense=actx.createGain();musDuck=actx.createGain(); // 音で感情(SPEC_oto_kanjo_20260809): ため中のくぐもり/ここぞのダック(曲だけが 通る。sfxBusは 従来どおり master 直結)
+  musLp.connect(musTense);musTense.connect(musDuck);musDuck.connect(master);
   musicIn=actx.createGain();musicIn.gain.value=1;musicIn.connect(musLp);
   // ホールリバーブ（生成インパルス応答のコンボルバー）
   const ir=actx.createBuffer(2,Math.floor(actx.sampleRate*1.7),actx.sampleRate);
@@ -4546,6 +4548,7 @@ function playSong(name){
 }
 function songTick(){
   if(!songDef||!actx)return;
+  audioMoodTick(); // ための くぐもり(状態駆動・曲が 鳴っている あいだだけ)
   const sd=60/songDef.bpm/(songDef.div||2);
   if(songNext<actx.currentTime-0.25){ // タブていし等で おくれたら 過去分は すてて いまの きょくいちへ あわせる（復帰時の一斉再生と負時刻例外の防止）
     const behind=Math.ceil((actx.currentTime-songNext)/sd);
@@ -4575,6 +4578,7 @@ function sfxHeal(){if(!actx)return;const t=actx.currentTime;[72,76,79,84].forEac
 function sfxLevel(){if(!actx)return;const t=actx.currentTime;[72,76,79,84,88].forEach((m,i)=>note('triangle',m,t+i*0.07,0.22,0.16,sfxBus));[76,79,84,88,91].forEach((m,i)=>note('triangle',m,t+0.4+i*0.07,0.26,0.14,sfxBus));}
 function sfxRun(){if(!actx)return;const t=actx.currentTime;[70,65,60,55].forEach((m,i)=>note('triangle',m,t+i*0.06,0.1,0.12,sfxBus));}
 function sfxCrit(){if(!actx)return;const t=actx.currentTime;
+  duckMusic(0.45,0.45); // かいしんの 瞬間だけ 曲が 一歩 さがる(音は 足さない=差で 立てる・SPEC_oto_kanjo §2-6)
   noiseHit(t,0.03,0.7,3600,3.5);noiseHit(t+0.01,0.14,0.55,5200,2.5);noiseHit(t+0.05,0.2,0.35,2600,1.6);
   note('square',98,t,0.07,0.1,sfxBus);note('square',103,t+0.05,0.12,0.09,sfxBus);
   note('sine',33,t+0.02,0.4,0.6,sfxBus);note('sine',26,t+0.06,0.5,0.5,sfxBus);}
@@ -4592,12 +4596,66 @@ function sfxEnc(){if(!actx)return;const t=actx.currentTime;
   o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+0.55);
   noiseHit(t,0.45,0.22,2400,0.7);}
 function sfxWin(){if(!actx)return;const t=actx.currentTime;
+  noiseHit(t,0.04,0.6,5200,3);noiseHit(t+0.02,0.4,0.42,600,1);note('sine',36,t,0.55,0.5,sfxBus); // とどめの きれつ+じひびき(65Hz)を 勝ちの ラッパの 下に(SPEC_oto_kanjo §2-7。呼び元=たおした 瞬間の 5箇所)
+  duckMusic(0.6,0.9);
   [[67,0,.12],[72,.13,.12],[76,.26,.12],[79,.39,.3],[76,.62,.1],[79,.74,.45]].forEach(n=>note('triangle',n[0],t+n[1],n[2],0.16,sfxBus));}
 function sfxBossDown(){if(!actx)return;const t=actx.currentTime;
   note('sine',30,t,1.6,0.5,sfxBus);noiseHit(t,1.2,0.5,300,0.6);noiseHit(t+0.2,1.6,0.3,3600,0.6);}
 function sfxOver(){if(!actx)return;const t=actx.currentTime;[55,52,48,43].forEach((m,i)=>note('triangle',m,t+i*0.45,0.5,0.16,sfxBus));}
 function sfxTone(m,dur){if(!actx)return;const t=actx.currentTime;note('sine',m,t,dur||0.5,0.16,sfxBus);note('triangle',m+12,t,(dur||0.5)*0.6,0.05,sfxBus);}
 function sfxChest(){if(!actx)return;const t=actx.currentTime;[[72,0],[76,0.09],[79,0.18],[84,0.27]].forEach(n=>note('triangle',n[0],t+n[1],0.18,0.14,sfxBus));}
+function sfxCoin(big){ // ゴールドの七ツ島の 褒美音: 高い2音(2回目は 3音め)。sfxChest と 同時に 鳴っても 濁らない 短さ(0.3秒以下)
+  if(!actx)return;const t=actx.currentTime;
+  note('triangle',88,t,0.09,big?0.15:0.11,sfxBus);note('triangle',93,t+0.07,big?0.2:0.13,big?0.17:0.11,sfxBus);
+  if(big){note('triangle',100,t+0.16,0.28,0.15,sfxBus);duckMusic(0.4,0.6);} // 2回目(5000G)は 曲も 一歩 さがる(ワクワク)
+}
+// ── 音で 感情を 作る(SPEC_oto_kanjo_20260809): ここぞの 7場面だけ。ふだんの 音・譜面・音量は 変えない ──
+function duckMusic(depth,hold){ // ここぞの 音の 瞬間、曲が 一歩 さがる(足すのでは なく まわりを しずめる)
+  if(!actx||!musDuck)return;const t=actx.currentTime;
+  musDuck.gain.cancelScheduledValues(t);
+  musDuck.gain.setTargetAtTime(Math.max(0.2,1-depth),t,0.015);
+  musDuck.gain.setTargetAtTime(1,t+(hold||0.5),0.3);
+}
+function audioMoodTick(){ // ための あいだだけ 曲が くぐもって 息を つめる(songTick=25msから よぶ・状態駆動=とけたら すっと もどる)
+  if(!actx||!musTense||!musLp)return;
+  const btM=(typeof Game!=='undefined'&&Game&&Game.scene==='battle')?Game.bt:null;
+  const tense=!!(btM&&btM.charge);
+  const tA=actx.currentTime;
+  musLp.frequency.setTargetAtTime(tense?1050:3400,tA,0.15);
+  musTense.gain.setTargetAtTime(tense?0.82:1,tA,0.15);
+}
+function sfxDread(){ // こわい: ぬし・ボス・かげとの 出あい(地鳴り+半音の うねり+落ちる 一すじ=ザコの 上昇笛と 正反対)
+  // ★低音は 55〜110Hzに 置く: 初版の 26〜37Hzは iPadの スピーカー(〜200Hzで 減衰)で ほぼ 消える(2026-08-09 実測後に 直した)
+  if(!actx)return;const t=actx.currentTime;
+  note('sine',33,t,0.85,0.30,sfxBus);note('sine',45,t,0.8,0.24,sfxBus);
+  note('sine',38,t,0.75,0.20,sfxBus);note('sine',39,t+0.05,0.7,0.18,sfxBus);
+  const o=actx.createOscillator(),g=actx.createGain();o.type='sawtooth';
+  o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(60,t+0.7);
+  g.gain.setValueAtTime(0.09,t);g.gain.exponentialRampToValueAtTime(0.0005,t+0.75);
+  o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+0.8);
+  noiseHit(t,0.7,0.15,180,0.8);
+  duckMusic(0.5,0.8);
+}
+function sfxEncNight(){ // こわい: 夜の まものとの 出あい(笛が ひくく とどまり、半音 さがる=ひやり)
+  if(!actx)return;const t=actx.currentTime;
+  const o=actx.createOscillator(),g=actx.createGain();o.type='square';
+  o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(560,t+0.4);
+  g.gain.setValueAtTime(0.11,t);g.gain.exponentialRampToValueAtTime(0.0005,t+0.52);
+  o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+0.55);
+  note('sine',44,t+0.06,0.5,0.22,sfxBus);note('sine',43,t+0.28,0.45,0.19,sfxBus); // 半音 さがる(103→98Hz=iPadでも 聞こえる 帯)
+  noiseHit(t,0.5,0.16,900,0.7);
+}
+function sfxDanger(){ // ドキドキ: HPが 25%(バーが 赤に なる 線と 同じ)を 切った・低HPの 手番の 節目(心の音 2拍・0.3秒)
+  if(!actx)return;const t=actx.currentTime;
+  note('sine',41,t,0.09,0.34,sfxBus);noiseHit(t,0.04,0.10,220,1.4);   // ドッ(87Hz=iPadでも 聞こえる)
+  note('sine',38,t+0.17,0.11,0.26,sfxBus);noiseHit(t+0.17,0.04,0.08,190,1.4); // ドッ(73Hz・すこし よわく)
+}
+function sfxHeavyHit(){ // ドキドキ: ため一撃・大技の 被弾(sfxHit=4層より 一まわり ふかい 地ひびき。ふだんの 一撃は 不変)
+  if(!actx)return;const t=actx.currentTime;
+  noiseHit(t,0.05,0.55,1900,2.5);noiseHit(t+0.015,0.32,0.5,340,1.1);
+  note('sine',43,t,0.42,0.46,sfxBus);note('sine',36,t+0.04,0.72,0.45,sfxBus);note('triangle',31,t+0.02,0.55,0.22,sfxBus); // 98/65/49Hz=体に あたる 帯
+  duckMusic(0.55,0.7);
+}
 function sfxMorning(){if(!actx)return;const t=actx.currentTime;[[88,0],[93,0.13],[91,0.32],[96,0.45],[100,0.62]].forEach(n=>note('triangle',n[0],t+n[1],0.2,0.10,sfxBus));}
 function sfxGira(){if(!actx)return;const t=actx.currentTime;
   const o=actx.createOscillator(),g=actx.createGain();o.type='sawtooth';
@@ -8104,6 +8162,7 @@ async function catchKodama(){
   ko.caught=true;Game.kodama=null;Game._qt=null;
   if(Game.cam){const q=isoCtr(ko.px,ko.py);puff(q.x,q.y,'rgba(190,232,255,.95)',22,130,1,{up:true,s0:2,s1:4});popup(q.x,q.y-16,'つかまえた！','sp');}
   sfxChest();flash('#d8e2ff',0.32,0.8);
+  {const qh=Game.cam?isoCtr(ko.px,ko.py):null;shimaHobiGive('tani',qh?qh.x:null,qh?qh.y+16:null);} // ゴールドの七ツ島(初回でも 再訪でも=ko.replay 分岐より 前)
   startTalk();
   if(ko.msg)await say(ko.msg);
   if(ko.replay){ // 再訪=もらうものは なにも 変わらない。こえを もう一度 きくだけ
@@ -8763,6 +8822,10 @@ function tamesuList(){
   if(h.ch13a){const _ht=HIDDENS.length,_hg=HIDDENS.filter(hd=>h[hd.key]).length;
    out.push({id:'takara',label:'🪙 しまの ほりだしもの（いま '+_hg+'/'+_ht+'）',
     line:'じめんが キラリと ひかる ところに、ほりだしものが ねむっておる。ふめば ひろえる。\nどの しまに のこって おるかは、☰メニューの「たびのメモ」にも でておる。',takara:true});}
+  // ゴールドの七ツ島(SPEC_shima_hobi_20260807): とっておきの秘密=鍵(ch13c)の前は 行ごと 無い(秘密が バレない)。14/14 で 行ごと 消える
+  if(h.ch13c&&SHIMA_HOBI.isles.length){const _hb=shimaHobiCount(),_hbt=SHIMA_HOBI.isles.length*SHIMA_HOBI.cap;
+   if(_hb<_hbt)out.push({id:'hobi',label:'💰 ゴールドの七ツ島（いま '+_hb+' / '+_hbt+'）',
+    line:'ぬしの しかけを じぶんの てで うまく おしかえすと、その ばで おかねが とびだす。\nひとつの しまで 2かいまで——2かいめが おおきい。',hobi:true});}
   if(h.ch12c)out.push({id:'butai',label:'🎭 いちざの ぶたい ─ こだまと けいこする',
     line:'みなみひがしの あかい テントから ぶたいへ。だんちょうに たのめば、\n「ものがたりの こだま」と なんども けいこできる——きずも ついえも のこらぬ 手あわせじゃ。',at:{x:17,y:12}});
   if(h.ch14c)out.push({id:'tani',label:'🌿 やまびこのたに ─ にげる こだまを おいかける',
@@ -9281,6 +9344,14 @@ async function gunshiTamesu(){
     else await say('フクロ「まだ みぬ しまにも ねむって おる。\nたびが すすんだら、また きくが よい。」');
     return;
   }
+  if(e.hobi){ // ゴールドの七ツ島: のこる島の名だけ ささやく(ほりだしものと 同じ物差し・場所は 明かさない)
+    const hbR=(Game.hidden&&Game.hidden.hobi)||{};
+    const remH=SHIMA_HOBI.isles.filter(m=>(hbR[m]||0)<SHIMA_HOBI.cap);
+    const remV=[...new Set(remH.filter(m=>Game.visited[m]).map(m=>MAPNAME[m]||m))];
+    if(remV.length)await say('フクロ「わたった ことの ある なかでは——\n「'+remV.slice(0,4).join('」「')+'」に、まだ おかねが ねむって おるようじゃ。」');
+    else await say('フクロ「まだ みぬ しまにも のこって おる。\nたびが すすんだら、また きくが よい。」');
+    return;
+  }
   if(e.kitaeru){ // つよくなる みち: そうび/たね/かせぎの3窓(各2行・2026-07-29)
     await say('フクロ「一つ、そうび。⚒ふねの「いちざの したく」(6000〜18000G)と、むらの みせの 二品(26000/28000G)。\nかげの 二はつめには 🛡したくの ころも(大技を へらす)が こたえじゃ。」');
     await say('フクロ「二つ、たね と こころ。⚒かじで ほしのてつ2つ+2000Gが ちから+3/まもり+2 になる。\n🔥ふかみの ふくろにも たねと てつが はいっておる。」');
@@ -9352,6 +9423,13 @@ async function gunshiTalk(){
     await say('フクロ「ほう。その あるきかた、たたかいを かさねた あし じゃな。\nわしは フクロ。むかし、ぐんしを しておった。」');
     await say('フクロ「ちからだけでは かてん。そうび、じゅもん、かせぎば——\nみたてが あれば、たたかいは さくせんに かわる。」');
     await say('フクロ「たまを めぐる たたかいを つづける そなたに、\nわしの ちえは いつでも ただで かす。えんりょは いらん。」');
+    saveGame();
+  }
+  // ゴールドの七ツ島(SPEC_shima_hobi_20260807): とっておきの秘密は フクロだけが 知っている(鍵=ch13c・一回きり)
+  if(SHIMA_HOBI.isles.length&&h.ch13c&&!h.hobiTold){
+    h.hobiTold=true;
+    await say('フクロ「……そなたにだけ、だれにも 言うて おらぬ ことを おしえよう。\nななつの しまの、とっておきの ひみつ じゃ。」');
+    await say('フクロ「しまで ぬしの しかけを、じぶんの てで うまく おしかえすと——\nその ばで おかねが とびだす。ひとつの しまで 2かいまで、2かいめが おおきい。\nなづけて『ゴールドの七ツ島』。しらぬ ものは、もらえぬ ぞ。」');
     saveGame();
   }
   // クリア後は まず「きょうの ひとすじ」(2026-07-27 一本道化)。📜で 従来の一覧へ
@@ -10819,7 +10897,11 @@ async function startEncounter(e){
   const p=Game.p;
   p.moving=null;p.bump=null;p.px=p.tx;p.py=p.ty;
   held.length=0;swipeVec=null;ptr=null;
-  stopSong();sfxEnc();
+  stopSong();
+  {const dfE=(e&&e.def)||{}; // 出あいの 音を 相手で 分ける(SPEC_oto_kanjo §2-1/2)。夜の式は 夜の印(v0834)と 同じ
+   if(dfE.boss||dfE.mboss)sfxDread();
+   else if(isNightNow()&&!dfE.stage)sfxEncNight();
+   else sfxEnc();}
   flash('#ffffff',0.5,0.22);await wait(0.05);
   flash('#ffffff',0.65,0.3);await wait(0.07);
   await fadeTo(1,0.16);
@@ -11964,6 +12046,24 @@ const SHIMA_PLAY={
     swerveAt:0.55, swerveDur:0.35 // 2回目だけ 切り取り線が べつの場面へ 移る(くらと同じ機構)。再照準の窓=1.6−0.55=1.05秒。swerveAt:99 で 従来と一字一句同じ
   }
 };
+// ── ゴールドの七ツ島(SPEC_shima_hobi_20260807・2026-08-09): 島の動詞を 自分の手で 成功させると その場で 金。
+//    ★isles を 空にすれば 従来と 一字一句 同じ(2窓・台帳の行・褒美の 全部が 消える)。額の調整は amount の 数字 2つだけ。
+//    鍵=ch13c(最初の ぬしを 倒した)。鍵の前は 1Gも 出ない・カウンタも 進めない(知ってから 14回 まるごと もらえる)。
+//    保存は Game.hidden.hobi/hobiTold のみ(h15〜h22 と 同じ型=セーブの器は 不変・NG+では 持ち越さない)。
+const SHIMA_HOBI={amount:[2000,5000],cap:2,
+  isles:['kura','tani','hora','uta','yakata3','kazemachiNight','tokikasanebell']};
+function shimaHobiCount(){const hb=(Game.hidden&&Game.hidden.hobi)||{};let n=0;for(const m of SHIMA_HOBI.isles)n+=Math.min(SHIMA_HOBI.cap,hb[m]||0);return n;}
+function shimaHobiGive(mapId,x,y){
+  if(!Game.hidden||!Game.hidden.ch13c||SHIMA_HOBI.isles.indexOf(mapId)<0)return; // 鍵の前は 1Gも 出ない・カウンタも 進めない(発注者「知らない奴は もらえない」)
+  const hb=Game.hidden.hobi=Game.hidden.hobi||{};
+  const n=hb[mapId]||0;if(n>=SHIMA_HOBI.cap)return; // 打ち止め(押し返しの 演出は 既存のまま 出る=無反応には ならない)
+  const amt=SHIMA_HOBI.amount[Math.min(n,SHIMA_HOBI.amount.length-1)]||0;
+  Game.gold+=amt;hb[mapId]=n+1;updateBars(); // HUDの所持金も その場で 動かす(金の増減は updateBars を 呼ぶ 既存の型)
+  if(x!=null&&y!=null)popup(x,y,'+'+amt+'G',n?'crit':'sp'); // 2回目(打ち止め)は かいしんと 同じ 大きな金(crit=long縮小の 対象外)
+  if(n)flash('#ffe9b0',0.28,0.7); // 2回目だけ 金の ひかり 1枚(ここぞの時だけ 大きく)
+  sfxCoin(!!n);
+  saveGame(); // 褒美は その場で 帳面へ(hidden は まるごと 保存される 既存の器)
+}
 function shimaPlaySpec(){return SHIMA_PLAY[Game.mapId]||null;}
 function shimaPlayNushi(){const sp=shimaPlaySpec();return (sp&&Game.enemies)?Game.enemies.find(e=>(e.sp&&e.sp.id)===sp.nushi):null;}
 function shimaPlayReady(){ // 発火条件: そろい済み+ぬしが盤上+かげ編でない(かげ狩り1体目が 同じ島・同じ敵)
@@ -12382,6 +12482,7 @@ function shimaPlayPeel(i){ // うそふだを はがす(タップ/会話到達�
   puff(q.x,q.y-cam.TW*0.18,'rgba(255,255,255,.95)',16,140,0.9,{up:true,s0:2,s1:4});
   popup(q.x,q.y-cam.TW*0.5,'ふだを はがした！','sp');
   sfxChest();flash('#e8f2ff',0.25,0.6);
+  shimaHobiGive(st.map,q.x,q.y-cam.TW*0.5+30); // ゴールドの七ツ島
   for(const c of (st.chips||[]))if(c.i===i){const cq=isoCtr(c.x,c.y);puff(cq.x,cq.y-cam.TW*0.15,'rgba(232,226,210,.85)',8,100,0.6,{s0:2,s1:3});} // かみきれも いっしょに ちる
   if(st.chips){st.chips=st.chips.filter(c=>c.i!==i);if(!st.chips.length)delete st.chips;}
   return true;
@@ -12439,6 +12540,7 @@ function nomiChoke(st,sp,cam){ // むせさせる: くちタップ / ねらわ�
   puff(mp.x,mp.y,'rgba(255,226,150,.95)',18,140,0.9,{up:true,s0:2,s1:4});
   popup(mp.x,mp.y-cam.TW*0.3,'むせた！','sp');
   sfxSlash();
+  shimaHobiGive(st.map,mp.x,mp.y-cam.TW*0.3+30); // ゴールドの七ツ島(阻止の側だけ=うたいかえしには 出さない)
   st.melody={notes:nomiMotif(sp,ai),i:0,t:0}; // もどる うたの おと
   nomiFlowNotes(st,sp,ai,mp,cam);
   return true;
@@ -12503,6 +12605,7 @@ function tsumiOpenOne(st,sp,i,cam){ // 塔を くずし切った=閉じ込めら
   puff(q.x,q.y-cam.TW*0.2,'rgba(255,238,180,.95)',20,150,1.0,{up:true,s0:2,s1:5});
   popup(q.x,q.y-cam.TW*0.6,'はこが ひらいた！','sp');
   sfxChest();flash('#ffeed0',0.25,0.6);
+  shimaHobiGive(st.map,q.x,q.y-cam.TW*0.6+30); // ゴールドの七ツ島(くずし切った時だけ=はたきや 勝利の 一斉ひらきでは 出ない)
 }
 function tsumiReleaseAll(st,sp){ // ぬしが ほどけ、塔が 全部はじける(flash1枚=静かな余韻の掟)
   const cam=Game.cam;if(!cam){for(let i=0;i<sp.anchors.length;i++){if(!st.boxed[i])continue;st.boxed[i]=false;st.towers[i]=0;
@@ -12703,6 +12806,7 @@ function mamoriRepel(st,sp,i){ // 号令: たてた ものが じぶんの持ち
   puff(fp.x,fp.y,'rgba(240,248,255,.95)',18,150,0.9,{up:true,s0:2,s1:4});
   popup(q.x,q.y-cam.TW*1.0,({Pier:'とあみが からめとった！',Shelter:'かぜが そらした！',Beacon:'ひが やきはらった！'})[sp.anchors[i].kind]||'まもった！','sp');
   sfxSlash();
+  if(!a.hobiG){a.hobiG=1;shimaHobiGive(st.map,q.x,q.y-cam.TW*1.0+30);} // ゴールドの七ツ島: 跳ね返り(a.rb)の 2度目の 号令と 合わせて 1投1回
   return true;
 }
 function mamoriHarai(i){ // 膜を はらう(タップ/会話到達の 両方から よぶ)。罰なし
@@ -13061,6 +13165,7 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
         puff(qZ.x,qZ.y-cam.TW*(aa.cy||0.3),'rgba(235,246,255,.95)',16,140,0.9,{up:true,s0:2,s1:4});
         popup(qZ.x,qZ.y-cam.TW*1.0,'さきに さわった！','sp');
         sfxSlash();
+        shimaHobiGive(st.map,qZ.x,qZ.y-cam.TW*1.0+30); // ゴールドの七ツ島(阻止の側だけ=めくりもどしには 出さない)
         return true;
       }
     }
@@ -13078,6 +13183,7 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
       puff(tip.x,tip.y,'rgba(255,226,150,.95)',20,140,0.9,{up:true,s0:2,s1:4});
       popup(tip.x,tip.y-14,'はたきおとした！','sp');
       sfxSlash();
+      shimaHobiGive(st.map,tip.x,tip.y+18); // ゴールドの七ツ島
       const nu=shimaPlayNushi();
       if(nu){const q=isoCtr(nu.px,nu.py);puff(q.x,q.y-cam.TW*0.8,'rgba(160,130,90,.8)',12,110,0.7,{s0:2,s1:4});}
       return true;
@@ -13089,6 +13195,7 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
       puff(tip.x,tip.y,'rgba(255,226,150,.95)',20,140,0.9,{up:true,s0:2,s1:4});
       popup(tip.x,tip.y-14,'はたきおとした！','sp');
       sfxSlash();
+      shimaHobiGive(st.map,tip.x,tip.y+18); // ゴールドの七ツ島(うでタップと 同じ 1回=phase が slapped に なれば もう一方は 通らない)
       const nuD=shimaPlayNushi();
       if(nuD){const qN=isoCtr(nuD.px,nuD.py);puff(qN.x,qN.y-cam.TW*0.8,'rgba(160,130,90,.8)',12,110,0.7,{s0:2,s1:4});}
       return true;
@@ -17777,7 +17884,8 @@ function preserveDodgeDrawRng(bt,heavy,physical,elemental){
 function hideParticlesFrom(start){for(let i=start;i<P.length;i++)P[i].noDraw=true;}
 function enemyImpactFeedback(bt,result,heavy,physical,elemental){
   if(result==='dodge'){bt.heroDodge=1;return;}
-  if(physical)sfxHit();
+  if(physical){if(heavy)sfxHeavyHit();else sfxHit();} // ため一撃・大技だけ ふかい 地ひびき(SPEC_oto_kanjo §2-4)
+  else if(heavy)duckMusic(0.5,0.6); // ほのお・せいこうの 大技は 固有の 音を 持つ=曲だけ さげる
   uiShake();bt.hitStop=0.06;
   // 炎・聖光は直前の固有shake(20/18)を維持する。ここで弱いshakeを上書きしない。メラ系は従来どおり通常shake。
   if(!elemental)shakeBattle(heavy?12:9,heavy?0.45:0.35);
@@ -18441,6 +18549,8 @@ function hoimiMichi(){const p=Game.p;return !!(p&&p.lv<4&&p.hp<=p.mhp*0.5&&p.mp>
 async function commandPhase(){
   const p=Game.p;
   while(true){
+    {const btD=Game.bt; // 低HPの あいだ、手番の 節目に 心の音 1回(サブメニューの 出入りでは 重ねない・常設ループは 作らない)
+     if(btD&&btD._dangerTurn!==btD.turn&&p.hp>0&&p.hp/p.mhp<=0.25){btD._dangerTurn=btD.turn;sfxDanger();}}
     if(Game.autoBattle)return autoDecide();
     const cmds=[{id:'fight',label:'たたかう'}]; // ななつへんげ: へんげを 1つでも おぼえたら コマンドに 立つ
     if(hengeCount()>0)cmds.push({id:'henge',label:'👹へんしん'+(Game.bt&&Game.bt.hengeUsed?'（つかった）':''),dis:!!(Game.bt&&Game.bt.hengeUsed)});
@@ -19849,6 +19959,7 @@ async function enemyAction(){
   enemyImpactFeedback(bt,impactResult,heavy,physical,fire||holy);
   let ukMp=0,nokoSaved=false;
   p.hp=Math.max(0,p.hp-d);
+  if(p.hp>0&&p.hp/p.mhp<=0.25&&(p.hp+d)/p.mhp>0.25)sfxDanger(); // 危機の門: HPバーが 赤に なる 線(25%)を 切った 瞬間(SPEC_oto_kanjo §2-5)
   if(p.hp<=0&&bt.nokoribiOn){bt.nokoribiOn=false;bt.nokoribiUsed=true;p.hp=1;nokoSaved=true;} // A案: のこりび=HP1で ふみとどまる
   Game.dmgTaken+=d;
   if(bt.uketome>0){bt.uketome--;const old=p.mp;p.mp=Math.min(p.mmp,p.mp+Math.min(6,Math.ceil(d*0.25)));ukMp=p.mp-old;}
@@ -25135,17 +25246,22 @@ function drawStageHero(s,t,bt){
   ctx.fillStyle='#e8bd55';ctx.beginPath();ctx.moveTo(s*14,-s*98);ctx.quadraticCurveTo(s*48,-s*138,s*58,-s*112);ctx.quadraticCurveTo(s*40,-s*113,s*21,-s*92);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.restore();
 }
+// 味方の 背の 物差し(SPEC_mate_size_20260809): 勇者の 高さ式と 同じ。
+// ★battleHeroStrikePoint と drawHeroBack に 同じ式の 複製が 2つ ある(接触点を 攻撃開始時に 固定する 設計意図つき+
+//   hero系の 契約(613/51/91/55)が 張りつく)ため あちらは 触らない。式を 変える時は 3箇所 同期。
+function battleAllyH(){const sm=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};return clamp(Math.min(H*0.29,W*(0.37+0.05*sm((W-320)/70))),110,190);}
 // せんとうの みちづれ（こどものかげ）：ゆうしゃの ひだりで いのる
 function drawMateBattle(bt){
   if(!Game.hidden||!Game.hidden.mate1)return;
   const M=MATES[mateKind()];
   const s=Math.min(H/720,W/900);
-  let mx=W*0.06, my=(bt.heroY==null?H*0.80:bt.heroY)+s*4;
+  const u=battleAllyH()*0.00662*M.sc; // 旧 s*0.62*M.sc(W/900割り)=勇者の30〜43%の背(2026-08-07実測)→勇者の60〜87%へ(SPEC_mate_size_20260809)
+  const wf=(M.eye==='slit')?1.16:1;
+  let mx=Math.max(W*0.06,u*34*wf), my=(bt.heroY==null?H*0.80:bt.heroY)+s*8; // 左端ガード=大きくした ぶん 画面外へ 出さない。+s*8=こどもと 同じ 接地(旧+s*4 は 7px 浮いた・実寸で 確認)
   if(bt.intro)mx-=bt.intro*bt.intro*W*0.30;
   const k=bt.pray?Math.sin(Math.min(1,bt.pray.t)*Math.PI):0;
   const hit=bt.mateHit>0?Math.sin(clamp(bt.mateHit,0,1)*Math.PI/2):0;
   const bob=Math.sin(bt.t*1.9+1.3)*s*2.0;
-  const u=s*0.62*M.sc;
   if(hit>0){ // かげのきしは勇者の肩前へ割り込み、自分の盾で攻撃線を止める
     const pt=battleHeroStrikePoint(bt,'shoulder');
     mx+=(pt.x-u*34-mx)*hit;my+=(pt.y+u*36-my)*hit; // 盾の右縁を接触点へ、頭と胴は勇者の外側へ残す
@@ -25153,8 +25269,7 @@ function drawMateBattle(bt){
   ctx.save();
   ctx.translate(mx,my+bob*0.5-k*s*8);
   ctx.rotate(-hit*0.10);
-  ctx.scale(1+hit,1+hit); // 割り込み時は2倍。小さな従者でも頭・盾・胴を一目で読める
-  const wf=(M.eye==='slit')?1.16:1;
+  ctx.scale(1+hit*0.35,1+hit*0.35); // 割り込みの 拡大は 1.35倍(旧×2は 従者が 小さかった 頃の 補正。土台を 大きくしたので 過大=SPEC_mate_size_20260809)
   if(k>0){ // いのりの ひかりばしら（こどものかげ）
     const gh=u*260;
     const lg=ctx.createLinearGradient(0,-gh,0,u*12);
@@ -25226,7 +25341,7 @@ function drawNkBattle(bt){
   const atkK=bt.nkAtk?Math.sin(Math.min(1,bt.nkAtk.t)*Math.PI):0;
   const prayK=bt.nkPray?Math.sin(Math.min(1,bt.nkPray.t)*Math.PI):0;
   const hitK=bt.nkHit>0?Math.sin(clamp(bt.nkHit,0,1)*Math.PI/2):0;
-  const u=s*0.60;
+  const u=battleAllyH()*0.0075; // 旧 s*0.60=勇者の48%の背(2026-08-07実測)→勇者の72%へ(SPEC_mate_size_20260809)
   ctx.save();
   ctx.translate(mx+atkK*W*0.05-hitK*W*0.028,my-(down?0:Math.abs(Math.sin(bt.t*2.2))*s*2)+hitK*s*5);
   ctx.rotate(-hitK*0.14);
