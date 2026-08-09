@@ -906,7 +906,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260809_2109'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_0822'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -12208,7 +12208,9 @@ function shimaGoldDraw(cam){
 function shimaGoldFeteDraw(cam){ // 祭りの オーバーレイ一式。ぜんぶ 一時変数(非保存)・entityは 触らない
   const T=cam.TW;
   const ft=Game._goldFete;
-  if(ft){const t=TM-ft.t0;
+  if(ft){
+    if(Game.talking&&TM-ft.t0>1.2)ft.t0=TM-1.2; // 祭りに つづく 会話(たにの こだまの こえ)の あいだ 窓を 保つ=読み終えて 0.8秒後に めあてが 戻る(発注者の実機の声 2026-08-09)
+    const t=TM-ft.t0;
     if(t>2.0)Game._goldFete=null;
     else{
       if(ft.lv&&t<1.15){ // ぬしの じたんだ(overlayのみ。大きな山だけ=+200で 毎回は くどい)
