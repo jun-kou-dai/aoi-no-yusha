@@ -921,7 +921,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1903'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1949'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -21000,6 +21000,8 @@ async function victory(){
       Game.hidden['henge'+kgV.no]=true;
       await hengeCutin({foe:kidV,fx:kgV.fx,name:kgV.kname.replace(' ','\n'),sub:'へんしんを おぼえた！',col:kgV.col});
       const hnV=hengeCount();
+      bt.kagebi={t:0,newIdx:kgV.no-13,lit:HENGE_KEYS.map(k=>!!Game.hidden[k]),cols:FUKAMI_ORDER.map(k=>KAGE[k].col),seven:hnV>=7,top:kagebiTop()}; // ななつのかげ火(SPEC_iwai §10): そらに かげ火の列(瞬間演出・保存キー0・topはUI実下端を1回だけ実測)
+      if(hnV<7)await say('そらの くらがりに、あたらしい かげ火が ともった——');
       toast('へんしん '+hnV+'/7'+(hnV>=7?' ——そろった！':''));
       if(hnV>=7)await say('ななつめの かげが きえた——そのとき、そらの おくで こえが した。\nヴォルガ『……そろえたか。ならば、わしの ところへ こい』');
       saveGame();
@@ -21535,6 +21537,7 @@ function updateBattle(dt){
   if(bt.nkAtk){bt.nkAtk.t+=dt*2.6;if(bt.nkAtk.t>=1)bt.nkAtk=null;} // こどもの つえの いちげき
   if(bt.critShock){bt.critShock.t+=dt*2.6;if(bt.critShock.t>=1)bt.critShock=null;} // かいしんの 金白リング
   if(bt.lvFete){bt.lvFete.t+=dt*0.62;if(bt.lvFete.t>=1)bt.lvFete=null;} // レベルアップの金の光条(SPEC_atsumeru 配信2)
+  if(bt.kagebi){const kbT=bt.kagebi;kbT.t+=dt;if(kbT.seven&&!kbT.dread&&kbT.t>=2.9){kbT.dread=1;try{sfxDread();}catch(e){}}if(kbT.t>=(kbT.seven?13:5.5))bt.kagebi=null;} // ななつのかげ火(SPEC_iwai §10): 寿命と 紫の完成の地鳴り1回
   if(bt.bossShock){bt.bossShock.t+=dt*2.0;if(bt.bossShock.t>=1)bt.bossShock=null;} // ボス登場の 地面波
   if(bt.cast){
     bt.cast.t+=dt;
@@ -21863,6 +21866,7 @@ function drawBattleScene(){
   drawKuseFoam(bt); // つつみ(章18): あわの膜は 勇者の まえ=つつまれて いるのが 見える
   drawKuseCut(bt);  // ときとめ(章19): かこみの 点線と きりとられた 紙は 勇者の まわり
   if(bt.lvFete)drawLvFete(bt); // レベルアップの光条は 勇者の まえ(SPEC_atsumeru 配信2・瞬間演出のみ)
+  if(bt.kagebi)drawKagebiFete(bt); // ななつのかげ火は 最前面(SPEC_iwai §10・7体目の 闇は 全画面)
   drawBattleFore(th.bokeh);
   ctx.restore();
   if(bt.foe.boss)bossFront(bt);
@@ -26046,6 +26050,101 @@ function drawLvFete(bt){ // レベルアップの 金の光条+のぼる粒(SPEC
     const k=(t*1.3+i*0.071)%1,px=cx+Math.sin(i*2.4)*u*66,py=hp.y-k*u*230;
     ctx.fillStyle='rgba(255,226,130,'+(a*(1-k)*0.9).toFixed(3)+')';
     ctx.beginPath();ctx.arc(px,py,Math.max(1.5,u*(3+(i%3)*2)*(1-k*0.5)),0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+// ななつのかげ火(SPEC_iwai §10): へんげ初回獲得の 瞬間だけ そらに 7つの かげ火(常設ゼロ・乱数ゼロ=sinゆらぎ)。
+// 7体目は 闇→紫の 燃えなおし→中央で ひとつの おおきな 紫の 炎=ヴォルガ(kagevolga #3a1440)の 予告。
+function kagebiTop(){ // 立てる瞬間に1回だけ: 上部の戦闘UI(敵パネル/勇者バー/カード)の下端を実測(930/たて390でDOMの背たけが違う)
+  let b=0;
+  try{const ub=document.getElementById('ui-battle');
+    if(ub)for(const el of ub.children){const r=el.getBoundingClientRect();
+      if(r.height>0&&r.top<H*0.5&&r.bottom<H*0.6)b=Math.max(b,r.bottom);}
+  }catch(e){}
+  return b||H*0.20;
+}
+function kagebiFlame(x,y,r,rgb,a,tt,ph){ // かげ火 1つ。芯は source-over(あかるい 島の そらでも 見える=ほしの教訓)・外光だけ lighter
+  if(a<=0.01||r<=0.1)return;
+  const sw=Math.sin(tt*4.6+ph)*r*0.14,hh=r*(2.05+0.20*Math.sin(tt*6.1+ph*1.7));
+  ctx.save();
+  ctx.globalCompositeOperation='lighter';
+  const g=ctx.createRadialGradient(x,y-r*0.5,r*0.2,x,y-r*0.5,r*2.6);
+  g.addColorStop(0,'rgba('+rgb+','+(0.30*a).toFixed(3)+')');
+  g.addColorStop(1,'rgba('+rgb+',0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y-r*0.5,r*2.6,0,Math.PI*2);ctx.fill();
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='rgba(16,8,22,'+(0.72*a).toFixed(3)+')'; // かげの ふち=くらい 縁どり
+  ctx.beginPath();ctx.moveTo(x,y-hh*1.06+sw*1.1);
+  ctx.quadraticCurveTo(x+r*0.98,y-hh*0.44,x+r*0.82,y);
+  ctx.quadraticCurveTo(x,y+r*0.34,x-r*0.82,y);
+  ctx.quadraticCurveTo(x-r*0.98,y-hh*0.44,x,y-hh*1.06+sw*1.1);ctx.fill();
+  ctx.fillStyle='rgba('+rgb+','+(0.95*a).toFixed(3)+')';
+  ctx.beginPath();ctx.moveTo(x,y-hh*0.92+sw);
+  ctx.quadraticCurveTo(x+r*0.80,y-hh*0.38,x+r*0.62,y);
+  ctx.quadraticCurveTo(x,y+r*0.26,x-r*0.62,y);
+  ctx.quadraticCurveTo(x-r*0.80,y-hh*0.38,x,y-hh*0.92+sw);ctx.fill();
+  ctx.fillStyle='rgba(255,244,214,'+(0.85*a).toFixed(3)+')'; // 芯の しろ
+  ctx.beginPath();ctx.moveTo(x,y-hh*0.44+sw*0.6);
+  ctx.quadraticCurveTo(x+r*0.30,y-hh*0.16,x+r*0.24,y-r*0.06);
+  ctx.quadraticCurveTo(x,y+r*0.14,x-r*0.24,y-r*0.06);
+  ctx.quadraticCurveTo(x-r*0.30,y-hh*0.16,x,y-hh*0.44+sw*0.6);ctx.fill();
+  ctx.restore();
+}
+function drawKagebiFete(bt){
+  const kb=bt.kagebi;if(!kb)return;
+  const t=kb.t,life=kb.seven?13:5.5;
+  const fade=Math.max(0,Math.min(1,Math.min(t/0.4,(life-t)/1.0)));
+  if(fade<=0)return;
+  const gap=Math.min(W*0.115,112),r0=gap*0.30,y0=Math.min(H*0.40,(kb.top||H*0.20)+r0*2.4+10); // そらの帯=上部UIの実下端(kb.top)の すぐ下(930/たて390の実画面で調整)
+  ctx.save();
+  if(!kb.seven){
+    for(let i=0;i<7;i++){
+      const x=W/2+(i-3)*gap;
+      if(!kb.lit[i]){ // まだの 場所=消し炭の 点(のこりが 数えられる。夜空に とけない よう 光る縁)
+        ctx.fillStyle='rgba(30,24,42,'+(0.75*fade).toFixed(3)+')';
+        ctx.beginPath();ctx.arc(x,y0,r0*0.32,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='rgba(158,146,182,'+(0.6*fade).toFixed(3)+')';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(x,y0,r0*0.32,0,Math.PI*2);ctx.stroke();
+        continue;
+      }
+      let sc=1;
+      if(i===kb.newIdx){ // あたらしい 1つ=ぽっ、と おくれて(オーバーシュート)
+        const k=Math.max(0,Math.min(1,(t-0.35)/0.45));
+        if(k<=0)continue;
+        sc=k<0.62?k/0.62*1.28:1.28-(k-0.62)/0.38*0.28;
+      }
+      kagebiFlame(x,y0,r0*sc,hexToRgbStr(kb.cols[i]),fade,t,i*1.9);
+    }
+    ctx.restore();return;
+  }
+  const VIO='162,100,140'; // VOLGA_TINTS の あかるい はし=そらでも 見える 紫
+  const dark=t<0.6?0:t<1.1?(t-0.6)/0.5:1;
+  const darkA=(t<3.6?0.55*dark:Math.max(0.35,0.55-(t-3.6)*0.1))*fade;
+  if(darkA>0.005){ctx.fillStyle='rgba(6,3,12,'+darkA.toFixed(3)+')';ctx.fillRect(-14,-14,W+28,H+28);} // 闇(最前面の板)
+  const gather=Math.max(0,Math.min(1,(t-2.8)/0.8)),gs=gather*gather;
+  for(let i=0;i<7;i++){
+    const x0=W/2+(i-3)*gap,x=x0+(W/2-x0)*gs;
+    if(t<0.6){ // 7つ ともる(7つ目は ぽっ)
+      let sc=1;
+      if(i===kb.newIdx){const k=Math.min(1,t/0.45);sc=k<0.62?k/0.62*1.28:1.28-(k-0.62)/0.38*0.28;}
+      kagebiFlame(x0,y0,r0*sc,hexToRgbStr(kb.cols[i]),fade,t,i*1.9);
+    }else if(t<1.1){ // ふっ、と ぜんぶ きえる
+      const k=1-(t-0.6)/0.5;
+      if(k>0.03)kagebiFlame(x0,y0,r0*k,hexToRgbStr(kb.cols[i]),fade*k,t,i*1.9);
+    }else{ // はしから 順に 紫で もえなおす(あつまるときは すこし おりる)
+      const bk=Math.max(0,Math.min(1,(t-1.15-i*0.22)/0.24));
+      if(bk<=0)continue;
+      const yG2=y0+(Math.max(y0,H*0.34)-y0)*gs;
+      const sc=(bk<0.6?bk/0.6*1.22:1.22-(bk-0.6)/0.4*0.22)*(1-gs*0.55);
+      kagebiFlame(x,yG2,r0*sc,VIO,fade*Math.min(1,bk*1.4)*(1-gs*0.4),t,i*1.9);
+    }
+  }
+  if(gather>0){ // あつまりながら すこし おりてきて、ひとつの おおきな 紫の 炎に(バーの下の そらの帯で 燃え上がる)
+    const yG=y0+(Math.max(y0,H*0.34)-y0)*gs,big=r0*(1.0+gs*1.2);
+    kagebiFlame(W/2,yG,big,VIO,fade*Math.min(1,gather*1.6),t,0.7);
+    if(gs>0.9){const rw=(t*0.9)%1;
+      ctx.strokeStyle='rgba('+VIO+','+(0.5*(1-rw)*fade).toFixed(3)+')';ctx.lineWidth=3;
+      ctx.beginPath();ctx.ellipse(W/2,yG,big*(1.4+rw*2.2),big*(0.5+rw*0.8),0,0,Math.PI*2);ctx.stroke();}
   }
   ctx.restore();
 }
