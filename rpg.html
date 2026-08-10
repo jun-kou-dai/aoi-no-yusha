@@ -907,7 +907,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1505'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1531'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3672,14 +3672,10 @@ function openJumon(mode,text){
   if(typeof sfxSel==='function')sfxSel();
 }
 function closeJumon(){const w=document.getElementById('jumonwin');if(w)w.classList.remove('show');Game.jumonOpen=false;}
-// きろくボタンのメニュー(きろく/じゅもん)。X・Escキーの クイックきろくは 従来どおり fieldSave 直
+// 2026-08-10 発注者「早く消せよ」——このメニューは じゅもん行の ために 作られたもの。行ごと やめて 直きろくへ(タップ1回 減る)
 async function fieldRecordMenu(){
-  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame||!Game.p)return; // minigame中は開かない(talkKing同列)
-  startTalk();sfxSel();
-  const c=await ask([{id:'save',label:'きろくする'},{id:'jumon',label:'ふっかつのじゅもんを きく'},{id:'back',label:'もどる'}],'きろく');
-  endTalk();
-  if(c==='save'){saveGame();sfxOk();toast('ぼうけんのしょに きろくした！');}
-  else if(c==='jumon'){saveGame();const t=await makeJumon();openJumon('view',t);}
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame||!Game.p)return; // minigame中は きかない(talkKing同列)
+  saveGame();sfxOk();toast('ぼうけんのしょに きろくした！');
 }
 function hasSave(n){try{return!!localStorage.getItem(n?('aoYushaSave'+n):saveKey());}catch(e){return false;}}
 function hasAnySave(){return hasSave(1)||hasSave(2)||hasSave(3);}
