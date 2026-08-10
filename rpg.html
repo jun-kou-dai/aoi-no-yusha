@@ -921,7 +921,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1853'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1903'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -4761,6 +4761,25 @@ function sfxWin(tier){if(!actx)return;const lv=tier|0,t=actx.currentTime+(lv>=2?
   [72,76,79,84].forEach(m=>playInst('brass',m,t+6.55,0.9,0.11));musDrum(1,t+6.55,0.5,33);note('sine',36,t+6.55,0.9,0.4,sfxBus); // 終止の和音
 }
 function winTier(f){return f===FOES.kagevolga?3:f===FOES.hajimarazu?2:(f&&f.mboss)?1:0;} // かちどきの階段: 勝ちの重さ(3=ヴォルガ級/2=大ボス/1=ぬし段mboss/0=ザコ)。けいこ(monoecho)・ぶたい(stage)は呼び元が引数なし固定=従来の音
+function sfxWinNigori(){ // にごるファンファーレ(SPEC_iwai §9): 勝ちの音が 途中から 腐って 止まり、地鳴りへ。かげ編開幕の 一回きり+台帳の 見返し
+  if(!actx)return;const t=actx.currentTime;
+  [[67,0,.12],[72,.13,.12],[76,.26,.12]].forEach(n=>note('triangle',n[0],t+n[1],n[2],0.16,sfxBus)); // 頭は 勝ちの音と 同じ 3音(記号の 借用)
+  {const o=actx.createOscillator(),g=actx.createGain();o.type='triangle'; // 4音目の ソが 崩れ おちる
+   o.frequency.setValueAtTime(mfreq(79),t+0.39);o.frequency.exponentialRampToValueAtTime(mfreq(73),t+0.95);
+   g.gain.setValueAtTime(0,t+0.39);g.gain.linearRampToValueAtTime(0.17,t+0.42);g.gain.exponentialRampToValueAtTime(0.0005,t+1.0);
+   o.connect(g);g.connect(sfxBus);o.start(t+0.39);o.stop(t+1.05);}
+  {const o=actx.createOscillator(),g=actx.createGain();o.type='triangle'; // 半音下の 重ね=にごり
+   o.frequency.setValueAtTime(mfreq(78),t+0.5);o.frequency.exponentialRampToValueAtTime(mfreq(70),t+0.95);
+   g.gain.setValueAtTime(0,t+0.5);g.gain.linearRampToValueAtTime(0.12,t+0.55);g.gain.exponentialRampToValueAtTime(0.0005,t+1.0);
+   o.connect(g);g.connect(sfxBus);o.start(t+0.5);o.stop(t+1.05);}
+  noiseHit(t+1.02,0.06,0.5,900,2); // ぷつっ(切断)→静寂
+  note('sine',33,t+1.6,1.1,0.30,sfxBus);note('sine',38,t+1.65,1.0,0.22,sfxBus); // 地鳴り(55〜110Hz=iPad帯)
+  noiseHit(t+1.6,0.9,0.16,180,0.8);
+  {const o=actx.createOscillator(),g=actx.createGain();o.type='sawtooth';
+   o.frequency.setValueAtTime(240,t+1.6);o.frequency.exponentialRampToValueAtTime(55,t+2.4);
+   g.gain.setValueAtTime(0.08,t+1.6);g.gain.exponentialRampToValueAtTime(0.0005,t+2.5);
+   o.connect(g);g.connect(sfxBus);o.start(t+1.6);o.stop(t+2.55);}
+}
 function sfxBossDown(){if(!actx)return;const t=actx.currentTime;
   note('sine',30,t,1.6,0.5,sfxBus);noiseHit(t,1.2,0.5,300,0.6);noiseHit(t+0.2,1.6,0.3,3600,0.6);}
 function sfxOver(){if(!actx)return;const t=actx.currentTime;[55,52,48,43].forEach((m,i)=>note('triangle',m,t+i*0.45,0.5,0.16,sfxBus));}
@@ -9092,6 +9111,8 @@ function tamesuList(){
   {const _eds=(h.kageVolgaDown?1:0)+(h.ch21c?1:0);
    if(_eds)out.push({id:'ending',label:'📖 あの おわりを もういちど 見る（'+_eds+'）',
      line:'たたかわずとも、あの ひの おわりは いつでも 見られる。\nどれを 見るか えらぶが よい。',ending:true});}
+  if(h.kageOpening)out.push({id:'kageop',label:'🌑 にごった そらの はじまりを もういちど みる',
+    line:'あの ひ、そらが あかぐろく そまった——わすれぬ うちに、もういちど。',kageop:true}); // SPEC_iwai §9(開幕済みセーブへの 見返しの 道)
   if(h.kageOpening)out.push({id:'kitaeru',label:'💪 つよくなる みち ─ レベル上限の あとに のびる 三つ',
     line:'レベルは '+maxLvNow()+'で うちどめ——その あとは 三つで のびる。きいて いくが よい。',kitaeru:true}); // 2026-07-29 発注者「お金稼ぎや装備をちゃんと教えないと」
   if(h.kageOpening){const _hn=hengeCount(); // ななつへんげ(2026-07-28)
@@ -9277,8 +9298,11 @@ function hengeClose(){const w=document.getElementById('hengewrap');if(w){w.style
 async function kageOpeningScene(){
   if(Game.talking||Game.battling||Game.transiting||Game.minigame)return;
   Game.hidden.kageOpening=true; // 先に立てる=多重発火防止
+  await kageOpeningPlay();
+}
+async function kageOpeningPlay(){ // 中身の 分離=開幕済みセーブの 見返し(SPEC_iwai §9・台帳の 🌑行)から も 呼ぶ
   startTalk();
-  sfxEnc();flash('#3a0a12',0.8,1.6);Game.fieldShake=10;
+  sfxWinNigori();flash('#3a0a12',0.8,1.6);Game.fieldShake=10; // にごるファンファーレ(旧sfxEnc)=勝ちの音が 腐って 地鳴りへ
   await say('——そらが きゅうに あかぐろく そまった。');
   await hengeCutin({name:'——ヴォルガ。\nかえってきたぞ',sub:'そらの おくから、わらいごえが ふってくる',col:'#e83a3a'});
   if(nkFollowing())await say('こども「ちょうめんに、かってに あたらしい しょうが かきはじめられてる…！」');
@@ -9624,7 +9648,7 @@ const TANA=[ // たなの ならびが 答え: うえほど のこりの ある 
   {id:'atsume',label:'💰 あつめる ─ たから と おかね',line:'のこりの ある たからじゃ。あつめきれば、この たなは かるく なる。',ids:['hobi','takara']},
   {id:'idomu',label:'⚔ いどむ ─ つよい あいて',line:'ちからだめしの あいてが まっておる。そなえて ゆくのじゃぞ。',ids:['kage','fukami','volga','ura','meguri']},
   {id:'sonae',label:'⚒ そなえる ─ かいもの と ちえ',line:'そうびと おかねと ちえは、この たなじゃ。',ids:['fune','mise','ou','kitaeru','shimameguri']},
-  {id:'mou',label:'🔁 もういちど ─ たたかい と おはなし',line:'おわった ものがたりに、もういちど あえる たなじゃ。',ids:['nushiAgain','tamoto','ending','butai','tani']}
+  {id:'mou',label:'🔁 もういちど ─ たたかい と おはなし',line:'おわった ものがたりに、もういちど あえる たなじゃ。',ids:['nushiAgain','tamoto','ending','kageop','butai','tani']}
 ];
 async function gunshiTamesu(){
   const list=tamesuList();
@@ -9665,6 +9689,11 @@ async function gunshiTamesuRun(e){ // 行の 中身は 一枚のときと 同じ
     await say('フクロ「二つ。きんいろの ひかりの はしらが、いま いくべき ばしょ。\nあおい はしらは、しまの でぐちじゃ。」');
     await say('フクロ「三つ。わしの「✨いま できること」から えらべば、そのばへ つれていく。\nまよったら、いつでも わしの ところへ もどって くるが よい。」');
     return;
+  }
+  if(e.kageop){ // にごりの そらを もういちど(SPEC_iwai §9・後発火=ED_REPLAYと同じ型)
+    KAGEOP_REPLAY=true;
+    await say('フクロ「……あの そらを、もういちど みるか。よかろう。」');
+    return 'moved';
   }
   if(e.ending){ // たたかわずに 締めだけ 見る(2026-07-30)
     const h2=Game.hidden,opts=[];
@@ -10881,6 +10910,7 @@ function updateField(dt){
     else if(Game.hidden.ch21c&&Game.hidden.tamotoTold&&Game.hidden.uraTold&&Game.hidden.howToTold&&CONT_BOOT&&!OSUSUME_GREETED&&!Game.minigame)gunshiGreetScene(); // どの地で ひらいても むかえに くる(2026-07-27 一本道)
     else if(Game.mapId==='grass'&&Game.hidden.koeAnswered&&!Game.hidden.kageOpening)kageOpeningScene(); // ななつへんげ 場面1(一回きり)
     else if(ED_REPLAY){const _m=ED_REPLAY;ED_REPLAY=null;replayEnding(_m);} // 締めの 見なおし(2026-07-30)
+    else if(KAGEOP_REPLAY){KAGEOP_REPLAY=false;kageOpeningPlay();} // にごりの そらの 見返し(SPEC_iwai §9)
     else if(FUKAMI_GO){FUKAMI_GO=false;fukamiStart();}   // フクロ/台帳の「つれていって」の後発火(TAMESU_GOと同じ流儀)
     else if(VOLGA_GO){VOLGA_GO=false;volgaFight();}
     else if(shimaIhenPending())shimaIhenScene();
@@ -20477,6 +20507,7 @@ const SHIMA_MOCHI={
 // 潜り『のこりびの ふかみ』: ラン状態はセーブしない(CH21_REPLAYと同じ一時変数方式)
 let FUKAMI=null,FUKAMI_GO=false,VOLGA_GO=false;
 let ED_REPLAY=null; // 締めを もういちど 見る(保存しない・'kage'|'maou')
+let KAGEOP_REPLAY=false; // にごりの そら(かげ編開幕)を もういちど(保存しない・SPEC_iwai §9)
 // たたかわずに 締めだけ 流す。進行フラグ・報酬は 何も 動かさない(ch21Finale は replay=true で
 // 「20この 蒼珠が…」の 初回文と みせの toast を 出さない)。もどるのは ED の「たびを つづける」。
 async function replayEnding(mode){
