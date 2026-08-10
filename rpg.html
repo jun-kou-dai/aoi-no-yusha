@@ -923,7 +923,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260811_0811'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260811_0843'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3817,7 +3817,7 @@ function loadGame(){
   resetGame();
   const p=Game.p;
   Game.diff=(d.diff>=1&&d.diff<=7)?d.diff:2; // なんいど（範囲外・未定義はふつう）
-  p.lv=Math.min(25,d.lv);p.exp=d.exp||0; // ロードは常に25まで受ける(かげ後のセーブ)p.bonusAtk=d.bonusAtk||0;
+  p.lv=Math.min(25,d.lv);p.exp=d.exp||0;p.bonusAtk=d.bonusAtk||0; // ロードは常に25まで受ける(かげ後のセーブ)。★行末コメントの あとに 実行文を 置かない——2026-07-29 の da320cf で ここへ コメントを 足したとき bonusAtk の 代入が 内側に 入り、ちからのたねが ロードの たびに 消えていた(13日間・SPEC_tane_load_20260811)
   Game.gold=d.gold||0;Game.weaponAtk=d.weaponAtk||0;Game.armorDef=d.armorDef||0;Game.ownW=(d.ownW||[]).slice();Game.ownA=(d.ownA||[]).slice();Game.shield=!!d.shield;Game.shield2=!!d.shield2;ownGear();
   Game.mbossDown=!!d.mbossDown;Game.springUsed=(d.springUsed&&typeof d.springUsed==='object')?d.springUsed:{};Game.saidYes=!!d.saidYes;
   if(d.items)for(const k in d.items)if(d.items[k])Game.items[k]=d.items[k]; // セーブ側のキーを正とする（新どうぐ追加時の取りこぼし防止）
