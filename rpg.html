@@ -921,7 +921,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1636'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1805'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -4738,10 +4738,23 @@ function sfxEnc(){if(!actx)return;const t=actx.currentTime;
   g.gain.setValueAtTime(0.26,t);g.gain.exponentialRampToValueAtTime(0.0005,t+0.5); // 昼の出あいの存在感(SPEC_oto_sekinin_20260810)。夜(0.283)より下の帯で
   o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+0.55);
   noiseHit(t,0.45,0.42,2400,0.7);}
-function sfxWin(){if(!actx)return;const t=actx.currentTime;
+function sfxWin(tier){if(!actx)return;const lv=tier|0,t=actx.currentTime+(lv>=2?0.8:lv===1?0.4:0); // かちどきの階段(SPEC_iwai_20260810): 勝ちの重さ=音の階段。引数なし(ザコ)=従来と同一の音。lv1〜は頭に本物の静寂(victoryは先頭でstopSong済み=無音はただの遅延)
   noiseHit(t,0.04,0.6,5200,3);noiseHit(t+0.02,0.4,0.42,600,1);note('sine',36,t,0.55,0.5,sfxBus); // とどめの きれつ+じひびき(65Hz)を 勝ちの ラッパの 下に(SPEC_oto_kanjo §2-7。呼び元=たおした 瞬間の 5箇所)
   duckMusic(0.6,0.9);
-  [[67,0,.12],[72,.13,.12],[76,.26,.12],[79,.39,.3],[76,.62,.1],[79,.74,.45]].forEach(n=>note('triangle',n[0],t+n[1],n[2],0.16,sfxBus));}
+  [[67,0,.12],[72,.13,.12],[76,.26,.12],[79,.39,.3],[76,.62,.1],[79,.74,.45]].forEach(n=>note('triangle',n[0],t+n[1],n[2],0.16,sfxBus));
+  if(!lv)return;
+  [[76,1.08,.1,.13],[79,1.19,.1,.13],[84,1.3,.55,.18]].forEach(n=>note('triangle',n[0],t+n[1],n[2],n[3],sfxBus)); // ぬし段: 上がる後奏(ミ・ソ・ド↑=でだしと同じ音いろ)
+  note('sine',36,t+1.3,0.5,0.3,sfxBus);
+  if(lv<2)return;
+  [60,67,72,76,79].forEach(m=>note('triangle',m,t+1.98,1.0,0.08,sfxBus)); // 大ボス: 和音の広がり+低音の打ち(65/98Hz=iPadでも聞こえる帯)
+  note('sine',36,t+1.98,0.6,0.38,sfxBus);note('sine',43,t+2.62,0.55,0.3,sfxBus);
+  if(lv<3)return;
+  [[67,3.05,.2],[69,3.27,.2],[71,3.49,.2],[72,3.71,.55],[76,4.4,.3],[74,4.75,.3],[72,5.1,.35],[79,5.5,.95]].forEach(n=>playInst('brass',n[0],t+n[1],n[2],0.16)); // ヴォルガ級: 初のBGM級(曲の楽器を 勝ちに はじめて つかう。stopSong済み=songBusはnull→musicIn経路)
+  [48,55,64].forEach(m=>playInst('strings',m,t+3.05,3.4,0.06));
+  musDrum(1,t+3.05,0.5,33);musDrum(0,t+3.71,0.4,33);musDrum(3,t+5.5,0.3);
+  [72,76,79,84].forEach(m=>playInst('brass',m,t+6.55,0.9,0.11));musDrum(1,t+6.55,0.5,33);note('sine',36,t+6.55,0.9,0.4,sfxBus); // 終止の和音
+}
+function winTier(f){return f===FOES.kagevolga?3:f===FOES.hajimarazu?2:(f&&f.mboss)?1:0;} // かちどきの階段: 勝ちの重さ(3=ヴォルガ級/2=大ボス/1=ぬし段mboss/0=ザコ)。けいこ(monoecho)・ぶたい(stage)は呼び元が引数なし固定=従来の音
 function sfxBossDown(){if(!actx)return;const t=actx.currentTime;
   note('sine',30,t,1.6,0.5,sfxBus);noiseHit(t,1.2,0.5,300,0.6);noiseHit(t+0.2,1.6,0.3,3600,0.6);}
 function sfxOver(){if(!actx)return;const t=actx.currentTime;[55,52,48,43].forEach((m,i)=>note('triangle',m,t+i*0.45,0.5,0.16,sfxBus));}
@@ -20674,7 +20687,7 @@ async function finaleLastQuestion(){
 async function finishFinaleBattle(){
   const bt=Game.bt,ep=enemyPos();
   stopSong();
-  bt.dying={t:0,dur:0.9};sfxWin();
+  bt.dying={t:0,dur:0.9};sfxWin(2); // かちどきの階段: 大ボス段
   flash('#fff2c0',0.6,1.4);
   for(let k=0;k<3;k++){if(P.length>420)break;puff(ep.x+rnd(-30,30),ep.y-ep.s*40+rnd(-30,30),'rgba(255,240,200,.95)',30,220,1.0,{s0:2,s1:6});}
   await wait(0.9);
@@ -20741,7 +20754,7 @@ async function victory(){
   const ep=enemyPos();
   puff(ep.x,ep.y-ep.s*40,'rgba(236,229,207,.9)',24,160,0.9,{s0:2,s1:5});
   await wait(0.5);
-  sfxWin();
+  sfxWin(winTier(foe));
   flash('#ffe9b0',0.20,0.55);
   await say(((bt.kage&&bt.kage.kname)||foe.name)+'を たおした！');
   Game.kills++;
@@ -21251,7 +21264,7 @@ async function bossDefeat(){
     const a=rnd(Math.PI*2),v=rnd(140,620)*ep.s;
     P.push({x:ep.x,y:ep.y-ep.s*40,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rnd(0.6,1.4),t:0,size:rnd(2,8)*ep.s,col:i%3?'rgba(255,248,225,.95)':'rgba(255,210,150,.9)',grav:0,light:true,drag:0.98});
   }
-  sfxWin();
+  sfxWin(3); // かちどきの階段: ヴォルガ級
   Game.kills++;
   Game.hidden.cleared=true;saveGame(); // クリアの きろく（scene='ending'になる まえ・いこう しろの ボスは gone:'cleared'で わかない）
   fadeColor('#f6f1e2');
@@ -21278,6 +21291,7 @@ async function bossDefeat(){
   $('#btn-title2').classList.remove('shown');
   $('#btn-ng').classList.remove('shown');
   $('#btn-cont').classList.remove('shown');
+  await wait(2.6); // かちどきの階段: ジングル本体(sfxWin+約4.2秒)が鳴り終わってから ED曲(SPEC_iwai_20260810 §2)
   playSong('ending');
   await fadeTo(0,1.8);
   fadeColor('#070b1e');
