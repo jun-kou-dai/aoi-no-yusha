@@ -906,7 +906,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_0952'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1316'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -5793,6 +5793,7 @@ const DIRS={ArrowUp:[-1,-1],w:[-1,-1],ArrowDown:[1,1],s:[1,1],ArrowLeft:[-1,1],a
 const DIR4={ArrowUp:'U',w:'U',ArrowDown:'D',s:'D',ArrowLeft:'L',a:'L',ArrowRight:'R',d:'R'};
 const held=[];
 let swipeVec=null,ptr=null,audioReady=false;
+let todomePtr=null; // とどめタップ(SPEC_todome_tap_20260810)の起点(非保存)
 function firstGesture(){
   if(!audioReady){
     audioReady=true;initAudio();resumeAudio();
@@ -5858,6 +5859,7 @@ stage.addEventListener('pointerdown',e=>{
   if(Game.scene==='prologue'){Game.prSkip=true;return;} // プロローグは タップで スキップ
   if(Game.scene==='ending'){const ad=($('#elans').textContent||'')!==''?2.2:0; if(Game.endT<12.5+ad){Game.endT=12.5+ad;sfxSel();} return;} // EDは タップで はやおくり(ボタンまで)
   if(MSG&&!MENU){msgConfirm();return;} // メッセージ表示中はタップで送り（全場面・固まり防止）
+  if(Game.scene==='battle'&&e.target===cv&&Game.bt&&Game.bt._todomeUi){todomePtr={x:e.clientX,y:e.clientY};} // とどめタップの起点(発火はpointerup+12px=down即決禁止の掟 2026-07-20)
   if(Game.scene==='field'&&!Game.talking){ptr={x:e.clientX,y:e.clientY};swipeVec=null;}
   else if((Game.scene==='battle'||Game.talking)&&!MENU)msgConfirm();
 });
@@ -5875,9 +5877,29 @@ window.addEventListener('pointerup',e=>{
     const dx=e.clientX-ptr.x,dy=e.clientY-ptr.y;
     if(Math.hypot(dx,dy)<16)tapMove(e.clientX,e.clientY); // うごかさず はなした=タップ→そこへ あるく
   }
+  if(todomePtr&&Game.scene==='battle'){ // とどめタップ(SPEC_todome_tap_20260810): えがいた輪と看板の中で はなした ときだけ
+    const tdx=e.clientX-todomePtr.x,tdy=e.clientY-todomePtr.y;
+    if(Math.hypot(tdx,tdy)<12&&typeof todomeReady==='function'&&todomeReady()){ // 発火時に再評価(描画コマの値を使い回さない)
+      const u=Game.bt._todomeUi,r=cv.getBoundingClientRect();
+      if(u&&r.width){
+        const lx=(e.clientX-r.left)*(W/r.width),ly=(e.clientY-r.top)*(H/r.height);
+        const nx=(lx-u.x)/u.rx,ny=(ly-u.y)/u.ry;
+        const lb=u.lb,inLb=!!(lb&&lx>=lb.bx&&lx<=lb.bx+lb.bw&&ly>=lb.by&&ly<=lb.by+lb.bh); // 看板ごと押せる(v2100の掟)
+        if(nx*nx+ny*ny<=1||inLb){
+          const fi=MENU.items.findIndex(it=>it.id==='fight');
+          if(fi>=0&&!MENU.items[fi].dis){
+            MENU.idx=fi;renderCursor();
+            const epT=enemyPos();puff(epT.x,u.y,'rgba(255,226,150,.95)',18,240,0.5,{s0:2,s1:5}); // タップの答え=輪のはじけ(新音0=すぐ攻撃のsfxが鳴る)
+            chooseMenu(); // メニュー押下と同一経路(sfxOk・dis判定・二重解決ガードごと再利用=複製ゼロ)
+          }
+        }
+      }
+    }
+    todomePtr=null;
+  }
   ptr=null;swipeVec=null;PTAP=null;
 });
-window.addEventListener('pointercancel',()=>{ptr=null;swipeVec=null;PTAP=null;});
+window.addEventListener('pointercancel',()=>{ptr=null;swipeVec=null;PTAP=null;todomePtr=null;});
 window.addEventListener('resize',()=>{const ms=document.getElementById('mscroll');if(ms&&ms.__upd){if(ms.__fit)ms.__fit();ms.__upd();setTimeout(()=>{try{if(ms.__fit)ms.__fit();ms.__upd();}catch(e){}},120);}}); // メニューを開いたまま回転→高さとあふれ判定をやり直す(2026-07-20)
 // おしている ほうこうキーを ぜんぶ あわせた タイルベクトル
 // （1キー＝がめんの みため4ほうこう／2キーどうじ＝タイルじくの ななめ＝みちなり）
@@ -13512,6 +13534,7 @@ function drawShimaActionMark(x,y,label,tw,rx,ry){ // 7島共通: 金=いま押�
   ctx.strokeStyle='rgba(255,226,150,0.95)';ctx.lineWidth=2;ctx.strokeRect(bx,by,bw,bh);
   ctx.fillStyle='#ffe296';ctx.fillText(disp,bx+bw/2,by+bh/2+1);
   ctx.restore();
+  return {bx,by,bw,bh}; // とどめタップ: 看板ごと押せる(v2100の掟)ため 実描画の四角を返す(島側は戻り値を見ない)
 }
 function shimaPlayActionHint(cam,st,sp){
   if(!cam||!st||!sp)return;
@@ -18079,6 +18102,25 @@ function drawChapterCard(){
 // ============================================================
 const calcDmg=(atk,def)=>Math.max(1,atk-def+ri(0,3));
 const enemyPos=()=>{const k=(Game.bt&&Game.bt.sizeK)||1;return{x:W/2,y:H*0.40,s:Math.min(W,H)/560*k};}; // sizeK=なかまをよぶ の 拡大
+let TODOME=true; // とどめタップ(SPEC_todome_tap_20260810): 勝ち確の手番だけ 敵タップ=こうげき。false で 従来と一字一句同じ
+function todomeMinDmg(bt){ // ふつうの一撃の下ぶれ側(playerActionの式と同因子=verify_hyokiが照合。増幅系(vsKage/vsGiant/おおぼら)は数えない=保守)
+  const p=Game.p;
+  const atkEff=Math.round(p.atk*(bt.atkUp||1)*(bt.jimeAtkDown||1)*(bt.hengeTurns>0?2:1));
+  let d=Math.max(1,atkEff-foeDefNow(bt)); // calcDmg=max(1,atk-def+ri(0,3)) の ri=0側
+  const physMul=battleAffinityMul('phys',foePhys(bt));
+  d=Math.max(1,Math.round(d*Math.min(1,physMul)));
+  return d;
+}
+function todomeReady(){ // 出す条件は ここ1本(描画と当たり判定と発火が同じ答えを読む)
+  const bt=Game.bt;
+  if(!TODOME||!Game.battling||!bt||!bt.foe||bt.hp<=0)return false;
+  if(!(typeof MENU!=='undefined'&&MENU&&MENU.items&&MENU.items.some(it=>it.id==='fight')))return false; // コマンド窓のときだけ(オートはMENUが立たない=構造で除外)
+  const f=bt.foe;
+  if(f.boss||f.mboss||f.stage||bt.shin)return false; // 山場の相手は 段と進行がある=出さない
+  if(bt.soar||bt.kuseBox>0||bt.kuseFoam>0)return false; // 上空/はこの塔/あわの膜=一撃が素通りしない
+  if(typeof hoimiMichi==='function'&&hoimiMichi())return false; // 光る押し場所は1つ(Lv4未満はホイミの道が先生=v2106実測 勝28敗2)
+  return bt.hp<=todomeMinDmg(bt); // かわす敵にも出す(かわされたら輪は残る=もう一度押せる。「かならず」は画面に書かない)
+}
 function shakeBattle(p,dur){const bt=Game.bt;if(bt){bt.shakeP=p;bt.shakeT=dur;}}
 
 // 敵の物理攻撃は「敵→接触点」を一本の座標系で扱う。
@@ -21723,6 +21765,12 @@ function drawBattleScene(){
   if(bt.foe.tint||bt.blink>0)drawFoeTinted(bt,ep);
   else drawFoe(bt,ep);
   drawKuseBox(bt,ep); // つみあげ(章17): はこの塔は ぬしの まえ=こうげきを うけとめる位置
+  if(typeof todomeReady==='function'&&todomeReady()){ // とどめタップ(SPEC_todome_tap_20260810): 勝ち確の手番だけ 島と同じ「押せ」の記号
+    if(bt._todomeCue!==1){bt._todomeCue=1;sfxOsu();} // 合図は1戦1回(島の窓びらきと同じ文法・btは非保存)
+    const rxT=ep.s*88,ryT=ep.s*66,cyT=ep.y-ep.s*6;
+    const lbT=drawShimaActionMark(ep.x,cyT,'タップで とどめ',ep.s*56,rxT,ryT);
+    bt._todomeUi={x:ep.x,y:cyT,rx:rxT,ry:ryT,lb:lbT};
+  }else if(bt)bt._todomeUi=null;
   drawEnemyStrikeFx(bt,ep,'trail');
   if(bt.critShock)drawCritShock(bt.critShock.t,ep); // 大リングは勇者の後ろ、剣先の衝突光は前へ
   if(!(bt.mateHit>0))drawMateBattle(bt);
