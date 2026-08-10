@@ -921,7 +921,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1949'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_2035'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -18186,6 +18186,7 @@ function drawChapterCard(){
 const calcDmg=(atk,def)=>Math.max(1,atk-def+ri(0,3));
 const enemyPos=()=>{const k=(Game.bt&&Game.bt.sizeK)||1;return{x:W/2,y:H*0.40,s:Math.min(W,H)/560*k};}; // sizeK=なかまをよぶ の 拡大
 let TODOME=true; // とどめタップ(SPEC_todome_tap_20260810): 勝ち確の手番だけ 敵タップ=こうげき。false で 従来と一字一句同じ
+let TODOME_NUSHI=true; // かちどきの とどめ(SPEC_iwai §11): ぬし段・かげぬし・ヴォルガ級にも とどめタップ=指の一撃→静寂→階段のファンファーレ。false で ぬし段だけ 従来へ
 function todomeMinDmg(bt){ // ふつうの一撃の下ぶれ側(playerActionの式と同因子=verify_hyokiが照合。増幅系(vsKage/vsGiant/おおぼら)は数えない=保守)
   const p=Game.p;
   const atkEff=Math.round(p.atk*(bt.atkUp||1)*(bt.jimeAtkDown||1)*(bt.hengeTurns>0?2:1));
@@ -18199,7 +18200,9 @@ function todomeReady(){ // 出す条件は ここ1本(描画と当たり判定�
   if(!TODOME||!Game.battling||!bt||!bt.foe||bt.hp<=0)return false;
   if(!(typeof MENU!=='undefined'&&MENU&&MENU.items&&MENU.items.some(it=>it.id==='fight')))return false; // コマンド窓のときだけ(オートはMENUが立たない=構造で除外)
   const f=bt.foe;
-  if(f.boss||f.mboss||f.stage||bt.shin)return false; // 山場の相手は 段と進行がある=出さない
+  if(f.boss||f.stage)return false; // 魔王系(EDと密結合)・けいこ/ぶたいは 従来どおり
+  if((f.mboss||bt.shin)&&!TODOME_NUSHI)return false; // かちどきの とどめ(SPEC_iwai §11): ぬし段は 1語で 従来へ 戻せる
+  if(f===FOES.hitorijime&&(bt.jimeP||0)<4)return false; // jimeGateが しきい75/50/25%で HPを 止める=輪が 嘘を つく 唯一の 機構。最終段だけ 灯す
   if(bt.soar||bt.kuseBox>0||bt.kuseFoam>0)return false; // 上空/はこの塔/あわの膜=一撃が素通りしない
   if(typeof hoimiMichi==='function'&&hoimiMichi())return false; // 光る押し場所は1つ(Lv4未満はホイミの道が先生=v2106実測 勝28敗2)
   return bt.hp<=todomeMinDmg(bt); // かわす敵にも出す(かわされたら輪は残る=もう一度押せる。「かならず」は画面に書かない)
