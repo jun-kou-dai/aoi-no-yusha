@@ -166,6 +166,8 @@ body{
 #msgwin .adv{ position:absolute; right:14px; bottom:8px; color:#d8cfae; font-size:.8em; opacity:0;
   animation:advblink 1s ease-in-out infinite; }
 #msgwin.done .adv{ opacity:1; }
+#msgwin.lastnote .adv{ opacity:1; color:#ffd97a; text-shadow:0 0 9px rgba(255,205,110,.85); animation:lastnotep 1.1s ease-in-out infinite; } /* さいごの一音(SPEC_iwai §12): ▼→👆金の脈動 */
+@keyframes lastnotep{ 0%,100%{ transform:scale(1); opacity:.72;} 50%{ transform:scale(1.3); opacity:1;} }
 #talkskip{ position:absolute; top:8px; right:52px; z-index:3; display:none; padding:5px 9px; border:1px solid rgba(255,217,122,.72); border-radius:999px;
   background:rgba(23,27,48,.96); color:#ffe9b0; font-size:clamp(11px,1.8vmin,14px); line-height:1.2; letter-spacing:.08em; cursor:pointer; user-select:none; -webkit-user-select:none; }
 #talkskip.on{ display:block; }
@@ -921,7 +923,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_2035'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_2053'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -4744,7 +4746,32 @@ function sfxEnc(){if(!actx)return;const t=actx.currentTime;
   g.gain.setValueAtTime(0.26,t);g.gain.exponentialRampToValueAtTime(0.0005,t+0.5); // 昼の出あいの存在感(SPEC_oto_sekinin_20260810)。夜(0.283)より下の帯で
   o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+0.55);
   noiseHit(t,0.45,0.42,2400,0.7);}
-function sfxWin(tier){if(!actx)return;const lv=tier|0,t=actx.currentTime+(lv>=2?0.8:lv===1?0.4:0); // かちどきの階段(SPEC_iwai_20260810): 勝ちの重さ=音の階段。引数なし(ザコ)=従来と同一の音。lv1〜は頭に本物の静寂(victoryは先頭でstopSong済み=無音はただの遅延)
+let WINLAST=null; // さいごの一音(SPEC_iwai §12): 保留した 締めの 和音{tier,dueAc,wait,over}。保存しない
+function sfxWinLast(tier,t0){ // 締めブロックの 切り出し(音符・音量・長さは 従来と 一音一句 同じ・起点だけ 引数化)
+  if(!actx)return;const t=(t0!=null)?t0:actx.currentTime;
+  if((tier|0)>=3){
+    [72,76,79,84].forEach(m=>playInst('brass',m,t,0.9,0.11));musDrum(1,t,0.5,33);note('sine',36,t,0.9,0.4,sfxBus); // 終止の和音
+  }else{
+    [60,67,72,76,79].forEach(m=>note('triangle',m,t,1.0,0.08,sfxBus)); // 大ボス: 和音の広がり+低音の打ち(65/98Hz=iPadでも聞こえる帯)
+    note('sine',36,t,0.6,0.38,sfxBus);note('sine',43,t+0.64,0.55,0.3,sfxBus);
+  }
+}
+function winLastArm(tier,dueAc){ // 締めを 保留する(wait は dt駆動=仮想時計でも 動く。actx無しでも 状態は 立て、鳴らす側で 握る)
+  WINLAST={tier:tier|0,dueAc:dueAc||0,wait:(actx&&dueAc)?Math.max(0,dueAc-actx.currentTime):((tier|0)>=3?7.35:2.78),over:0};
+}
+function winLastAdv(on){ // 窓の ▼⇔👆金の 切替(状態が 変わる ときだけ DOMに 触る)
+  try{const a=msgwinEl.querySelector('.adv');
+    if(on&&!msgwinEl.classList.contains('lastnote')){msgwinEl.classList.add('lastnote');if(a)a.textContent='👆';}
+    else if(!on&&msgwinEl.classList.contains('lastnote')){msgwinEl.classList.remove('lastnote');if(a)a.textContent='▼';}
+  }catch(e){}
+}
+function winLastFire(){ // 締めの 和音を いま 鳴らす(期限後の 窓送りタップ or +2.5秒の 自動=罰なし)
+  if(!WINLAST)return;const wl=WINLAST;WINLAST=null;
+  try{if(actx)sfxWinLast(wl.tier,actx.currentTime);}catch(e){}
+  try{flash('#ffe9b0',0.22,0.5);}catch(e){}
+  winLastAdv(false);
+}
+function sfxWin(tier,hold){const lv=tier|0;if(!actx){if(hold&&lv>=2)winLastArm(lv,0);return;}const t=actx.currentTime+(lv>=2?0.8:lv===1?0.4:0); // かちどきの階段(SPEC_iwai_20260810): 勝ちの重さ=音の階段。引数なし(ザコ)=従来と同一の音。lv1〜は頭に本物の静寂(victoryは先頭でstopSong済み=無音はただの遅延)。hold=さいごの一音(§12)
   noiseHit(t,0.04,0.6,5200,3);noiseHit(t+0.02,0.4,0.42,600,1);note('sine',36,t,0.55,0.5,sfxBus); // とどめの きれつ+じひびき(65Hz)を 勝ちの ラッパの 下に(SPEC_oto_kanjo §2-7。呼び元=たおした 瞬間の 5箇所)
   duckMusic(0.6,0.9);
   [[67,0,.12],[72,.13,.12],[76,.26,.12],[79,.39,.3],[76,.62,.1],[79,.74,.45]].forEach(n=>note('triangle',n[0],t+n[1],n[2],0.16,sfxBus));
@@ -4752,13 +4779,14 @@ function sfxWin(tier){if(!actx)return;const lv=tier|0,t=actx.currentTime+(lv>=2?
   [[76,1.08,.1,.13],[79,1.19,.1,.13],[84,1.3,.55,.18]].forEach(n=>note('triangle',n[0],t+n[1],n[2],n[3],sfxBus)); // ぬし段: 上がる後奏(ミ・ソ・ド↑=でだしと同じ音いろ)
   note('sine',36,t+1.3,0.5,0.3,sfxBus);
   if(lv<2)return;
-  [60,67,72,76,79].forEach(m=>note('triangle',m,t+1.98,1.0,0.08,sfxBus)); // 大ボス: 和音の広がり+低音の打ち(65/98Hz=iPadでも聞こえる帯)
-  note('sine',36,t+1.98,0.6,0.38,sfxBus);note('sine',43,t+2.62,0.55,0.3,sfxBus);
+  if(lv===2&&hold){winLastArm(2,t+1.98);return;} // さいごの一音(§12): tier2の 締め=和音の 広がりを 保留
+  sfxWinLast(2,t+1.98); // tier3では 本体の 一部として そのまま 鳴る
   if(lv<3)return;
   [[67,3.05,.2],[69,3.27,.2],[71,3.49,.2],[72,3.71,.55],[76,4.4,.3],[74,4.75,.3],[72,5.1,.35],[79,5.5,.95]].forEach(n=>playInst('brass',n[0],t+n[1],n[2],0.16)); // ヴォルガ級: 初のBGM級(曲の楽器を 勝ちに はじめて つかう。stopSong済み=songBusはnull→musicIn経路)
   [48,55,64].forEach(m=>playInst('strings',m,t+3.05,3.4,0.06));
   musDrum(1,t+3.05,0.5,33);musDrum(0,t+3.71,0.4,33);musDrum(3,t+5.5,0.3);
-  [72,76,79,84].forEach(m=>playInst('brass',m,t+6.55,0.9,0.11));musDrum(1,t+6.55,0.5,33);note('sine',36,t+6.55,0.9,0.4,sfxBus); // 終止の和音
+  if(hold){winLastArm(3,t+6.55);return;} // さいごの一音(§12): tier3の 締め=終止の 和音を 保留
+  sfxWinLast(3,t+6.55);
 }
 function winTier(f){return f===FOES.kagevolga?3:f===FOES.hajimarazu?2:(f&&f.mboss)?1:0;} // かちどきの階段: 勝ちの重さ(3=ヴォルガ級/2=大ボス/1=ぬし段mboss/0=ザコ)。けいこ(monoecho)・ぶたい(stage)は呼び元が引数なし固定=従来の音
 function sfxWinNigori(){ // にごるファンファーレ(SPEC_iwai §9): 勝ちの音が 途中から 腐って 止まり、地鳴りへ。かげ編開幕の 一回きり+台帳の 見返し
@@ -5915,6 +5943,7 @@ function finishMsg(){
 }
 function msgConfirm(){
   if(!MSG)return false;
+  if(WINLAST&&WINLAST.wait<=0&&Game.scene==='battle')winLastFire(); // さいごの一音(§12): 期限後の 最初の 窓送りタップが 締めを 鳴らす(同じ タップで 窓も 送る)
   if(!MSG.done){MSG.shown=MSG.full.length;MSG.done=true;MSG.timer=0.1;msgtextEl.textContent=MSG.full;msgwinEl.classList.add('done');}
   else finishMsg();
   return true;
@@ -20764,7 +20793,7 @@ async function finaleLastQuestion(){
 async function finishFinaleBattle(){
   const bt=Game.bt,ep=enemyPos();
   stopSong();
-  bt.dying={t:0,dur:0.9};sfxWin(2); // かちどきの階段: 大ボス段
+  bt.dying={t:0,dur:0.9};sfxWin(2,true); // かちどきの階段: 大ボス段+さいごの一音(§12)
   flash('#fff2c0',0.6,1.4);
   for(let k=0;k<3;k++){if(P.length>420)break;puff(ep.x+rnd(-30,30),ep.y-ep.s*40+rnd(-30,30),'rgba(255,240,200,.95)',30,220,1.0,{s0:2,s1:6});}
   await wait(0.9);
@@ -20831,7 +20860,7 @@ async function victory(){
   const ep=enemyPos();
   puff(ep.x,ep.y-ep.s*40,'rgba(236,229,207,.9)',24,160,0.9,{s0:2,s1:5});
   await wait(0.5);
-  sfxWin(winTier(foe));
+  {const tW=winTier(foe);sfxWin(tW,tW>=2);} // さいごの一音(§12): 大ボス級から 締めを 保留(ザコ・ぬし段は 従来どおり)
   flash('#ffe9b0',0.20,0.55);
   await say(((bt.kage&&bt.kage.kname)||foe.name)+'を たおした！');
   Game.kills++;
@@ -21200,6 +21229,7 @@ async function victory(){
   await leaveBattle(true);
 }
 async function leaveBattle(won){
+  if(WINLAST){const wl=WINLAST;WINLAST=null;try{if(actx)sfxWinLast(wl.tier,Math.max(actx.currentTime,wl.dueAc||0));}catch(e){}winLastAdv(false);} // さいごの一音(§12): 早送りで 窓を 走り抜けたら 元の 時刻に 予約=従来と 同一波形
   const bt=Game.bt;
   const nushiRep=!!NUSHI_REPLAY; // 再戦かどうかは transitMap で消える前に 控える(2026-07-26 夜)
   const ch18Return=!!(bt&&bt.foe===FOES.shioarashi&&!FUKAMI); // ふかみの階では 島へ送還しない(2026-07-28)
@@ -21541,6 +21571,7 @@ function updateBattle(dt){
   if(bt.critShock){bt.critShock.t+=dt*2.6;if(bt.critShock.t>=1)bt.critShock=null;} // かいしんの 金白リング
   if(bt.lvFete){bt.lvFete.t+=dt*0.62;if(bt.lvFete.t>=1)bt.lvFete=null;} // レベルアップの金の光条(SPEC_atsumeru 配信2)
   if(bt.kagebi){const kbT=bt.kagebi;kbT.t+=dt;if(kbT.seven&&!kbT.dread&&kbT.t>=2.9){kbT.dread=1;try{sfxDread();}catch(e){}}if(kbT.t>=(kbT.seven?13:5.5))bt.kagebi=null;} // ななつのかげ火(SPEC_iwai §10): 寿命と 紫の完成の地鳴り1回
+  if(WINLAST){WINLAST.wait-=dt;if(WINLAST.wait<=0){winLastAdv(true);WINLAST.over+=dt;if(WINLAST.over>=2.5)winLastFire();}} // さいごの一音(§12): 期限で ▼→👆金・+2.5秒で 自動発火(罰なし)
   if(bt.bossShock){bt.bossShock.t+=dt*2.0;if(bt.bossShock.t>=1)bt.bossShock=null;} // ボス登場の 地面波
   if(bt.cast){
     bt.cast.t+=dt;
