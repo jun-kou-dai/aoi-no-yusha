@@ -906,7 +906,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1316'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1334'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -4589,7 +4589,8 @@ function songTick(){
 // ---- 効果音 ----
 function sfxSel(){if(!actx)return;note('square',93,actx.currentTime,0.05,0.05,sfxBus);}
 function sfxOk(){if(!actx)return;const t=actx.currentTime;note('square',88,t,0.06,0.06,sfxBus);note('square',95,t+0.07,0.09,0.06,sfxBus);}
-function sfxSlash(){if(!actx)return;const t=actx.currentTime;noiseHit(t,0.16,0.5,3400,2);noiseHit(t+0.03,0.12,0.3,1700,2);}
+function sfxSlash(){if(!actx)return;const t=actx.currentTime; // 剣の風切り(SPEC_oto_sekinin_20260810): ヒュッ→ドンの2段を音で成立させる。一撃(0.378)より下・かいしんより下
+  noiseHit(t,0.06,0.28,1200,1.3);noiseHit(t+0.03,0.16,0.70,2900,1.3);noiseHit(t+0.09,0.13,0.55,4800,1.4);}
 function sfxHit(){if(!actx)return;const t=actx.currentTime; // 4そう：クリック＋ボディ＋にく＋そこ
   noiseHit(t,0.045,0.6,2600,3);noiseHit(t+0.012,0.15,0.62,760,1.5);
   note('triangle',45,t,0.09,0.4,sfxBus);note('sine',31,t,0.22,0.62,sfxBus);}
@@ -4617,9 +4618,9 @@ function sfxSoar(){if(!actx)return;const t=actx.currentTime;[62,67,72,77].forEac
 function sfxEnc(){if(!actx)return;const t=actx.currentTime;
   const o=actx.createOscillator(),g=actx.createGain();o.type='square';
   o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(820,t+0.42);
-  g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.0005,t+0.5);
+  g.gain.setValueAtTime(0.26,t);g.gain.exponentialRampToValueAtTime(0.0005,t+0.5); // 昼の出あいの存在感(SPEC_oto_sekinin_20260810)。夜(0.283)より下の帯で
   o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+0.55);
-  noiseHit(t,0.45,0.22,2400,0.7);}
+  noiseHit(t,0.45,0.42,2400,0.7);}
 function sfxWin(){if(!actx)return;const t=actx.currentTime;
   noiseHit(t,0.04,0.6,5200,3);noiseHit(t+0.02,0.4,0.42,600,1);note('sine',36,t,0.55,0.5,sfxBus); // とどめの きれつ+じひびき(65Hz)を 勝ちの ラッパの 下に(SPEC_oto_kanjo §2-7。呼び元=たおした 瞬間の 5箇所)
   duckMusic(0.6,0.9);
@@ -9380,13 +9381,50 @@ async function gunshiGreetScene(){
     endTalk();
   }
 }
+// 2026-08-10 発注者「わかりにくいし、使いにくい。ソート順とか、なんのためとか、全くわからない」(実機スクショ)——
+// 台帳17行が push順(開発日付順)の 一枚岩で、おわった 7/7 が うえ・のこりの ある 収集が したに 沈んでいた。
+// よっつの たな(2階層)へ。FUKURO_TANA=false で 従来の 一枚と 一字一句 同じ。正本=SPEC_fukuro_tana_20260810.md
+let FUKURO_TANA=true;
+const TANA=[ // たなの ならびが 答え: うえほど のこりの ある あそび、しもの たなは もういちど。
+  // tamesuList に 足した 行が ここに 無ければ 最上段に 直に 出る(=「1行 足せば 届く」の 掟は 壊れない)
+  {id:'atsume',label:'💰 あつめる ─ たから と おかね',line:'のこりの ある たからじゃ。あつめきれば、この たなは かるく なる。',ids:['hobi','takara']},
+  {id:'idomu',label:'⚔ いどむ ─ つよい あいて',line:'ちからだめしの あいてが まっておる。そなえて ゆくのじゃぞ。',ids:['kage','fukami','volga','ura','meguri']},
+  {id:'sonae',label:'⚒ そなえる ─ かいもの と ちえ',line:'そうびと おかねと ちえは、この たなじゃ。',ids:['fune','mise','ou','kitaeru','shimameguri']},
+  {id:'mou',label:'🔁 もういちど ─ たたかい と おはなし',line:'おわった ものがたりに、もういちど あえる たなじゃ。',ids:['nushiAgain','tamoto','ending','butai','tani']}
+];
 async function gunshiTamesu(){
   const list=tamesuList();
   if(!list.length){await say('フクロ「いまは、めのまえの たびに あつまる ときじゃ。\nつぎの ゆきさきは 🧭で みたてよう。」');return;}
-  const c=await ask(list.map(e=>({id:e.id,label:e.label})).concat([{id:'no',label:'やめておく'}]),
-    'フクロ「いま そなたに できるのは、この '+list.length+'つ じゃ。\nえらべば、わしが そこまでの みちを ひらく。」');
-  if(!c||c==='no')return;
-  const e=list.find(x=>x.id===c);if(!e)return;
+  if(!FUKURO_TANA||list.length<=8){ // 行が すくない 若い たびは 従来の 一枚の ほうが 早い(はじまりの 旅は 不変)
+    const c=await ask(list.map(e=>({id:e.id,label:e.label})).concat([{id:'no',label:'やめておく'}]),
+      'フクロ「いま そなたに できるのは、この '+list.length+'つ じゃ。\nえらべば、わしが そこまでの みちを ひらく。」');
+    if(!c||c==='no')return;
+    const e=list.find(x=>x.id===c);if(!e)return;
+    return gunshiTamesuRun(e);
+  }
+  while(true){
+    const used=new Set(['howto']),rows=[];
+    const howto=list.find(x=>x.id==='howto');
+    if(howto)rows.push({id:'howto',label:howto.label});
+    for(const t of TANA){const es=t.ids.filter(id=>list.some(x=>x.id===id));
+      if(es.length)rows.push({id:'t_'+t.id,label:t.label+'（'+es.length+'）'});
+      t.ids.forEach(id=>used.add(id));}
+    for(const x of list)if(!used.has(x.id))rows.push({id:x.id,label:x.label}); // たなの 無い 新顔は 最上段に 直に 出す
+    rows.push({id:'no',label:'やめておく'});
+    const c=await ask(rows,'フクロ「できることは '+list.length+'。たなに わけて ならべた。\nうえの たなほど、のこりの ある あそびじゃ。」');
+    if(!c||c==='no')return;
+    const t=TANA.find(x=>'t_'+x.id===c);
+    if(!t){const e=list.find(x=>x.id===c);if(!e)continue;
+      const r=await gunshiTamesuRun(e);if(r==='moved')return 'moved';continue;}
+    const es=t.ids.map(id=>list.find(x=>x.id===id)).filter(Boolean);
+    const c2=await ask(es.map(x=>({id:x.id,label:x.label})).concat([{id:'back',label:'← たなへ もどる'}]),'フクロ「'+t.line+'」');
+    if(!c2||c2==='back')continue;
+    const e=es.find(x=>x.id===c2);if(!e)continue;
+    const r=await gunshiTamesuRun(e);
+    if(r==='moved')return 'moved'; // ★上へ 返さないと 会話が とじず TAMESU_GO/FUKAMI_GO 等の 後発火が 死ぬ(ending行の 罠と 同じ)
+  }
+}
+async function gunshiTamesuRun(e){ // 行の 中身は 一枚のときと 同じ 1本(複製ゼロ)
   await say(e.line);
   if(e.howto){ // あそびかた: 三つの きほんを いつでも 読み直せる(2026-07-27)
     await say('フクロ「一つ。がめんの したの きんいろの おび（もくてき）を タップ——\nあしが かってに うごいて、つぎの ばしょへ つれていく。」');
