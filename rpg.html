@@ -923,7 +923,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_2053'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260811_0722'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3675,6 +3675,7 @@ function loadMap(id){
   if(id==='umi'&&Game.hidden.ch11d)MAP=MAP.map(row=>row.replace(/X/g,'W')); // あらなみは ほどけたまま(みなと開通)
   Game.kodama=null; // やまびこ おいかけ(章14): マップを移ったら こだまは いない(保存しない一時状態)
   Game.horaFx=null; // 章15 ほらが ほんとうに なる も 島を出たら 消える(保存しない)
+  Game.kagebiFx=null; // かげ火の 見返し(SPEC_iwai §13)も 地を うつれば 消える(保存しない)
   Game._taniCatch=0; // たにの こだま=この訪問で つかまえた 数(島あそびが先の 勘定。保存しない。SPEC_gold_focus §8)
   Game.shimaPlay=null; // ぬしの しかけ(枠SHIMA_PLAY): 島を出たら 消える(保存しない・SPEC_nushi_shikake_20260802)
   if(typeof horaFxRestore==='function')horaFxRestore(); // ★そろえた しまは 入りなおしても のこる(これが 無いと クリアずみでは 1つも 出ない)
@@ -9142,6 +9143,9 @@ function tamesuList(){
      line:'たたかわずとも、あの ひの おわりは いつでも 見られる。\nどれを 見るか えらぶが よい。',ending:true});}
   if(h.kageOpening)out.push({id:'kageop',label:'🌑 にごった そらの はじまりを もういちど みる',
     line:'あの ひ、そらが あかぐろく そまった——わすれぬ うちに、もういちど。',kageop:true}); // SPEC_iwai §9(開幕済みセーブへの 見返しの 道)
+  // 2026-08-11 弾8: かげ火は へんげ初回獲得の 瞬間だけ=そろえた 旅人には 二度と 出なかった(作ったものへ 道が 無い)。🌑行と 同じ型で 見返しの 道を 通す。
+  if(h.kageOpening&&hengeCount()>=7)out.push({id:'kagebi',label:'🔥 ななつの かげ火を もういちど みる',
+    line:'ななつ そろった よるの そら——あの ひが もえた ところを、もういちど。',kagebi:true}); // SPEC_iwai §13
   if(h.kageOpening)out.push({id:'kitaeru',label:'💪 つよくなる みち ─ レベル上限の あとに のびる 三つ',
     line:'レベルは '+maxLvNow()+'で うちどめ——その あとは 三つで のびる。きいて いくが よい。',kitaeru:true}); // 2026-07-29 発注者「お金稼ぎや装備をちゃんと教えないと」
   if(h.kageOpening){const _hn=hengeCount(); // ななつへんげ(2026-07-28)
@@ -9677,7 +9681,7 @@ const TANA=[ // たなの ならびが 答え: うえほど のこりの ある 
   {id:'atsume',label:'💰 あつめる ─ たから と おかね',line:'のこりの ある たからじゃ。あつめきれば、この たなは かるく なる。',ids:['hobi','takara']},
   {id:'idomu',label:'⚔ いどむ ─ つよい あいて',line:'ちからだめしの あいてが まっておる。そなえて ゆくのじゃぞ。',ids:['kage','fukami','volga','ura','meguri']},
   {id:'sonae',label:'⚒ そなえる ─ かいもの と ちえ',line:'そうびと おかねと ちえは、この たなじゃ。',ids:['fune','mise','ou','kitaeru','shimameguri']},
-  {id:'mou',label:'🔁 もういちど ─ たたかい と おはなし',line:'おわった ものがたりに、もういちど あえる たなじゃ。',ids:['nushiAgain','tamoto','ending','kageop','butai','tani']}
+  {id:'mou',label:'🔁 もういちど ─ たたかい と おはなし',line:'おわった ものがたりに、もういちど あえる たなじゃ。',ids:['nushiAgain','tamoto','ending','kageop','kagebi','butai','tani']}
 ];
 async function gunshiTamesu(){
   const list=tamesuList();
@@ -9722,6 +9726,11 @@ async function gunshiTamesuRun(e){ // 行の 中身は 一枚のときと 同じ
   if(e.kageop){ // にごりの そらを もういちど(SPEC_iwai §9・後発火=ED_REPLAYと同じ型)
     KAGEOP_REPLAY=true;
     await say('フクロ「……あの そらを、もういちど みるか。よかろう。」');
+    return 'moved';
+  }
+  if(e.kagebi){ // ななつの かげ火を もういちど(SPEC_iwai §13・後発火=KAGEOP_REPLAYと同じ型)
+    KAGEBI_REPLAY=true;
+    await say('フクロ「……あの よるの そらか。よかろう、もういちど ともそう。」');
     return 'moved';
   }
   if(e.ending){ // たたかわずに 締めだけ 見る(2026-07-30)
@@ -10792,6 +10801,9 @@ function autoStep(){
 function updateField(dt){
   const p=Game.p;
   if(Game.horaFx){for(const f of Game.horaFx)f.t+=(f.life>1e8?dt*0.35:dt);Game.horaFx=Game.horaFx.filter(f=>f.t<f.life);if(!Game.horaFx.length)Game.horaFx=null;} // 章15 ほらが ほんとうに なる。常設は0.35倍速=しずかな余韻(発注者はうるささを許可していない 2026-08-02)
+  if(Game.kagebiFx){const kf=Game.kagebiFx;kf.t+=dt; // かげ火の 見返し(SPEC_iwai §13): 寿命と 紫の完成の 地鳴り1回は updateBattle と 同じ条項
+    if(!kf.dread&&kf.t>=2.9){kf.dread=1;try{sfxDread();}catch(e){}}
+    if(kf.t>=13)Game.kagebiFx=null;else Game.grace=Math.max(Game.grace,0.6);} // 見ている あいだは まものが 邪魔しない(こだま・しかけと 同じ 1行の型)
   if(Game.inventoryOpen||Game.proofOpen||Game.menuOpen){held.length=0;Game.autoPath=null;return;}
   if(!Game.talking&&!Game.battling&&!Game.transiting)checkChapterProof();
   if(!Game.talking)Game.dayT+=dt; // かいわちゅうは ときが とまる
@@ -10940,6 +10952,7 @@ function updateField(dt){
     else if(Game.mapId==='grass'&&Game.hidden.koeAnswered&&!Game.hidden.kageOpening)kageOpeningScene(); // ななつへんげ 場面1(一回きり)
     else if(ED_REPLAY){const _m=ED_REPLAY;ED_REPLAY=null;replayEnding(_m);} // 締めの 見なおし(2026-07-30)
     else if(KAGEOP_REPLAY){KAGEOP_REPLAY=false;kageOpeningPlay();} // にごりの そらの 見返し(SPEC_iwai §9)
+    else if(KAGEBI_REPLAY){KAGEBI_REPLAY=false;kagebiReplayStart();} // かげ火の 見返し(SPEC_iwai §13)
     else if(FUKAMI_GO){FUKAMI_GO=false;fukamiStart();}   // フクロ/台帳の「つれていって」の後発火(TAMESU_GOと同じ流儀)
     else if(VOLGA_GO){VOLGA_GO=false;volgaFight();}
     else if(shimaIhenPending())shimaIhenScene();
@@ -12325,6 +12338,7 @@ function drawFieldScene(){
   if(Game.shimaPlay)shimaPlayDraw(Game.cam); // ぬしの しかけ: うでと 箱も おなじ 後段(闇に つぶされない)
   drawChapterCard(); // しょうタイトルは さいじょうそう
   drawMinimap(); // ちいさな ちず（あかるい しまだけ・かいわちゅうは けす）
+  if(Game.kagebiFx)drawKagebiFete({kagebi:Game.kagebiFx}); // かげ火の 見返し(SPEC_iwai §13)は さいぜんめん=闇の板が どの overlay も つぶす
 }
 // ミニマップ：左上HUDの下。タイル色分け+勇者=白点(点滅)+でぐち=金。dark持ちマップは視界の意味が消えるため出さない
 function drawMinimap(){
@@ -20540,6 +20554,7 @@ const SHIMA_MOCHI={
 let FUKAMI=null,FUKAMI_GO=false,VOLGA_GO=false;
 let ED_REPLAY=null; // 締めを もういちど 見る(保存しない・'kage'|'maou')
 let KAGEOP_REPLAY=false; // にごりの そら(かげ編開幕)を もういちど(保存しない・SPEC_iwai §9)
+let KAGEBI_REPLAY=false; // ななつの かげ火を もういちど(保存しない・SPEC_iwai §13)
 // たたかわずに 締めだけ 流す。進行フラグ・報酬は 何も 動かさない(ch21Finale は replay=true で
 // 「20この 蒼珠が…」の 初回文と みせの toast を 出さない)。もどるのは ED の「たびを つづける」。
 async function replayEnding(mode){
@@ -26124,12 +26139,24 @@ function kagebiFlame(x,y,r,rgb,a,tt,ph){ // かげ火 1つ。芯は source-over(
   ctx.quadraticCurveTo(x-r*0.30,y-hh*0.16,x,y-hh*0.44+sw*0.6);ctx.fill();
   ctx.restore();
 }
+function kagebiFieldPlace(){ // そらの帯を DOMの 実下端(ステータス)と 実上端(もくてきの おび)から 決める。
+  // ★固定比は たて390で ステータスカードの 裏に 埋まり、よこ844では 大炎が 上のバーに 潜る(実画面で 見つけた=§10の 教訓の 再演)。
+  let top=H*0.10,bot=H*0.92;
+  try{const f=document.getElementById('fstat');if(f){const r=f.getBoundingClientRect();if(r.height>0)top=Math.max(top,r.bottom+8);}
+      const q=document.getElementById('quest');if(q){const r=q.getBoundingClientRect();if(r.height>0&&r.top>top+40)bot=Math.min(bot,r.top-8);}}catch(e){}
+  const need=Math.min(W*0.115,112)*0.30*4.95; // ひとつの おおきな 炎の 背たけ
+  const sc=Math.max(0.45,Math.min(1,(bot-top)/(need+16))); // 空きが せまい画面(よこ)は 火だけ 小さく=列の 間隔は 不変
+  return {y0:Math.min(bot-6,top+need*sc+40*sc),sc:sc};
+}
+function kagebiReplayStart(){ // 見返し(SPEC_iwai §13): 7体目の 絵を そのまま フィールドの そらで 再生(乱数0・保存キー0・新しい絵と音ゼロ)
+  Game.kagebiFx=Object.assign({t:0,newIdx:6,lit:[true,true,true,true,true,true,true],cols:FUKAMI_ORDER.map(k=>KAGE[k].col),seven:true},kagebiFieldPlace());
+}
 function drawKagebiFete(bt){
   const kb=bt.kagebi;if(!kb)return;
   const t=kb.t,life=kb.seven?13:5.5;
   const fade=Math.max(0,Math.min(1,Math.min(t/0.4,(life-t)/1.0)));
   if(fade<=0)return;
-  const gap=Math.min(W*0.115,112),r0=gap*0.30,y0=Math.min(H*0.40,(kb.top||H*0.20)+r0*2.4+10); // そらの帯=上部UIの実下端(kb.top)の すぐ下(930/たて390の実画面で調整)
+  const gap=Math.min(W*0.115,112),r0=gap*0.30*(kb.sc||1),y0=kb.y0||Math.min(H*0.40,(kb.top||H*0.20)+r0*2.4+10); // そらの帯=上部UIの実下端(kb.top)の すぐ下(930/たて390の実画面で調整)。kb.y0/kb.sc は 見返し(§13=フィールド)だけが 渡す=戦闘は 1ビットも 変わらない
   ctx.save();
   if(!kb.seven){
     for(let i=0;i<7;i++){
