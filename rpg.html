@@ -906,7 +906,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_0827'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_0952'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -9854,11 +9854,16 @@ function markFirstVillageTalk(n){
   if(Game.mapId!=='grass'||introVillageDone()||!isFirstVillageNpc(n))return false;
   Game.hidden.firstVillageTalk=true;saveGame();return true;
 }
+let YORU_MICHI=true; // よるのみちしるべ(SPEC_yoru_michi_20260810): 夜×Lv4未満は めあてが むらを指す。false で 従来と一字一句同じ
+const YORU_HOME={x:8,y:9}; // むらの道P・y>=8=敵が構造的に入れない帯(10752)・NPC/出口/宝/湧きと非衝突(2026-08-10 機械走査)
 function chapterOneStep(){
   if(!Game.p||Game.mbossDown||(Game.hidden&&Game.hidden.cleared))return null;
   const lv=Game.p.lv||1,v=Game.visited||{};
   if(!introVillageDone())return {key:'village',map:'grass',bar:'もくてき：「！」の むらびとに はなしかけよう',exp:'まず むらの「！」が ついた じいさんに はなしを きこう。たびの てがかりを もっている。'};
-  if(lv<4)return {key:'grassTrain',map:'grass',bar:'もくてき：そうげんの まものと たたかい レベル4へ（いま Lv'+lv+'）',exp:'そうげんの 青いスライムや からすと たたかい、まず レベル4を めざそう。金の柱が ちかい相手を しめす。'};
+  if(lv<4){
+    if(YORU_MICHI&&isNightNow())return {key:'grassNight',map:'grass',bar:'もくてき：よるの まものは てごわい——むらへ もどって あさを まとう',exp:'よるの まものは ひるより つよい。むらの なかへは まものは 入ってこない。あさに なれば、めあては まものへ もどる。'}; // よるのみちしるべ(SPEC_yoru_michi_20260810)。Lv4以上は 従来のまま=夜かせぎ保護
+    return {key:'grassTrain',map:'grass',bar:'もくてき：そうげんの まものと たたかい レベル4へ（いま Lv'+lv+'）',exp:'そうげんの 青いスライムや からすと たたかい、まず レベル4を めざそう。金の柱が ちかい相手を しめす。'};
+  }
   if(!v.forest)return {key:'forestExit',map:'grass',bar:'もくてき：むらの みぎうえの でぐちから もりへ',exp:'レベル4になった。むらの みぎうえにある ひかる でぐちから、ふかい もりへ すすもう。'};
   if(lv<5)return {key:'forestTrain',map:'forest',bar:'もくてき：もりの まものと たたかい レベル5へ（いま Lv'+lv+'）',exp:'もりの スライムや やまばとと たたかい、レベル5を めざそう。'};
   if(!v.cave)return {key:'caveExit',map:'forest',bar:'もくてき：もりの みぎしたの でぐちから どうくつへ',exp:'レベル5になった。もりの みぎしたにある でぐちから、きたの どうくつへ すすもう。'};
@@ -17835,6 +17840,7 @@ function questBeaconTargets(){
   {const early=chapterOneStep();
    if(early&&early.map===Game.mapId){
      if(early.key==='grassTrain')foeB(e=>e.id==='slime'||e.id==='crow');
+     else if(early.key==='grassNight')push(YORU_HOME.x,YORU_HOME.y); // よるのみちしるべ(SPEC_yoru_michi_20260810)
      else if(early.key==='forestExit'&&w.exits){for(const ex of w.exits)if(ex.to==='forest')push(ex.x,ex.y);}
      else if(early.key==='forestTrain')foeB(e=>e.id==='mslime'||e.id==='yamabato');
      else if(early.key==='caveExit'&&w.exits){for(const ex of w.exits)if(ex.to==='cave')push(ex.x,ex.y);}
