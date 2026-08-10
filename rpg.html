@@ -921,7 +921,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1805'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1829'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3824,6 +3824,8 @@ function loadGame(){
    else h.firstVillageTalk=!!h.firstVillageTalk;}
   {const h=Game.hidden; // ゴールドの節目(SPEC_atsumeru 配信2): 節目キーの無い記録は いまの蓄えの段まで 無演出で埋める(ロード直後の連続発火を防ぐ)
    if(typeof h.goldMile!=='number'){const cur=(typeof d.gold==='number')?d.gold:0;let top=0;for(const v of GOLD_MILE)if(cur>=v)top=v;h.goldMile=top;}}
+  {const h=Game.hidden; // まちの祝福(SPEC_iwai §7): 祝いキーの無い記録は クリア済みの章ぶんを 無演出で埋める。feteMaou だけは 埋めない=魔王の がいせんは クリア済みセーブでも 一度 見せる
+   if(!h.feteInit){h.feteInit=true;for(const cM of [13,14,15,16,17,18,19,20])if(h['ch'+cM+'c'])h['fete'+cM]=true;}}
   {const h=Game.hidden; // 章19: 不正な結論文字列と途中状態を、安全な因果関係へ正規化
    if(h.ch19Pick!=='rescue')delete h.ch19Pick;
    if(h.ch19c)h.ch19d=true;
@@ -8553,6 +8555,41 @@ async function shimaIhenScene(){
 }
 // 既存のぼうけんのしょへ 一回きりの「めざめ」告知: 新呪文はレベル連動のため、配信前にLv到達済みのセーブでは
 // 習得告知が一度も出ない。武器の売り場も含め、フクロウの声で在り処を知らせる(SPEC_gunshi_catchup_20260719)
+// まちの祝福(SPEC_iwai_20260810 §7): 発注者「魔王を倒した。その締めくくりが大切。街は祝福しているか」(2026-08-10)。
+// 魔王撃破後の むら 一回きりの がいせん+章クリアごとの 小さい祝い。演出のみ=数値/乱数/報酬は 触らない。
+async function feteMaouScene(){
+  Game.hidden.feteMaou=true;
+  startTalk();
+  if(actx){const tB=actx.currentTime;playInst('bell',79,tB,1.5,0.22);playInst('bell',84,tB+0.7,1.5,0.20);playInst('bell',88,tB+1.4,1.9,0.18);} // 既存の かねの音いろ(INST.bell)
+  flash('#ffe9b0',0.4,1.2);
+  for(let i=0;i<3;i++)puff(W/2+(i-1)*90,H*0.40-i*26,'rgba(255,236,170,.95)',26,180,1.1,{up:true,s0:2,s1:6}); // 画面座標=camに依存しない(update側の発火はcam未構築のことがある)
+  await say('むらじゅうに、かねの ねが なりわたる——');
+  await say('おうさま「やみのおうを たおした ゆうしゃの がいせんじゃ！\nむらを あげて いわうぞ！」');
+  await say('こども「ゆうしゃさま、おかえりなさい！」\nじいさん「ようやった、ようやった……むらの ほこりじゃよ。」');
+  sfxGoldJingle(true);flash('#ffe9b0',0.3,0.8);
+  puff(W/2,H*0.38,'rgba(255,246,214,.95)',34,220,1.2,{up:true,s0:2,s1:7});
+  await say('ひろばに あかりが ともり、うたごえは よるまで つづいた——');
+  endTalk();
+  saveGame();
+}
+const FETE_CH={13:'kura',14:'tani',15:'hora',16:'uta',17:'yakata1',18:'kazemachi',19:'tokikasanedusk',20:'shiowakare'}; // 章→島(名は MAPNAME から 引く=手打ちゼロ)
+function feteIslePending(){
+  if(Game._feteAt&&TM-Game._feteAt<30)return 0; // 30秒に 1つ=複数章 未消化でも 連発しない
+  const h=Game.hidden;for(const c of Object.keys(FETE_CH))if(h['ch'+c+'c']&&!h['fete'+c])return +c;
+  return 0;
+}
+async function feteIsleScene(){
+  const cN=feteIslePending();if(!cN)return;
+  Game.hidden['fete'+cN]=true;Game._feteAt=TM;
+  const nm=(MAPNAME[FETE_CH[cN]]||'しま').split('・')[0];
+  startTalk();
+  if(actx)playInst('bell',84,actx.currentTime,1.6,0.2);
+  flash('#ffe9b0',0.28,0.9);
+  puff(W/2,H*0.42,'rgba(255,236,170,.9)',22,170,1.0,{up:true,s0:2,s1:5}); // 画面座標=cam非依存
+  await say('むすめ「'+nm+'の はなし、むらまで とどいてるわ。\nしまの こえを すくった ゆうしゃさま——むらの じまんよ！」');
+  endTalk();
+  saveGame();
+}
 // かんけつ後、むらに入った一回だけ: たもとの案内(2026-07-20「先に進めない・最終章完結と出ている」への正面対応)
 async function tamotoScene(){
   Game.hidden.tamotoTold=true;
@@ -10832,6 +10869,8 @@ function updateField(dt){
     else if(Game.mapId==='kokoro'&&Game.hidden.ch5c&&!Game.hidden.ch5card){Game.hidden.ch5card=true;showChapter('だい 5 しょう','とざされた ひかり');saveGame();}
     else if(Game.mapId==='towa'&&!Game.hidden.towaCard){Game.hidden.towaCard=true;showChapter('とわの ふち','といの ねむる ばしょ');saveGame();}
     else if(Game.hidden.ch2&&!Game.hidden.mate1&&(Game.purified||0)>=5)mateJoinScene();
+    else if(Game.mapId==='grass'&&Game.hidden.cleared&&!Game.hidden.feteMaou&&!Game.minigame)feteMaouScene(); // まちの祝福: がいせん(一回きり)
+    else if(Game.mapId==='grass'&&!Game.minigame&&feteIslePending())feteIsleScene(); // まちの祝福: 島の章クリア(一回きり・30秒に1つ)
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&!Game.hidden.tamotoTold)tamotoScene();
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&Game.hidden.tamotoTold&&!Game.hidden.uraTold)uraToldScene();
     else if(Game.mapId==='grass'&&Game.hidden.ch21c&&Game.hidden.tamotoTold&&Game.hidden.uraTold&&!Game.hidden.howToTold)howToScene();
