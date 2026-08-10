@@ -374,6 +374,18 @@ body{
   background:var(--indigo); border-bottom:1px solid var(--line); border-radius:10px 10px 0 0; }
 #questclose{ cursor:pointer; padding:4px 12px; border-radius:8px; background:rgba(255,255,255,.10); font-size:.82em; }
 #questclose:active{ transform:scale(.92); }
+/* そうびちょう(2026-08-10 SPEC_atsumeru): つよさ(statuswin)と同じ型 */
+#gearwin{ position:fixed; inset:0; z-index:200; display:none; justify-content:center; align-items:flex-start;
+  background:rgba(6,10,28,.82); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); overflow:auto; padding:20px 10px; }
+#gearwin.show{ display:flex; }
+#gearpanel{ width:100%; max-width:520px; max-height:94vh; overflow-y:auto; padding:0 0 18px; color:var(--text); }
+#gearhead{ position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between;
+  padding:13px 18px; font-size:1.12em; font-weight:700; letter-spacing:.06em;
+  background:var(--indigo); border-bottom:1px solid var(--line); border-radius:10px 10px 0 0; }
+#gearclose{ cursor:pointer; padding:4px 12px; border-radius:8px; background:rgba(255,255,255,.10); font-size:.82em; }
+#gearclose:active{ transform:scale(.92); }
+#gearbody{ padding:6px 16px; }
+#gearbody .gbno{ opacity:.62; }
 #questbody{ padding:6px 16px; }
 /* ---------- 蒼珠・旅支度 ---------- */
 #proofhud{ position:absolute; left:12px; bottom:max(64px, calc(env(safe-area-inset-bottom) + 64px)); z-index:68;
@@ -640,7 +652,7 @@ body{
   width:auto; min-height:56px; height:auto; margin:0; padding:12px 10px; border-radius:12px;
   display:none; align-items:center; justify-content:center; gap:8px;
   font-size:clamp(13px,2.1vmin,16px); letter-spacing:.08em; color:#eee8d2; cursor:pointer; pointer-events:auto; opacity:.96; }
-#menugrid>#menustatus,#menugrid>#menubag,#menugrid>#spellbtn,#menugrid>#questbtn,#menugrid>#savebtn,#menugrid>#talkbtn{ display:flex; }
+#menugrid>#menustatus,#menugrid>#menubag,#menugrid>#spellbtn,#menugrid>#questbtn,#menugrid>#savebtn,#menugrid>#talkbtn,#menugrid>#gearbtn{ display:flex; }
 #menugrid>#doorbtn.show,#menugrid>#cloakbtn.show,#menugrid>#bookbtn.show{ display:flex; }
 @media (max-width:400px){ #menugrid{ grid-template-columns:1fr; } }
 
@@ -864,11 +876,13 @@ body{
     <div id="spellbtn" class="glass">🔮 じゅもん</div>
     <div id="questbtn" class="glass">🗺 たびのメモ</div>
     <div id="bookbtn" class="glass">📕 ずかん</div>
+    <div id="gearbtn" class="glass">📗 そうびちょう</div>
     <div id="savebtn" class="glass">📖 きろく</div>
     <div id="doorbtn" class="glass">🚪 どこでもドア</div>
     <div id="cloakbtn" class="glass">👻 とうめい</div>
     <div id="talkbtn" class="glass">💬 はなしかけ</div>
   </div></div></div>
+  <div id="gearwin"><div id="gearpanel" class="glass"><div id="gearhead"><span>📗 そうびちょう</span><span id="gearclose">✕ とじる</span></div><div id="gearbody"></div></div></div>
   <div id="questwin"><div id="questpanel" class="glass"><div id="questhead"><span>🗺 たびのメモ</span><span id="questclose">✕ とじる</span></div><div id="questbody"></div></div></div>
   <div id="jumonwin"><div id="jumonpanel" class="glass"><div id="jumonhead"><span>🔮 ふっかつの じゅもん</span><span id="jumonclose">✕ とじる</span></div><div id="jumonbody"><textarea id="jumontext" spellcheck="false" autocomplete="off" autocorrect="off"></textarea><div id="jumonbtns"><div class="btn" id="jumoncopy">コピー</div><div class="btn" id="jumoncast">となえる</div></div><div class="jumon-note" id="jumonnote"></div></div></div></div>
   <div id="mute" class="glass" title="サウンド">
@@ -907,7 +921,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1531'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1615'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3280,8 +3294,8 @@ function ownGear(){
   if(Game.armorDef&&!Game.ownA.includes(Game.armorDef))Game.ownA.push(Game.armorDef);
   Game.ownW.sort((a,b)=>a-b);Game.ownA.sort((a,b)=>a-b);
 }
-function gainWeapon(v){ownGear();if(!Game.ownW.includes(v)){Game.ownW.push(v);Game.ownW.sort((a,b)=>a-b);}}
-function gainArmor(v){ownGear();if(!Game.ownA.includes(v)){Game.ownA.push(v);Game.ownA.sort((a,b)=>a-b);}}
+function gainWeapon(v){ownGear();if(!Game.ownW.includes(v)){Game.ownW.push(v);Game.ownW.sort((a,b)=>a-b);}gearBookCheck();}
+function gainArmor(v){ownGear();if(!Game.ownA.includes(v)){Game.ownA.push(v);Game.ownA.sort((a,b)=>a-b);}gearBookCheck();}
 // 案7(2026-07-22): 島の結びで1点ずつ授かる固有装備。効果式は既存装備の再利用のみ。
 const ISLAND_REWARDS=[
   // 便2(2026-07-25): 旧値(w54/58/70/78・a42/48/54/64)は 買える天井(⚔82/🛡60)も 鍛えた天井(⚔100/🛡78)も全て下回り、
@@ -3312,6 +3326,89 @@ function normalizeIslandRewards(){
   let n=0;for(const r of ISLAND_REWARDS)if(Game.hidden&&Game.hidden[r.flag]&&gainIslandReward(r.no,false))n++;
   Game._islandRewardCatchup=n;return n;
 }
+// ============================================================
+// そうびちょう(2026-08-10 SPEC_atsumeru_20260810): 全そうびの台帳=あつめる進捗を画面に出す。
+// 行は 実装の表(SHOP/ISLAND_REWARDS/FORGE_W/FORGE_A/KAJI_KAGE)から機械導出=手打ちの数字ゼロ。
+// 物語で さずかる7点だけ 出どころの一言を GEAR_STORY に書く(さずける箇所は実読済み:
+//   ⚔16=どうくつ奥の宝箱(17,9) ⚔26=ポポ救出 ⚔44=satonushi勝利 ⚔52=王crown2 ⚔56=toikeshin勝利 🛡20=mgolem勝利 🛡28=hikarinokodama勝利)。
+// 旧世代の値(⚔54/58/70/78/108・🛡42/48/54/64/84 ほか)は台帳に載せない=いまの旅で そろえられる物だけを数える。
+// ============================================================
+const FORGE_W={82:[88,2000,1],88:[94,5000,2],94:[100,9000,3]}; // forgeRun の FW/FA を持ち上げ(そうびちょうと共用・値は不変)
+const FORGE_A={60:[66,2000,1],66:[72,5000,2],72:[78,9000,3]};
+const KAJI_KAGE=[['kw1',142,'w',8000,2],['kw2',150,'w',14000,4],['ka1',114,'a',9000,2],['ka2',120,'a',15000,4]]; // forgeRun の かげ装備表を持ち上げ(値は不変)
+const GEAR_STORY={
+  w:{16:'どうくつの おくの たからばこ',26:'まいごの ポポを おかあさんへ とどけると',44:'しずみのさとの さとぬしを ときはなつと',52:'くにを すくった あと おうさまから',56:'とわのふちの ぬしを しずめると'},
+  a:{20:'かざんの ぬしの たおれた あとに',28:'ひかりのこだまの いのりを うけつぐと'}};
+function gearBookRows(){
+  const w=new Map(),a=new Map(),tate=[],kid=[];
+  const put=(m,v,name,src)=>{if(v&&!m.has(v))m.set(v,{v,name,src});};
+  for(const it of SHOP){
+    const late=it.need?'（ものがたりが すすむと）':'';
+    if(it.atk)put(w,it.atk,it.label,shopWhereOf(it)+late);
+    else if(it.armor)put(a,it.armor,it.label,shopWhereOf(it)+late);
+    else if(it.def)tate.push({v:it.def,name:it.label,src:shopWhereOf(it),own:()=>!!(Game.shield||Game.shield2)});
+    else if(it.def2)tate.push({v:it.def2,name:it.label,src:shopWhereOf(it),own:()=>!!Game.shield2});
+    else if(it.nk==='w')kid.push({v:12,name:it.label,src:shopWhereOf(it)+late,own:()=>(Game.nkW||0)>0});
+    else if(it.nk==='a')kid.push({v:14,name:it.label,src:shopWhereOf(it)+late,own:()=>(Game.nkA||0)>0});
+  }
+  for(const r of ISLAND_REWARDS){
+    const t=SHITAKU_TALK.find(x=>x.done===r.flag);
+    put(r.kind==='w'?w:a,r.value,r.name,(t?t.island:'しま')+'の ものがたりの おくりもの');
+  }
+  for(const k in FORGE_W)put(w,FORGE_W[k][0],WNAME[FORGE_W[k][0]],'⚒かじで きたえる（ほしのてつ）');
+  for(const k in FORGE_A)put(a,FORGE_A[k][0],ANAME[FORGE_A[k][0]],'⚒かじで きたえる（ほしのてつ）');
+  for(const r of KAJI_KAGE)put(r[2]==='w'?w:a,r[1],(r[2]==='w'?WNAME:ANAME)[r[1]],'⚒かじで うちだす（かげいし）');
+  for(const k in GEAR_STORY.w)put(w,+k,WNAME[+k],GEAR_STORY.w[k]);
+  for(const k in GEAR_STORY.a)put(a,+k,ANAME[+k],GEAR_STORY.a[k]);
+  const srt=m=>[...m.values()].sort((x,y)=>x.v-y.v);
+  return {w:srt(w),a:srt(a),tate:tate.sort((x,y)=>x.v-y.v),kid};
+}
+function gearBookCount(){
+  const B=gearBookRows(),ow=Game.ownW||[],oa=Game.ownA||[];
+  let n=0,m=0;
+  for(const r of B.w){m++;if(ow.includes(r.v))n++;}
+  for(const r of B.a){m++;if(oa.includes(r.v))n++;}
+  for(const r of B.tate){m++;if(r.own())n++;}
+  for(const r of B.kid){m++;if(r.own())n++;}
+  return {n,m};
+}
+function gearBookCheck(){ // 節目: 半分=toast一回きり／完集=しょうごう「そうびはかせ」(Ever=一度えたら とりあげない)
+  if(!Game.hidden)return;
+  const c=gearBookCount();
+  if(!Game.hidden.gearHalfTold&&c.n>=Math.ceil(c.m/2)&&c.n<c.m){Game.hidden.gearHalfTold=true;
+    toast('📗 そうびちょうが はんぶんを こえた！（いま '+c.n+' / '+c.m+'）');if(typeof sfxChest==='function')sfxChest();}
+  if(!Game.hidden.gearHakaseEver&&c.n>=c.m){Game.hidden.gearHakaseEver=true;Game.hidden.gearHalfTold=true;
+    toast('📗 そうびを ぜんぶ あつめた！ しょうごう「そうびはかせ」を えた！');
+    if(typeof sfxLevel==='function')sfxLevel();if(typeof flash==='function')flash('#ffe9b0',0.4,0.9);}
+}
+function renderGearBook(){
+  const B=gearBookRows(),c=gearBookCount(),ow=Game.ownW||[],oa=Game.ownA||[];
+  const row=(icon,name,desc,sub,own,eq)=>'<div class="strow qstack'+(own?'':' gbno')+'"><div class="qtop"><span class="stlabel">'+(own?'':'□ ')+icon+name+'</span><span class="stval">'+desc+'</span></div><span class="qsub">'+(own?(eq?'● そうび中':'✓ もっている'):'▶ '+sub)+'</span></div>';
+  let h='<div class="strow"><span class="stlabel">あつめた そうび</span><span class="stval">'+c.n+' / '+c.m+((Game.hidden&&Game.hidden.gearHakaseEver)?'<span class="stsub">しょうごう「そうびはかせ」</span>':'')+'</span></div>';
+  h+='<div class="bsec-note">もっていない そうびは ▶ が てがかり。ぜんぶ あつめると しょうごうが まっている。</div>';
+  h+='<h3 class="bisle">⚔ ぶき<span class="stsub">　いま '+B.w.filter(r=>ow.includes(r.v)).length+' / '+B.w.length+'</span></h3>';
+  for(const r of B.w)h+=row('⚔',r.name,'こうげき +'+r.v+(WEAPONFX[r.v]?'✦':''),r.src,ow.includes(r.v),Game.weaponAtk===r.v);
+  h+='<h3 class="bisle">🛡 よろい<span class="stsub">　いま '+B.a.filter(r=>oa.includes(r.v)).length+' / '+B.a.length+'</span></h3>';
+  for(const r of B.a)h+=row('🛡',r.name,'しゅび +'+r.v+(ARMORFX[r.v]?'✦':''),r.src,oa.includes(r.v),(Game.armorDef||0)===r.v);
+  h+='<h3 class="bisle">🛡 たて<span class="stsub">　いま '+B.tate.filter(r=>r.own()).length+' / '+B.tate.length+'</span></h3>';
+  for(const r of B.tate)h+=row('🛡',r.name,'しゅび +'+r.v,r.src,r.own(),false);
+  h+='<h3 class="bisle">👦 こどもの そうび<span class="stsub">　いま '+B.kid.filter(r=>r.own()).length+' / '+B.kid.length+'</span></h3>';
+  for(const r of B.kid)h+=row('',r.name,'こどもの ちから +'+r.v,r.src,r.own(),false);
+  h+='<div class="bsec-note">'+FXNOTE+'（くわしくは 🎒たびじたく）</div>';
+  return h;
+}
+function openGearBook(){
+  if(Game.minigame)return;
+  if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting)return;
+  const wnd=document.getElementById('gearwin');if(!wnd)return;
+  gearBookCheck();
+  document.getElementById('gearbody').innerHTML=renderGearBook();
+  wnd.classList.add('show');Game.gearOpen=true;Game._gearT=performance.now();
+  held.length=0;swipeVec=null;ptr=null;
+  if(typeof sfxSel==='function')sfxSel();
+  showPanScroll(document.getElementById('gearpanel'));
+}
+function closeGearBook(){const wnd=document.getElementById('gearwin');if(wnd)wnd.classList.remove('show');Game.gearOpen=false;hidePanScroll();}
 async function awardIslandReward(no){
   const got=gainIslandReward(no,true);if(!got)return false;
   const r=got.reward,icon=r.kind==='w'?'⚔':'🛡';sfxChest();flash('#ffe4a8',0.38,0.85);
@@ -5222,10 +5319,11 @@ function renderStatus(){
    h+='<h3 class="bisle">きろく</h3>';
    h+=row('なんいど',curDiff().name,(Game.ng?(Game.ng+1)+'しゅうめ':''));
    h+=row('ずかん',zk+' / '+zAll.length);
+   {const gb=gearBookCount();h+=row('そうびちょう',gb.n+' / '+gb.m);}
    h+=row('せきひ',sk+' / 5');
    h+=row('きょじんのこころ',(Game.gheart||0)+' / 5');
    if(Game.hidden&&Game.hidden.ch2)h+=row('じょうか',(Game.purified||0)+'にん の かげを ときはなった');if(Game.hidden&&Game.hidden.mate1){const Mm=MATES[mateKind()];h+=row('みちづれ',Mm.name+'（'+Mm.act+'）');}
-   {const tt=[],H=Game.hidden||{};if(H.zkomp)tt.push('まものはかせ');if(H.slcatch||H.slcatchEver)tt.push('スライムキャッチャー');if(H.towaDown||H.fuchiEver)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal()||H.kataribeEver)tt.push('かたりべ');if(H.ch4b||H.wataseEver)tt.push('ひかりを わたせしもの');if(H.ch5c||H.ch5cEver)tt.push('となりびと');if(H.ch6c||H.ch6cEver)tt.push('なまえを よぶもの');if(H.ch7c||H.ch7cEver)tt.push('ものがたりを つぐもの');if(H.ch8c||H.ch8cEver)tt.push('みおくりびと');if(H.ch9c||H.ch9cEver)tt.push('ともしびを つぐもの');if(H.ch10c||H.ch10cEver)tt.push('ふたりの かたりべ');if(H.ch11c||H.ch11cEver)tt.push('うみを つなぐもの');if(H.meguriDown||H.meguriEver)tt.push('しんぱんを こえしもの');
+   {const tt=[],H=Game.hidden||{};if(H.zkomp)tt.push('まものはかせ');if(H.slcatch||H.slcatchEver)tt.push('スライムキャッチャー');if(H.towaDown||H.fuchiEver)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal()||H.kataribeEver)tt.push('かたりべ');if(H.ch4b||H.wataseEver)tt.push('ひかりを わたせしもの');if(H.ch5c||H.ch5cEver)tt.push('となりびと');if(H.ch6c||H.ch6cEver)tt.push('なまえを よぶもの');if(H.ch7c||H.ch7cEver)tt.push('ものがたりを つぐもの');if(H.ch8c||H.ch8cEver)tt.push('みおくりびと');if(H.ch9c||H.ch9cEver)tt.push('ともしびを つぐもの');if(H.ch10c||H.ch10cEver)tt.push('ふたりの かたりべ');if(H.ch11c||H.ch11cEver)tt.push('うみを つなぐもの');if(H.meguriDown||H.meguriEver)tt.push('しんぱんを こえしもの');if(H.gearHakaseEver)tt.push('そうびはかせ');
     h+=row('しょうごう',tt.length?tt.join('　'):'──');}}
   if(Game.hidden&&Game.hidden.mate1){
     h+='<h3 class="bisle">みちづれを えらぶ<span class="stsub">　じょうかが すすむほど つよくなる</span></h3><div class="mateswap">';
@@ -5997,6 +6095,7 @@ function openFieldMenu(){
   if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
   const w=document.getElementById('menuwin');if(!w)return;
   w.classList.add('show');Game.menuOpen=true;Game._menuT=performance.now();
+  gearBookCheck(); // たて・こども装備ぶんの節目も メニューを開いた時に拾う(2026-08-10 そうびちょう)
   if(w.firstElementChild)w.firstElementChild.scrollTop=0;Game.autoPath=null;held.length=0;swipeVec=null;ptr=null;if(typeof sfxSel==='function')sfxSel();
 }
 function closeFieldMenu(){const w=document.getElementById('menuwin');if(w)w.classList.remove('show');Game.menuOpen=false;}
@@ -6014,6 +6113,9 @@ $('#menustatus').addEventListener('pointerdown',e=>{e.stopPropagation();firstGes
 $('#panup').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();panScrollStep(-1);});
 $('#pandown').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();panScrollStep(1);});
 $('#menubag').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openInventory();});
+$('#gearbtn').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openGearBook();});
+$('#gearclose').addEventListener('pointerdown',e=>{e.stopPropagation();closeGearBook();});
+$('#gearwin').addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.id==='gearwin'&&performance.now()-(Game._gearT||0)>450)closeGearBook();});
 $('#proofhud').addEventListener('pointerdown',e=>{e.stopPropagation();firstGesture();openProof();});
 $('#proofclose').addEventListener('pointerdown',e=>{e.stopPropagation();closeProof();});
 $('#proofwin').addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.id==='proofwin'&&performance.now()-(Game._proofT||0)>450)closeProof();});
@@ -9630,8 +9732,7 @@ async function gunshiMenu(){
 }
 // ほりびとの かじ本体(ちそこ常設と ふなみせ⚒の両方から呼ぶ 2026-07-21)。段・価格・てつ消費・文言は従来のまま
 async function forgeRun(atSea){
-  const FW={82:[88,2000,1],88:[94,5000,2],94:[100,9000,3]};
-  const FA={60:[66,2000,1],66:[72,5000,2],72:[78,9000,3]};
+  const FW=FORGE_W,FA=FORGE_A; // 表の正本は FORGE_W/FORGE_A(そうびちょうと共用・2026-08-10・値は不変)
   while(true){
     const wr=FW[Game.weaponAtk],ar=FA[Game.armorDef];
     const list=[];
@@ -9646,7 +9747,7 @@ async function forgeRun(atSea){
      list.push({id:'seedw',label:'🌱 ちからのたね を うちだす（こうげき +3）　'+SG+'G・てつ'+SI+short(),dis:Game.gold<SG||iron<SI});
      list.push({id:'seeda',label:'🌱 まもりのたね を うちだす（しゅび +2）　'+SG+'G・てつ'+SI+short(),dis:Game.gold<SG||iron<SI});}
     if(Game.hidden.kageOpening){const KI=Game.items.kageishi||0; // A案(2026-07-29): かげいしの そうび=倒すほど 強い買い物
-     const KG=[['kw1',142,'w',8000,2],['kw2',150,'w',14000,4],['ka1',114,'a',9000,2],['ka2',120,'a',15000,4]];
+     const KG=KAJI_KAGE; // 表の正本は KAJI_KAGE(そうびちょうと共用・2026-08-10・値は不変)
      for(const [id,v,kind,g,ki] of KG){
        const own=(kind==='w'?(Game.ownW||[]):(Game.ownA||[])).includes(v);
        if(own)continue;
@@ -9662,7 +9763,7 @@ async function forgeRun(atSea){
     const c=await ask(list,'かじ（'+Game.gold+'G　ほしのてつ×'+(Game.items.hoshitetsu||0)+'）');
     if(c==='no'||!c)break;
     if(c==='kw1'||c==='kw2'||c==='ka1'||c==='ka2'){ // かげの そうび(A案 2026-07-29)
-      const KG={kw1:[142,'w',8000,2],kw2:[150,'w',14000,4],ka1:[114,'a',9000,2],ka2:[120,'a',15000,4]}[c];
+      const KG=(KAJI_KAGE.find(r=>r[0]===c)||[]).slice(1);
       const [v,kind,g,ki]=KG;
       if(Game.gold<g||(Game.items.kageishi||0)<ki){await say('かじの こえ「かねか かげいしが たりないよ。」');continue;}
       Game.gold-=g;Game.items.kageishi-=ki;
@@ -18495,7 +18596,8 @@ const KAKAGE=[
  {k:'tomoshibi',name:'ともしびを つぐもの',desc:'どく・ねむり・まひを 3わり ふせぐ',own:()=>!!(Game.hidden&&(Game.hidden.ch9c||Game.hidden.ch9cEver))},
  {k:'futari',name:'ふたりの かたりべ',desc:'こどもの こうげき・まもり +20%',own:()=>!!(Game.hidden&&(Game.hidden.ch10c||Game.hidden.ch10cEver))},
  {k:'umi',name:'うみを つなぐもの',desc:'ゴールド +10%',own:()=>!!(Game.hidden&&(Game.hidden.ch11c||Game.hidden.ch11cEver))},
- {k:'shinpan',name:'しんぱんを こえしもの',desc:'こうげき +5%',own:()=>!!(Game.hidden&&(Game.hidden.meguriDown||Game.hidden.meguriEver))}];
+ {k:'shinpan',name:'しんぱんを こえしもの',desc:'こうげき +5%',own:()=>!!(Game.hidden&&(Game.hidden.meguriDown||Game.hidden.meguriEver))},
+ {k:'atsume',name:'そうびはかせ',desc:'かいしんの いちげき +5%',own:()=>!!(Game.hidden&&Game.hidden.gearHakaseEver)}];
 const kkOn=key=>{if(Game.kakage!==key)return false;const e=KAKAGE.find(x=>x.k===key);return !!(e&&e.own());};
 function nkStats(){const lv=(Game.p&&Game.p.lv)||1;const m=(typeof kkOn==='function'&&kkOn('futari'))?1.2:1;return{mhp:40+lv*9,mmp:10+lv*4,atk:Math.round((8+lv*5+(Game.nkW||0))*m),def:Math.round((4+Math.round(lv*3.5)+(Game.nkA||0))*m)};}
 function nkSpawnFollower(){const p=Game.p;
@@ -19005,7 +19107,7 @@ async function playerAction(act){
     beginHeroStrike(bt);sfxSlash();
     await wait(0.08);
     const wfx=WEAPONFX[Game.weaponAtk]||{};
-    const crit=(!!(bt.kuseMouth||(bt.charge&&bt.kuseFake)))||Math.random()<((curDiff().pcrit||0.1)+(wfx.critUp||0)+(kkOn('tsugu')?0.04:0)+(bt.kuseCutWin?0.30:0)); // ぬしの くせ: 口内/うそ見抜きは かいしん保証
+    const crit=(!!(bt.kuseMouth||(bt.charge&&bt.kuseFake)))||Math.random()<((curDiff().pcrit||0.1)+(wfx.critUp||0)+(kkOn('tsugu')?0.04:0)+(kkOn('atsume')?0.05:0)+(bt.kuseCutWin?0.30:0)); // ぬしの くせ: 口内/うそ見抜きは かいしん保証
     const physRaw=foePhys(bt),physMul=battleAffinityMul('phys',physRaw);
     const dodgeP=(bt.tomoshibi>0||bt.ch18NoDodge||bt.tokiNoDodge)?0:(bt.soar?0.5:(bt.foe.dodge||0));
     if(!crit&&dodgeP&&Math.random()<dodgeP){
