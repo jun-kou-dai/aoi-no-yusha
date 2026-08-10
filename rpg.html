@@ -906,7 +906,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1403'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1417'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -5554,6 +5554,13 @@ talkskipEl.addEventListener('pointerdown',e=>{
   e.stopPropagation();e.preventDefault();if(!TALK_SKIP.eligible)return;
   TALK_SKIP.on=true;sfxOk();talkSkipAdvance(MSG);
 });
+// キャラ3体の パレット(デザインシート 2026-08-10・フィールド/戦闘/会話で 同じ いろを つかう)
+// 正本=SPEC_chara_design_20260810.md。ゆうしゃの 金は isHair契約(g/r>0.82・verify_battle_hero_finish)の 内側で えらんだ
+const CHARA_PAL={
+  hero:{hair:'#f2ca50',hairBk:'#e8c355',hairHi:'#f8e08a',band:'#f4f6fa',shBase:'#2b4aa6',shBase2:'#7a5230',shRim:'#c8d2e0',cross:'#e8c14e',gem:'#7fd4f0'},
+  kid:{hair:'#8a5a36',skin:'#f4d9b0',top:'#a8d8f0',collar:'#f2f5f8',shorts:'#3d78c8',sock:'#eef2f6',shoe:'#28407c',strap:'#c89a50',bag:'#e08428',bagDk:'#b8641c',buckle:'#8ec4e8'},
+  kokage:{limb:'#332e60',tunic:'#6a63a8',head:'#413c78',hairSh:'#322d5e',strap:'#453f80',hand:'#4a4488',eye:'rgba(223,232,255,0.94)',rim:'143,216,248'}
+};
 // はなしての かおグラ（ホワイトリスト＝ちゅうかんの「」や システムぶんには でない）
 const FACES={
   'おうさま':{hair:'side',hcol:'#b9bec9',beard:'short',bcol:'#c9ced8',crown:1},
@@ -5565,7 +5572,7 @@ const FACES={
   'しょうにん':{hair:'short',hcol:'#5a3a26',cap:'#3f7a4f'},
   'やどや':{hair:'short',hcol:'#4a3423',band:'#b0483a'},
   'ポポ':{hair:'short',hcol:'#8a5a33',child:1,blush:1},
-  'こども':{hair:'short',hcol:'#4a3423',child:1},
+  'こども':{hair:'short',hcol:'#8a5a36',child:1},
   'むらびと':{hair:'short',hcol:'#4a3423'},
   'きこり':{hair:'short',hcol:'#5a3a26',straw:1},
   'たびびと':{type:'hood',hood:'#6a7a8a',eyes:'#2a2018'},
@@ -5576,7 +5583,7 @@ const FACES={
   'こたえなきもの':{type:'hood',hood:'#0e1220',eyes:'#dfe6ff',glow:1},
   'せきひ':{type:'stone'},
   'こえ':{type:'ghost'},
-  'こどものかげ':{type:'shadow'},
+  'こどものかげ':{type:'shadow',kid:1},
   'りょうしのかげ':{type:'shadow'},
   'はなよめのかげ':{type:'shadow'}};
 function drawPortrait(key){
@@ -5615,6 +5622,22 @@ function drawPortrait(key){
     return true;
   }
   if(f.type==='shadow'){
+    if(f.kid){ // こどものかげ: こどもと おなじ かたちの かみを した 藍紫の 子(SPEC_chara_design_20260810)。りょうし/はなよめの かげは 従来のまま
+      const K=CHARA_PAL.kokage;
+      c.save();c.globalCompositeOperation='lighter';
+      c.fillStyle='rgba(120,140,230,0.20)';c.beginPath();c.arc(cx,cy,fr+10,0,Math.PI*2);c.fill();c.restore();
+      c.fillStyle=K.head;c.beginPath();c.arc(cx,cy,fr+4,0,Math.PI*2);c.fill();
+      c.fillStyle=K.hairSh;
+      c.beginPath();c.arc(cx,cy,fr+4,Math.PI,Math.PI*2);
+      c.lineTo(cx+fr+4,cy+3);c.lineTo(cx+12,cy+3);c.lineTo(cx+8,cy-4);c.lineTo(cx+4,cy+3);c.lineTo(cx-fr-4,cy+3);c.closePath();c.fill();
+      c.strokeStyle='rgba('+K.rim+',0.85)';c.lineWidth=3;c.lineCap='round';
+      c.beginPath();c.arc(cx,cy,fr+8,Math.PI*0.78,Math.PI*1.30);c.stroke();
+      c.beginPath();c.moveTo(cx-fr-9,cy-13);c.lineTo(cx-fr-14,cy-17);c.stroke();
+      c.fillStyle=K.eye;
+      c.beginPath();c.ellipse(cx-11,cy+8,4.4,6.2,0,0,Math.PI*2);c.fill();
+      c.beginPath();c.ellipse(cx+11,cy+8,4.4,6.2,0,0,Math.PI*2);c.fill();
+      return true;
+    }
     c.fillStyle='#2a2440';c.beginPath();c.arc(cx,cy,fr+4,0,Math.PI*2);c.fill();
     c.save();c.globalCompositeOperation='lighter';
     c.fillStyle='rgba(120,90,200,0.25)';c.beginPath();c.arc(cx,cy,fr+10,0,Math.PI*2);c.fill();c.restore();
@@ -16949,41 +16972,66 @@ function drawNakamaField(){
   ctx.beginPath();ctx.ellipse(c.x,fy,ts*0.16,ts*0.055,0,0,Math.PI*2);ctx.fill();
   ctx.save();ctx.translate(c.x,fy-bob);
   const OL='rgba(12,16,34,0.45)',olw=Math.max(1,ts*0.025);
-  // ワンピース(みずいろ)
-  const bg=ctx.createLinearGradient(0,-ts*0.42,0,0);
-  bg.addColorStop(0,'#a8d8f0');bg.addColorStop(1,'#5a8ab0');
-  ctx.fillStyle=bg;
+  const K=CHARA_PAL.kid; // シート02: 茶のマッシュ髪+水色の上着+青の半ズボン+橙のかばん(SPEC_chara_design_20260810)
+  // あし+くつした+こんの くつ
+  ctx.fillStyle=K.skin;
+  ctx.fillRect(-ts*0.075,-ts*0.10,ts*0.052,ts*0.075);
+  ctx.fillRect(ts*0.023,-ts*0.10,ts*0.052,ts*0.075);
+  ctx.fillStyle=K.sock;
+  ctx.fillRect(-ts*0.075,-ts*0.048,ts*0.052,ts*0.028);
+  ctx.fillRect(ts*0.023,-ts*0.048,ts*0.052,ts*0.028);
+  ctx.fillStyle=K.shoe;
+  rr(ctx,-ts*0.082,-ts*0.026,ts*0.066,ts*0.036,ts*0.012);ctx.fill();
+  rr(ctx,ts*0.016,-ts*0.026,ts*0.066,ts*0.036,ts*0.012);ctx.fill();
+  // はんズボン(なかあお)
+  ctx.fillStyle=K.shorts;
+  rr(ctx,-ts*0.095,-ts*0.175,ts*0.19,ts*0.085,ts*0.02);ctx.fill();
+  ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,ts*0.015);
+  rr(ctx,-ts*0.095,-ts*0.175,ts*0.19,ts*0.085,ts*0.02);ctx.stroke();
+  // うわぎ(うすあお・すそが すこし ひろがる)
+  ctx.fillStyle=K.top;
   ctx.beginPath();
-  ctx.moveTo(-ts*0.09,-ts*0.38);
-  ctx.quadraticCurveTo(-ts*0.19,-ts*0.12,-ts*0.15,0);
-  ctx.lineTo(ts*0.15,0);
-  ctx.quadraticCurveTo(ts*0.19,-ts*0.12,ts*0.09,-ts*0.38);
+  ctx.moveTo(-ts*0.085,-ts*0.37);
+  ctx.quadraticCurveTo(-ts*0.135,-ts*0.20,-ts*0.115,-ts*0.145);
+  ctx.lineTo(ts*0.115,-ts*0.145);
+  ctx.quadraticCurveTo(ts*0.135,-ts*0.20,ts*0.085,-ts*0.37);
   ctx.closePath();ctx.fill();
   ctx.strokeStyle=OL;ctx.lineWidth=olw;ctx.stroke();
-  // エプロン
-  ctx.fillStyle='#efe7d2';
-  ctx.beginPath();
-  ctx.moveTo(-ts*0.06,-ts*0.30);
-  ctx.quadraticCurveTo(-ts*0.10,-ts*0.08,-ts*0.085,-ts*0.01);
-  ctx.lineTo(ts*0.085,-ts*0.01);
-  ctx.quadraticCurveTo(ts*0.10,-ts*0.08,ts*0.06,-ts*0.30);
-  ctx.closePath();ctx.fill();
-  // かたりべちょう(こわきの ほん)
-  ctx.fillStyle='#a86a3a';
-  ctx.fillRect(ts*0.10,-ts*0.30,ts*0.10,ts*0.14);
-  ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,ts*0.015);ctx.strokeRect(ts*0.10,-ts*0.30,ts*0.10,ts*0.14);
+  // て(そでの さきに ちいさく)
+  ctx.fillStyle=K.skin;
+  ctx.beginPath();ctx.arc(-ts*0.117,-ts*0.155,ts*0.026,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(ts*0.117,-ts*0.155,ts*0.026,0,Math.PI*2);ctx.fill();
+  // ななめの ストラップ+かたかけかばん(だいだい)＝かたりべちょうの いえ
+  ctx.strokeStyle=K.strap;ctx.lineWidth=Math.max(1.2,ts*0.028);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-ts*0.055,-ts*0.345);ctx.lineTo(ts*0.092,-ts*0.185);ctx.stroke();
+  ctx.fillStyle=K.bag;
+  rr(ctx,ts*0.055,-ts*0.205,ts*0.10,ts*0.085,ts*0.018);ctx.fill();
+  ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,ts*0.015);
+  rr(ctx,ts*0.055,-ts*0.205,ts*0.10,ts*0.085,ts*0.018);ctx.stroke();
+  ctx.fillStyle=K.bagDk;
+  rr(ctx,ts*0.055,-ts*0.205,ts*0.10,ts*0.032,ts*0.014);ctx.fill();
+  ctx.fillStyle=K.buckle;
+  ctx.fillRect(ts*0.094,-ts*0.185,ts*0.022,ts*0.022);
+  // えり(しろ)
+  ctx.fillStyle=K.collar;
+  ctx.beginPath();ctx.ellipse(0,-ts*0.355,ts*0.05,ts*0.02,0,0,Math.PI*2);ctx.fill();
   // あたま
-  ctx.fillStyle='#f4d9b0';
+  ctx.fillStyle=K.skin;
   ctx.beginPath();ctx.arc(0,-ts*0.5,ts*0.165,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle=OL;ctx.lineWidth=olw;ctx.stroke();
-  // かみのけ(ちゃいろ・よこの おだんご)
-  ctx.fillStyle='#8a5a36';
-  ctx.beginPath();ctx.arc(0,-ts*0.54,ts*0.155,Math.PI*0.95,Math.PI*2.05);ctx.fill();
-  ctx.beginPath();ctx.arc(ts*0.14,-ts*0.58,ts*0.06,0,Math.PI*2);ctx.fill();
+  // かみのけ(ちゃいろの マッシュ+まえがみの きれこみ)
+  ctx.fillStyle=K.hair;
+  ctx.beginPath();
+  ctx.arc(0,-ts*0.50,ts*0.168,Math.PI,Math.PI*2);
+  ctx.lineTo(ts*0.168,-ts*0.455);
+  ctx.lineTo(ts*0.062,-ts*0.455);ctx.lineTo(ts*0.040,-ts*0.492);ctx.lineTo(ts*0.018,-ts*0.455);
+  ctx.lineTo(-ts*0.168,-ts*0.455);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,ts*0.015);ctx.stroke();
   // め
   ctx.fillStyle='#2a3050';
-  ctx.beginPath();ctx.arc(-ts*0.05,-ts*0.49,ts*0.018,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(ts*0.05,-ts*0.49,ts*0.018,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(-ts*0.05,-ts*0.435,ts*0.018,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(ts*0.05,-ts*0.435,ts*0.018,0,Math.PI*2);ctx.fill();
   ctx.restore();
 }
 // あそびスライム（スライムつかまえ用・ちいさくて ぴょんぴょん はねる）
@@ -17051,6 +17099,47 @@ function drawMateField(){
   ctx.beginPath();ctx.ellipse(c.x,fy,ts*0.13*wf,ts*0.045,0,0,Math.PI*2);ctx.fill();
   ctx.save();ctx.translate(c.x,fy-ts*0.05-fl);
   const gl=0.26+(Math.sin(TM*3.4)*0.5+0.5)*0.14; // りんかくの ひかりが めいめつ
+  if(mateKind()==='kokage'){ // こどもの 2頭身の かげ(シート03=SPEC_chara_design_20260810)。かげびと/なきかげ/かげのきしは 従来のまま
+    const K=CHARA_PAL.kokage;
+    ctx.fillStyle=K.limb;
+    ctx.fillRect(-ts*0.072,-ts*0.10,ts*0.05,ts*0.09);
+    ctx.fillRect(ts*0.022,-ts*0.10,ts*0.05,ts*0.09);
+    ctx.fillStyle=K.tunic;
+    ctx.beginPath();
+    ctx.moveTo(-ts*0.082,-ts*0.34);
+    ctx.quadraticCurveTo(-ts*0.13,-ts*0.185,-ts*0.11,-ts*0.115);
+    ctx.lineTo(ts*0.11,-ts*0.115);
+    ctx.quadraticCurveTo(ts*0.13,-ts*0.185,ts*0.082,-ts*0.34);
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(170,200,255,'+gl+')';ctx.lineWidth=Math.max(1,ts*0.02);ctx.stroke();
+    ctx.strokeStyle=K.strap;ctx.lineWidth=Math.max(1,ts*0.024);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-ts*0.05,-ts*0.315);ctx.lineTo(ts*0.088,-ts*0.165);ctx.stroke();
+    ctx.fillStyle='#57517f';
+    rr(ctx,ts*0.050,-ts*0.19,ts*0.088,ts*0.075,ts*0.016);ctx.fill();
+    ctx.fillStyle=K.hand;
+    ctx.beginPath();ctx.arc(-ts*0.112,-ts*0.14,ts*0.024,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(ts*0.112,-ts*0.14,ts*0.024,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=K.head;
+    ctx.beginPath();ctx.arc(0,-ts*0.47,ts*0.165,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=K.hairSh;
+    ctx.beginPath();
+    ctx.arc(0,-ts*0.47,ts*0.166,Math.PI,Math.PI*2);
+    ctx.lineTo(ts*0.166,-ts*0.425);
+    ctx.lineTo(ts*0.058,-ts*0.425);ctx.lineTo(ts*0.037,-ts*0.458);ctx.lineTo(ts*0.016,-ts*0.425);
+    ctx.lineTo(-ts*0.166,-ts*0.425);
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(170,200,255,'+(gl+0.06)+')';ctx.lineWidth=Math.max(1,ts*0.018);
+    ctx.beginPath();ctx.arc(0,-ts*0.47,ts*0.168,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='rgba('+K.rim+','+(gl+0.34).toFixed(3)+')';ctx.lineWidth=Math.max(1,ts*0.022);ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(0,-ts*0.47,ts*0.185,Math.PI*0.80,Math.PI*1.34);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-ts*0.155,-ts*0.30);ctx.lineTo(-ts*0.185,-ts*0.345);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-ts*0.128,-ts*0.055);ctx.lineTo(-ts*0.155,-ts*0.095);ctx.stroke();
+    ctx.fillStyle=K.eye;
+    ctx.beginPath();ctx.ellipse(-ts*0.055,-ts*0.395,ts*0.021,ts*0.030,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(ts*0.055,-ts*0.395,ts*0.021,ts*0.030,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    return;
+  }
   const bg=ctx.createLinearGradient(0,-ts*0.40,0,0);
   bg.addColorStop(0,M.body);bg.addColorStop(1,'rgba(34,30,56,0.30)');
   ctx.fillStyle=bg;
@@ -17171,17 +17260,20 @@ function drawHeroBoat(){
   ctx.restore();
   // なかまの こども(となりに すわる)
   if(typeof nkFollowing==='function'&&nkFollowing()){
-    ctx.fillStyle='#a8d8f0';
+    const K=CHARA_PAL.kid; // 船の こどもも 同じ 子(シート02): 水色の うわぎ+橙の かばん+マッシュの かみ
+    ctx.fillStyle=K.top;
     ctx.beginPath();
     ctx.moveTo(ts*0.10,-ts*0.10);
     ctx.quadraticCurveTo(ts*0.055,-ts*0.02,ts*0.075,ts*0.02);
     ctx.lineTo(ts*0.16,ts*0.02);
     ctx.quadraticCurveTo(ts*0.175,-ts*0.02,ts*0.145,-ts*0.10);
     ctx.closePath();ctx.fill();
-    ctx.fillStyle='#f4d9b0';
+    ctx.fillStyle=K.bag;
+    rr(ctx,ts*0.150,-ts*0.075,ts*0.034,ts*0.030,ts*0.008);ctx.fill();
+    ctx.fillStyle=K.skin;
     ctx.beginPath();ctx.arc(ts*0.12,-ts*0.145,ts*0.048,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#8a5a36';
-    ctx.beginPath();ctx.arc(ts*0.12,-ts*0.158,ts*0.045,Math.PI*0.95,Math.PI*2.05);ctx.fill();
+    ctx.fillStyle=K.hair;
+    ctx.beginPath();ctx.arc(ts*0.12,-ts*0.155,ts*0.046,Math.PI*0.85,Math.PI*2.15);ctx.fill();
   }
   ctx.restore();
 }
@@ -17211,7 +17303,7 @@ function drawHeroBody(ts,view,wk,mv){
   function head(hx0,v){
     const hy=-ts*0.72,hr=ts*0.155;
     // うしろがみ
-    ctx.fillStyle='#c9ae6e';
+    ctx.fillStyle=CHARA_PAL.hero.hairBk;
     ctx.beginPath();ctx.arc(hx0,hy,hr*1.05,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle=OL;ctx.lineWidth=olw;ctx.stroke();
     if(v!=='U'){
@@ -17220,7 +17312,7 @@ function drawHeroBody(ts,view,wk,mv){
       ctx.beginPath();ctx.arc(hx0+(v==='S'?ts*0.014:0),hy+ts*0.018,hr*0.92,0,Math.PI*2);ctx.fill();
     }
     // かみ
-    ctx.fillStyle='#e8d29a';
+    ctx.fillStyle=CHARA_PAL.hero.hair;
     if(v==='D'){
       ctx.beginPath();
       ctx.arc(hx0,hy,hr,Math.PI,Math.PI*2);
@@ -17239,14 +17331,18 @@ function drawHeroBody(ts,view,wk,mv){
     }else{
       ctx.beginPath();ctx.arc(hx0,hy,hr*0.99,0,Math.PI*2);ctx.fill();
     }
-    // はちまき
-    ctx.strokeStyle='#d98e5f';ctx.lineWidth=Math.max(1.4,ts*0.034);
+    // はちまき(しろ=シート01)
+    ctx.strokeStyle=CHARA_PAL.hero.band;ctx.lineWidth=Math.max(1.4,ts*0.034);
     ctx.beginPath();
     ctx.moveTo(hx0-hr*0.92,hy-hr*0.34);ctx.lineTo(hx0+hr*0.92,hy-hr*0.34);
     ctx.stroke();
+    ctx.strokeStyle='rgba(150,165,190,0.55)';ctx.lineWidth=Math.max(1,ts*0.012);
+    ctx.beginPath();
+    ctx.moveTo(hx0-hr*0.92,hy-hr*0.245);ctx.lineTo(hx0+hr*0.92,hy-hr*0.245);
+    ctx.stroke();
     if(v==='U'){
-      // むすびめの リボンが なびく
-      ctx.lineWidth=Math.max(1,ts*0.024);
+      // むすびめの リボンが なびく(しろ)
+      ctx.strokeStyle=CHARA_PAL.hero.band;ctx.lineWidth=Math.max(1,ts*0.024);
       ctx.beginPath();ctx.moveTo(hx0+hr*0.5,hy-hr*0.3);ctx.quadraticCurveTo(hx0+hr*0.9,hy+hr*0.2+flut,hx0+hr*0.72,hy+hr*0.62+flut);ctx.stroke();
       ctx.beginPath();ctx.moveTo(hx0+hr*0.5,hy-hr*0.3);ctx.quadraticCurveTo(hx0+hr*1.15,hy-hr*0.05+flut,hx0+hr*1.06,hy+hr*0.36+flut);ctx.stroke();
     }
@@ -17305,11 +17401,15 @@ function drawHeroBody(ts,view,wk,mv){
     flameGlow(ts*0.178,-ts*0.6);
     // ひだりて：たて か こぶし
     if(Game.shield){
-      ctx.fillStyle='#8a93b8';
-      ctx.beginPath();ctx.ellipse(-ts*0.205,-ts*0.365,ts*0.088,ts*0.118,0,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle='#dfd8bd';ctx.lineWidth=Math.max(1,ts*0.022);
-      ctx.beginPath();ctx.ellipse(-ts*0.205,-ts*0.365,ts*0.088,ts*0.118,0,0,Math.PI*2);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(-ts*0.205,-ts*0.45);ctx.lineTo(-ts*0.205,-ts*0.28);ctx.stroke();
+      ctx.fillStyle=CHARA_PAL.hero.shBase;
+      ctx.beginPath();ctx.ellipse(-ts*0.205,-ts*0.365,ts*0.092,ts*0.115,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=CHARA_PAL.hero.shRim;ctx.lineWidth=Math.max(1,ts*0.024);
+      ctx.beginPath();ctx.ellipse(-ts*0.205,-ts*0.365,ts*0.092,ts*0.115,0,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=CHARA_PAL.hero.cross;ctx.lineWidth=Math.max(1.2,ts*0.030);ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-ts*0.205,-ts*0.443);ctx.lineTo(-ts*0.205,-ts*0.287);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-ts*0.262,-ts*0.372);ctx.lineTo(-ts*0.148,-ts*0.372);ctx.stroke();
+      ctx.fillStyle=CHARA_PAL.hero.gem;
+      ctx.beginPath();ctx.arc(-ts*0.205,-ts*0.372,ts*0.018,0,Math.PI*2);ctx.fill();
     }else{
       ctx.fillStyle='#f2c79a';
       ctx.beginPath();ctx.arc(-ts*0.178,-ts*0.315,ts*0.042,0,Math.PI*2);ctx.fill();
@@ -17355,10 +17455,15 @@ function drawHeroBody(ts,view,wk,mv){
     ctx.beginPath();ctx.moveTo(-ts*0.02,-ts*0.555);ctx.quadraticCurveTo(-ts*0.25,-ts*0.44,-ts*0.30,-ts*0.17+flut*2);ctx.stroke();
     // たて（かっていれば せなかに）
     if(Game.shield){
-      ctx.fillStyle='#7d86ab';
-      ctx.beginPath();ctx.ellipse(-ts*0.155,-ts*0.41,ts*0.062,ts*0.105,0.25,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle='#cfc8ae';ctx.lineWidth=Math.max(1,ts*0.018);
-      ctx.beginPath();ctx.ellipse(-ts*0.155,-ts*0.41,ts*0.062,ts*0.105,0.25,0,Math.PI*2);ctx.stroke();
+      ctx.save();ctx.translate(-ts*0.155,-ts*0.41);ctx.rotate(0.25);
+      ctx.fillStyle=CHARA_PAL.hero.shBase;
+      ctx.beginPath();ctx.ellipse(0,0,ts*0.062,ts*0.105,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=CHARA_PAL.hero.shRim;ctx.lineWidth=Math.max(1,ts*0.018);
+      ctx.beginPath();ctx.ellipse(0,0,ts*0.062,ts*0.105,0,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=CHARA_PAL.hero.cross;ctx.lineWidth=Math.max(1,ts*0.022);ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(0,-ts*0.068);ctx.lineTo(0,ts*0.068);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-ts*0.040,-ts*0.006);ctx.lineTo(ts*0.040,-ts*0.006);ctx.stroke();
+      ctx.restore();
     }
     // あし（はさみ あるき）
     leg(-ts*0.03-wk*ts*0.065,0);
@@ -25676,6 +25781,56 @@ function drawMateBattle(bt){
     ctx.strokeStyle='rgba(216,205,255,'+(0.88*hit).toFixed(3)+')';ctx.lineWidth=Math.max(1,u*3);ctx.beginPath();ctx.arc(0,0,u*23,-1.38,1.38);ctx.stroke();ctx.restore();
   }
   const gl=0.24+(Math.sin(bt.t*3.2)*0.5+0.5)*0.12+k*0.45;
+  if(mateKind()==='kokage'){ // こどもの 2頭身の かげ(シート03)。いのりの て・とじる めの うごきは 従来のまま
+    const K=CHARA_PAL.kokage;
+    ctx.fillStyle=K.limb;
+    ctx.fillRect(-u*9.5,-u*14,u*6.6,u*13);
+    ctx.fillRect(u*2.9,-u*14,u*6.6,u*13);
+    rr(ctx,-u*11,-u*2,u*9.4,u*7.4,u*2.4);ctx.fill();
+    rr(ctx,u*1.6,-u*2,u*9.4,u*7.4,u*2.4);ctx.fill();
+    ctx.fillStyle=K.tunic;
+    ctx.beginPath();
+    ctx.moveTo(-u*10.5,-u*50);
+    ctx.quadraticCurveTo(-u*18,-u*31,-u*15,-u*19);
+    ctx.lineTo(u*15,-u*19);
+    ctx.quadraticCurveTo(u*18,-u*31,u*10.5,-u*50);
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(170,200,255,'+gl+')';ctx.lineWidth=Math.max(1,u*2);ctx.stroke();
+    ctx.strokeStyle=K.strap;ctx.lineWidth=Math.max(1,u*2.2);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(u*6.5,-u*46);ctx.lineTo(-u*10,-u*26);ctx.stroke();
+    ctx.fillStyle='#57517f';
+    rr(ctx,-u*16,-u*30,u*11,u*10,u*2.2);ctx.fill();
+    const hyK=-u*30-k*u*26; // て：ふだんは むねの まえ、いのりで たかく(従来と 同じ 高さ)
+    ctx.fillStyle=K.hand;
+    ctx.beginPath();ctx.arc(-u*5,hyK,u*4.6,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(u*5,hyK,u*4.6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=K.head;
+    ctx.beginPath();ctx.arc(0,-u*68,u*17,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=K.hairSh;
+    ctx.beginPath();
+    ctx.arc(0,-u*68,u*17.2,Math.PI,Math.PI*2);
+    ctx.lineTo(u*17.2,-u*63);
+    ctx.lineTo(u*8.3,-u*63);ctx.lineTo(u*5.8,-u*66.8);ctx.lineTo(u*3.3,-u*63);
+    ctx.lineTo(-u*17.2,-u*63);
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(170,200,255,'+(gl+0.05)+')';ctx.lineWidth=Math.max(1,u*1.8);
+    ctx.beginPath();ctx.arc(0,-u*68,u*17.3,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='rgba('+K.rim+','+Math.min(1,gl+0.36).toFixed(3)+')';ctx.lineWidth=Math.max(1,u*2.2);ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(0,-u*68,u*19.5,Math.PI*0.80,Math.PI*1.34);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-u*15.5,-u*44);ctx.lineTo(-u*18.5,-u*49);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-u*13,-u*6);ctx.lineTo(-u*16,-u*11);ctx.stroke();
+    const eyK=-u*58.5;
+    if(k>0.25){ // いのりちゅうは めを とじる(従来)
+      ctx.strokeStyle='rgba(215,235,255,0.9)';ctx.lineWidth=Math.max(1,u*1.6);
+      ctx.beginPath();ctx.moveTo(-u*8,eyK);ctx.lineTo(-u*3,eyK);ctx.moveTo(u*3,eyK);ctx.lineTo(u*8,eyK);ctx.stroke();
+    }else{
+      ctx.fillStyle=K.eye;
+      ctx.beginPath();ctx.ellipse(-u*5.5,eyK,u*2.4,u*3.4,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(u*5.5,eyK,u*2.4,u*3.4,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+    return;
+  }
   const bg2=ctx.createLinearGradient(0,-u*78,0,u*10);
   bg2.addColorStop(0,M.body);bg2.addColorStop(1,'rgba(30,26,52,0.25)');
   ctx.fillStyle=bg2;
@@ -25730,7 +25885,7 @@ function drawNkBattle(bt){
   const hitK=bt.nkHit>0?Math.sin(clamp(bt.nkHit,0,1)*Math.PI/2):0;
   const u=battleAllyH()*0.0075; // 旧 s*0.60=勇者の48%の背(2026-08-07実測)→勇者の72%へ(SPEC_mate_size_20260809)
   ctx.save();
-  ctx.translate(mx+atkK*W*0.05-hitK*W*0.028,my-(down?0:Math.abs(Math.sin(bt.t*2.2))*s*2)+hitK*s*5);
+  ctx.translate(mx+atkK*W*0.022-hitK*W*0.028,my-(down?0:Math.abs(Math.sin(bt.t*2.2))*s*2)+hitK*s*5); // 前スライド0.022W=じぶんの 列に とどまる(0.05Wは 勇者の 裏に 入る)
   ctx.rotate(-hitK*0.14);
   if(prayK>0){ // いやしの おはなし: ことばの ひかりが たちのぼる
     ctx.save();ctx.globalCompositeOperation='lighter';
@@ -25748,45 +25903,97 @@ function drawNkBattle(bt){
     ctx.globalAlpha=0.85;
     ctx.translate(0,u*4);ctx.scale(1,0.72);
   }
-  // ワンピース
-  const bg2=ctx.createLinearGradient(0,-u*66,0,u*10);
-  bg2.addColorStop(0,'#a8d8f0');bg2.addColorStop(1,'#4a6a90');
-  ctx.fillStyle=bg2;
+  const K=CHARA_PAL.kid,OLK='rgba(12,16,34,0.5)'; // シート02(SPEC_chara_design_20260810)
+  // あし+くつした+こんの くつ(せっちは u*10=かげの だえんの まま)
+  ctx.fillStyle=K.skin;
+  ctx.fillRect(-u*10,-u*16,u*7,u*14);
+  ctx.fillRect(u*3,-u*16,u*7,u*14);
+  ctx.fillStyle=K.sock;
+  ctx.fillRect(-u*10,-u*4,u*7,u*5);
+  ctx.fillRect(u*3,-u*4,u*7,u*5);
+  ctx.fillStyle=K.shoe;
+  rr(ctx,-u*11.5,u*2,u*10,u*8,u*2.5);ctx.fill();
+  rr(ctx,u*1.5,u*2,u*10,u*8,u*2.5);ctx.fill();
+  ctx.strokeStyle=OLK;ctx.lineWidth=Math.max(1,u*1.2);
+  rr(ctx,-u*11.5,u*2,u*10,u*8,u*2.5);ctx.stroke();
+  rr(ctx,u*1.5,u*2,u*10,u*8,u*2.5);ctx.stroke();
+  // はんズボン(なかあお)
+  ctx.fillStyle=K.shorts;
+  rr(ctx,-u*13,-u*26,u*26,u*12,u*3);ctx.fill();
+  ctx.strokeStyle=OLK;ctx.lineWidth=Math.max(1,u*1.3);
+  rr(ctx,-u*13,-u*26,u*26,u*12,u*3);ctx.stroke();
+  // うわぎ(うすあお)
+  ctx.fillStyle=K.top;
   ctx.beginPath();
-  ctx.moveTo(-u*13,-u*52);
-  ctx.quadraticCurveTo(-u*24,-u*14,-u*19,u*8);
-  ctx.quadraticCurveTo(0,u*13,u*19,u*8);
-  ctx.quadraticCurveTo(u*24,-u*14,u*13,-u*52);
+  ctx.moveTo(-u*11,-u*52);
+  ctx.quadraticCurveTo(-u*19,-u*32,-u*16,-u*21);
+  ctx.lineTo(u*16,-u*21);
+  ctx.quadraticCurveTo(u*19,-u*32,u*11,-u*52);
   ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(12,16,34,0.5)';ctx.lineWidth=Math.max(1,u*1.6);ctx.stroke();
-  // つえ(みぎてに・こうげきで ふりあげ)
-  ctx.save();
-  ctx.translate(u*15,-u*30);
-  ctx.rotate(-0.5-atkK*1.4);
-  ctx.strokeStyle='#a8763a';ctx.lineWidth=Math.max(1.5,u*3.4);ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(0,u*8);ctx.lineTo(0,-u*36);ctx.stroke();
-  ctx.fillStyle='#ffe9b0';
-  ctx.beginPath();ctx.arc(0,-u*40,u*5,0,Math.PI*2);ctx.fill();
-  ctx.restore();
-  // かたりべちょう(こしに)
-  ctx.fillStyle='#a86a3a';
-  ctx.fillRect(-u*20,-u*28,u*10,u*14);
+  ctx.strokeStyle=OLK;ctx.lineWidth=Math.max(1,u*1.6);ctx.stroke();
+  // えり(しろ)
+  ctx.fillStyle=K.collar;
+  ctx.beginPath();ctx.ellipse(0,-u*50,u*6.5,u*2.8,0,0,Math.PI*2);ctx.fill();
+  // ななめの ストラップ+かたかけかばん(ひだりごし)＝かたりべちょうの いえ
+  ctx.strokeStyle=K.strap;ctx.lineWidth=Math.max(1.2,u*2.4);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(u*7,-u*48);ctx.lineTo(-u*11,-u*27);ctx.stroke();
+  ctx.fillStyle=K.bag;
+  rr(ctx,-u*18,-u*31,u*12,u*11,u*2.5);ctx.fill();
+  ctx.strokeStyle=OLK;ctx.lineWidth=Math.max(1,u*1.2);
+  rr(ctx,-u*18,-u*31,u*12,u*11,u*2.5);ctx.stroke();
+  ctx.fillStyle=K.bagDk;
+  rr(ctx,-u*18,-u*31,u*12,u*4.5,u*2);ctx.fill();
+  ctx.fillStyle=K.buckle;
+  ctx.fillRect(-u*13.5,-u*27.5,u*3,u*3);
   // あたま
-  ctx.fillStyle='#f4d9b0';
+  ctx.fillStyle=K.skin;
   ctx.beginPath();ctx.arc(0,-u*64,u*15,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='rgba(12,16,34,0.5)';ctx.lineWidth=Math.max(1,u*1.4);ctx.stroke();
-  // かみ+おだんご
-  ctx.fillStyle='#8a5a36';
-  ctx.beginPath();ctx.arc(0,-u*68,u*14.5,Math.PI*0.9,Math.PI*2.1);ctx.fill();
-  ctx.beginPath();ctx.arc(u*13,-u*72,u*5.4,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=OLK;ctx.lineWidth=Math.max(1,u*1.4);ctx.stroke();
+  // かみ(ちゃいろの マッシュ+まえがみの きれこみ)
+  ctx.fillStyle=K.hair;
+  ctx.beginPath();
+  ctx.arc(0,-u*64,u*15.3,Math.PI,Math.PI*2);
+  ctx.lineTo(u*15.3,-u*59.5);
+  ctx.lineTo(u*8.5,-u*59.5);ctx.lineTo(u*5.5,-u*64);ctx.lineTo(u*2.5,-u*59.5);
+  ctx.lineTo(-u*15.3,-u*59.5);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle=OLK;ctx.lineWidth=Math.max(1,u*1.2);ctx.stroke();
   if(down){ // ぐるぐるめ
     ctx.strokeStyle='#2a3050';ctx.lineWidth=Math.max(1,u*1.2);
-    ctx.beginPath();ctx.arc(-u*5,-u*63,u*2.6,0,Math.PI*1.5);ctx.stroke();
-    ctx.beginPath();ctx.arc(u*5,-u*63,u*2.6,Math.PI,Math.PI*2.6);ctx.stroke();
+    ctx.beginPath();ctx.arc(-u*5,-u*55,u*2.6,0,Math.PI*1.5);ctx.stroke();
+    ctx.beginPath();ctx.arc(u*5,-u*55,u*2.6,Math.PI,Math.PI*2.6);ctx.stroke();
   }else{
     ctx.fillStyle='#2a3050';
-    ctx.beginPath();ctx.arc(-u*4.6,-u*63,u*1.9,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(u*4.6,-u*63,u*1.9,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(-u*4.6,-u*55,u*1.9,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(u*4.6,-u*55,u*1.9,0,Math.PI*2);ctx.fill();
+  }
+  // うで: ふだんは よこに。こうげきの あいだだけ まえへ のばし、つえを ふる
+  // (つえを 常時 消すのは 「こどもの つえの いちげき！」の 台詞と 食い違う=画面の嘘。SPEC §2 却下2)
+  ctx.strokeStyle=K.top;ctx.lineWidth=Math.max(2,u*5);ctx.lineCap='round';
+  if(bt.nkAtk){
+    const ax=u*(9+atkK*9),ay=-u*(40+atkK*5); // うでを たかく=つえは 自分の あたまの うえ(前へ 出すと 勇者に かくれる)
+    ctx.beginPath();ctx.moveTo(u*7,-u*44);ctx.lineTo(ax,ay);ctx.stroke();
+    ctx.save();
+    ctx.translate(ax,ay);
+    ctx.rotate(-0.12-atkK*0.30);
+    ctx.strokeStyle=OLK;ctx.lineWidth=Math.max(2.4,u*5);ctx.lineCap='round'; // 柄の縁取り(かみの茶に とけない)
+    ctx.beginPath();ctx.moveTo(0,u*8);ctx.lineTo(0,-u*36);ctx.stroke();
+    ctx.strokeStyle='#c08a48';ctx.lineWidth=Math.max(1.5,u*3.2);
+    ctx.beginPath();ctx.moveTo(0,u*8);ctx.lineTo(0,-u*36);ctx.stroke();
+    ctx.fillStyle='#ffe9b0';
+    ctx.beginPath();ctx.arc(0,-u*40,u*5,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=OLK;ctx.lineWidth=Math.max(1,u*1.2);
+    ctx.beginPath();ctx.arc(0,-u*40,u*5,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle=K.skin;
+    ctx.beginPath();ctx.arc(ax,ay,u*3.4,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(-u*13,-u*30,u*3.2,0,Math.PI*2);ctx.fill();
+  }else{
+    ctx.beginPath();ctx.moveTo(-u*9,-u*45);ctx.lineTo(-u*13,-u*31);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(u*9,-u*45);ctx.lineTo(u*13,-u*31);ctx.stroke();
+    ctx.fillStyle=K.skin;
+    ctx.beginPath();ctx.arc(-u*13,-u*29,u*3.2,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(u*13,-u*29,u*3.2,0,Math.PI*2);ctx.fill();
   }
   ctx.restore();
 }
@@ -25818,7 +26025,7 @@ function drawBattleHeroSword(u,sw){
   const rg=ctx.createLinearGradient(-1*u,0,8*u,0);rg.addColorStop(0,'#f8fcff');rg.addColorStop(0.48,'#d4e2ec');rg.addColorStop(1,'#71869d');
   ctx.fillStyle=rg;ctx.beginPath();ctx.moveTo(0,-102.5*u);ctx.lineTo(6.6*u,-86*u);ctx.lineTo(5.8*u,-10*u);ctx.lineTo(0,-10*u);ctx.closePath();ctx.fill();
   ctx.strokeStyle='rgba(244,251,255,.88)';ctx.lineWidth=Math.max(1,u*1.15);ctx.beginPath();ctx.moveTo(0,-100*u);ctx.lineTo(0,-13*u);ctx.stroke();
-  ctx.strokeStyle=accent;ctx.globalAlpha=high?0.90:0.62;ctx.lineWidth=Math.max(1,u*1.55);ctx.beginPath();ctx.moveTo(-3.3*u,-82*u);ctx.lineTo(-3*u,-19*u);ctx.stroke();ctx.globalAlpha=1;
+  ctx.strokeStyle='#58a8e2';ctx.globalAlpha=high?0.92:0.70;ctx.lineWidth=Math.max(1,u*1.55);ctx.beginPath();ctx.moveTo(-3.3*u,-82*u);ctx.lineTo(-3*u,-19*u);ctx.stroke();ctx.globalAlpha=1; // 蒼の 樋=シート01
   if(high){ctx.strokeStyle='rgba(164,234,255,.86)';ctx.lineWidth=Math.max(1,u*1.7);ctx.beginPath();ctx.moveTo(6.1*u,-84*u);ctx.lineTo(5.5*u,-15*u);ctx.stroke();}
   ctx.strokeStyle='rgba(8,14,30,.86)';ctx.lineWidth=Math.max(1.2,u*1.9);bladePath();ctx.stroke();
   // 端が反った翼形の鍔。
@@ -25829,7 +26036,8 @@ function drawBattleHeroSword(u,sw){
   const hg=ctx.createLinearGradient(-4*u,0,4*u,0);hg.addColorStop(0,'#382318');hg.addColorStop(0.5,'#7a4b2d');hg.addColorStop(1,'#2c1a13');
   ctx.fillStyle=hg;ctx.beginPath();ctx.roundRect(-4*u,-1*u,8*u,24*u,2*u);ctx.fill();ctx.stroke();
   ctx.strokeStyle='#d3a663';ctx.lineWidth=Math.max(1,u*1.05);for(let y=3;y<=17;y+=7){ctx.beginPath();ctx.moveTo(-3.5*u,y*u);ctx.lineTo(3.5*u,(y+3)*u);ctx.stroke();}
-  ctx.fillStyle=accent;ctx.beginPath();ctx.moveTo(0,20*u);ctx.lineTo(6*u,26*u);ctx.lineTo(0,32*u);ctx.lineTo(-6*u,26*u);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle=accent;ctx.beginPath();ctx.arc(0,26*u,5.6*u,0,Math.PI*2);ctx.fill();ctx.stroke(); // まるい 柄頭+蒼い 芯(シート01)
+  ctx.fillStyle='#7fd4f0';ctx.beginPath();ctx.arc(0,26*u,2.3*u,0,Math.PI*2);ctx.fill();
   ctx.restore();
 }
 function drawHeroBack(bt,ep){
@@ -25881,7 +26089,7 @@ function drawHeroBack(bt,ep){
   }
   // 実DOMのHP欄が折り返した時は、頭頂をその下へ押し戻す。幅の閾値ではなく実配置を基準にする。
   if(hudBottom>0){
-    const headTop=hy+breathe*u*0.7+crouch-178*u;
+    const headTop=hy+breathe*u*0.7+crouch-192*u;
     if(headTop<hudBottom+5)hy+=hudBottom+5-headTop;
   }
   bt.heroPos={x:hx,y:hy,u:u}; // ななつへんげ: オーラ描画用に現在位置を控えるだけ(挙動不変)
@@ -25969,13 +26177,18 @@ function drawHeroBack(bt,ep){
   ctx.beginPath();ctx.moveTo(-13*u,-72*u);ctx.lineTo(21*u,-70*u);ctx.lineTo(19*u,-61*u);ctx.lineTo(-9*u,-63*u);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.fillStyle='#e3bd58';ctx.beginPath();ctx.arc(6*u,-67*u,5*u,0,Math.PI*2);ctx.fill();ctx.stroke();
   ctx.fillStyle='#72d6f0';ctx.beginPath();ctx.arc(5*u,-68*u,2.2*u,0,Math.PI*2);ctx.fill();
+  // 腰布(シート01の 青)。うえの 装備色とは 独立の 本人の 青
+  ctx.fillStyle='#2b4aa6';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.2,u*1.8);
+  ctx.beginPath();ctx.moveTo(-9*u,-62*u);ctx.lineTo(15*u,-61*u);ctx.lineTo(11*u,-39*u);ctx.lineTo(1*u,-35*u);ctx.lineTo(-8*u,-42*u);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#22398a';
+  ctx.beginPath();ctx.moveTo(-14*u,-63*u);ctx.lineTo(-7*u,-62*u);ctx.lineTo(-8*u,-45*u);ctx.lineTo(-17*u,-50*u);ctx.closePath();ctx.fill();ctx.stroke();
 
   // 左腕。詠唱では盾を背へ回し、開いた掌を敵へ向ける。
   const palmX=(cast?43:-16)*u,palmY=(cast?-119:-88)*u;
   ctx.strokeStyle='#23305f';ctx.lineWidth=Math.max(7,u*12);ctx.lineCap='round';
   ctx.beginPath();ctx.moveTo(-16*u,-107*u);ctx.quadraticCurveTo(-25*u,-96*u,palmX,palmY);ctx.stroke();
   ctx.strokeStyle=ar[2]||ar[0];ctx.lineWidth=Math.max(4,u*7);ctx.beginPath();ctx.moveTo(-16*u,-107*u);ctx.lineTo(palmX,palmY);ctx.stroke();
-  ctx.fillStyle='#efc79c';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.5);
+  ctx.fillStyle='#a06e46';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.5);
   ctx.beginPath();ctx.arc(palmX,palmY,5.5*u,0,Math.PI*2);ctx.fill();ctx.stroke();
   if(cast){
     ctx.strokeStyle='rgba(202,245,255,0.94)';ctx.lineWidth=Math.max(1.2,u*1.8);
@@ -25984,16 +26197,16 @@ function drawHeroBack(bt,ep){
 
   // 実際に所持している盾。防御時は前へ、通常時は左腕へ沿わせる。
   if(Game.shield){
-    const sx=(guard?31+guardHit*4:-27)*u,sy=(guard?-91+guardHit*2:-86)*u,sk=guard?1.14+guardHit*0.10:0.86;
+    const sx=(guard?31+guardHit*4:-29)*u,sy=(guard?-91+guardHit*2:-84)*u,sk=guard?1.34+guardHit*0.10:1.18; // たて=シートの 大きさ(待機1.18)。ぼうぎょは それより 大きく 前へ(1.34)
     ctx.save();ctx.translate(sx,sy);ctx.scale(sk,sk);ctx.rotate(guard?-0.08+guardHit*0.045:-0.28);
-    const sg=ctx.createLinearGradient(-18*u,-24*u,17*u,25*u);
-    if(Game.shield2){sg.addColorStop(0,'#d9e8f5');sg.addColorStop(0.48,'#6786b8');sg.addColorStop(1,'#26395f');}
-    else{sg.addColorStop(0,'#d7b36c');sg.addColorStop(0.48,'#9b6c38');sg.addColorStop(1,'#4f3422');}
-    ctx.fillStyle=sg;ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.5,u*2.3);
+    ctx.fillStyle=Game.shield2?CHARA_PAL.hero.shBase:CHARA_PAL.hero.shBase2;ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.5,u*2.3);
     ctx.beginPath();ctx.moveTo(0,-25*u);ctx.quadraticCurveTo(19*u,-19*u,18*u,2*u);ctx.quadraticCurveTo(13*u,21*u,0,29*u);ctx.quadraticCurveTo(-13*u,21*u,-18*u,2*u);ctx.quadraticCurveTo(-19*u,-19*u,0,-25*u);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.strokeStyle=Game.shield2?'#e9c85f':'#e3b65f';ctx.lineWidth=Math.max(1.4,u*2.5);
-    ctx.beginPath();ctx.moveTo(0,-20*u);ctx.lineTo(0,21*u);ctx.moveTo(-13*u,-3*u);ctx.lineTo(13*u,-3*u);ctx.stroke();
-    ctx.fillStyle='#6fd3ed';ctx.beginPath();ctx.arc(0,-3*u,4.4*u,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=Game.shield2?CHARA_PAL.hero.shRim:'#c8a86a';ctx.lineWidth=Math.max(1,u*1.5);
+    ctx.beginPath();ctx.moveTo(0,-21.5*u);ctx.quadraticCurveTo(16*u,-16.5*u,15*u,2*u);ctx.quadraticCurveTo(11*u,18.5*u,0,25.5*u);ctx.quadraticCurveTo(-11*u,18.5*u,-15*u,2*u);ctx.quadraticCurveTo(-16*u,-16.5*u,0,-21.5*u);ctx.closePath();ctx.stroke();
+    ctx.strokeStyle=Game.shield2?'#e9c85f':'#e3b65f';ctx.lineWidth=Math.max(2,u*4.2);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(0,-19*u);ctx.lineTo(0,20*u);ctx.moveTo(-12*u,-3*u);ctx.lineTo(12*u,-3*u);ctx.stroke();
+    ctx.fillStyle='#6fd3ed';ctx.beginPath();ctx.arc(0,-3*u,5*u,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.85)';ctx.beginPath();ctx.arc(-1.4*u,-4.4*u,1.6*u,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }else if(guard){
     ctx.strokeStyle='#d6e9ff';ctx.lineWidth=Math.max(2,u*4);ctx.beginPath();ctx.moveTo(-3*u,-107*u);ctx.lineTo(30*u,-78*u);ctx.stroke();
@@ -26018,8 +26231,12 @@ function drawHeroBack(bt,ep){
   // 首と横顔。三角鼻をやめ、額→鼻梁→口元→顎を曲線でつなぐ。
   ctx.fillStyle='#e5b488';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1.2,u*1.8);
   ctx.beginPath();ctx.moveTo(3*u,-124*u);ctx.lineTo(20*u,-123*u);ctx.lineTo(19*u,-139*u);ctx.lineTo(6*u,-141*u);ctx.closePath();ctx.fill();ctx.stroke();
-  // 鉢巻の二本の尾は髪と頭より後ろへ流す。
-  ctx.strokeStyle='#d47a43';ctx.lineWidth=Math.max(1.4,u*2.5);ctx.lineCap='round';
+  ctx.save();ctx.translate(16*u,-153*u);ctx.scale(1.32,1.32);ctx.translate(-16*u,153*u); // シート01の 2.5頭身=あたまだけ 1.32倍(中心不変・以下の 座標は 従来のまま)
+  // 鉢巻の二本の尾は髪と頭より後ろへ流す。(しろ=シート01。先に濃い縁でそらに とけないように)
+  ctx.strokeStyle=OL;ctx.lineWidth=Math.max(2.2,u*3.6);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-3*u,-164*u);ctx.quadraticCurveTo((-18+wind*3-atk*5)*u,-162*u,(-29+wind*5-atk*8)*u,-149*u);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-3*u,-165*u);ctx.quadraticCurveTo((-17+wind*2-atk*4)*u,-173*u,(-31+wind*4-atk*7)*u,-166*u);ctx.stroke();
+  ctx.strokeStyle=CHARA_PAL.hero.band;ctx.lineWidth=Math.max(1.3,u*2.3);
   ctx.beginPath();ctx.moveTo(-3*u,-164*u);ctx.quadraticCurveTo((-18+wind*3-atk*5)*u,-162*u,(-29+wind*5-atk*8)*u,-149*u);ctx.stroke();
   ctx.beginPath();ctx.moveTo(-3*u,-165*u);ctx.quadraticCurveTo((-17+wind*2-atk*4)*u,-173*u,(-31+wind*4-atk*7)*u,-166*u);ctx.stroke();
   // 耳を顔の後ろへ。小画面でも輪郭だけは残る。
@@ -26035,21 +26252,23 @@ function drawHeroBack(bt,ep){
   // 顎下だけを一段暗くし、首との境を作る。
   ctx.fillStyle='rgba(143,79,60,.18)';ctx.beginPath();ctx.moveTo(14*u,-134*u);ctx.quadraticCurveTo(24*u,-133*u,30*u,-141*u);ctx.quadraticCurveTo(25*u,-136*u,17*u,-139*u);ctx.closePath();ctx.fill();
   // 後頭部、上の三房、前髪を別々に重ねる。
-  ctx.fillStyle='#d9bc72';ctx.strokeStyle=OL;ctx.lineJoin='round';ctx.lineWidth=Math.max(1.2,u*1.8);
+  ctx.fillStyle=CHARA_PAL.hero.hairBk;ctx.strokeStyle=OL;ctx.lineJoin='round';ctx.lineWidth=Math.max(1.2,u*1.8);
   ctx.beginPath();ctx.moveTo(-5*u,-152*u);ctx.quadraticCurveTo(-8*u,-169*u,7*u,-177*u);ctx.quadraticCurveTo(17*u,-181*u,26*u,-172*u);ctx.lineTo(25*u,-160*u);ctx.quadraticCurveTo(12*u,-166*u,5*u,-154*u);ctx.lineTo(-1*u,-139*u);ctx.lineTo(-13*u,-145*u);ctx.closePath();ctx.fill();ctx.stroke();
-  ctx.fillStyle='#ecd58e';
+  ctx.fillStyle=CHARA_PAL.hero.hair;
   ctx.beginPath();ctx.moveTo(3*u,-168*u);ctx.quadraticCurveTo(7*u,-179*u,12*u,-176*u);ctx.quadraticCurveTo(18*u,-181*u,22*u,-175*u);ctx.quadraticCurveTo(29*u,-178*u,30*u,-169*u);ctx.quadraticCurveTo(34*u,-167*u,31*u,-160*u);ctx.quadraticCurveTo(18*u,-165*u,3*u,-158*u);ctx.closePath();ctx.fill();ctx.stroke();
-  ctx.fillStyle='#f0d996';ctx.beginPath();ctx.moveTo(18*u,-168*u);ctx.quadraticCurveTo(28*u,-169*u,34*u,-161*u);ctx.lineTo(27*u,-154*u);ctx.lineTo(20*u,-158*u);ctx.lineTo(14*u,-151*u);ctx.lineTo(10*u,-163*u);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle=CHARA_PAL.hero.hairHi;ctx.beginPath();ctx.moveTo(18*u,-168*u);ctx.quadraticCurveTo(28*u,-169*u,34*u,-161*u);ctx.lineTo(27*u,-154*u);ctx.lineTo(20*u,-158*u);ctx.lineTo(14*u,-151*u);ctx.lineTo(10*u,-163*u);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.strokeStyle='rgba(255,247,202,.58)';ctx.lineWidth=Math.max(1,u*1.2);ctx.beginPath();ctx.moveTo(5*u,-171*u);ctx.quadraticCurveTo(14*u,-177*u,22*u,-171*u);ctx.stroke();
   // 額を横切る鉢巻は髪の前へ。尾と一本線に見えないよう結び目を置く。
-  ctx.strokeStyle='#d47a43';ctx.lineWidth=Math.max(2,u*4);ctx.beginPath();ctx.moveTo(-3*u,-164*u);ctx.quadraticCurveTo(13*u,-168*u,29*u,-163*u);ctx.stroke();
-  ctx.fillStyle='#e79a5d';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.0);ctx.beginPath();ctx.moveTo(-5.8*u,-164*u);ctx.lineTo(-3*u,-166.8*u);ctx.lineTo(-0.2*u,-164*u);ctx.lineTo(-3*u,-161.2*u);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.strokeStyle=OL;ctx.lineWidth=Math.max(2.6,u*5.2);ctx.beginPath();ctx.moveTo(-3*u,-164*u);ctx.quadraticCurveTo(13*u,-168*u,29*u,-163*u);ctx.stroke();
+  ctx.strokeStyle=CHARA_PAL.hero.band;ctx.lineWidth=Math.max(2,u*4);ctx.beginPath();ctx.moveTo(-3*u,-164*u);ctx.quadraticCurveTo(13*u,-168*u,29*u,-163*u);ctx.stroke();
+  ctx.fillStyle='#dce4f0';ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,u*1.0);ctx.beginPath();ctx.moveTo(-5.8*u,-164*u);ctx.lineTo(-3*u,-166.8*u);ctx.lineTo(-0.2*u,-164*u);ctx.lineTo(-3*u,-161.2*u);ctx.closePath();ctx.fill();ctx.stroke();
   // 表情。攻撃は眉を落とし、被弾では目を閉じる。
   const browDrop=atk*2.2*u;
   ctx.strokeStyle='#34384e';ctx.lineWidth=Math.max(1,u*1.2);ctx.beginPath();ctx.moveTo(23*u,-157*u+browDrop);ctx.lineTo(31*u,-159*u+browDrop);ctx.stroke();
   if(hit>0.20){ctx.beginPath();ctx.moveTo(24*u,-152*u);ctx.quadraticCurveTo(28*u,-149*u,32*u,-152*u);ctx.stroke();}
   else{ctx.beginPath();ctx.moveTo(24*u,-153*u);ctx.quadraticCurveTo(28*u,-155*u,32*u,-153*u);ctx.stroke();ctx.fillStyle='#15233f';ctx.beginPath();ctx.arc(29*u,-153.5*u,1.7*u,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,255,255,.88)';ctx.beginPath();ctx.arc(29.5*u,-154*u,0.55*u,0,Math.PI*2);ctx.fill();}
   ctx.strokeStyle='rgba(139,75,55,.66)';ctx.lineWidth=Math.max(1,u*1.1);ctx.beginPath();ctx.moveTo(35*u,-147*u);ctx.quadraticCurveTo(32*u,-146*u,30*u,-147*u);ctx.stroke();
+  ctx.restore(); // あたまの 1.32倍 ここまで
 
   // 手首の手甲は剣の下、掌と指は剣の上。柄を実際につかむ重なり順にする。
   ctx.save();ctx.translate(handX,handY);ctx.rotate(Math.atan2(handY-elbowY,handX-elbowX));
