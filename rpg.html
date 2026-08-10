@@ -906,7 +906,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1334'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1403'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -9270,6 +9270,14 @@ function osusumeNow(){
      const yet=KG.filter(g=>!((g[1]==='w'?(Game.ownW||[]):(Game.ownA||[])).includes(g[0])));
      const sp=SPELL_LEARN.find(sl=>sl[1]>Game.p.lv&&sl[1]<=maxLvNow()); // 上限の むこうの 呪文は「つぎ」と 言わない
      const ki=Game.items.kageishi||0;
+     // 2026-08-10 発注者スクショ: かげいし20個持ちに「2つ たまれば…ふかみで あつまるぞ」と言っていた
+     // (yetの有無だけ見て ki/所持金と 照合していなかった)。値は KG表から差し込む=直書き数字ゼロ。
+     if(!sp&&yet.length&&ki>=yet[0][3]){const [v,k,g,n]=yet[0];
+       if(Game.gold>=g)return {id:'fukamiRec',bar:'⚒ かじへ——かげの そうびが うてる',
+         head:'フクロ「かげいしは '+ki+'つ ある——⚒かじで '+(k==='w'?'⚔'+WNAME[v]:'🛡'+ANAME[v])+'が うてるぞ（'+g+'Gと かげいし'+n+'つ）。\nにしの きしの ふねへ ゆくか？」',
+         at:{x:1,y:6},line:'フクロ「あしは わしが すすめる。きしに ついたら ふねに ふれ、\n⚒かじを ひらくのじゃ。」'};
+       return {id:'fukamiRec',bar:'🔥 ふかみへ——⚒かじの おかねを かせぐ',
+         head:'フクロ「かげいしは たりておる（'+ki+'つ）——のこりは おかね（あと '+(g-Game.gold)+'G）。\nふかみで かせぐか？」',fukami:true};}
      return {id:'fukamiRec',
        bar:sp?'🔥 ふかみへ——つぎは レベル'+sp[1]+'の『'+sp[0]+'』'
           :yet.length?'🔥 ふかみへ——かげいしを あつめて ⚒かじへ'
