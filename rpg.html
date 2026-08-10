@@ -921,7 +921,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260810_1829'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260810_1853'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3300,8 +3300,12 @@ function ownGear(){
   if(Game.armorDef&&!Game.ownA.includes(Game.armorDef))Game.ownA.push(Game.armorDef);
   Game.ownW.sort((a,b)=>a-b);Game.ownA.sort((a,b)=>a-b);
 }
-function gainWeapon(v){ownGear();if(!Game.ownW.includes(v)){Game.ownW.push(v);Game.ownW.sort((a,b)=>a-b);}gearBookCheck();}
-function gainArmor(v){ownGear();if(!Game.ownA.includes(v)){Game.ownA.push(v);Game.ownA.sort((a,b)=>a-b);}gearBookCheck();}
+function gainWeapon(v,quiet){ownGear();if(!Game.ownW.includes(v)){Game.ownW.push(v);Game.ownW.sort((a,b)=>a-b);if(!quiet)gearGotToast();}gearBookCheck();}
+function gainArmor(v,quiet){ownGear();if(!Game.ownA.includes(v)){Game.ownA.push(v);Game.ownA.sort((a,b)=>a-b);if(!quiet)gearGotToast();}gearBookCheck();}
+function gearGotToast(){ // てにいれの儀式(SPEC_iwai §8): あたらしい そうびを えた瞬間、台帳の数が まわる。quiet=ロードの自動補填(音も文字も出さない)
+  if(!Game.hidden)return;const cG=gearBookCount();
+  toast('📗 そうびちょう '+cG.n+' / '+cG.m);
+}
 // 案7(2026-07-22): 島の結びで1点ずつ授かる固有装備。効果式は既存装備の再利用のみ。
 const ISLAND_REWARDS=[
   // 便2(2026-07-25): 旧値(w54/58/70/78・a42/48/54/64)は 買える天井(⚔82/🛡60)も 鍛えた天井(⚔100/🛡78)も全て下回り、
@@ -3323,8 +3327,8 @@ function islandRewardOwned(r){return !!r&&(r.kind==='w'?(Game.ownW||[]).includes
 function gainIslandReward(no,refresh=true){
   const r=islandReward(no);if(!r||islandRewardOwned(r))return null;
   let equipped=false;
-  if(r.kind==='w'){gainWeapon(r.value);if((Game.weaponAtk||0)<r.value){Game.weaponAtk=r.value;equipped=true;}}
-  else{gainArmor(r.value);if((Game.armorDef||0)<r.value){Game.armorDef=r.value;equipped=true;}}
+  if(r.kind==='w'){gainWeapon(r.value,!refresh);if((Game.weaponAtk||0)<r.value){Game.weaponAtk=r.value;equipped=true;}}
+  else{gainArmor(r.value,!refresh);if((Game.armorDef||0)<r.value){Game.armorDef=r.value;equipped=true;}} // refresh=false はロードの補填=てにいれのtoastを出さない(SPEC_iwai §8)
   if(refresh){recalcStats();updateBars();}
   return {reward:r,equipped};
 }
