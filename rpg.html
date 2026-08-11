@@ -923,7 +923,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260811_0913'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260811_1241'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -20811,7 +20811,7 @@ async function finaleLastQuestion(){
 async function finishFinaleBattle(){
   const bt=Game.bt,ep=enemyPos();
   stopSong();
-  bt.dying={t:0,dur:0.9};sfxWin(2,true); // かちどきの階段: 大ボス段+さいごの一音(§12)
+  bt.dying={t:0,dur:0.9,tier:2};sfxWin(2,true); // かちどきの階段: 大ボス段+さいごの一音(§12)／くずおれの階段の最上段(§15): 音は3.98秒なのに 絵の段が 抜けていた。durは 触らない=無音の頭0.8秒と 崩れ0.9秒の 重なりを 保つ
   flash('#fff2c0',0.6,1.4);
   for(let k=0;k<3;k++){if(P.length>420)break;puff(ep.x+rnd(-30,30),ep.y-ep.s*40+rnd(-30,30),'rgba(255,240,200,.95)',30,220,1.0,{s0:2,s1:6});}
   await wait(0.9);
@@ -21342,7 +21342,7 @@ async function transformPhase2(){
 }
 async function bossDefeat(){
   const bt=Game.bt,ep=enemyPos();
-  bt.dying={t:0,dur:2.3};
+  bt.dying={t:0,dur:2.3,tier:3};  // くずおれの階段の最上段(§15): 音は8.70秒なのに 絵の段が 抜けていた。2.3は DYING_DUR[3]=2.0 の 上=魔王が いちばん 重い は 保つ
   sfxBossDown();
   for(let k=0;k<5;k++){
     flash(k%2?'#ffffff':'#e8c0ff',0.5+k*0.06,0.32);
