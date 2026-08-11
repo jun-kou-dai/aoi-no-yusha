@@ -923,7 +923,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260811_1633'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260811_2043'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -17325,11 +17325,22 @@ function drawMateField(){
   ctx.beginPath();ctx.ellipse(c.x,fy,ts*0.13*wf,ts*0.045,0,0,Math.PI*2);ctx.fill();
   ctx.save();ctx.translate(c.x,fy-ts*0.05-fl);
   const gl=0.26+(Math.sin(TM*3.4)*0.5+0.5)*0.14; // りんかくの ひかりが めいめつ
-  if(mateKind()==='kokage'){ // ChatGPTシートの 実画像(かげびと/なきかげ/かげのきしは 従来のまま)
-    if(sprOK('kokage_stand')){
-      const im=CHARA_SPR.kokage_stand;
-      const h=ts*0.72,w=h*im.naturalWidth/im.naturalHeight;
-      ctx.drawImage(im,-w/2,-h,w,h);
+  if(sprOK('kokage_stand')){ // ChatGPTシートの 実画像を 4体 ぜんぶの 土台へ(SPEC_kage_tsukurinaoshi §6)。大きさは ts に M.sc が 入っている
+    const im=CHARA_SPR.kokage_stand;
+    const h=ts*0.72,w=h*im.naturalWidth/im.naturalHeight;
+    ctx.drawImage(im,-w/2,-h,w,h);
+    const kk=mateKind(); // フィールドは 30px 前後＝しるしは いちばん 小さいものだけ
+    if(kk==='kagehito'){ // ついげき: まえへ はしる 一本の 線
+      ctx.strokeStyle='rgba(196,238,255,0.80)';ctx.lineWidth=Math.max(1,ts*0.028);ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(w*0.34,-h*0.44);ctx.lineTo(w*0.92,-h*0.44);ctx.stroke();
+    }else if(kk==='nakikage'){ // なきかげ: しずく ひとつぶ
+      ctx.fillStyle='rgba(176,224,255,0.90)';
+      ctx.beginPath();ctx.arc(w*0.22,-h*0.60,Math.max(1,ts*0.035),0,Math.PI*2);ctx.fill();
+    }else if(kk==='kagekishi'){ // かげのきし: まえに かまえる たて
+      ctx.fillStyle='rgba(150,132,214,0.92)';ctx.strokeStyle='rgba(12,10,30,0.72)';ctx.lineWidth=Math.max(1,ts*0.02);
+      ctx.beginPath();ctx.moveTo(w*0.30,-h*0.62);ctx.lineTo(w*0.66,-h*0.58);
+      ctx.lineTo(w*0.64,-h*0.24);ctx.quadraticCurveTo(w*0.46,-h*0.08,w*0.30,-h*0.26);
+      ctx.closePath();ctx.fill();ctx.stroke();
     }
     ctx.restore();
     return;
