@@ -111,6 +111,13 @@ body{
 .mopt.cur{ border-color:rgba(255,230,168,.75); box-shadow:0 0 0 1px rgba(255,230,168,.35); background:rgba(255,230,168,.08); }
 .mopt.lock{ opacity:.55; cursor:default; }
 .mopt:active{ transform:scale(.98); }
+/* みちづれを えらぶ: 絵つきの 行(SPEC_michizure_erabu_20260811)。ほかの .mopt(さくせん・しょうごう・ふえ)は 不変 */
+.mopt.mate{ display:flex; align-items:center; gap:9px; }
+.mopt.mate .mtxt{ flex:1; min-width:0; }
+.mface{ flex:none; width:72px; height:72px; border-radius:9px; background-image:var(--msheet); background-repeat:no-repeat; }
+.mface.lk{ background:rgba(255,255,255,.05); border:1px dashed rgba(160,170,210,.30); display:flex; align-items:center; justify-content:center; color:#7a83a8; font-size:1.25em; }
+.mopt.mate.cur .mface{ box-shadow:0 0 0 2px rgba(255,230,168,.65); }
+@media (max-width:430px){ .mopt.mate .mface{ width:56px; height:56px; } } /* せまい画面: 絵が 幅を 食って ことばが 窮屈に なる(実画面 390x844 で 見つけた) */
 
 /* ---------- フィールド ---------- */
 #ui-field{ flex-direction:column; align-items:flex-start; }
@@ -923,7 +930,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260811_2200'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260811_2227'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -5109,6 +5116,67 @@ function bookUnknownCard(id,f){
   const cls='bmon unseen'+((f.boss||f.mboss)?' bunkboss':'');
   return '<div class="'+cls+'"><div class="bmh">'+(f.boss?'<span class="bthumb">？</span>':bookFoeThumb(id,true))+'<b>？？？</b>'+role+'<span class="bdg unk">みつけていない</span></div><div class="bunk">？？？　ステータスは ふめい</div>'+buy+'</div>';
 }
+// みちづれを えらぶ 画面の すがた(SPEC_michizure_erabu_20260811)。
+// それまで 4体から えらぶのに 名前と 効果の 文字だけで、どんな 姿かは えらんで 戦いに 入るまで わからなかった
+// (2026-08-11 に 4体の 絵を そろえたのに、えらぶ 画面には 1枚も 出ていなかった)。
+// ★型は ずかんの bookSheet と 同じ: 1まいの シートに えがき CSSの background-position で 切り出す。
+//   ずかんの 58px は【横長の 敵】向けの 値。みちづれは 縦長で 細いので そのまま 写さない(72px・せまい画面 56px)。
+const MATE_CELL=144, MATE_COLS=4; // 見せる 大きさの 正本は CSS の .mface(72px / せまい画面 56px)。切り出しは 割合なので ここには 持たない
+let MATE_SHEET_OFF=false;   // true で 絵を 出さない=従来と 一字一句 同じ HTML(1語で 戻せる)
+let _MSHEET=null;
+const MATE_HMAX=()=>Math.max.apply(null,MATE_ORDER.map(k=>MATE_H(MATES[k]))); // 表から ひく=手打ちゼロ
+function mateSheet(){
+  if(_MSHEET)return _MSHEET;
+  const pos={}; let url='';
+  const im=sprOK('kokage_side')?CHARA_SPR.kokage_side:null;
+  try{
+    const cv=document.createElement('canvas');
+    cv.width=MATE_CELL*MATE_COLS; cv.height=MATE_CELL;
+    const g=cv.getContext('2d');
+    g.fillStyle='#141a2e'; g.fillRect(0,0,cv.width,cv.height); // したじきを ぬる(透明のままだと JPEGが 巨大に なる=bookSheet の 教訓)
+    const tmp=document.createElement('canvas');
+    tmp.width=MATE_CELL; tmp.height=MATE_CELL;
+    const tg=tmp.getContext('2d');
+    const keep=ctx;
+    try{
+      MATE_ORDER.forEach(function(mk,i){
+        const M=MATES[mk];
+        pos[mk]=i;
+        // いちばん 背の 高い 子が こまの 92%。段の ちがい(勇者の 72〜87%)は そのまま のこす。
+        // ★0.883 を 直書きしない: MATES に 体が ふえたり sc が かわると 破れる(この弾で 一度 作って 潰した)
+        const hb=MATE_CELL*0.92/MATE_HMAX();
+        const h=hb*MATE_H(M), u=hb*0.00662*M.sc, wf=(M.eye==='slit')?1.16:1;
+        tg.setTransform(1,0,0,1,0,0);
+        tg.globalCompositeOperation='source-over';
+        tg.clearRect(0,0,MATE_CELL,MATE_CELL);
+        ctx=tg;
+        try{
+          ctx.save();
+          // 絵の 底辺は 原点+u*10(drawKageActor の top=-h+u*10)。u は M.sc で かわるので
+          // そのぶん 上へ ずらして 4体の 足もとを そろえる
+          ctx.translate(MATE_CELL/2, MATE_CELL*0.93-u*10);
+          if(im)drawKageActor(M,u,wf,0.30,0,mk,im,h*im.naturalWidth/im.naturalHeight,h);
+          else drawKageBody(M,u,wf,0.30,0,mk);
+          ctx.restore();
+        }catch(e){}
+        ctx=keep;
+        g.drawImage(tmp,i*MATE_CELL,0);
+      });
+    }finally{ ctx=keep; } // ★戻し損ねると ゲーム画面が 描けなくなる(bookSheet と 同じ 守り)
+    url=cv.toDataURL('image/jpeg',0.9);
+  }catch(e){ url=''; }
+  const sh={url:url,pos:pos};
+  if(url)document.documentElement.style.setProperty('--msheet','url('+url+')');
+  if(url&&im)_MSHEET=sh; // 絵が まだ 読めていない うちは キャッシュしない(ベクターの ひかえで 焼き付く)
+  return sh;
+}
+function mateFace(mk){
+  const sh=mateSheet(), p=sh.pos[mk];
+  if(!sh.url||p==null)return '<span class="mface lk">？</span>';
+  // ★大きさは CSS(72px / せまい画面 56px)に まかせ、切り出しは 割合で 指定する。
+  //   px で 書くと せまい画面の 56px で ずれる(background-size と width が 食い違う)
+  return '<span class="mface" style="background-position:'+(p*100/(MATE_COLS-1)).toFixed(4)+'% 0;background-size:'+(MATE_COLS*100)+'% 100%"></span>';
+}
 const BOOK_ISLES=[
   ['むらの そうげん',['slime','crow','golem']],
   ['ふかい もり',['mslime','yamabato','wslime','ent']],
@@ -5423,8 +5491,10 @@ function renderStatus(){
     h+='<h3 class="bisle">みちづれを えらぶ<span class="stsub">　じょうかが すすむほど つよくなる</span></h3><div class="mateswap">';
     for(const mk of MATE_ORDER){
       const M=MATES[mk],un=(Game.purified||0)>=M.need,cur=mateKind()===mk;
-      if(un)h+='<div class="mopt'+(cur?' cur':'')+'" data-mate="'+mk+'"><b>'+M.name+'</b><span class="msub">'+M.act+'：'+(M.descF?M.descF():M.desc)+'</span></div>';
-      else h+='<div class="mopt lock"><b>？？？</b><span class="msub">じょうか '+M.need+'にんで こころを ひらく</span></div>';
+      // 絵つき(SPEC_michizure_erabu_20260811)。MATE_SHEET_OFF か シートが 作れない ときは 従来と 一字一句 同じ
+      const fc=(!MATE_SHEET_OFF&&mateSheet().url)?mateFace(mk):'';
+      if(un)h+='<div class="mopt'+(fc?' mate':'')+(cur?' cur':'')+'" data-mate="'+mk+'">'+fc+(fc?'<span class="mtxt">':'')+'<b>'+M.name+'</b><span class="msub">'+M.act+'：'+(M.descF?M.descF():M.desc)+'</span>'+(fc?'</span>':'')+'</div>';
+      else h+='<div class="mopt'+(fc?' mate':'')+' lock">'+(fc?'<span class="mface lk">？</span><span class="mtxt">':'')+'<b>？？？</b><span class="msub">じょうか '+M.need+'にんで こころを ひらく</span>'+(fc?'</span>':'')+'</div>';
     }
     h+='</div>';
   }
