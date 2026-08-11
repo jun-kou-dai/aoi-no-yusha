@@ -930,7 +930,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260811_2227'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260811_2245'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -17490,6 +17490,7 @@ function drawFieldHero(){
     puff(fx+(p.face<0?-1:1)*ts*0.2,fy-bob-ts*0.5,'rgba(255,170,90,.8)',1,14,0.5,{up:true,s0:1,s1:2});
 }
 // ひとつの うみ: 勇者は ナギゆずりの こぶねで すすむ(帆+引き波)
+let MATE_BOAT_OFF=false; // true で みちづれを 舟に 乗せない=従来と 一字一句 同じ(1語で 戻せる)
 function drawHeroBoat(){
   const cam=Game.cam,p=Game.p,ts=cam.TW*0.9;
   const ct=isoCtr(p.px,p.py);
@@ -17532,6 +17533,23 @@ function drawHeroBoat(){
   ctx.lineTo(0,-ts*0.12);
   ctx.closePath();ctx.fill();
   ctx.strokeStyle=OL;ctx.lineWidth=Math.max(1,ts*0.016);ctx.stroke();
+  // みちづれ(かげ)も ふねに のる(SPEC_fune_michizure_20260811)。
+  // ★海を 渡る あいだ だけ 消えていた: drawP が 舟に すりかわり(mapId==='umi')、
+  //   みちづれの 呼び出しは mapId!=='umi' の ゲートの 内側に あったため。こどもは もとから 乗っている。
+  // 勇者より さきに えがく=ともがわ(うしろ)に 居る。大きさの 物差しは こども・戦闘と 同じ(勇者の 72〜87%)
+  if(!MATE_BOAT_OFF&&Game.hidden&&Game.hidden.mate1&&sprOK('kokage_side')){
+    const M=MATES[mateKind()],mim=CHARA_SPR.kokage_side;
+    const hb=ts*0.47;                     // 勇者の 実効の 背(ts*0.94 を scale(0.5) で えがいている)
+    const mh=hb*MATE_H(M), mw=mh*mim.naturalWidth/mim.naturalHeight;
+    const mu=hb*0.00662*M.sc, mwf=(M.eye==='slit')?1.16:1;
+    ctx.save();
+    // 底辺は 原点+mu*10(drawKageActor の top=-h+u*10)＝こどもと 同じ 喫水線(ts*0.02)へ そろえる
+    // ★-0.26(とも)では 勇者(-0.16)と 3.7px しか 離れず「紫の もや」に 見えた(実画面で 発見)→へさき側へ。
+    //   +0.28 は かげのきしの たてが 船首を 1px 突き抜けた(実測)→+0.24。舟は 画面上 37px しか ない
+    ctx.translate(ts*0.24, ts*0.02-mu*10+Math.sin(TM*1.6+0.7)*ts*0.008);
+    drawKageActor(M,mu,mwf,0.24+(Math.sin(TM*3.2)*0.5+0.5)*0.12,0,mateKind(),mim,mw,mh);
+    ctx.restore();
+  }
   // 勇者(こしかけて かじを とる)
   ctx.save();
   ctx.translate(-ts*0.16,-ts*0.10);
@@ -25945,7 +25963,10 @@ function drawKageActor(M,u,wf,gl,k,kind,im,w,h){
     ctx.beginPath();ctx.ellipse(w*0.14,cy+u*13,u*7.5,u*4.2,0,0,Math.PI*2);ctx.fill();ctx.restore();
   }
 }
-// 絵が よみこめない ときの ひかえ(ベクター)
+// 絵が よみこめない ときの ひかえ(ベクター)。
+// ★2026-08-11 実測: これは 死にコードでは ない。CHARA_SPR.kokage_side を 読めなくして
+//   drawMateBattle を 呼ぶと ここが 1回 通る(measure_kagebody.js)。消すと 画像が 読めない
+//   ときに みちづれが 完全に 消える＝**消さない**。本番は drawKageActor(実画像＋姿勢と 小物)。
 function drawKageBody(M,u,wf,gl,k,kind){
   const th=(kind==='kagehito'),we=(kind==='nakikage'),sl=(kind==='kagekishi');
   const hr=u*(th?20:sl?22:21);              // あたまの 半径
