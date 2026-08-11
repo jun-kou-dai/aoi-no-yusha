@@ -923,7 +923,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260811_1520'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260811_1545'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -25791,7 +25791,7 @@ function drawMateBattle(bt){
   if(mateKind()==='kokage'){ // ChatGPTシートの 実画像(よこ)。いのりの 光柱は 従来のまま
     if(sprOK('kokage_side')){
       const im=CHARA_SPR.kokage_side;
-      const h=battleAllyH()*0.62,w=h*im.naturalWidth/im.naturalHeight;
+      const h=battleAllyH()*0.803,w=h*im.naturalWidth/im.naturalHeight; // §18: 実画像に 差し替えた ときの 0.62 は 勇者の55.5%=2026-08-09 に 決めた 72% を 下回っていた(発注者「影がまたおかしくなっている」)
       ctx.drawImage(im,-w/2,-h+u*10,w,h);
     }
     ctx.restore();
@@ -25871,7 +25871,7 @@ function drawNkBattle(bt){
   }
   if(sprOK(bt.nkAtk?'kid_atk':'kid_side')){ // ChatGPTシートの 実画像(よこ/パンチ)
     const kimg=CHARA_SPR[bt.nkAtk?'kid_atk':'kid_side'];
-    const kh=battleAllyH()*(bt.nkAtk?0.62:0.70),kw=kh*kimg.naturalWidth/kimg.naturalHeight;
+    const kh=battleAllyH()*(bt.nkAtk?0.711:0.803),kw=kh*kimg.naturalWidth/kimg.naturalHeight; // §18: 0.70=勇者の62.7% を 設計値の 72% へ。攻撃は 立ちとの 比(0.886)を 保つ
     const xo=bt.nkAtk?kw*0.10:0;
     ctx.drawImage(kimg,-kw/2+xo,-kh+u*10,kw,kh);
   }
