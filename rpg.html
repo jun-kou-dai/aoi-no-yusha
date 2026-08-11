@@ -923,7 +923,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260811_1241'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260811_1322'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -26176,7 +26176,10 @@ function drawKagebiFete(bt){
   const t=kb.t,life=kb.seven?13:5.5;
   const fade=Math.max(0,Math.min(1,Math.min(t/0.4,(life-t)/1.0)));
   if(fade<=0)return;
-  const gap=Math.min(W*0.115,112),r0=gap*0.30*(kb.sc||1),y0=kb.y0||Math.min(H*0.40,(kb.top||H*0.20)+r0*2.4+10); // そらの帯=上部UIの実下端(kb.top)の すぐ下(930/たて390の実画面で調整)。kb.y0/kb.sc は 見返し(§13=フィールド)だけが 渡す=戦闘は 1ビットも 変わらない
+  const gap=Math.min(W*0.115,112); // 列の 間隔は 変えない(§13 の裁定)
+  const _top=kb.top||H*0.20, _room=Math.max(24,H*0.5-_top-10); // そらの帯=上部UIの実下端〜地平線
+  const r0=Math.min(gap*0.30*(kb.sc||1),kb.y0?1e9:_room/2.45); // よこ844(H=390)は 帯が 47.8pxしか 無く 火が バーの裏へ 潜っていた(§16)=空きに 入らなければ 火だけ 縮める(§13 フィールド版と 同じ考え)。930/たて390 は 上限の4分の1以下=1ピクセルも 変わらない
+  const y0=kb.y0||(_top+r0*2.4+10); // kb.y0/kb.sc は 見返し(§13=フィールド)だけが 渡す=そちらは 1文字も 変わらない
   ctx.save();
   if(!kb.seven){
     for(let i=0;i<7;i++){
