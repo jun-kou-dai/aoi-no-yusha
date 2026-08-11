@@ -923,7 +923,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260811_1545'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260811_1633'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -18692,6 +18692,9 @@ MATES.kagehito.descF=()=>'ターンのおわりに てきへ '+mateAtkN()+'〜'+
 MATES.nakikage.descF=()=>'なきごえで てきを 1回 やすませる（'+Math.round(mateBindP()*100)+'%）';
 MATES.kagekishi.descF=()=>'たてとなり 被ダメージを やわらげる（'+Math.round(mateGuardP()*100)+'%）';
 const mateOn=()=>!!(Game.hidden&&Game.hidden.mate1);
+// みちづれの 背たけ(勇者に対する 割合)。0.803=勇者の72%(こども と 同値)。じょうかの 段が 上がるほど すこし 大きく、
+// いちばん 上(かげのきし sc1.32)でも 勇者の 87%を こえない(SPEC_mate_size_20260809 の 60〜87%を まもる)。
+const MATE_H=(M)=>0.803+((M&&M.sc||0.92)-0.92)*0.20;
 const mateKind=()=>{const k=Game.hidden&&Game.hidden.mateSel;return (k&&MATES[k]&&(Game.purified||0)>=MATES[k].need)?k:'kokage';};
 async function mateTurn(){
   const p=Game.p,bt=Game.bt;
@@ -25753,10 +25756,14 @@ function battleAllyH(){const sm=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};return c
 function drawMateBattle(bt){
   if(!Game.hidden||!Game.hidden.mate1)return;
   const M=MATES[mateKind()];
-  const s=Math.min(H/720,W/900);
+  const s=Math.min(H/720,W/390); // SPEC_kage_tsukurinaoshi §3-1: こどもと 同じ 物差し。旧 W/900 は 分母だけ ちがい、同じ 地面に 立てていなかった
   const u=battleAllyH()*0.00662*M.sc; // 旧 s*0.62*M.sc(W/900割り)=勇者の30〜43%の背(2026-08-07実測)→勇者の60〜87%へ(SPEC_mate_size_20260809)
   const wf=(M.eye==='slit')?1.16:1;
-  let mx=Math.max(W*0.06,u*34*wf), my=(bt.heroY==null?H*0.80:bt.heroY)+s*8; // 左端ガード=大きくした ぶん 画面外へ 出さない。+s*8=こどもと 同じ 接地(旧+s*4 は 7px 浮いた・実寸で 確認)
+  const uk=battleAllyH()*0.0075;      // こどもの u＝接地の 基準(drawNkBattle と 同値)
+  const kim=sprOK('kokage_side')?CHARA_SPR.kokage_side:null;
+  const halfW=kim?(battleAllyH()*MATE_H(M)*kim.naturalWidth/kim.naturalHeight)/2:u*30*wf; // 体の 実半幅(旧は 接地影の 半径しか 見ていなかった)
+  let mx=Math.max(u*34*wf,halfW)+W*0.015, // §3-2: 影の 半径 ちょうどだと 左端が かならず x=0 で 切れる(実測)→余白を 足す
+      my=(bt.heroY==null?H*0.80:bt.heroY)+s*8+uk*10-u*10; // §3-1: 接地点(原点+u*10)を こどもと 同じ 線へ そろえる
   if(bt.intro)mx-=bt.intro*bt.intro*W*0.30;
   const k=bt.pray?Math.sin(Math.min(1,bt.pray.t)*Math.PI):0;
   const hit=bt.mateHit>0?Math.sin(clamp(bt.mateHit,0,1)*Math.PI/2):0;
@@ -25788,56 +25795,200 @@ function drawMateBattle(bt){
     ctx.strokeStyle='rgba(216,205,255,'+(0.88*hit).toFixed(3)+')';ctx.lineWidth=Math.max(1,u*3);ctx.beginPath();ctx.arc(0,0,u*23,-1.38,1.38);ctx.stroke();ctx.restore();
   }
   const gl=0.24+(Math.sin(bt.t*3.2)*0.5+0.5)*0.12+k*0.45;
-  if(mateKind()==='kokage'){ // ChatGPTシートの 実画像(よこ)。いのりの 光柱は 従来のまま
-    if(sprOK('kokage_side')){
-      const im=CHARA_SPR.kokage_side;
-      const h=battleAllyH()*0.803,w=h*im.naturalWidth/im.naturalHeight; // §18: 実画像に 差し替えた ときの 0.62 は 勇者の55.5%=2026-08-09 に 決めた 72% を 下回っていた(発注者「影がまたおかしくなっている」)
-      ctx.drawImage(im,-w/2,-h+u*10,w,h);
-    }
+  if(sprOK('kokage_side')){ // ChatGPTシートの 実画像を 4体 ぜんぶの 土台に する(2026-08-11)。いのりの 光柱は 従来のまま
+    const im=CHARA_SPR.kokage_side;
+    const h=battleAllyH()*MATE_H(M),w=h*im.naturalWidth/im.naturalHeight; // §18: 0.803=勇者の72%(こどもと 同値)。段が 上がるほど 少し 大きい(72〜87%)
+    drawKageActor(M,u,wf,gl,k,mateKind(),im,w,h);
     ctx.restore();
     return;
   }
-  const bg2=ctx.createLinearGradient(0,-u*78,0,u*10);
-  bg2.addColorStop(0,M.body);bg2.addColorStop(1,'rgba(30,26,52,0.25)');
-  ctx.fillStyle=bg2;
-  ctx.beginPath();
-  ctx.moveTo(-u*17*wf,-u*56);
-  ctx.quadraticCurveTo(-u*28*wf,-u*18,-u*20*wf,u*8);
-  ctx.quadraticCurveTo(0,u*14,u*20*wf,u*8);
-  ctx.quadraticCurveTo(u*28*wf,-u*18,u*17*wf,-u*56);
-  ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(170,200,255,'+gl+')';ctx.lineWidth=Math.max(1,u*2);ctx.stroke();
-  const hy2=-u*30-k*u*26; // て：ふだんは むねの まえ、いのりで たかく
-  ctx.fillStyle='#6a6494';
-  ctx.beginPath();ctx.arc(-u*5,hy2,u*4.6,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(u*5,hy2,u*4.6,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=M.head;
-  ctx.beginPath();ctx.arc(0,-u*68,u*17,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='rgba(170,200,255,'+(gl+0.05)+')';ctx.lineWidth=Math.max(1,u*1.8);ctx.stroke();
-  const ey=-u*68;
-  if(k>0.25){ // いのりちゅうは めを とじる
-    ctx.strokeStyle='rgba(215,235,255,0.9)';ctx.lineWidth=Math.max(1,u*1.6);
-    ctx.beginPath();ctx.moveTo(-u*8,ey);ctx.lineTo(-u*3,ey);ctx.moveTo(u*3,ey);ctx.lineTo(u*8,ey);ctx.stroke();
-  }else if(M.eye==='slit'){
-    ctx.strokeStyle='rgba(215,235,255,0.92)';ctx.lineWidth=Math.max(1,u*2.2);
-    ctx.beginPath();ctx.moveTo(-u*8.5,ey);ctx.lineTo(u*8.5,ey);ctx.stroke();
-  }else if(M.eye==='calm'){
-    ctx.fillStyle='rgba(215,235,255,0.9)';
-    ctx.beginPath();ctx.ellipse(-u*5.5,ey,u*2.8,u*1.4,0,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.ellipse(u*5.5,ey,u*2.8,u*1.4,0,0,Math.PI*2);ctx.fill();
-  }else if(M.eye==='weep'){
-    ctx.fillStyle='rgba(215,235,255,0.92)';
-    ctx.beginPath();ctx.arc(-u*5.5,ey,u*2.3,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(u*5.5,ey,u*2.3,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='rgba(170,215,255,0.75)';ctx.lineWidth=Math.max(1,u*1.3);
-    ctx.beginPath();ctx.moveTo(-u*5.5,ey+u*3.6);ctx.lineTo(-u*5.5,ey+u*9);
-    ctx.moveTo(u*5.5,ey+u*3.6);ctx.lineTo(u*5.5,ey+u*9);ctx.stroke();
-  }else{
-    ctx.fillStyle='rgba(215,235,255,0.92)';
-    ctx.beginPath();ctx.arc(-u*5.5,ey,u*2.4,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(u*5.5,ey,u*2.4,0,Math.PI*2);ctx.fill();
-  }
+  drawKageBody(M,u,wf,gl,k,mateKind());
   ctx.restore();
+}
+// ChatGPTシート「こどものかげ」の 絵の ことばで えがく かげの家族(SPEC_kage_tsukurinaoshi_20260811 §2)。
+// 共通の 骨組み= あたま・どう・うで・あし・かたかけかばん・青白い 燐光・白い め。
+// 個性は「かたち」で 出す(1つの型の 色ちがいは 2026-07-30 に 叱られた 禁じ手)。よこ向き=こども/こどものかげと 同じ 向き。
+// ChatGPTシート「こどものかげ」の 実画像を 4体 ぜんぶの 土台に する(SPEC_kage_tsukurinaoshi §2 改)。
+// MATE_ORDER は「じょうかが すすむほど 姿を かえる 同じ かげの子」＝絵柄を そろえるのが 物語に 合う。
+// 見分けは 色ちがいでは なく【姿勢と 小物】: ついげき=つき出す こぶし／なきかげ=かおを おおう て と しずく／かげのきし=かまえる たて。
+function drawKageActor(M,u,wf,gl,k,kind,im,w,h){
+  const th=(kind==='kagehito'),we=(kind==='nakikage'),sl=(kind==='kagekishi');
+  const top=-h+u*10;
+  const lift=(c,f,bl)=>{const m=/^#(..)(..)(..)$/.exec(c);if(!m)return c;
+    return 'rgb('+Math.min(255,Math.round(parseInt(m[1],16)*f))+','+Math.min(255,Math.round(parseInt(m[2],16)*f))+','+Math.min(255,Math.round(parseInt(m[3],16)*f+(bl||0)))+')';};
+  const SKIN=lift(M.head,1.72,30),line='rgba(10,8,26,0.86)',rim=(0.30+gl*0.55);
+  const paint=(pf,fill)=>{ // 燐光は ふつうの ぬり(lighter だと 背景の みどりと まざって みどりの ふちに なる)
+    ctx.save();
+    ctx.strokeStyle='rgba(178,236,255,'+Math.min(0.85,rim+0.22).toFixed(3)+')';
+    ctx.lineWidth=Math.max(1.6,u*3.4);ctx.lineJoin='round';ctx.lineCap='round';pf();ctx.stroke();ctx.restore();
+    pf();ctx.fillStyle=fill;ctx.fill();
+    ctx.strokeStyle=line;ctx.lineWidth=Math.max(1,u*1.5);ctx.lineJoin='round';pf();ctx.stroke();};
+  // ★シートの 絵には すでに うでと 手が ある。足すのは【いちばん 小さい しるし】だけ(うでを 描き足すと 3本目に なる)
+  // かげのきしの たて＝てきの がわ(みぎ)・画像の 手の 高さへ。おくに 先に えがく
+  if(sl)paint(()=>{const sx=w*0.42,cy=top+h*0.60,r=u*10.5;
+    ctx.beginPath();ctx.moveTo(sx-r*0.95,cy-r*1.55);
+    ctx.quadraticCurveTo(sx,cy-r*1.88,sx+r*0.95,cy-r*1.55);
+    ctx.lineTo(sx+r*0.88,cy+r*0.46);
+    ctx.quadraticCurveTo(sx,cy+r*2.10,sx-r*0.88,cy+r*0.46);
+    ctx.closePath();},lift(M.body,2.0,46));
+  // ★土台=シートの 実画像(姿勢だけ 変える。絵は 1ピクセルも いじらない)
+  ctx.save();
+  if(th)ctx.rotate(-0.05);
+  else if(we)ctx.rotate(0.075);
+  ctx.drawImage(im,-w/2,top,w,h);
+  ctx.restore();
+  // ★こせいの しるし
+  if(th){ // かげびと＝ついげき: 手の さきから まえへ はしる かげの ひとうち
+    const hx=w*0.20,hy2=top+h*0.60;
+    ctx.save();
+    ctx.strokeStyle='rgba(196,238,255,'+(0.62+gl*0.3).toFixed(3)+')';
+    ctx.lineWidth=Math.max(1.4,u*2.4);ctx.lineCap='round';
+    for(const [dy,ln] of [[-u*6,u*20],[0,u*27],[u*6,u*17]]){
+      ctx.beginPath();ctx.moveTo(hx+u*5,hy2+dy);ctx.lineTo(hx+u*5+ln,hy2+dy);ctx.stroke();}
+    ctx.restore();
+    paint(()=>{ctx.beginPath();ctx.ellipse(hx+u*22,hy2,u*7.2,u*5.4,0,0,Math.PI*2);},lift(M.head,1.9,34));
+  }else if(we){ // なきかげ＝てをふさぐ: めから したたる しずく(手は 絵に ある)
+    const cy=top+h*0.30;
+    ctx.fillStyle='rgba(176,224,255,0.92)';
+    for(const [dx,dy,sc] of [[w*0.24,cy+u*9,1.0],[w*0.10,cy+u*17,0.82],[w*0.22,cy+u*24,0.66]]){
+      ctx.beginPath();ctx.moveTo(dx,dy-u*4.2*sc);
+      ctx.quadraticCurveTo(dx+u*2.8*sc,dy,dx,dy+u*2.6*sc);
+      ctx.quadraticCurveTo(dx-u*2.8*sc,dy,dx,dy-u*4.2*sc);ctx.closePath();ctx.fill();}
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    ctx.fillStyle='rgba(150,215,255,'+(0.13+gl*0.16).toFixed(3)+')';
+    ctx.beginPath();ctx.ellipse(w*0.14,cy+u*13,u*7.5,u*4.2,0,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+}
+// 絵が よみこめない ときの ひかえ(ベクター)
+function drawKageBody(M,u,wf,gl,k,kind){
+  const th=(kind==='kagehito'),we=(kind==='nakikage'),sl=(kind==='kagekishi');
+  const hr=u*(th?20:sl?22:21);              // あたまの 半径
+  const hy=-u*(th?68:sl?65:66);             // あたまの 中心
+  const sy=-u*44,wy=-u*8,fy=u*8;            // かた・こし・あしもと
+  const bw=u*(th?12.5:sl?18:14.5)*wf;       // どうの 半幅
+  const lean=we?u*2.5:0;                    // なきかげは すこし まえかがみ
+  const step=th?u*10:sl?u*3:u*2;            // かげびとは まえへ ふみだす
+  const cx=lean*1.2;
+  const line='rgba(10,8,26,0.88)',rim=(0.30+gl*0.55);
+  // シートの こどものかげ(#4a3f9e系)の 明るさへ 持ち上げる。MATESの データ(暗い)は 触らない
+  const lift=(c,f,bl)=>{const m=/^#(..)(..)(..)$/.exec(c);if(!m)return c;
+    return 'rgb('+Math.min(255,Math.round(parseInt(m[1],16)*f))+','+Math.min(255,Math.round(parseInt(m[2],16)*f))+','+Math.min(255,Math.round(parseInt(m[3],16)*f+(bl||0)))+')';};
+  const SKIN=lift(M.head,1.62,26),CLOTH=lift(M.body,1.58,30);
+  const dark=(c,f)=>lift(c,1.62*f,26*f);
+  const paint=(pf,fill,noGlow)=>{
+    if(!noGlow){ctx.save();ctx.globalCompositeOperation='lighter';
+      ctx.strokeStyle='rgba(150,226,252,'+rim.toFixed(3)+')';
+      ctx.lineWidth=Math.max(1.6,u*3.6);ctx.lineJoin='round';ctx.lineCap='round';
+      pf();ctx.stroke();ctx.restore();}
+    pf();ctx.fillStyle=fill;ctx.fill();
+    ctx.strokeStyle=line;ctx.lineWidth=Math.max(1,u*1.5);ctx.lineJoin='round';pf();ctx.stroke();
+  };
+  const leg=(dx,fw)=>()=>{const w=u*5.0;
+    ctx.beginPath();ctx.moveTo(dx-w,wy);
+    ctx.lineTo(dx-w+fw,fy-u*4.5);
+    ctx.quadraticCurveTo(dx-w+fw,fy,dx-w+fw+u*2,fy);
+    ctx.lineTo(dx+w+fw+u*2.5,fy);
+    ctx.quadraticCurveTo(dx+w+fw+u*3.4,fy-u*1.6,dx+w+fw,fy-u*5);
+    ctx.lineTo(dx+w,wy);ctx.closePath();};
+  const arm=(dx,ex,dy)=>()=>{const w=u*4.6,ey2=sy+u*26+dy;
+    ctx.beginPath();ctx.moveTo(dx-w,sy);
+    ctx.quadraticCurveTo(dx-w+ex*0.55,sy+u*14+dy*0.5,dx-w+ex,ey2);
+    ctx.lineTo(dx+w+ex,ey2);
+    ctx.quadraticCurveTo(dx+w+ex*0.55,sy+u*14+dy*0.5,dx+w,sy);ctx.closePath();};
+  const fist=(dx,ex,dy)=>()=>{ctx.beginPath();ctx.arc(dx+ex,sy+u*24.5+dy,u*5.4,0,Math.PI*2);};
+  const torso=()=>{ctx.beginPath();
+    ctx.moveTo(-bw+lean,sy);
+    ctx.quadraticCurveTo(-bw*1.2+lean*0.6,sy+u*20,-bw*1.3,wy+u*5);
+    ctx.lineTo(bw*1.3,wy+u*5);
+    ctx.quadraticCurveTo(bw*1.2+lean*0.6,sy+u*20,bw+lean,sy);ctx.closePath();};
+  // よこ顔(シートと 同じ 向き): うしろあたまは まるく、ひたい→はな→くち→あご
+  const head=()=>{ctx.beginPath();
+    ctx.arc(cx,hy,hr,Math.PI*0.60,Math.PI*1.74);
+    ctx.quadraticCurveTo(cx+hr*0.86,hy-hr*0.80,cx+hr*0.93,hy-hr*0.16);
+    ctx.lineTo(cx+hr*1.10,hy+hr*0.14);
+    ctx.lineTo(cx+hr*0.86,hy+hr*0.26);
+    ctx.quadraticCurveTo(cx+hr*0.94,hy+hr*0.56,cx+hr*0.50,hy+hr*0.86);
+    ctx.closePath();};
+  // ★シートの いちばんの しるし: かみが 青白い ほのおに なって もえている
+  const hairFlame=()=>{const n=6;
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    ctx.fillStyle='rgba(158,230,255,'+(0.40+gl*0.55).toFixed(3)+')';
+    for(let i=0;i<n;i++){
+      const a=Math.PI*(0.72+1.12*i/(n-1));
+      const wob=Math.sin(i*1.7)*0.5+0.5;
+      const len=hr*(0.42+0.30*wob);
+      const bx=cx+Math.cos(a)*hr*0.97,by=hy+Math.sin(a)*hr*0.97;
+      ctx.beginPath();
+      ctx.moveTo(cx+Math.cos(a-0.26)*hr*0.97,hy+Math.sin(a-0.26)*hr*0.97);
+      ctx.quadraticCurveTo(bx+Math.cos(a)*len*0.5,by+Math.sin(a)*len*0.5,
+        bx+Math.cos(a+0.30)*len,by+Math.sin(a+0.30)*len);
+      ctx.quadraticCurveTo(bx+Math.cos(a)*len*0.4,by+Math.sin(a)*len*0.4,
+        cx+Math.cos(a+0.26)*hr*0.97,hy+Math.sin(a+0.26)*hr*0.97);
+      ctx.closePath();ctx.fill();}
+    ctx.restore();};
+  // ★からだの ふちに ゆれる 燐光(シートの もえる かげ)
+  const bodyFlame=()=>{const n=6;
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    ctx.fillStyle='rgba(150,222,252,'+(0.30+gl*0.42).toFixed(3)+')';
+    for(let i=0;i<n;i++){const y=sy+u*(5+i*9),len=u*(7.5+4.0*(Math.sin(i*1.7)*0.5+0.5));
+      ctx.beginPath();ctx.moveTo(-bw*1.16,y-u*4.5);
+      ctx.quadraticCurveTo(-bw*1.16-len,y,-bw*1.16,y+u*5);ctx.closePath();ctx.fill();}
+    ctx.restore();};
+  // ── えがく(おく→てまえ)
+  hairFlame();bodyFlame();
+  paint(arm(-u*3,we?u*6:step*0.35,we?-u*17:0),dark(M.head,0.70),true);
+  paint(leg(-u*6,0),dark(M.head,0.76),true);
+  paint(leg(u*3,step),SKIN);
+  paint(torso,CLOTH);
+  ctx.save();ctx.strokeStyle='rgba(24,18,54,0.62)';ctx.lineWidth=Math.max(1,u*1.15);
+  ctx.beginPath();ctx.moveTo(-bw*0.72+lean,sy+u*2);ctx.lineTo(bw*0.88,wy+u*1);ctx.stroke();ctx.restore();
+  paint(()=>{const bx=-bw*1.06,by=wy-u*5,bwd=u*8,bh=u*12;
+    ctx.beginPath();ctx.moveTo(bx-bwd/2,by);ctx.lineTo(bx+bwd/2,by);
+    ctx.lineTo(bx+bwd/2,by+bh-u*2.2);
+    ctx.quadraticCurveTo(bx+bwd/2,by+bh,bx+bwd/2-u*2.2,by+bh);
+    ctx.lineTo(bx-bwd/2+u*2.2,by+bh);
+    ctx.quadraticCurveTo(bx-bwd/2,by+bh,bx-bwd/2,by+bh-u*2.2);
+    ctx.closePath();},dark(M.head,0.86),true);
+  if(sl)paint(()=>{const sx=bw*2.05,cy=-u*26;   // かげのきし: からだから はなして かまえる たて
+    ctx.beginPath();ctx.moveTo(sx-u*8,cy-u*18);
+    ctx.lineTo(sx+u*8,cy-u*15);ctx.lineTo(sx+u*8,cy+u*9);
+    ctx.quadraticCurveTo(sx+u*1,cy+u*23,sx-u*8,cy+u*16);ctx.closePath();},lift(M.body,2.1,48));
+  if(we){paint(arm(u*2,u*8,-u*21),SKIN);paint(fist(u*2,u*8,-u*21),dark(M.head,1.2),true);}
+  else{const ex=step*0.5+(th?u*16:sl?u*11:u*4),dy=th?-u*4:sl?-u*10:0;
+    paint(arm(u*2,ex,dy),SKIN);paint(fist(u*2,ex,dy),dark(M.head,1.2),true);}
+  paint(head,SKIN);
+  // まえがみ(シートの きれこみ)
+  ctx.save();head();ctx.clip();
+  ctx.fillStyle=dark(M.head,0.74);
+  ctx.beginPath();ctx.moveTo(cx-hr*1.1,hy-hr*1.1);
+  ctx.lineTo(cx+hr*1.2,hy-hr*1.1);ctx.lineTo(cx+hr*1.05,hy-hr*0.06);
+  ctx.lineTo(cx+hr*0.46,hy-hr*0.20);ctx.lineTo(cx+hr*0.32,hy-hr*0.56);
+  ctx.lineTo(cx-hr*0.12,hy-hr*0.32);ctx.lineTo(cx-hr*1.1,hy-hr*0.40);
+  ctx.closePath();ctx.fill();ctx.restore();
+  // ★め(よこ向き=てまえが 大きい)。いのりちゅうは とじる
+  const ex1=cx+hr*0.62,ex2=cx+hr*0.16,ey=hy+hr*0.10;
+  ctx.fillStyle='rgba(240,250,255,0.97)';ctx.strokeStyle='rgba(10,8,26,0.72)';ctx.lineWidth=Math.max(1,u*1.1);
+  if(k>0.25){
+    ctx.strokeStyle='rgba(228,244,255,0.94)';ctx.lineWidth=Math.max(1.2,u*1.8);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(ex2-u*2.6,ey);ctx.lineTo(ex2+u*2.2,ey);
+    ctx.moveTo(ex1-u*2.6,ey);ctx.lineTo(ex1+u*2.2,ey);ctx.stroke();
+  }else{
+    const rx=(M.eye==='slit')?u*2.9:(M.eye==='weep')?u*3.0:u*2.7;
+    const ry=(M.eye==='slit')?u*1.5:(M.eye==='calm')?u*3.3:u*3.8;
+    ctx.beginPath();ctx.ellipse(ex2,ey,rx*0.84,ry*0.84,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.ellipse(ex1,ey,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    if(M.eye==='weep'){
+      ctx.fillStyle='rgba(176,224,255,0.88)';
+      for(const [dx,dy] of [[ex2,ey+ry+u*5],[ex1,ey+ry+u*9]]){
+        ctx.beginPath();ctx.moveTo(dx,dy-u*3.6);
+        ctx.quadraticCurveTo(dx+u*2.4,dy,dx,dy+u*2.2);
+        ctx.quadraticCurveTo(dx-u*2.4,dy,dx,dy-u*3.6);ctx.closePath();ctx.fill();}
+    }
+  }
+  // まゆ(シートの ひとすじ)
+  ctx.strokeStyle='rgba(12,10,30,0.72)';ctx.lineWidth=Math.max(1,u*1.5);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(ex1-u*3.0,ey-(we?u*8.0:u*6.8));
+  ctx.lineTo(ex1+u*2.4,ey-(we?u*5.6:u*7.6));ctx.stroke();
 }
 // せんとうの なかま（こども＝かたりべ・うしろすがた぀近い よこすがた）
 function drawNkBattle(bt){
