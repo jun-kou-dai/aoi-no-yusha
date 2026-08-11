@@ -923,7 +923,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260811_2137'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260811_2200'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3349,6 +3349,7 @@ function normalizeIslandRewards(){
 // ============================================================
 const FORGE_W={82:[88,2000,1],88:[94,5000,2],94:[100,9000,3]}; // forgeRun の FW/FA を持ち上げ(そうびちょうと共用・値は不変)
 const FORGE_A={60:[66,2000,1],66:[72,5000,2],72:[78,9000,3]};
+const KAJI_SEED=[2000,2]; // かげいし→たね の 代価(forgeRun と フクロの推しが ひく正本・2026-08-11)
 const KAJI_KAGE=[['kw1',142,'w',8000,2],['km1',144,'w',12000,3],['ky1',146,'w',12000,3],['kw2',150,'w',14000,4],['ka1',114,'a',9000,2],['ka2',120,'a',15000,4]]; // forgeRun の かげ装備表を持ち上げ(値は不変)
 const GEAR_STORY={
   w:{16:'どうくつの おくの たからばこ',26:'まいごの ポポを おかあさんへ とどけると',44:'しずみのさとの さとぬしを ときはなつと',52:'くにを すくった あと おうさまから',56:'とわのふちの ぬしを しずめると'},
@@ -9567,9 +9568,11 @@ function osusumeNow(){
      return {id:'fukamiRec',
        bar:sp?'🔥 ふかみへ——つぎは レベル'+sp[1]+'の『'+sp[0]+'』'
           :yet.length?'🔥 ふかみへ——かげいしを あつめて ⚒かじへ'
+          :(h.fukamiBest||0)>=7?'🔥 ふかみへ——かげいしを たねに かえる' // 2026-08-11: 7が 終点(9402)なのに「のばす」は 実行不可能＝嘘だった
           :'🔥 ふかみで きろくを のばす（さいこう '+(h.fukamiBest||0)+'かい）',
        head:sp?'フクロ「つぎは レベル'+sp[1]+'で じゅもん『'+sp[0]+'』を おぼえる。\nふかみに もぐれば はやいぞ。ゆくか？」'
           :yet.length?(([v,k,g,n])=>'フクロ「かげいしが '+n+'つ たまれば、⚒かじで '+(k==='w'?'⚔'+WNAME[v]:'🛡'+ANAME[v])+'が うてる（いま '+ki+'つ）。\nふかみで あつまるぞ。ゆくか？」')(yet[0])
+          :(h.fukamiBest||0)>=7?'フクロ「ふかみは 7かいで そこじゃ——おぬしは もう ついておる。\nかげいし'+KAJI_SEED[1]+'つと '+KAJI_SEED[0]+'Gで ⚒かじが たねを うつ。もぐるか？」'
           :'フクロ「ふかみの きろくは さいこう '+(h.fukamiBest||0)+'かい。\nそれを こえに ゆくか？」',fukami:true};
    }
    } // しんぱん未消化なら 下の めぐり推しへ 流す(2026-07-28)
@@ -9904,7 +9907,7 @@ async function forgeRun(atSea){
      }
      // 2026-07-29: ふかみは 一かい＝かげいし1つ。かじの そうびは 4点で 合わせて 12こ＝
      // 二周で そろい、三周目からは 潜るたび まるごと 余っていた。たねへ 通す(ほしのてつと同じ形)。
-     {const KSG=2000,KSI=2,ksh=()=>Game.gold<KSG?'　（あと '+(KSG-Game.gold)+'G）':(KI<KSI?'　（かげいしが あと '+(KSI-KI)+'つ）':'');
+     {const [KSG,KSI]=KAJI_SEED,ksh=()=>Game.gold<KSG?'　（あと '+(KSG-Game.gold)+'G）':(KI<KSI?'　（かげいしが あと '+(KSI-KI)+'つ）':'');
       list.push({id:'kseedw',label:'🌱 ちからのたね を うちだす（こうげき +3）　'+KSG+'G・かげいし'+KSI+ksh(),dis:Game.gold<KSG||KI<KSI});
       list.push({id:'kseeda',label:'🌱 まもりのたね を うちだす（しゅび +2）　'+KSG+'G・かげいし'+KSI+ksh(),dis:Game.gold<KSG||KI<KSI});}}
     list.push({id:'no',label:'やめる'});
@@ -9923,7 +9926,7 @@ async function forgeRun(atSea){
       saveGame();continue;
     }
     if(c==='kseedw'||c==='kseeda'){ // かげいしから たねを うちだす(2026-07-29・余った かげいしの ゆきさき)
-      const SG=2000,SI=2;
+      const [SG,SI]=KAJI_SEED;
       if(Game.gold<SG||(Game.items.kageishi||0)<SI){await say('かじの こえ「かねか かげいしが たりないよ。」');continue;}
       Game.gold-=SG;Game.items.kageishi-=SI;
       sfxCrit();flash('#9fe8b0',0.4,0.7);
