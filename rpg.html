@@ -930,7 +930,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260812_1140'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260812_1219'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3357,6 +3357,7 @@ function normalizeIslandRewards(){
 const FORGE_W={82:[88,2000,1],88:[94,5000,2],94:[100,9000,3]}; // forgeRun の FW/FA を持ち上げ(そうびちょうと共用・値は不変)
 const FORGE_A={60:[66,2000,1],66:[72,5000,2],72:[78,9000,3]};
 const KAJI_SEED=[2000,2]; // かげいし→たね の 代価(forgeRun と フクロの推しが ひく正本・2026-08-11)
+const TETSU_SEED=[2000,2]; // ほしのてつ→たね の 代価(forgeRun の 表示と 引き落としが ひく正本・2026-08-12 台帳§O)。KAJI_SEED とは 別の器=値が 同じなのは 偶然。片方だけ 変えられるように 分けてある
 const KAJI_KAGE=[['kw1',142,'w',8000,2],['km1',144,'w',12000,3],['ky1',146,'w',12000,3],['kw2',150,'w',14000,4],['ka1',114,'a',9000,2],['ka2',120,'a',15000,4]]; // forgeRun の かげ装備表を持ち上げ(値は不変)
 const GEAR_STORY={
   w:{16:'どうくつの おくの たからばこ',26:'まいごの ポポを おかあさんへ とどけると',44:'しずみのさとの さとぬしを ときはなつと',52:'くにを すくった あと おうさまから',56:'とわのふちの ぬしを しずめると'},
@@ -9962,7 +9963,7 @@ async function forgeRun(atSea){
     // 2026-07-26: かじは ⚔100/🛡78 で 打ち止めで、第3部の旅人には ほしのてつの つかい道が
     // 「250Gで売る」しか なかった。たね を うちだす道を 常設にする＝レベル上限に とどいた
     // あとも のびる 三つ(たね・金・きょじんのこころ)の うち 二つが 手に入る。
-    {const iron=Game.items.hoshitetsu||0,SG=2000,SI=2;
+    {const iron=Game.items.hoshitetsu||0,[SG,SI]=TETSU_SEED;
      if(!wr&&!ar)list.push({id:'inf',label:'そうびを きたえられるのは ほしのてつの そうび（⚔ほしくだきのつるぎ／🛡ほしのよろい）だけ',dis:true});
      const short=g=>Game.gold<SG?'　（あと '+(SG-Game.gold)+'G）':(iron<SI?'　（てつが あと '+(SI-iron)+'つ）':'');
      list.push({id:'seedw',label:'🌱 ちからのたね を うちだす（こうげき +3）　'+SG+'G・てつ'+SI+short(),dis:Game.gold<SG||iron<SI});
@@ -10008,7 +10009,7 @@ async function forgeRun(atSea){
       saveGame();continue;
     }
     if(c==='seedw'||c==='seeda'){ // たねを うちだす(2026-07-26)
-      const SG=2000,SI=2;
+      const [SG,SI]=TETSU_SEED;
       if(Game.gold<SG||(Game.items.hoshitetsu||0)<SI){await say('かじの こえ「かねか てつが たりないよ。」');continue;}
       Game.gold-=SG;Game.items.hoshitetsu-=SI;
       sfxCrit();flash('#9fe8b0',0.4,0.7);
