@@ -211,6 +211,11 @@ body{
 .dmg.player{ color:#ffb1a0; }
 .dmg.heal{ color:#b8f0c0; }
 .dmg.sp{ color:#ffd9a8; }
+.dmg.sub{ margin-top:2.4em; } /* おいうち(2げきめ・たぐり)の 数字。本打ちと 同じ アンカーに 出し、ずらしは em＝字の 大きさで きめる。
+   ★ep.s(敵の 大きさ)で ずらすと 小さい 敵で また 重なる(旧 -58 が それ・2026-08-12 台帳§W)。clamp は .dmg に 一度だけ 書く。
+   ★2.4em は 実測で 決めた。字の 箱は font-size では なく line-height ぶん(46px の 字で 約70px)あり、
+     さらに かいしん(.dmg.crit=66px)の あとに 2げきめが 続く 組み合わせが いちばん せまい——
+     1.9em では そこが -5.2px で 交わった(390・⚔102・かいしん強制)。2.4em で +8.5〜+30.6px。 */
 .dmg.long:not(.crit){ font-size:clamp(20px,3.4vmin,30px); } /* ながい ことばだけ 小さく。crit(すってん等)は 大きいまま */
 .dmg.crit{ color:#ffd86b; font-size:clamp(42px,7.6vmin,66px);
   text-shadow:0 4px 0 rgba(60,30,0,.85), 0 2px 16px rgba(0,0,0,.7), 0 0 40px rgba(255,205,100,.9);
@@ -930,7 +935,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260812_1219'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260812_1808'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -19456,7 +19461,7 @@ async function playerAction(act){
       markHeroStrikeImpact(bt,'hit');
       bt.flash=1;bt.hitStop=0.06;bt.recoil=0.9;bt.blink=1;shakeBattle(8,0.25);
       bt.hp=Math.max(0,bt.hp-dtg);
-      popup(ep.x,ep.y-ep.s*58,dtg);
+      popup(ep.x,ep.y-ep.s*70,dtg,'sub'); // 本打ちと 同じ アンカー＋.dmg.sub＝ずらしは CSS が em で きめる(台帳§W)
       puff(ep.x,ep.y-ep.s*40,'rgba(255,205,235,.9)',14,200,0.5,{s0:2,s1:4});
       await wait(0.10);
       await say('むちが しなって まきつき、'+bt.foe.name+'を たぐりよせた！ さらに '+dtg+'の ダメージ！');
@@ -19472,7 +19477,7 @@ async function playerAction(act){
       markHeroStrikeImpact(bt,'hit');
       bt.flash=1;bt.hitStop=0.06;bt.recoil=0.9;bt.blink=1;shakeBattle(8,0.25);
       bt.hp=Math.max(0,bt.hp-d2);
-      popup(ep.x,ep.y-ep.s*58,d2);
+      popup(ep.x,ep.y-ep.s*70,d2,'sub'); // 同上(たぐりと 同じ型＝決まりは ひとつ)
       puff(ep.x,ep.y-ep.s*40,'rgba(200,235,255,.9)',14,200,0.5,{s0:2,s1:4});
       await wait(0.10);
       await say((WNAME[Game.weaponAtk]||'つるぎ')+'の 2げきめ！ さらに '+d2+'の ダメージ！');
