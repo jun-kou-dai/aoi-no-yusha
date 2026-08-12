@@ -930,7 +930,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260811_2253'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260812_1040'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -25938,7 +25938,7 @@ function drawKageActor(M,u,wf,gl,k,kind,im,w,h){
   // ★土台=シートの 実画像(姿勢だけ 変える。絵は 1ピクセルも いじらない)
   ctx.save();
   if(th)ctx.rotate(-0.05);
-  else if(we)ctx.rotate(0.075);
+  else if(we)ctx.rotate(0.13); // ★2026-08-12(台帳§P): 0.075(4.3度)では 72px の こまで うつむきが 読めなかった→7.4度。しずくの dx 補正は 入れない(顔の x ずれ 4.8px＝顔の 半幅31px の 内・実画面で 確認)
   ctx.drawImage(im,-w/2,top,w,h);
   ctx.restore();
   // ★こせいの しるし
@@ -25952,12 +25952,27 @@ function drawKageActor(M,u,wf,gl,k,kind,im,w,h){
     ctx.restore();
     paint(()=>{ctx.beginPath();ctx.ellipse(hx+u*22,hy2,u*7.2,u*5.4,0,0,Math.PI*2);},lift(M.head,1.9,34));
   }else if(we){ // なきかげ＝てをふさぐ: めから したたる しずく(手は 絵に ある)
-    const cy=top+h*0.30;
-    ctx.fillStyle='rgba(176,224,255,0.92)';
-    for(const [dx,dy,sc] of [[w*0.24,cy+u*9,1.0],[w*0.10,cy+u*17,0.82],[w*0.22,cy+u*24,0.66]]){
-      ctx.beginPath();ctx.moveTo(dx,dy-u*4.2*sc);
-      ctx.quadraticCurveTo(dx+u*2.8*sc,dy,dx,dy+u*2.6*sc);
-      ctx.quadraticCurveTo(dx-u*2.8*sc,dy,dx,dy-u*4.2*sc);ctx.closePath();ctx.fill();}
+    // ★2026-08-12(台帳 §P): しるしが 輪郭の 内側に 収まり、こまを 72px へ 縮めると 消えていた。
+    //   実測=こまの 矩形の 幅 59px ⇔ こどものかげ 58px＝1px しか ちがわない(画素差も 4体中 最小 2367点)。
+    //   かげびと(線 u*27・幅88px)・かげのきし(たて r=u*10.5・幅74px)は どちらも【輪郭が 変わる 大きさ】を 渡している。
+    //   → 涙を 輪郭の 外へ 出す: 粒を 大きくして たてに つらね、足もとに たまりを 作る。
+    //   ★たまりの 下端は 絵の 底辺(原点+u*8＝画像の 実下端)に そろえる=足もとの 線を 下げない(えらぶ画面の 契約 S8 ≤4px)。
+    //   ★左右対称に 広げない: 戦闘の 左端クランプ(drawMateBattle の halfW)は 画像の 幅からしか 半幅を 出していないので、
+    //     体の 左へ 出すと 画面の 端で 切れる(SPEC_kage_tsukurinaoshi §3-2 で 直した 穴の 再演に なる)。前(てき側=みぎ)へ 寄せる。
+    const cy=top+h*0.30, pw=u*9.2, ph=u*6.0; // 粒の たて・よこ(旧 u*4.2/u*2.8=実寸 3.6x2.9px で 読めなかった)
+    // ★実画面(4ばい拡大)で 直した2件: ①x が ジグザグで 粒が 胴の上に 散り「ぬれている」に 見えた→顔の ふちから
+    //   まっすぐ 下へ ②色が 体の 燐光(178,236,255)と 同系で まぎれた→白寄りへ
+    ctx.fillStyle='rgba(228,246,255,0.95)';
+    for(const [dx,dy,sc] of [[w*0.27,cy+u*12,1.0],[w*0.25,cy+u*32,0.86],[w*0.23,cy+u*52,0.70]]){
+      ctx.beginPath();ctx.moveTo(dx,dy-pw*sc);
+      ctx.quadraticCurveTo(dx+ph*sc,dy,dx,dy+pw*sc*0.62);
+      ctx.quadraticCurveTo(dx-ph*sc,dy,dx,dy-pw*sc);ctx.closePath();ctx.fill();}
+    // 足もとの たまり＝輪郭を 変える 本体。paint=青白い 燐光の ふち＋くらい 線(かげのきしの たてと 同じ 扱い)
+    paint(()=>{const ry=u*3.6;
+      // ★w*0.24 では 足りなかった: うつむきを 深くした(0.13)ぶん 体の 左端が 右へ 動き、輪郭の 幅の 差が
+      //   7px→2px へ 打ち消された(実測)。たまりを【前へ 寄せる】=大きさは 変えず 幅の 差を 取り戻す。
+      //   左端は 体の 内側に とどまる=左端クランプ(halfW)に 触らない。
+      ctx.beginPath();ctx.ellipse(w*0.32,u*8-ry,u*24,ry,0,0,Math.PI*2);},'rgba(168,220,255,0.86)');
     ctx.save();ctx.globalCompositeOperation='lighter';
     ctx.fillStyle='rgba(150,215,255,'+(0.13+gl*0.16).toFixed(3)+')';
     ctx.beginPath();ctx.ellipse(w*0.14,cy+u*13,u*7.5,u*4.2,0,0,Math.PI*2);ctx.fill();ctx.restore();
