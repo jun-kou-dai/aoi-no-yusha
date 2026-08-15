@@ -940,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260815_1917'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260815_2152'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -4777,8 +4777,17 @@ function songTick(){
 // ---- 効果音 ----
 function sfxSel(){if(!actx)return;note('square',93,actx.currentTime,0.05,0.05,sfxBus);}
 function sfxOk(){if(!actx)return;const t=actx.currentTime;note('square',88,t,0.06,0.06,sfxBus);note('square',95,t+0.07,0.09,0.06,sfxBus);}
-function sfxSlash(){if(!actx)return;const t=actx.currentTime; // 剣の風切り(SPEC_oto_sekinin_20260810): ヒュッ→ドンの2段を音で成立させる。一撃(0.378)より下・かいしんより下
-  noiseHit(t,0.06,0.28,1200,1.3);noiseHit(t+0.03,0.16,0.70,2900,1.3);noiseHit(t+0.09,0.13,0.55,4800,1.4);}
+function sfxSlash(tier){if(!actx)return;const t=actx.currentTime; // 剣の風切り(SPEC_oto_sekinin_20260810): ヒュッ→ドンの2段を音で成立させる。一撃(0.378)より下・かいしんより下
+  noiseHit(t,0.06,0.28,1200,1.3);noiseHit(t+0.03,0.16,0.70,2900,1.3);noiseHit(t+0.09,0.13,0.55,4800,1.4);
+  // 剣の 重さ(SPEC_oto_iryoku_20260815 弾1・発注者「これは威力で、音は変えないと」2026-08-15)。
+  // ★引数なし＝段0＝上の3行だけ＝従来と 一字一句 同じ(前例: sfxWin(tier)/sfxCoin(big)/sfxGoldJingle(big)/sfxCoinDrop(hi))。
+  // 段は 音量では なく **明るさと 長さ**で 作る——コンプ(3975行 threshold-14/knee24/ratio5)の ニー中央に
+  // 主層 vol0.70 が すでに 居り、出力2倍に 素27.6倍 要る＝音量軸は 天井。実測でも 弱くすると 曲に 埋もれた(×1.4)。
+  // 実測(3回×3段・oto_bench): 明るさ 5365→2116→770Hz(27.2σ/11.3σ) 長さ 0.168→0.198→0.293秒 ピーク 0.212→0.284→0.274(ほぼ据え置き)。
+  // 足す 低音は 55〜110Hz(midi45=110Hz/40=82Hz)＝4901行の 実測裁定(26〜37Hzは iPadで ほぼ 消える)の 内側。
+  const d=tier|0;
+  if(d>=2){noiseHit(t+0.02,0.20,0.46,460,1.0);note('sine',45,t+0.03,0.24,0.26,sfxBus);note('sine',40,t+0.05,0.16,0.14,sfxBus);}
+  else if(d===1){noiseHit(t+0.02,0.16,0.44,640,1.0);note('sine',45,t+0.03,0.14,0.16,sfxBus);}}
 function sfxHit(){if(!actx)return;const t=actx.currentTime; // 4そう：クリック＋ボディ＋にく＋そこ
   noiseHit(t,0.045,0.6,2600,3);noiseHit(t+0.012,0.15,0.62,760,1.5);
   note('triangle',45,t,0.09,0.4,sfxBus);note('sine',31,t,0.22,0.62,sfxBus);}
@@ -19454,6 +19463,20 @@ async function spellResult(foe,d,rawMul,kind,effectiveMul){
 }
 // 通常攻撃の「振る→接触」を一か所で同期する。
 // はやさ設定は台詞の待ち時間だけを変えるため、接触フレームはここで同じ姿勢へ揃える。
+// 剣の 重さ＝ふり音の 段(SPEC_oto_iryoku_20260815 弾1)。
+// 「いま 手に している 剣の 重さ」＝装備・レベル・かけた 呪文。19564 の ダメージ式と 同じ因子だけを 掛ける(乱数ゼロ)。
+// ★かいしんは 19522＝ふり音(19520)の あとに 抽選される＝振る瞬間 まだ 決まっていない。
+//   だから ふり音は「結果」では なく「腕の中の 重さ」を 語る(結果は sfxCrit と 金の flash が 担う)。
+// しきい 60/150 の 根拠(実測): Lv1どうのつるぎ=12(段0) / Lv8ゆうしゃのつるぎ=62(段1) / Lv15ほしくだき=158(段2)
+//   ＝第1部・第2部・第3部に そのまま 対応。バイキルト(×1.5)や へんげ(×2)で その場で 段が 上がる＝呪文が 耳へ 返る。
+function slashDan(bt){
+  // ★音の 段を 返す 関数が 進行を 止めては ならない。検証の サンドボックス等で Game.p が 無い 文脈から
+  //   呼ばれても 例外を 出さず 段0(=従来と 同じ音)へ 落ちる。
+  const p=(typeof Game!=='undefined'&&Game)?Game.p:null;
+  if(!p||!p.atk)return 0;
+  const a=p.atk*((bt&&bt.atkUp)||1)*((bt&&bt.jimeAtkDown)||1)*((bt&&bt.hengeTurns>0)?2:1);
+  return a>=150?2:(a>=60?1:0);
+}
 function beginHeroStrike(bt,extra){
   bt.heroAtk=1;
   bt.slash=Object.assign({t:0,result:'pending'},extra||{});
@@ -19517,7 +19540,7 @@ async function playerAction(act){
   if(act.kind==='fight'){
     const wfx=WEAPONFX[Game.weaponAtk]||{}; // やり/むち(SPEC_atsumeru 配信3): kindが無ければ文言は従来と一字一句同じ
     await say(wfx.kind==='yari'?'ゆうしゃの やりの ひとつき！':wfx.kind==='muchi'?'ゆうしゃの むちの ひとふり！':'ゆうしゃの こうげき！');
-    beginHeroStrike(bt);sfxSlash();
+    beginHeroStrike(bt);sfxSlash(slashDan(bt));
     await wait(0.08);
     const crit=(!!(bt.kuseMouth||(bt.charge&&bt.kuseFake)))||Math.random()<((curDiff().pcrit||0.1)+(wfx.critUp||0)+(kkOn('tsugu')?0.04:0)+(kkOn('atsume')?0.05:0)+(bt.kuseCutWin?0.30:0)); // ぬしの くせ: 口内/うそ見抜きは かいしん保証
     const physRaw=foePhys(bt),physMul=battleAffinityMul('phys',physRaw);
@@ -19554,7 +19577,11 @@ async function playerAction(act){
       if(bt.kuseFoam>0)d=Math.max(1,Math.round(d*0.5)); // つつみ(章18): あわの まくで こうげきが 半分(ぼうぎょで はらえる)
       markHeroStrikeImpact(bt,'crit');
       bt.hp=Math.max(0,bt.hp-d);
-      sfxCrit();bt.flash=1;bt.hitStop=0.16;bt.recoil=1.35;bt.blink=1;shakeBattle(18,0.5);bt.critShock={t:0};
+      // ★critShock の 起点を 0.34 から(SPEC_ken_hikari_20260815)。半径の 式(r=s*(28+t*150))は 1文字も 触らない。
+      // 理由(実測): hitStop=0.16 の あいだ dt=0 で t が 進まない(21950行)ため、いちばん 見せたい 9.6コマを
+      // r=s*28(直径93px)＝敵の 白い 点滅(22737行)の 中に 隠れたまま 過ごしていた。
+      // 0.34 起点なら 凍結中ずっと r=s*79(直径262px)で 開いたまま 止まる。t は 2.6/秒で 進み 残り0.25秒で 消える。
+      sfxCrit();bt.flash=1;bt.hitStop=0.16;bt.recoil=1.35;bt.blink=1;shakeBattle(18,0.5);bt.critShock={t:0.34};
       flash('#fff3c4',0.45,0.55);
       popup(ep.x,ep.y-ep.s*70,d,'crit');
       puff(ep.x,ep.y-ep.s*40,'rgba(255,225,140,.95)',34,300,0.8,{s0:2,s1:6});
@@ -19594,7 +19621,7 @@ async function playerAction(act){
     if(wfx.venom&&bt.hp>0&&!bt.foePoison&&!(bt.foe.boss||bt.foe.mboss)&&Math.random()<wfx.venom){bt.foePoison=true;flash('#b06ae8',0.2,0.4);await say(bt.foe.name+'は どくに おかされた！');} // ぶきの こせい：どく（ボス・ぬしには きかない。通常敵は勝利文の有無で除外しない）
     if(bt.horaBig){bt.horaBig=0;await say('おおぼらの いきおいが せなかを おした！ いちげきが 2ばい！');}
     if(wfx.taguri&&!crit&&!dodgeP&&bt.hp>0){ // かげたぐり(2026-08-12・SPEC_kaji_volga §2 採用A): かわす目の ない 相手には しなりが まきついて もう ひとうち。dodgeP>0 の 相手(きりとるもの等)では この分岐に 入らない=1ビットも かわらない
-      beginHeroStrike(bt,{second:true});sfxSlash();
+      beginHeroStrike(bt,{second:true});sfxSlash(Math.max(0,slashDan(bt)-1)); // 2撃目は 1段 下げる(絵も hitStop0.06/recoil0.9 で 一段 弱い)
       await wait(0.10);
       const dtg=Math.max(1,Math.round(d*wfx.taguri)); // d は physMul・vsGiant・pierce が すでに 入った 実ダメージ=二重掛けに ならない(twice は 掛け直している)
       markHeroStrikeImpact(bt,'hit');
@@ -19607,7 +19634,7 @@ async function playerAction(act){
       if(wfx.drain&&dtg>0&&p.hp>0&&p.hp<p.mhp){const dr3=Math.min(p.mhp-p.hp,Math.max(1,Math.round(dtg*wfx.drain)));p.hp+=dr3;updateBars();const dc3=playerChipPos();popup(dc3.x,dc3.y,'+'+dr3,'heal');} // 表記「ダメージの 28%を すう」の とおり 追加打にも 乗せる
     }
     if(wfx.twice&&bt.hp>0){
-      beginHeroStrike(bt,{second:true});sfxSlash();
+      beginHeroStrike(bt,{second:true});sfxSlash(Math.max(0,slashDan(bt)-1)); // 2撃目は 1段 下げる(絵も hitStop0.06/recoil0.9 で 一段 弱い)
       await wait(0.10);
       let d2=calcDmg(Math.round(p.atk*0.75*(bt.atkUp||1)*(bt.jimeAtkDown||1)*(bt.hengeTurns>0?2:1)),foeDefNow(bt)); // へんげは2げきめにも2倍(A案v2)
       d2=Math.max(1,Math.round(d2*physMul));
@@ -27039,16 +27066,28 @@ function drawKagebiFete(bt){
 }
 function drawCritShock(t,ep){
   const s=ep.s,r=s*(28+t*150),a=Math.min(1,(1-t)*1.4),cx=ep.x+s*battleStrikeSide(),cy=ep.y-s*22;
-  ctx.save();ctx.globalCompositeOperation='lighter';ctx.translate(cx,cy);ctx.rotate(-0.48);ctx.scale(1,0.68);
+  // ★加算(lighter)を やめる(SPEC_ken_hikari_20260815)。敵は 被弾中 白80%に 塗られており(22737行)、
+  //   加算の のこりしろが 51/255 しか ない＝金も 青も 芯が 純白へ 張りつく。画面光を 消して 測ると
+  //   ふつうと かいしんの SSIM が 0.979（同じ ふつうの コマ間 0.954 より 小さい）＝見分けが つかなかった。
+  //   source-over なら 白の上でも 金が 金のまま 残る。かげ火が すでに 使っている 作法。
+  ctx.save();ctx.globalCompositeOperation='source-over';ctx.translate(cx,cy);ctx.rotate(-0.48);ctx.scale(1,0.68);
   const fg=ctx.createRadialGradient(0,0,r*0.28,0,0,r);
   fg.addColorStop(0,'rgba(255,240,190,0)');
   fg.addColorStop(0.78,'rgba(255,218,116,'+(a*0.22).toFixed(3)+')');
   fg.addColorStop(1,'rgba(255,240,190,0)');
   ctx.fillStyle=fg;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
   const seg=[[-2.88,-1.58],[-1.15,0.38],[0.82,2.18],[2.54,2.82]];
-  ctx.lineCap='round';ctx.strokeStyle='rgba(255,211,105,'+(a*0.94).toFixed(3)+')';ctx.lineWidth=Math.max(1.5,s*8*(1-t*0.45));
+  ctx.lineCap='round';
+  // 暗い 下地を 先に 敷く=白い敵の上でも 明るい 背景絵の上でも 金の 縁が 残る。
+  // ★とげ(下の for i<6)には 敷かない=外へ 広がらない＝verify_battle_strike の box.w<ep.s*185 を 動かさない。
+  const lwG=Math.max(1.5,s*8*(1-t*0.45)), lwW=Math.max(1,s*2.5);
+  ctx.strokeStyle='rgba(26,14,44,'+(a*0.55).toFixed(3)+')';ctx.lineWidth=lwG*1.35;
   for(const q of seg){ctx.beginPath();ctx.arc(0,0,r,q[0],q[1]);ctx.stroke();}
-  ctx.strokeStyle='rgba(255,255,238,'+(a*0.82).toFixed(3)+')';ctx.lineWidth=Math.max(1,s*2.5);
+  ctx.lineWidth=lwW*1.35;
+  for(const q of seg.slice(0,3)){ctx.beginPath();ctx.arc(0,0,r*0.86,q[0]+0.12,q[1]-0.10);ctx.stroke();}
+  ctx.strokeStyle='rgba(255,211,105,'+(a*0.94).toFixed(3)+')';ctx.lineWidth=lwG;
+  for(const q of seg){ctx.beginPath();ctx.arc(0,0,r,q[0],q[1]);ctx.stroke();}
+  ctx.strokeStyle='rgba(255,255,238,'+(a*0.82).toFixed(3)+')';ctx.lineWidth=lwW;
   for(const q of seg.slice(0,3)){ctx.beginPath();ctx.arc(0,0,r*0.86,q[0]+0.12,q[1]-0.10);ctx.stroke();}
   ctx.strokeStyle='rgba(255,191,72,'+(a*0.88).toFixed(3)+')';ctx.lineWidth=Math.max(1,s*2.2);
   for(let i=0;i<6;i++){const an=-2.65+i*1.05,ri=r*1.03,ro=ri+s*(10+(i%2)*8);ctx.beginPath();ctx.moveTo(Math.cos(an)*ri,Math.sin(an)*ri);ctx.lineTo(Math.cos(an)*ro,Math.sin(an)*ro);ctx.stroke();}
