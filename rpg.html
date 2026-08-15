@@ -111,6 +111,11 @@ body{
 .mopt.cur{ border-color:rgba(255,230,168,.75); box-shadow:0 0 0 1px rgba(255,230,168,.35); background:rgba(255,230,168,.08); }
 .mopt.lock{ opacity:.55; cursor:default; }
 .mopt:active{ transform:scale(.98); }
+/* そうびの ふくろ(2026-08-15 SPEC_annai_botan): .mopt を **横に ならぶ 小さな 札**へ。
+   1点1行の カードに すると、終盤(⚔20+🛡20)で ふくろだけ 1590px に なる(実測: 522→1590)。
+   押せることは 変えず、たけを old と 同じ 帯に もどす。 */
+.gearbag{ margin-top:4px; }
+.mopt.gear{ display:inline-block; padding:7px 10px; margin:0 5px 5px 0; border-radius:9px; font-size:.92em; }  /* たけ 38px＝#itembtn と 同じ 押しどころの 大きさ(実測) */
 /* みちづれを えらぶ: 絵つきの 行(SPEC_michizure_erabu_20260811)。ほかの .mopt(さくせん・しょうごう・ふえ)は 不変 */
 .mopt.mate{ display:flex; align-items:center; gap:9px; }
 .mopt.mate .mtxt{ flex:1; min-width:0; }
@@ -935,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260814_0413'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260815_1355'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3156,6 +3161,15 @@ const FOES={
   cuslime:{name:'のろいスライム', hp:200, atk:62, def:9, exp:78, g:34, col:'#e88ad0', draw:'slime', v:'dark', spell:true, physMul:1, fireMul:1.3, iceMul:1.3, dodge:0.12},
   niseyusha:{name:'ぶたいの にせもの勇者', hp:920, atk:112, def:46, exp:0, g:0, col:'#e6b95e', draw:'stagehero', stage:true, mboss:true, still:true, watch:true, physMul:0.7, fireMul:1.6, iceMul:0.9, dodge:0, winMsg:'にせもの勇者は おおげさに くるりと まわり、あかい まくの うしろへ ころがりこんだ！'},
   kotae:{charge:true, name:'こたえなき もの', hp:820, atk:104, def:18, exp:400, g:300, col:'#8a76c8', draw:'golem', v:'iron', mboss:true, still:true, huge:true, spell:true, watch:true, physMul:1, fireMul:0.5, iceMul:0.5, dodge:0, winMsg:'こたえなき ものは しずかに くずれ、なみの おとだけが のこった。\nおくの いしぶみが あわく ひかっている…'}};
+// 押しどころの 正式名の 正本(2026-08-15 SPEC_annai_botan_20260815)。
+// ★ここ 1か所で 決める——①HTMLの 見た目 ②relayoutSideBtns の 書きかえ ③案内文 が これを 読む。
+//   2026-07-20 の「☰メニュー集約」で ボタンを パネルへ 移したとき **案内文だけが 移動前のまま 残り**、
+//   「フィールドの『🚪』ボタン」など **実在しない 場所を 指す 文が 5件** 生きていた(番犬=verify_annai.js)。
+//   手打ちで 直すと また ずれる（実装は 幅≤360px で『🚪 ドア』へ 縮める＝ラベルは 動く）。
+const UI_NAME={menu:'☰ メニュー',status:'💪 つよさ',bag:'🎒 たびじたく',spell:'🔮 じゅもん',
+  quest:'🗺 たびのメモ',book:'📕 ずかん',gearbook:'📗 そうびちょう',save:'📖 きろく',
+  door:'🚪 どこでもドア',cloak:'👻 とうめい',talk:'💬 はなしかけ',
+  invUse:'つかう・そうびする',funamise:'🛒 ふなみせ',kaji:'⚒ かじ'};
 const SHOP=[
   {id:'w1',label:'どうのつるぎ',cost:30,atk:5,town:'grass'},
   {id:'w2',label:'はがねのつるぎ',cost:90,atk:12,town:'grass'},
@@ -3216,9 +3230,9 @@ const SHOP=[
   {id:'seisui2',label:'まほうのせいすい',cost:80,item:'seisui',town:'icetown'},
   {id:'tokusen',label:'とくせんやくそう',cost:250,item:'tokusen',town:'icetown'},
   {id:'inazuma',label:'いなずまだま',cost:400,item:'inazuma',town:'icetown'},
-  {id:'door',label:'どこでもドア',cost:150,key:'door',hint:'フィールドの「🚪」ボタンで いつでも つかえる！'},
-  {id:'cloak',label:'とうめいマント',cost:180,key:'cloak',hint:'フィールドの「👻」ボタンで ON/OFFできる！'},
-  {id:'book',label:'冒険の書',cost:100,key:'book',hint:'フィールドの「📕」ボタンで モンスター図鑑を ひらける！'},
+  {id:'door',label:'どこでもドア',cost:150,key:'door',hint:'☰メニューの「'+UI_NAME.door+'」で いつでも つかえる！'},
+  {id:'cloak',label:'とうめいマント',cost:180,key:'cloak',hint:'☰メニューの「'+UI_NAME.cloak+'」で ON/OFFできる！'},
+  {id:'book',label:'冒険の書',cost:100,key:'book',hint:'☰メニューの「'+UI_NAME.book+'」で モンスター図鑑を ひらける！'},
   {id:'mkey',label:'まほうのかぎ',cost:300,key:'mkey',town:'icetown',hint:'ちそこの とざされた とびらが ひらく！'},
   // 便1(2026-07-25): くらのしまの みせ。第3部に店が1軒(おみやげ)しか無かったため戻す
   // やくそう/いいやくそう/どくけしそう は town無し＝どの店にも並ぶので、ここでは足さない(二重表示になる)
@@ -3714,6 +3728,13 @@ function recalcStats(){
   p.atk=L.atk+p.bonusAtk+Game.weaponAtk;
   p.def=L.def+(Game.shield2?12:(Game.shield?6:0))+(Game.armorDef||0)+(Game.bonusDef||0);
   if(typeof kkOn==='function'&&kkOn('shinpan'))p.atk=Math.round(p.atk*1.05); // かかげ: しんぱんを こえしもの
+}
+// そうびの つけかえの 一本化(2026-08-15 SPEC_annai_botan_20260815)。
+// つよさ画面(#statusbody の data-gear)と どうぐの 窓(useFieldItem)が **同じ ここ**を 通る。
+function equipGear(kind,v){
+  if(kind==='w')Game.weaponAtk=v;else Game.armorDef=v;
+  recalcStats();updateBars();
+  return kind==='w'?Game.p.atk:Game.p.def;
 }
 function resetGame(){
   Game.p=newPlayer();
@@ -4962,9 +4983,9 @@ function relayoutSideBtns(){
   }
   // ☰メニュー集約後(2026-07-20)はパネル幅が広く、短縮は320px帯だけでよい(i===7条件は列積み時代のfstat重なり対策)
   const compact=innerWidth<=360;
-  const db=document.getElementById('doorbtn');if(db)db.textContent=compact?'🚪 ドア':'🚪 どこでもドア';
+  const db=document.getElementById('doorbtn');if(db)db.textContent=compact?'🚪 ドア':UI_NAME.door;
   const tb=document.getElementById('talkbtn');if(tb)tb.textContent=(Game.talkOff?'🤫':'💬')+(compact?' はなし':' はなしかけ')+(Game.talkOff?' OFF':' ON');
-  const cb=document.getElementById('cloakbtn');if(cb)cb.textContent='👻 とうめい'+(Game.invisible?(compact?' ':' のこり')+Math.max(0,Game.cloakSteps)+'歩':'');
+  const cb=document.getElementById('cloakbtn');if(cb)cb.textContent=UI_NAME.cloak+(Game.invisible?(compact?' ':' のこり')+Math.max(0,Game.cloakSteps)+'歩':'');
 }
 function updateDoorBtn(){const b=document.getElementById('doorbtn');if(b)b.classList.toggle('show',!!Game.door);relayoutSideBtns();}
 // ============== 冒険の書（モンスター図鑑）==============
@@ -5465,9 +5486,15 @@ function renderStatus(){
   h+=row('たて',Game.shield2?'ひかりのたて':(Game.shield?'てつのたて':'なし'),Game.shield2?'しゅび +12':(Game.shield?'しゅび +6':''));
   {ownGear();
    // 旧: 名前の羅列だけ＝⚔78も⚔128も「みつどきのこだち」で、どちらが 強いか わからなかった(2026-07-26)
-   const bag=[...Game.ownW.map(v=>(v===Game.weaponAtk?'●':'')+'⚔'+(WNAME[v]||'ぶき')+' +'+v+(WEAPONFX[v]?'✦':'')),
-              ...Game.ownA.map(v=>(v===Game.armorDef?'●':'')+'🛡'+(ANAME[v]||'よろい')+' +'+v+(ARMORFX[v]?'✦':''))];
-   h+=row('そうびの ふくろ','<div style="margin-top:4px">'+bag.join('　')+'</div>','●=そうびちゅう ／ '+FXNOTE+'。つけかえは ☰メニューの「どうぐ」から','qstack');}
+   // 2026-08-15(SPEC_annai_botan): 名前を ならべるだけ＝**押せなかった**。
+   //   下の 説明も 実在しない「☰メニューの『どうぐ』」を 指していた（☰に その枠は 無い）。
+   //   → しょうごう/みちづれ/さくせんと 同じ .mopt に して **押せば その場で つけかわる**。
+   const cell=(kind,v,cur,nm,fx)=>'<div class="mopt gear'+(cur?' cur':'')+'" data-gear="'+kind+v+'">'
+     +(cur?'●':'')+(kind==='w'?'⚔':'🛡')+nm+' +'+v+(fx?'✦':'')+'</div>';
+   const bag=[...Game.ownW.map(v=>cell('w',v,v===Game.weaponAtk,WNAME[v]||'ぶき',WEAPONFX[v])),
+              ...Game.ownA.map(v=>cell('a',v,v===Game.armorDef,ANAME[v]||'よろい',ARMORFX[v]))];
+   h+=row('そうびの ふくろ','<div class="gearbag">'+bag.join('')+'</div>',
+     '●=そうびちゅう ／ おしたら その場で つけかえ ／ '+FXNOTE+'。'+UI_NAME.menu+'→'+UI_NAME.bag+'→「'+UI_NAME.invUse+'」からも できる','qstack');}
   {const dj=[];if(Game.door)dj.push('どこでもドア');if(Game.cloak)dj.push('とうめいマント');if(Game.book)dj.push('冒険の書');if(Game.mkey)dj.push('まほうのかぎ');if(Game.hidden&&Game.hidden.troupeTicket)dj.push('一座の はんけん');if(Game.hidden&&Game.hidden.troupeMask)dj.push('にせもの勇者の おめん');if(Game.hidden&&Game.hidden.troupeScript)dj.push('ほんとうのこえの だいほん');
    if(Game.hidden&&Game.hidden.ch17Key)dj.push('こえの はこの かぎ');if(Game.hidden&&Game.hidden.ch17Stone)dj.push('こだまの いしへん');
    if(Game.hidden&&Game.hidden.ch17Fuda)dj.push('はがされた しろい ふだ');if(Game.hidden&&Game.hidden.ch17Score)dj.push('サヨの がくふ');
@@ -6320,6 +6347,17 @@ $('#statusclose').addEventListener('pointerdown',e=>{
   e.stopPropagation();closeStatus();
 });
 $('#statusbody').addEventListener('pointerdown',e=>{
+  {const bg=e.target.closest('[data-gear]');
+   if(bg&&Game.statusOpen){
+     const t=bg.getAttribute('data-gear')||'',kind=t.slice(0,1),v=+t.slice(1);
+     if((kind==='w'||kind==='a')&&v>0&&(kind==='w'?Game.ownW:Game.ownA).includes(v)){
+       e.stopPropagation();firstGesture();
+       if((kind==='w'?Game.weaponAtk:Game.armorDef)===v){sfxSel();toast('もう そうびして いる');return;}
+       const n=equipGear(kind,v);sfxOk();saveGame();
+       const sb=document.getElementById('statusbody');if(sb)sb.innerHTML=renderStatus();
+       toast((kind==='w'?(WNAME[v]||'ぶき'):(ANAME[v]||'よろい'))+' +'+v+'を そうびした！（'
+         +(kind==='w'?'こうげき ':'しゅび ')+n+'）');
+       return;}}}
   {const bk=e.target.closest('[data-kakage]');
    if(bk&&Game.statusOpen){
      const k=bk.getAttribute('data-kakage')||'';
@@ -6490,13 +6528,13 @@ async function useFieldItem(){
     if(c==='back'||!c)break;
     if(c.startsWith&&c.startsWith('gw_')){
       const v=+c.slice(3);
-      Game.weaponAtk=v;recalcStats();updateBars();sfxOk();
+      equipGear('w',v);sfxOk();
       await say((WNAME[v]||'ぶき')+' +'+v+'を そうびした！（こうげき '+Game.p.atk+'）'+(WFXDESC[v]?'\n✦'+WFXDESC[v]:''));
       continue;
     }
     if(c.startsWith&&c.startsWith('ga_')){
       const v=+c.slice(3);
-      Game.armorDef=v;recalcStats();updateBars();sfxOk();
+      equipGear('a',v);sfxOk();
       await say((ANAME[v]||'よろい')+' +'+v+'を そうびした！（しゅび '+Game.p.def+'）'+(AFXDESC[v]?'\n✦'+AFXDESC[v]:''));
       continue;
     }
@@ -9212,6 +9250,17 @@ function tamesuList(){
   // 無かった＝ゲーム内の常設の説明がゼロだった。台帳の先頭に いつでも読める1行を置く。
   out.push({id:'howto',label:'❓ あそびかた ─ まよったら まず これ',
     line:'あるきかたは 三つだけ じゃ。よく きくが よい。',howto:true});
+  // 2026-08-15: どこでもドアを 買っていないと、みちびきの 行き先(島)へ 行く 手だてが **1つも 無い**
+  //   (measure_iku.js の 全数スイープで 211場面)。台帳は「いま できること」の 唯一の 正本＝
+  //   ここに 1行 無いと、遊ぶ人には 永久に 届かない(掟 2026-07-26)。正本=rireki/SPEC_door_annai_20260815.md
+  //   ★ここで questDest() を 呼んでは いけない（questDest の 完結後の 分岐が tamesuList() を 呼ぶ＝
+  //     呼び合いに なって 積みあがる。2026-08-15 に 実測で 踏んだ: Maximum call stack size exceeded）。
+  //     条件は 旗と 出口だけで 決める＝海路(ch11a)が ひらく までの あいだ、島へは ドアしか ない。
+  {const _ms=(WORLDS.grass.npcs||[]).find(n=>n.shop);
+   if(!Game.door&&h.cleared&&!h.ch11a&&ISLE.some(([id])=>!walkReachMap(id)))
+     out.push({id:'door',label:'🚪 '+((SHOP.find(x=>x.id==='door')||{}).label||'どこでもドア')+' を かう ─ しまへ わたる ただ ひとつの みち',
+       line:'うみの むこうの しまへは、あるいては わたれん。\nむらの みせに ならぶ '+doorBuyText()+' が、ただ ひとつの みちじゃ。\n（いま '+Game.gold+'G）',
+       at:{x:_ms?_ms.x:5,y:_ms?_ms.y:9}});}
   if(h.ch13d){const _heard=['koe13','koe14','koe15','koe16','koe17','koe18','koe19'].filter(k=>h[k]).length;
   out.push({id:'nushiAgain',label:'⚔ ぬしの こえを ききなおす（いま '+_heard+'/7）',
     line:'ほどけた ぬしたちは、しまの きおくの なかで しずかに ねむっておる。\nあの ものたちだけが しっている ことが ある——ものがたりが はじまる まえの ことじゃ。\nもういちど 立ちあい、ちからを しめせば、はじまりの ひとことを かたって くれよう。\nななつ そろえば、ほしあかりの おくの「はじまり」が、ほんとうの こえで こたえる。',
@@ -9643,7 +9692,7 @@ function osusumeNow(){
      if(!sp&&yet.length&&ki>=yet[0][3]){const [v,k,g,n]=yet[0];
        if(Game.gold>=g)return {id:'fukamiRec',bar:'⚒ かじへ——かげの そうびが うてる',
          head:'フクロ「かげいしは '+ki+'つ ある——⚒かじで '+(k==='w'?'⚔'+WNAME[v]:'🛡'+ANAME[v])+'が うてるぞ（'+g+'Gと かげいし'+n+'つ）。\nにしの きしの ふねへ ゆくか？」',
-         at:{x:1,y:6},line:'フクロ「あしは わしが すすめる。きしに ついたら ふねに ふれ、\n⚒かじを ひらくのじゃ。」'};
+         at:{x:1,y:6},line:'フクロ「あしは わしが すすめる。きしに ついたら ふねに ふれ、\n「'+UI_NAME.funamise+'」の なかの「'+UI_NAME.kaji+'」を ひらくのじゃ。」'};
        return {id:'fukamiRec',bar:'🔥 ふかみへ——⚒かじの おかねを かせぐ',
          head:'フクロ「かげいしは たりておる（'+ki+'つ）——のこりは おかね（あと '+(g-Game.gold)+'G）。\nふかみで かせぐか？」',fukami:true};}
      return {id:'fukamiRec',
@@ -9767,7 +9816,7 @@ const TANA=[ // たなの ならびが 答え: うえほど のこりの ある 
   // tamesuList に 足した 行が ここに 無ければ 最上段に 直に 出る(=「1行 足せば 届く」の 掟は 壊れない)
   {id:'atsume',label:'💰 あつめる ─ たから と おかね',line:'のこりの ある たからじゃ。あつめきれば、この たなは かるく なる。',ids:['hobi','takara']},
   {id:'idomu',label:'⚔ いどむ ─ つよい あいて',line:'ちからだめしの あいてが まっておる。そなえて ゆくのじゃぞ。',ids:['kage','fukami','volga','ura','meguri']},
-  {id:'sonae',label:'⚒ そなえる ─ かいもの と ちえ',line:'そうびと おかねと ちえは、この たなじゃ。',ids:['fune','mise','ou','kitaeru','shimameguri']},
+  {id:'sonae',label:'⚒ そなえる ─ かいもの と ちえ',line:'そうびと おかねと ちえは、この たなじゃ。',ids:['fune','mise','ou','kitaeru','shimameguri','door']},
   {id:'mou',label:'🔁 もういちど ─ たたかい と おはなし',line:'おわった ものがたりに、もういちど あえる たなじゃ。',ids:['nushiAgain','tamoto','ending','kageop','kagebi','butai','tani']}
 ];
 async function gunshiTamesu(){
@@ -9908,7 +9957,9 @@ async function gunshiNavi(){
   const L=['いま なすべきは——','　'+d.exp];
   if(d.map&&d.map!==Game.mapId){
     const nm=(ISLE.find(([id])=>id===d.map)||[])[1]||MAPNAME[d.map]||'';
-    if(nm)L.push('いくさきは『'+nm+'』じゃ。'+(Game.door?'☰メニューの「どこでもドア」なら ひとっとび じゃぞ。':'ひかる でぐちには いきさきの なが でておる。'));
+    if(nm)L.push('いくさきは『'+nm+'』じゃ。'+(Game.door?'☰メニューの「どこでもドア」なら ひとっとび じゃぞ。'
+      :(walkReachMap(d.map)?'ひかる でぐちには いきさきの なが でておる。'
+        :'あるいては わたれん。むらの みせの '+doorBuyText()+' が いるぞ。')));   // 2026-08-15: 歩けない 島に 出口を さがせと 言っていた
   }else if(d.map===Game.mapId){
     L.push('めあては この しまの なかに ある。したの「もくてき」の おびを タップすれば、きんいろの ひかりが みちを てらす。');
   }
@@ -18048,6 +18099,27 @@ function questDest(){
   if(Game.diff===7&&!h.meguriDown)return {map:'towa',exp:'しんぱんの みちを ゆく ものへ——とわの ふちに「めぐりのけしん」が かたちを もった。すべての といの、さいごの ひとつだ。'};
   return {map:null,exp:'すべての こたえが むすばれた。おうさまに はなせば、あたらしい めぐり——「つよくて ニューゲーム」が はじまる。ものがたりは、なんども いきられる。'};
 }
+// 2026-08-15: みちびきの 行き先へ **歩いて** 行けるか(いまの 旗で 通れる 出口だけを たどる)。
+//   ★画面の 言葉を 実装から 導くため。ドアを 持たない 人に「あるいて わたるか」と 言えるのは これが true の ときだけ。
+//   実測(measure_iku.js の 全数スイープ・152状態): 島への 徒歩の 出口は 1本も 無く、211場面で この 言葉が 嘘だった。
+//   正本=rireki/SPEC_door_annai_20260815.md
+function walkReachMap(dest){
+  if(!dest||!WORLDS[dest])return false;
+  if(dest===Game.mapId)return true;
+  const seen={};seen[Game.mapId]=1;const q=[Game.mapId];
+  while(q.length){
+    const c=q.shift();
+    for(const e of (WORLDS[c]&&WORLDS[c].exits)||[]){
+      if(e.need&&!Game.hidden[e.need])continue;
+      if(!WORLDS[e.to]||seen[e.to])continue;
+      if(e.to===dest)return true;
+      seen[e.to]=1;q.push(e.to);
+    }
+  }
+  return false;
+}
+// どこでもドアの 名と 値段は **みせの 表(SHOP)が 正本**＝台詞に 数字を 直書きしない(掟: 画面の 文言は 実装から 導く)
+function doorBuyText(){const s=SHOP.find(x=>x.id==='door');return s?('「'+s.label+'」（'+s.cost+'G）'):'「どこでもドア」';}
 async function questGuide(){
   if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
   // クリア後のむら: バーのタップは「きょうの ひとすじ」を その場で ひらく(2026-07-27 一本道化)
@@ -18086,8 +18158,12 @@ async function questGuide(){
     endTalk();
     const st=(d.map==='grass'&&Game.hidden.ch11c&&!Game.hidden.ch12a)?{x:11,y:11}:WORLDS[d.map].start;
     await transitMap({to:d.map,tx:st.x,ty:st.y,msg:(MAPNAME[d.map]||'')+'へ みちびかれた！'});
-  }else{
+  }else if(walkReachMap(d.map)){
     await say('みちびきの こえ「めざすは「'+(MAPNAME[d.map]||d.map)+'」。あるいて わたるか、むらの みせの「どこでもドア」が あれば ひととびだ。」');
+    endTalk();
+  }else{
+    // 2026-08-15: 島へ 歩いて 渡れる 出口は 1本も 無い(実測)＝「あるいて わたるか」は 嘘だった。
+    await say('みちびきの こえ「めざすは「'+(MAPNAME[d.map]||d.map)+'」。\nそこへ あるいて わたる みちは ない——むらの みせの '+doorBuyText()+' が いる。」');
     endTalk();
   }
 }
@@ -18260,7 +18336,11 @@ function questBeaconTargets(){
   if(Game.mapId==='sunken'&&h.ch2&&!h.sn1)foeB(e=>e.def.kage);
   // 章2後半: わすれのうみの かげ（じょうかを つみ、ぬけがら・継承へ）
   if(Game.mapId==='mistsea'&&h.ch2end&&!h.ch3m&&!(h.nk2&&(Game.purified||0)>=15))foeB(e=>e.def.kage);
-  // 城: やみの ぬけがら
+  // 城: やみのおう ヴォルガ(本編) — 2026-08-15 SPEC_shiro_hashira_20260815
+  //   ここが 無いと 城だけ 金柱0本＝もくてきバーを 押しても 何も 起きない(実測: 自動歩行0マス)。
+  //   湧きの表が {id:'boss',gone:'cleared'} なので クリア後は そもそも 湧かない＝!h.cleared と 二重の 守り。
+  if(Game.mapId==='castle'&&!h.cleared)foeB(e=>e.def===FOES.boss);
+  // 城: やみの ぬけがら(裏。need:'ch2end'＝クリア後にしか 湧かない＝本編ヴォルガとは 同時に 出ない)
   if(Game.mapId==='castle'&&h.ch2end&&!h.nk1)foeB(e=>e.def===FOES.nukegara);
   // 章3: ひかりの しずく3つ → いずみの まえの ボス
   if(Game.mapId==='minamoto'&&w.npcs){
@@ -21005,12 +21085,17 @@ async function victory(){
   if(foe.stage){await finishStageBattle(true);return;}
   stopSong();
   if(foe.boss){await bossDefeat();return;}
-  const tW=winTier(foe),dyD=DYING_DUR[tW]; // くずおれの階段(§14): 1つの 数字で 倒れ方と 間を そろえる(tier0=0.5=従来と 同一)
+  const isKV=(foe===FOES.kagevolga); // 最終戦だけ 倒した画面で 締める(SPEC_oto_finale_20260815)
+  const tW=winTier(foe),dyD=isKV?KV_CRUMBLE_SEC:DYING_DUR[tW]; // くずおれの階段(§14): 1つの 数字で 倒れ方と 間を そろえる(tier0=0.5=従来と 同一)
   bt.dying={t:0,dur:dyD,tier:tW};
   const ep=enemyPos();
-  puff(ep.x,ep.y-ep.s*40,'rgba(236,229,207,.9)',24,160,0.9,{s0:2,s1:5});
-  await wait(dyD); // 崩れ切ってから 静寂へ=§4 の 無音の頭(0.4/0.8秒)を 自分で 埋めない
+  if(isKV)await kageVolgaCrumble(ep); // 最終戦: 崩れの あいだに 5連の 光と 地鳴り(bossDefeat と 同じ 語彙)
+  else{
+    puff(ep.x,ep.y-ep.s*40,'rgba(236,229,207,.9)',24,160,0.9,{s0:2,s1:5});
+    await wait(dyD); // 崩れ切ってから 静寂へ=§4 の 無音の頭(0.4/0.8秒)を 自分で 埋めない
+  }
   sfxWin(tW,tW>=2); // さいごの一音(§12): 大ボス級から 締めを 保留(ザコ・ぬし段は 従来どおり)
+  if(isKV)KV_WIN_LEFT=KV_WIN_SEC; // 村の曲は これが 鳴り終わってから(§17 と 同じ 掟)
   flash('#ffe9b0',0.20,0.55);
   await say(((bt.kage&&bt.kage.kname)||foe.name)+'を たおした！');
   Game.kills++;
@@ -21241,6 +21326,7 @@ async function victory(){
     Game.hidden.kageVolgaDown=true;
     await say('さいごの かげが ほどけ——ヴォルガが しずかに わらった。\n『……みごとじゃ。ななつの ちからは、もう そなたの ものよ』');
     sfxLevel();flash('#ffe9b0',0.7,1.3);
+    kageVolgaLight(); // 最終戦: ほどける 瞬間に 光の柱(SPEC_oto_finale_20260815)。台詞・報酬・音は 不変
     if(firstVolga){
       Game.bonusHp=(Game.bonusHp||0)+30;Game.p.mhp+=30;Game.p.hp=Math.min(Game.p.mhp,Game.p.hp+30);recalcStats();updateBars();
       Game.hidden.shinYusha=true;
@@ -21392,7 +21478,8 @@ async function leaveBattle(won){
   const volgaWin=!!(bt&&bt.foe===FOES.kagevolga&&won);
   const ch20Return=!!(bt&&bt.foe===FOES.kajiu);
   const uraReturn=!!(bt&&bt.foe===FOES.hajimarazu&&won);
-  await fadeTo(1,0.25);
+  if(volgaWin)await kageVolgaDawn(); // 最終戦: 暗転では なく よあけの 光で 満ちる(SPEC_oto_finale_20260815)
+  else await fadeTo(1,0.25);
   if(won){
     const i=Game.enemies.indexOf(bt.ref);
     if(i>=0)Game.enemies.splice(i,1);
@@ -21403,8 +21490,10 @@ async function leaveBattle(won){
   MSG=null;msgtextEl.textContent='';msgwinEl.classList.remove('done');msgwinEl.classList.remove('hasface');
   Game.scene='field';
   showUI('ui-field');updateBars();
+  if(volgaWin)await kageVolgaWinTail(); // かちどきが 鳴り終わってから 村の曲(重なり0)
   playSong(fieldSong());
-  await fadeTo(0,0.25);
+  await fadeTo(0,volgaWin?1.4:0.25);
+  if(volgaWin)fadeColor('#070b1e'); // ぬり色は 明けきってから もどす(startKageEnding と 同じ順・塗り残しは 全域へ 漏れる)
   Game.grace=1.2;
   if(won)Game.huntCalm=6; // 勝ったら 6歩ぶんは 追ってくる まものが 寄ってこない(保存しない=graceと同じ扱い)
   Game.battling=false;
@@ -21473,6 +21562,58 @@ async function transformPhase2(){
   playSong('boss2');
   await wait(0.3);
   await say('ひかりを すてた けいしょうしゃ……\nヴォルガが しんのすがたを あらわした！');
+}
+// ── 最終戦『ななつのかげを まとう ヴォルガ』の 締め(SPEC_oto_finale_20260815) ──
+// 発注者「音は途中で切れて、すぐ、草原に行く仕様になっているよな。倒した画面で盛り上げるのが普通だろ」(2026-08-15)。
+// 最終戦は mboss であって boss では ない＝bossDefeat を 通らず、ザコと 同じ 勝利処理だった。
+// 絵は bossDefeat と 同じ 語彙だけを 使い回す(新しい 描画・新しい 音・新しい 押し場所は 作らない)。
+const KV_CRUMBLE_SEC=2.3;   // くずおれ=魔王と 同じ 最上段(DYING_DUR[3]=2.0 の 上)
+// ★はやさ×2 の 打ち消し(holdKagebiSeven と 同じ型): wait() は 戦闘中だけ 0.5倍に なるが、
+//   bt.dying.t は dt のまま(21884)＝掛けないと **崩れ切る前に ファンファーレが 鳴る**(§14 却下1)。
+//   2026-08-15 実測: ⚡ONで dying.t=1.49／dur=2.3(直す前の 版も dying.t=1.19／dur=2.0＝元から そう)。
+const kvFB=()=>(Game.fastBattle&&Game.scene==='battle')?2:1;
+const KV_WIN_SEC=8.7;       // ヴォルガ級ジングルの 実測長(SPEC_iwai §6 t3 dur 8.70)
+let KV_WIN_LEFT=0;          // かちどきの のこり(秒)。**dt駆動**=WINLAST.wait と 同じ型(performance.now は 検証の 仮想時計と ずれる)。保存しない=grace と 同じ 扱い
+async function kageVolgaCrumble(ep){ // 崩れの あいだ=音は 地鳴りだけ(§4 の 無音の頭を 自分で 埋めない)
+  sfxBossDown();
+  for(let k=0;k<5;k++){
+    flash(k%2?'#ffffff':'#e8c0ff',0.5+k*0.06,0.32);
+    shakeBattle(14+k*3,0.4);
+    sfxBossDown();
+    for(let i=0;i<24;i++){
+      if(P.length>420)break;
+      const a=rnd(Math.PI*2),v=rnd(100,460)*ep.s;
+      P.push({x:ep.x+rnd(-40,40)*ep.s,y:ep.y-ep.s*40+rnd(-50,50)*ep.s,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rnd(0.4,0.9),t:0,size:rnd(2,7)*ep.s,col:k%2?'rgba(255,250,235,.95)':'rgba(210,140,255,.9)',grav:0,light:true,drag:0.96});
+    }
+    await wait(0.42*kvFB());
+  }
+  await wait(0.3*kvFB());
+}
+function kageVolgaLight(){ // かげが ほどける 瞬間の 光の柱(bossDefeat の 締めと 同じ 語彙)。
+  // ★台詞は 1文字も 足さない——別れの ことばは 21328 に すでに ある(2026-08-15 に 一度 二重に 書いて 順序が 矛盾した)。
+  const ep=enemyPos();
+  shakeBattle(28,1.0);
+  for(let i=0;i<120;i++){
+    if(P.length>420)break;
+    const a=rnd(Math.PI*2),v=rnd(140,620)*ep.s;
+    P.push({x:ep.x,y:ep.y-ep.s*40,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rnd(0.6,1.4),t:0,size:rnd(2,8)*ep.s,col:i%3?'rgba(255,248,225,.95)':'rgba(255,210,150,.9)',grav:0,light:true,drag:0.98});
+  }
+}
+function kageVolgaWinLeft(){ // かちどきの のこり(秒)。鳴らしていなければ 0
+  return Math.max(0,KV_WIN_LEFT);
+}
+async function kageVolgaDawn(){ // 暗転では なく よあけの 光で 満ちる=待ちが そのまま 見せ場(黒で 止めると 読み込みで 固まって 見える)
+  fadeColor('#ffe6c0');         // startKageEnding と 同じ よあけ色
+  // ★上限を つけない: 切った 余りは そのまま「静止した 明るい 画面での 待ち」に なる
+  //   (2026-08-15 実測: 上限3.4だと 速く送る子に 最大2.6秒の 静止が 残った＝合格条件3「死に時間0」を 割る)。
+  //   のこりを 丸ごと 吸わせれば 画面は 最後まで 動き続ける。実測の 幅は 1.6〜約4.7秒。
+  const n=Math.max(1.6,kageVolgaWinLeft());
+  fadeTo(1,n);                  // 絵(CSSの遷移)は はやさ設定の 外＝いつも 実時間 n秒
+  await wait((n+0.05)*kvFB());  // 待ちも 実時間 n秒(はやさ×2の 半減を 打ち消す)
+}
+async function kageVolgaWinTail(){ // 村の曲は かちどきが 鳴り終わってから(§17 と 同じ 掟・重なり0)
+  const rest=kageVolgaWinLeft();KV_WIN_LEFT=0;
+  if(rest>0)await wait(rest*kvFB()); // ここは 場面が field＝半減しないが、型を そろえる
 }
 async function bossDefeat(){
   const bt=Game.bt,ep=enemyPos();
@@ -29403,6 +29544,7 @@ function loopBody(ts){
   if(Game.scene==='battle'&&Game.bt&&Game.bt.hitStop>0){Game.bt.hitStop-=dt;dt=0;} // ヒットストップ：いちげきの てごたえ（はいけいは いきたまま、やくしゃと じかんだけ こおる）
   const dodgeBt=Game.scene==='battle'&&Game.bt&&Game.bt.dodgeRngHold>0?Game.bt:null;
   updateMsg(dt);
+  if(KV_WIN_LEFT>0)KV_WIN_LEFT=Math.max(0,KV_WIN_LEFT-dt); // かちどきの のこり(SPEC_oto_finale): 戦闘→よあけ→村と 場面を またぐので loopBody で 数える
   updateP(dodgeBt?0:dt); // 回避hold中の粒子寿命・個数は旧版と一致させる
   if(Game.scene==='field')updateField(dt);
   else if(Game.scene==='battle'){
