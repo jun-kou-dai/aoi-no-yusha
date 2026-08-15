@@ -940,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260815_2152'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260815_2250'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -4788,9 +4788,26 @@ function sfxSlash(tier){if(!actx)return;const t=actx.currentTime; // 剣の風�
   const d=tier|0;
   if(d>=2){noiseHit(t+0.02,0.20,0.46,460,1.0);note('sine',45,t+0.03,0.24,0.26,sfxBus);note('sine',40,t+0.05,0.16,0.14,sfxBus);}
   else if(d===1){noiseHit(t+0.02,0.16,0.44,640,1.0);note('sine',45,t+0.03,0.14,0.16,sfxBus);}}
-function sfxHit(){if(!actx)return;const t=actx.currentTime; // 4そう：クリック＋ボディ＋にく＋そこ
+function sfxHit(tier){if(!actx)return;const t=actx.currentTime; // 4そう：クリック＋ボディ＋にく＋そこ
   noiseHit(t,0.045,0.6,2600,3);noiseHit(t+0.012,0.15,0.62,760,1.5);
-  note('triangle',45,t,0.09,0.4,sfxBus);note('sine',31,t,0.22,0.62,sfxBus);}
+  note('triangle',45,t,0.09,0.4,sfxBus);note('sine',31,t,0.22,0.62,sfxBus);
+  // 当たりの 重さ(SPEC_oto_iryoku_20260815 弾2・発注者「相手も、そうだけど、ここが見せどころでしょ」2026-08-15)。
+  // ★引数なし＝段0＝上の3行だけ＝従来と 一字一句 同じ。段は 勇者も 敵も 同じ物差し(atariDan)を 読む。
+  // 段は 音量では なく **低さと 長さ**で 作る(弾1と 同じ理由＝コンプの ニーで 音量軸は 天井)。
+  // 足す 低音は 55〜110Hz(midi 45=110Hz/40=82Hz/36=65Hz)＝4901行の 実測裁定の 内側。
+  const d=tier|0;
+  if(d>=1){note('sine',40,t+0.01,0.26,0.30,sfxBus);noiseHit(t+0.02,0.20,0.30,420,1.1);}
+  if(d>=2){note('sine',36,t+0.02,0.38,0.34,sfxBus);noiseHit(t+0.04,0.30,0.26,240,0.9);
+    note('triangle',40,t+0.05,0.22,0.16,sfxBus);}}
+// 当たりの 段(SPEC_oto_iryoku 弾2)。物差しは「のこりの 何割を 持っていったか」ひとつ＝**勇者も 敵も 同じ**。
+// hpBefore は 打つ前の のこり。乱数ゼロ。しきい 0.15/0.40。
+// ★とどめ(hpBefore<=d)は 段2に なるが duck は 出さない(呼び元で 出す/出さないを 決める＝sfxWin と 二重に 沈まない)。
+function atariDan(d,hpBefore){
+  const h=+hpBefore;
+  if(!(h>0)||!(d>0))return 0;
+  const r=d/h;
+  return r>=0.40?2:(r>=0.15?1:0);
+}
 function sfxFire(){if(!actx)return;const t=actx.currentTime;
   const o=actx.createOscillator(),g=actx.createGain();o.type='sawtooth';
   o.frequency.setValueAtTime(640,t);o.frequency.exponentialRampToValueAtTime(110,t+0.4);
@@ -4805,12 +4822,25 @@ function sfxCrit(){if(!actx)return;const t=actx.currentTime;
   noiseHit(t,0.03,0.7,3600,3.5);noiseHit(t+0.01,0.14,0.55,5200,2.5);noiseHit(t+0.05,0.2,0.35,2600,1.6);
   note('square',98,t,0.07,0.1,sfxBus);note('square',103,t+0.05,0.12,0.09,sfxBus);
   note('sine',33,t+0.02,0.4,0.6,sfxBus);note('sine',26,t+0.06,0.5,0.5,sfxBus);}
-function sfxCharge(){if(!actx)return;const t=actx.currentTime;
+function sfxCharge(tier){if(!actx)return;const t=actx.currentTime;
+  // 弾3(SPEC_oto_iryoku)。★引数なし＝段0＝従来と 一字一句 同じ(フィールドの 4箇所は 不変)。
+  // 段1=戦いの ため予告。**実測で 埋もれていた**——ピーク0.049・RMS0.0047 に対し
+  // たたかいの曲は RMS 0.0740＝×0.7、ボスの曲では ×0.57。**聞き逃すと 大技を くらう**ので 立てる。
+  // 段2=致死圏(p.hp <= p.mhp*capHeavy)の ため。低く 長く、曲も 一歩 さげる。
+  const d=tier|0, mid=d>=1, dp=d>=2;
   const o=actx.createOscillator(),g=actx.createGain();o.type='sawtooth';
-  o.frequency.setValueAtTime(46,t);o.frequency.exponentialRampToValueAtTime(92,t+0.55);
-  g.gain.setValueAtTime(0.16,t);g.gain.exponentialRampToValueAtTime(0.0005,t+0.6);
-  o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+0.65);
-  noiseHit(t,0.5,0.14,260,0.7);}
+  const f0=dp?34:(mid?40:46), f1=dp?70:(mid?84:92), len=dp?0.86:(mid?0.68:0.6);
+  o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+len*0.92);
+  g.gain.setValueAtTime(dp?0.30:(mid?0.26:0.16),t);g.gain.exponentialRampToValueAtTime(0.0005,t+len);
+  o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+len+0.06);
+  noiseHit(t,dp?0.72:(mid?0.6:0.5),dp?0.22:(mid?0.20:0.14),dp?200:(mid?230:260),0.7);
+  if(mid){note('sine',dp?36:40,t+0.04,dp?0.5:0.42,dp?0.30:0.24,sfxBus);duckMusic(dp?0.3:0.22,dp?0.7:0.5);}}
+// 戦いの ための 段: 致死圏(一撃で 倒れうる 帯)なら 2、ふだんの 戦いは 1。フィールドの ためは 引数なし=0。
+function tameDan(){
+  const p=(typeof Game!=='undefined'&&Game)?Game.p:null;
+  if(!p||!(p.mhp>0)||!(p.hp>0))return 1;
+  try{return p.hp<=p.mhp*curDiff().capHeavy?2:1;}catch(e){return 1;}
+}
 function sfxSoar(){if(!actx)return;const t=actx.currentTime;[62,67,72,77].forEach((m,i)=>note('triangle',m,t+i*0.05,0.12,0.11,sfxBus));}
 function sfxEnc(){if(!actx)return;const t=actx.currentTime;
   const o=actx.createOscillator(),g=actx.createGain();o.type='square';
@@ -4902,9 +4932,19 @@ function audioMoodTick(){ // ための あいだだけ 曲が くぐもって �
   if(!actx||!musTense||!musLp)return;
   const btM=(typeof Game!=='undefined'&&Game&&Game.scene==='battle')?Game.bt:null;
   const tense=!!(btM&&btM.charge);
+  // 弾3(SPEC_oto_iryoku・発注者「ドキドキする勘が大切。やられるかもしらない」2026-08-15)。
+  // これまで ここは bt.charge しか 見ていなかった＝「やられるかもしれない」が 曲に 一度も 出なかった。
+  // 致死圏は curDiff().capHeavy(3061行の 定数)を そのまま 読む＝二重管理ゼロ。
+  // 段: 平時3400/1 → 赤(25%)2200/0.92 → ため中1050/0.82 → 致死圏＋ため 850/0.76。
+  const pM=(typeof Game!=='undefined'&&Game)?Game.p:null;
+  const low=!!(btM&&pM&&pM.mhp>0&&pM.hp>0&&pM.hp/pM.mhp<=0.25);
+  let lethal=false;
+  try{lethal=!!(btM&&pM&&pM.hp>0&&pM.hp<=pM.mhp*curDiff().capHeavy);}catch(e){lethal=false;} // 一撃で 倒れうる 帯
+  const hz=tense?(lethal?850:1050):(low?2200:3400);
+  const gv=tense?(lethal?0.76:0.82):(low?0.92:1);
   const tA=actx.currentTime;
-  musLp.frequency.setTargetAtTime(tense?1050:3400,tA,0.15);
-  musTense.gain.setTargetAtTime(tense?0.82:1,tA,0.15);
+  musLp.frequency.setTargetAtTime(hz,tA,0.15);
+  musTense.gain.setTargetAtTime(gv,tA,0.15);
 }
 function sfxDread(){ // こわい: ぬし・ボス・かげとの 出あい(地鳴り+半音の うねり+落ちる 一すじ=ザコの 上昇笛と 正反対)
   // ★低音は 55〜110Hzに 置く: 初版の 26〜37Hzは iPadの スピーカー(〜200Hzで 減衰)で ほぼ 消える(2026-08-09 実測後に 直した)
@@ -4927,10 +4967,13 @@ function sfxEncNight(){ // こわい: 夜の まものとの 出あい(笛が �
   note('sine',44,t+0.06,0.5,0.22,sfxBus);note('sine',43,t+0.28,0.45,0.19,sfxBus); // 半音 さがる(103→98Hz=iPadでも 聞こえる 帯)
   noiseHit(t,0.5,0.16,900,0.7);
 }
-function sfxDanger(){ // ドキドキ: HPが 25%(バーが 赤に なる 線と 同じ)を 切った・低HPの 手番の 節目(心の音 2拍・0.3秒)
+function sfxDanger(tier){ // ドキドキ: HPが 25%(バーが 赤に なる 線と 同じ)を 切った・低HPの 手番の 節目(心の音 2拍・0.3秒)
+  // 弾3: 12%を 切ったら 心の音が **速く 強く** なる(tier=1)。★引数なし＝従来と 一字一句 同じ。
   if(!actx)return;const t=actx.currentTime;
-  note('sine',41,t,0.09,0.34,sfxBus);noiseHit(t,0.04,0.10,220,1.4);   // ドッ(87Hz=iPadでも 聞こえる)
-  note('sine',38,t+0.17,0.11,0.26,sfxBus);noiseHit(t+0.17,0.04,0.08,190,1.4); // ドッ(73Hz・すこし よわく)
+  const hard=(tier|0)>=1, gap=hard?0.13:0.17;
+  note('sine',41,t,0.09,hard?0.40:0.34,sfxBus);noiseHit(t,0.04,hard?0.13:0.10,220,1.4);   // ドッ(87Hz=iPadでも 聞こえる)
+  note('sine',38,t+gap,0.11,hard?0.32:0.26,sfxBus);noiseHit(t+gap,0.04,hard?0.10:0.08,190,1.4); // ドッ(73Hz・すこし よわく)
+  if(hard){note('sine',36,t+gap*2,0.12,0.28,sfxBus);noiseHit(t+gap*2,0.04,0.10,175,1.4);} // 3拍目=もう あとが ない
 }
 function sfxOsu(){ // 押す合図(SPEC_osu_aizu_20260809): しかけの窓が ひらいた 瞬間の「ここ!」。1窓1回・約0.2秒・sfxBus直結=音量系 不変
   if(!actx)return;const t=actx.currentTime;
@@ -18567,9 +18610,12 @@ function preserveDodgeDrawRng(bt,heavy,physical,elemental){
   shakeBattle(heavy?12:9,heavy?0.45:0.35);
 }
 function hideParticlesFrom(start){for(let i=start;i<P.length;i++)P[i].noDraw=true;}
-function enemyImpactFeedback(bt,result,heavy,physical,elemental){
+function enemyImpactFeedback(bt,result,heavy,physical,elemental,tier){
   if(result==='dodge'){bt.heroDodge=1;return;}
-  if(physical){if(heavy)sfxHeavyHit();else sfxHit();} // ため一撃・大技だけ ふかい 地ひびき(SPEC_oto_kanjo §2-4)
+  // 弾2(SPEC_oto_iryoku): ふつうの こうげきも「のこりの 何割を 持っていったか」で 段が つく。
+  // ★tier を 渡さない 呼び元(こども被弾 20648)は 段0＝従来と 一字一句 同じ。
+  // ★ため一撃は これまでどおり sfxHeavyHit(専用の 地ひびき)＝段の 上に 別の 音が 立つ 構図は 変えない。
+  if(physical){if(heavy)sfxHeavyHit();else{const dn=tier|0;sfxHit(dn);if(dn>=2)duckMusic(0.25,0.25);}} // ため一撃・大技だけ ふかい 地ひびき(SPEC_oto_kanjo §2-4)
   else if(heavy)duckMusic(0.5,0.6); // ほのお・せいこうの 大技は 固有の 音を 持つ=曲だけ さげる
   uiShake();bt.hitStop=0.06;
   // 炎・聖光は直前の固有shake(20/18)を維持する。ここで弱いshakeを上書きしない。メラ系は従来どおり通常shake。
@@ -19079,7 +19125,7 @@ async function jimeGate(){
     const J=JIME[bt.jimeP-1];
     bt.charge=false;
     J.set(bt);
-    sfxCharge();shakeBattle(14,0.7);flash('#c8a040',0.45,0.9);
+    sfxCharge(tameDan());shakeBattle(14,0.7);flash('#c8a040',0.45,0.9);
     updateBars();
     for(const line of J.say)await say(line);
     if(bt.jimeP===4){ // はじまりを わすれる やみ=つかった 章じゅもんを ふうじる(はじまりのうたで もどせる)
@@ -19241,7 +19287,7 @@ async function commandPhase(){
   const p=Game.p;
   while(true){
     {const btD=Game.bt; // 低HPの あいだ、手番の 節目に 心の音 1回(サブメニューの 出入りでは 重ねない・常設ループは 作らない)
-     if(btD&&btD._dangerTurn!==btD.turn&&p.hp>0&&p.hp/p.mhp<=0.25){btD._dangerTurn=btD.turn;sfxDanger();}}
+     if(btD&&btD._dangerTurn!==btD.turn&&p.hp>0&&p.hp/p.mhp<=0.25){btD._dangerTurn=btD.turn;sfxDanger(p.hp/p.mhp<=0.12?1:0);}}
     if(Game.autoBattle)return autoDecide();
     const cmds=[{id:'fight',label:'たたかう'}]; // ななつへんげ: へんげを 1つでも おぼえたら コマンドに 立つ
     if(hengeCount()>0)cmds.push({id:'henge',label:'👹へんしん'+(Game.bt&&Game.bt.hengeUsed?'（つかった）':''),dis:!!(Game.bt&&Game.bt.hengeUsed)});
@@ -19595,8 +19641,11 @@ async function playerAction(act){
       if(bt.horaHit){d=Math.round(d*2);bt.horaHit=0;bt.horaBig=1;}
       if(bt.kuseFoam>0)d=Math.max(1,Math.round(d*0.5)); // つつみ(章18): あわの まくで こうげきが 半分(ぼうぎょで はらえる)
       markHeroStrikeImpact(bt,'hit');
+      const hpB=bt.hp; // 打つ前の のこり(段の 物差し)
       bt.hp=Math.max(0,bt.hp-d);
-      sfxHit();bt.flash=1;bt.hitStop=0.08;bt.recoil=1;bt.blink=1;shakeBattle(10,0.3);
+      const danH=atariDan(d,hpB); // 弾2: 押し込むほど 打つ音が 重い
+      sfxHit(danH);if(danH>=2&&bt.hp>0)duckMusic(0.25,0.25); // とどめ(hp0)では 沈めない＝sfxWin と 二重に ならない
+      bt.flash=1;bt.hitStop=0.08;bt.recoil=1;bt.blink=1;shakeBattle(10,0.3);
       popup(ep.x,ep.y-ep.s*70,d);
       puff(ep.x,ep.y-ep.s*40,'rgba(255,245,220,.9)',18,220,0.6,{s0:2,s1:5});
     }
@@ -20462,7 +20511,7 @@ async function enemyAction(){
   }
   if(kk==='echo'&&!bt.charge&&bt.turn%3!==2&&!bt.kuseEcho&&((bt.kuseEchoN||0)===0||Math.random()<0.4)){
     bt.kuseEcho=true;bt.kuseEchoN=(bt.kuseEchoN||0)+1;
-    sfxCharge();flash('#8fa8e8',0.3,0.6);
+    sfxCharge(tameDan());flash('#8fa8e8',0.3,0.6);
     const eqE=enemyPos();puff(eqE.x,eqE.y-eqE.s*40,'rgba(143,168,232,.85)',16,150,0.8,{up:true,s0:2,s1:5});
     await say('もとをただすものは こだまの かまえに 入った——！'+(bt.kuseEchoN<=1?'\n（かまえに うちこむと、いちげきが こだまで かえってくる…！）':''));
     return;
@@ -20519,7 +20568,7 @@ async function enemyAction(){
   }
   // ゴーレム系：3ターンしゅうきで ちからを ためる
   if(foe===FOES.hitorijime&&bt.jimeP===2&&!bt.charge){ // 章17すがた2: ただしさの こだま=まいターン ためる
-    bt.charge=true;sfxCharge();shakeBattle(4,0.4);
+    bt.charge=true;sfxCharge(tameDan());shakeBattle(4,0.4);
     await say('ただしさの こだまが、ちからを ためて いる…！');
     return;
   }
@@ -20543,7 +20592,7 @@ async function enemyAction(){
     const second=bt.shin&&bt.shinVolley===1; // 二連ため(§2): 予告2回め→2発目は ぼうぎょ貫通(bt.shinの戦いだけ)
     bt.charge=true;
     if(second)bt.shinVolley=2;
-    sfxCharge();
+    sfxCharge(tameDan());
     shakeBattle(4,0.4);
     if(nushiKuse(bt)==='usotame'&&!second){ // うそのため(章15): ほのおの 色で 見抜ける。はじめは かならず うそ=読みを おしえる
       bt.kuseFake=((bt.kuseFakeN||0)===0)?true:Math.random()<0.35;bt.kuseFakeN=(bt.kuseFakeN||0)+1;
@@ -20705,10 +20754,10 @@ async function enemyAction(){
   const impactResult=(bt.guard&&!shinPierced)?'guard':(kabau?'cover':'hit');
   if(foe.boss&&impactResult!=='hit')hideParticlesFrom(bloodStart);
   if(physical)markEnemyStrikeImpact(bt,impactResult);
-  enemyImpactFeedback(bt,impactResult,heavy,physical,fire||holy);
+  enemyImpactFeedback(bt,impactResult,heavy,physical,fire||holy,atariDan(d,p.hp)); // 弾2: ぬしの 一撃が 雑魚と ちがう 重さで 鳴る(p.hp は まだ 引いていない=打たれる前の のこり)
   let ukMp=0,nokoSaved=false;
   p.hp=Math.max(0,p.hp-d);
-  if(p.hp>0&&p.hp/p.mhp<=0.25&&(p.hp+d)/p.mhp>0.25)sfxDanger(); // 危機の門: HPバーが 赤に なる 線(25%)を 切った 瞬間(SPEC_oto_kanjo §2-5)
+  if(p.hp>0&&p.hp/p.mhp<=0.25&&(p.hp+d)/p.mhp>0.25)sfxDanger(p.hp/p.mhp<=0.12?1:0); // 危機の門: HPバーが 赤に なる 線(25%)を 切った 瞬間(SPEC_oto_kanjo §2-5)
   if(p.hp<=0&&bt.nokoribiOn){bt.nokoribiOn=false;bt.nokoribiUsed=true;p.hp=1;nokoSaved=true;} // A案: のこりび=HP1で ふみとどまる
   Game.dmgTaken+=d;
   if(bt.uketome>0){bt.uketome--;const old=p.mp;p.mp=Math.min(p.mmp,p.mp+Math.min(6,Math.ceil(d*0.25)));ukMp=p.mp-old;}
