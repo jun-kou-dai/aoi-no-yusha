@@ -940,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260815_1856'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260815_1917'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -2834,6 +2834,22 @@ function ch20SendVoice(px,py){
   CH20_TAPBOOST=Math.min(4,CH20_TAPBOOST+2);
   sfxSel();
 }
+// ── 章20 しおわかれの かいきょうの 一枚絵 ────────────────────────
+// 発注者「全てに反映されていますか」(2026-08-15)＝全描画経路を 洗ったら ここが 白い円の月と
+// 黒い三角の岩の ままだった。空・月・海の 塗りだけ 絵に する。
+// 港の 灯・岩・三艘・波紋は **遊びに かかわる**ので そのまま 上に 描く。
+const CH20_ART_SRC='img/ch20.jpg';
+let CH20_ART=null;
+function ch20Img(){
+  if(!CH20_ART){CH20_ART=new Image();CH20_ART.src=CH20_ART_SRC;}
+  return (CH20_ART.complete&&CH20_ART.naturalWidth>0)?CH20_ART:null;
+}
+function ch20ArtDraw(g,im,w,h){ // cover（この 場面だけ 別の canvas なので 専用）
+  const sc=Math.max(w/im.naturalWidth,h/im.naturalHeight);
+  const dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;
+  g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+  g.drawImage(im,(w-dw)/2,(h-dh)/2,dw,dh);
+}
 function drawCh20Sea(dt){
   const wrap=document.getElementById('seawrap'),c=document.getElementById('seacv'),win=document.getElementById('convoywin');
   if(!wrap||!c||!win.classList.contains('show')||!win.classList.contains('sea'))return;
@@ -2841,12 +2857,15 @@ function drawCh20Sea(dt){
   const dpr=Math.min(2,window.devicePixelRatio||1),w=Math.round(rc.width*dpr),h=Math.round(rc.height*dpr);
   if(c.width!==w||c.height!==h){c.width=w;c.height=h;}
   const g=c.getContext('2d'),S=CH20_SEA;S.t+=dt;const t=S.t;
+  const cArt=ch20Img(); // 一枚絵が 読めたら 空と 海の 塗りは 描かない
   const nav=ch20Nav(),route=ch20Board(),near=1-nav.y/6;
   // 三艘を目標へ寄せる(急がず、波に乗るように)
   const cells=ch20Cells(nav);
   if(!S.ships)S.ships=cells.map(cc=>{const q=ch20SeaXY(cc.x,cc.y,w,h);return{x:q.x,y:q.y,glow:0};});
   cells.forEach((cc,i)=>{const q=ch20SeaXY(cc.x,cc.y,w,h),sp=S.ships[i];
     const k=Math.min(1,dt*4.2);sp.x+=(q.x-sp.x)*k;sp.y+=(q.y-sp.y)*k;sp.glow=Math.max(0,sp.glow-dt*1.4);});
+  if(cArt){ ch20ArtDraw(g,cArt,w,h); }
+  else{
   // 空
   let sky=g.createLinearGradient(0,0,0,h*0.4);
   sky.addColorStop(0,'#060a1e');sky.addColorStop(0.7,'#0d1533');sky.addColorStop(1,'#1b2648');
@@ -2857,6 +2876,7 @@ function drawCh20Sea(dt){
   g.globalAlpha=1;
   g.save();g.shadowColor='rgba(240,240,255,.9)';g.shadowBlur=46;g.fillStyle='#e8ecff';
   g.beginPath();g.arc(w*0.8,h*0.085,w*0.036,0,7);g.fill();g.restore();
+  }
   // 港: 建物と灯(近づくほど強く)
   const py2=h*0.185;
   g.fillStyle='#0d1330';
@@ -2869,10 +2889,12 @@ function drawCh20Sea(dt){
     g.fillStyle='#ffd98a';g.beginPath();g.arc(x,py2-h*0.056,(3.4+near*1.8)*dpr,0,7);g.fill();g.restore();}
   g.save();g.fillStyle='rgba(255,229,167,'+(0.75+near*0.25)+')';g.font=(11*dpr)+'px sans-serif';g.textAlign='center';
   g.shadowColor='rgba(255,200,90,.8)';g.shadowBlur=10;g.fillText('☀ かぜまちじま',w*0.5,py2-h*0.065);g.restore();
-  // 海
-  let sea=g.createLinearGradient(0,py2,0,h);
-  sea.addColorStop(0,'#0d1a3e');sea.addColorStop(0.5,'#0a1330');sea.addColorStop(1,'#050a1c');
-  g.fillStyle=sea;g.fillRect(0,py2,w,h-py2);
+  // 海（一枚絵の ときは 塗らない）
+  if(!cArt){
+    let sea=g.createLinearGradient(0,py2,0,h);
+    sea.addColorStop(0,'#0d1a3e');sea.addColorStop(0.5,'#0a1330');sea.addColorStop(1,'#050a1c');
+    g.fillStyle=sea;g.fillRect(0,py2,w,h-py2);
+  }
   let refl=g.createLinearGradient(0,py2,0,py2+h*0.12);
   refl.addColorStop(0,'rgba(255,200,110,'+(0.18+near*0.22)+')');refl.addColorStop(1,'rgba(255,200,110,0)');
   g.fillStyle=refl;g.fillRect(0,py2,w,h*0.12);
@@ -22213,12 +22235,14 @@ function prImg(k){
   return (im.complete&&im.naturalWidth>0)?im:null;
 }
 // ── エンディング（よあけ）の 一枚絵 ────────────────────────────
-// 通常エンディングだけ。最終章の 締め(endMode==='finale'・星空)は 絵が 別物なので コードの まま。
-const ED_ART_SRC='img/ed.jpg';
-let ED_ART=null;
-function edImg(){
-  if(!ED_ART){ED_ART=new Image();ED_ART.src=ED_ART_SRC;}
-  return (ED_ART.complete&&ED_ART.naturalWidth>0)?ED_ART:null;
+// よあけ版(normal)と 星空版(finale・最終章の しめ)の 2枚。どちらも 絵に なった。
+const ED_ART_SRC={normal:'img/ed.jpg',finale:'img/ed_finale.jpg'};
+const ED_ART={};
+function edImg(fin){
+  const k=fin?'finale':'normal';
+  if(!ED_ART[k]){const im=new Image();im.src=ED_ART_SRC[k];ED_ART[k]=im;}
+  const im=ED_ART[k];
+  return (im.complete&&im.naturalWidth>0)?im:null;
 }
 function artCover(im,a){ // 画面を うめ、はみ出しは 中央で 切る
   const sc=Math.max(W/im.naturalWidth,H/im.naturalHeight);
@@ -29416,8 +29440,8 @@ function updateEnding(dt){
 function drawEndingScene(){
   const k=Math.min(1,Game.endT/16);
   const fin=Game.endMode==='finale'; // 最終章の締めは よぞら(ほしのうみ)版
-  if(!fin){ // よあけの 一枚絵（発注者が ChatGPT で 生成・2026-08-15）
-    const ei=edImg();
+  { // 一枚絵（発注者が ChatGPT で 生成・2026-08-15）よあけ版と 星空版(最終章の しめ)
+    const ei=edImg(fin);
     if(ei){
       artCover(ei,1);
       // 文が 乗る 帯だけ 弱く 落とす。実測: 3行目の 背景201.3・文字240.6＝差39.2 で 読みにくかった
