@@ -940,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260815_1646'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260815_1813'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -21960,7 +21960,7 @@ for(let i=0;i<70;i++)STARS.push({x:Math.random(),y:Math.random(),s:rnd(0.6,1.9),
 // せんとうはいけいの テーマ（ばしょ と じこくで きりかわる）
 const BT_NIGHT={sky:[[0,'#11173b'],[0.30,'#28315f'],[0.44,'#5e4663'],[0.52,'#96624e'],[0.60,'#2a3358'],[1,'#161e3e']],
   mtn:['#333a6b','#1d2650','#161e42'],ground:['#2a3760','#222e54','#141b38'],stars:1,
-  pg:'95,115,190',fog:'150,175,235',bokeh:'168,190,255'};
+  pg:'95,115,190',fog:'150,175,235',bokeh:'168,190,255',art:'night'};
 const BT_DAY={sky:[[0,'#54a0d8'],[0.32,'#8cc6ea'],[0.52,'#d4ecf4'],[0.60,'#eaf2d8'],[0.74,'#b2d8a4'],[1,'#84bc8a']],
   mtn:['#6890bc','#4f78a6','#3f648e'],ground:['#6cae6c','#549457','#3d7449'],stars:0,
   pg:'255,250,205',fog:'255,255,255',bokeh:'255,250,220',art:'day'};
@@ -21972,16 +21972,16 @@ const BT_CASTLE={sky:[[0,'#16081e'],[0.30,'#2c1139'],[0.46,'#561d4e'],[0.54,'#8c
   pg:'190,90,220',fog:'170,110,200',bokeh:'210,140,235',kind:'hall',art:'castle'};
 const BT_FOREST={sky:[[0,'#16301f'],[0.30,'#21452d'],[0.50,'#3a7048'],[0.60,'#356340'],[0.74,'#1f3e28'],[1,'#0e2415']],
   mtn:['#244c31','#16301e','#0d1f13'],ground:['#3c5e40','#2e4a33','#1a2e1f'],stars:0,
-  pg:'205,230,170',fog:'120,150,110',bokeh:'200,220,150',kind:'forest'};
+  pg:'205,230,170',fog:'120,150,110',bokeh:'200,220,150',kind:'forest',art:'forest'};
 const BT_ICE={sky:[[0,'#2f5680'],[0.30,'#4f7ba6'],[0.50,'#86b0d4'],[0.60,'#b6d4e8'],[0.74,'#dcecf6'],[1,'#c2dcec']],
   mtn:['#6f93b4','#4e7298','#34526f'],ground:['#d4e6f2','#a6c4dc','#7a9cba'],stars:0,
   pg:'220,238,255',fog:'170,200,224',bokeh:'210,232,250',art:'ice'};
 const BT_VOLCANO={sky:[[0,'#1c0606'],[0.30,'#3a0e0a'],[0.50,'#7a1f10'],[0.60,'#c2491c'],[0.74,'#5e1a0a'],[1,'#1a0807']],
   mtn:['#4e1a10','#2e0d08','#1a0605'],ground:['#42160f','#2c0f0a','#170806'],stars:0,
-  pg:'255,148,66',fog:'150,72,52',bokeh:'255,170,92'};
+  pg:'255,148,66',fog:'150,72,52',bokeh:'255,170,92',art:'volcano'};
 const BT_SUNKEN={sky:[[0,'#2a1630'],[0.30,'#4e2542'],[0.46,'#8a4152'],[0.54,'#c67a55'],[0.62,'#5a2c48'],[1,'#241426']],
   mtn:['#4a2848','#341c38','#241328'],ground:['#2e2452','#252048','#161230'],stars:0.35,
-  pg:'255,190,130',fog:'190,120,140',bokeh:'255,180,150'};
+  pg:'255,190,130',fog:'190,120,140',bokeh:'255,180,150',art:'sunken'};
 const BT_MISTSEA={sky:[[0,'#1c2434'],[0.30,'#2e3d52'],[0.50,'#54687e'],[0.60,'#7e92a4'],[0.74,'#3c4e64'],[1,'#182030']],
   mtn:['#37485e','#28374a','#1c2838'],ground:['#26364c','#1e2c40','#121c2c'],stars:0.15,
   pg:'170,200,230',fog:'205,220,235',bokeh:'185,210,240',kind:'sea',art:'mistsea'};
@@ -21993,49 +21993,49 @@ const BT_TOWA={sky:[[0,'#0a0616'],[0.30,'#1c1034'],[0.46,'#342054'],[0.54,'#4e32
   pg:'170,140,230',fog:'120,95,180',bokeh:'185,155,240',art:'towa'};
 const BT_MISAKI={sky:[[0,'#241c2e'],[0.30,'#4a3448'],[0.46,'#8a5658'],[0.54,'#d8926a'],[0.62,'#5a3a50'],[1,'#201828']],
   mtn:['#3a2c42','#2c2236','#1e1828'],ground:['#4a3a4e','#382c40','#241c2c'],stars:0.3,
-  pg:'255,190,140',fog:'190,140,150',bokeh:'255,200,160',kind:'sea'};
+  pg:'255,190,140',fog:'190,140,150',bokeh:'255,200,160',kind:'sea',art:'misaki'};
 const BT_OKA={sky:[[0,'#2a1c34'],[0.30,'#5a3448'],[0.46,'#a05a50'],[0.54,'#e8a060'],[0.62,'#6a3e4a'],[1,'#241a2c']],
   mtn:['#4a3448','#38283a','#261c2c'],ground:['#4e3e3a','#3a2e30','#241e22'],stars:0.2,
-  pg:'255,200,130',fog:'200,140,120',bokeh:'255,210,150'};
+  pg:'255,200,130',fog:'200,140,120',bokeh:'255,210,150',art:'oka'};
 const BT_UMI={sky:[[0,'#0c1830'],[0.30,'#1c3050'],[0.46,'#2e5078'],[0.54,'#4a7aa8'],[0.62,'#1e3a5e'],[1,'#0c1830']],
   mtn:['#1c3a5e','#16304e','#102440'],ground:['#1e3c62','#182f4e','#0f2038'],stars:0.5,
   pg:'150,210,255',fog:'140,180,220',bokeh:'170,215,255',kind:'sea',art:'umi'};
 const BT_KOKORO={sky:[[0,'#0c0a1c'],[0.30,'#1e1838'],[0.46,'#342a52'],[0.54,'#4a3e6a'],[0.62,'#241e42'],[1,'#0e0c20']],
   mtn:['#2a2448','#1f1a3a','#14102a'],ground:['#221c40','#191434','#0f0c22'],stars:0.5,
-  pg:'150,138,200',fog:'110,100,160',bokeh:'170,158,220'};
+  pg:'150,138,200',fog:'110,100,160',bokeh:'170,158,220',art:'kokoro'};
 const BT_EDGE={sky:[[0,'#080a1a'],[0.30,'#181c3a'],[0.46,'#343056'],[0.54,'#6a5878'],[0.62,'#242244'],[1,'#0c0e22']],
   mtn:['#262a4a','#1a1d38','#121428'],ground:['#1e2140','#171a34','#0e1024'],stars:0.9,
-  pg:'190,200,255',fog:'140,150,200',bokeh:'190,205,255'};
+  pg:'190,200,255',fog:'140,150,200',bokeh:'190,205,255',art:'edge'};
 const BT_STAGE={sky:[[0,'#210714'],[0.34,'#431024'],[0.58,'#6f2430'],[0.76,'#2e0b1c'],[1,'#160611']],
   mtn:['#5a1a2a','#3c1020','#260916'],ground:['#8a5734','#5b351f','#2d180f'],stars:0,
   pg:'255,210,130',fog:'210,120,105',bokeh:'255,205,150'};
 const BT_KURA={sky:[[0,'#16101c'],[0.30,'#241a2c'],[0.46,'#38284a'],[0.54,'#4a3a2a'],[0.62,'#241c2a'],[1,'#120e18']],
   mtn:['#3a2c34','#2c2128','#1c141e'],ground:['#3a2e22','#2a2018','#181210'],stars:0.15,
-  pg:'230,190,120',fog:'120,100,90',bokeh:'240,200,140'};
+  pg:'230,190,120',fog:'120,100,90',bokeh:'240,200,140',art:'kura'};
 const BT_TANI={sky:[[0,'#241a33'],[0.35,'#3c2a4a'],[0.55,'#7a4a4a'],[0.62,'#c8784a'],[0.70,'#4a3350'],[1,'#1a1426']],
   mtn:['#4a3a55','#382c44','#241c30'],ground:['#3a4030','#2a3024','#1a1e16'],stars:0.25,
-  pg:'255,190,130',fog:'110,90,120',bokeh:'255,200,150'};
+  pg:'255,190,130',fog:'110,90,120',bokeh:'255,200,150',art:'tani'};
 const BT_HORA={sky:[[0,'#5aa8d8'],[0.35,'#8ecce8'],[0.55,'#c8e8f4'],[0.68,'#8ec8d8'],[1,'#4a90b8']],
   mtn:['#6ab0cc','#4a90b0','#2a6888'],ground:['#e0d0a0','#c0ac80','#8a7854'],stars:0,
-  pg:'255,244,200',fog:'210,235,245',bokeh:'255,255,225'};
+  pg:'255,244,200',fog:'210,235,245',bokeh:'255,255,225',art:'hora'};
 const BT_UTA={sky:[[0,'#3a3454'],[0.35,'#6a5878'],[0.55,'#c88ea0'],[0.68,'#e8c8b0'],[0.8,'#8aa890'],[1,'#3a5448']],
   mtn:['#5a6878','#48566a','#324050'],ground:['#5a7a50','#42603c','#2a4028'],stars:0.12,
-  pg:'255,220,200',fog:'150,160,170',bokeh:'255,235,210'};
+  pg:'255,220,200',fog:'150,160,170',bokeh:'255,235,210',art:'uta'};
 const BT_HOSHI={sky:[[0,'#060a1e'],[0.35,'#101838'],[0.55,'#1c2a58'],[0.68,'#2a3c74'],[0.8,'#141e44'],[1,'#04081a']],
   mtn:['#1a2448','#141c3a','#0c1228'],ground:['#1c2850','#141e40','#0c142e'],stars:0.85,
-  pg:'190,210,255',fog:'80,100,160',bokeh:'210,225,255',kind:'star'};
+  pg:'190,210,255',fog:'80,100,160',bokeh:'210,225,255',kind:'star',art:'hoshi'};
 const BT_YAKATA={sky:[[0,'#141018'],[0.35,'#241c22'],[0.55,'#3a2c22'],[0.7,'#241a18'],[1,'#100c0e']],
   mtn:['#3a3028','#2c241e','#1c1614'],ground:['#332a1e','#241e16','#161210'],stars:0.1,
   pg:'240,200,120',fog:'90,80,70',bokeh:'255,215,140',kind:'hall',art:'yakata'};
 const BT_KAZEMACHI={sky:[[0,'#061426'],[0.30,'#12314c'],[0.48,'#245777'],[0.58,'#4c8298'],[0.70,'#173a56'],[1,'#071528']],
   mtn:['#204d67','#173b54','#0d2a40'],ground:['#21465a','#173747','#0d2432'],stars:0.55,
-  pg:'175,225,255',fog:'120,180,205',bokeh:'190,230,255'};
+  pg:'175,225,255',fog:'120,180,205',bokeh:'190,230,255',art:'kazemachi'};
 const BT_TOKIKASANE={sky:[[0,'#100d2b'],[0.28,'#24204d'],[0.46,'#51456f'],[0.56,'#a36b68'],[0.68,'#3d365e'],[1,'#12112c']],
   mtn:['#51425f','#362e4c','#211d38'],ground:['#4b3e48','#342c3d','#201b2d'],stars:0.72,
   pg:'245,205,135',fog:'170,150,195',bokeh:'255,215,150',art:'tokikasane'};
 const BT_SHIOWAKARE={sky:[[0,'#07172b'],[0.25,'#12324b'],[0.47,'#36647a'],[0.58,'#d28b71'],[0.68,'#58677b'],[1,'#0b2135']],
   mtn:['#293c52','#1d3146','#13283b'],ground:['#17384e','#102c42','#091c2d'],stars:0.42,
-  pg:'255,206,132',fog:'130,200,220',bokeh:'255,220,164',kind:'sea'};
+  pg:'255,206,132',fog:'130,200,220',bokeh:'255,220,164',kind:'sea',art:'shiowakare'};
 function battleTheme(bt){
   if(bt&&bt.foe&&bt.foe.stage)return BT_STAGE;
   if(Game.mapId==='cave'||Game.mapId==='cave2')return BT_CAVE;
@@ -22191,7 +22191,7 @@ function drawStageBattleSet(gt){
 // 絵は rpg.html の **外**(img/*.jpg)に 置き、その場所に 入った ときだけ 読む。
 //  ・単一HTMLの ままだと 24枚で +7.2MB。外に 出せば 版を 上げても 絵は 読み直さない
 //  ・絵が まだ 無い / 読めない 場所は **いままでの コード背景に そのまま 落ちる**（壊れない）
-const BG_ART_SRC={towa:'img/bg_towa.jpg',ice:'img/bg_ice.jpg',castle:'img/bg_castle.jpg',tokikasane:'img/bg_tokikasane.jpg',day:'img/bg_day.jpg',minamoto:'img/bg_minamoto.jpg',mistsea:'img/bg_mistsea.jpg',umi:'img/bg_umi.jpg',yakata:'img/bg_yakata.jpg',cave:'img/bg_cave.jpg'};
+const BG_ART_SRC={shiowakare:'img/bg_shiowakare.jpg',hoshi:'img/bg_hoshi.jpg',kokoro:'img/bg_kokoro.jpg',misaki:'img/bg_misaki.jpg',edge:'img/bg_edge.jpg',kazemachi:'img/bg_kazemachi.jpg',uta:'img/bg_uta.jpg',tani:'img/bg_tani.jpg',oka:'img/bg_oka.jpg',sunken:'img/bg_sunken.jpg',volcano:'img/bg_volcano.jpg',forest:'img/bg_forest.jpg',hora:'img/bg_hora.jpg',kura:'img/bg_kura.jpg',night:'img/bg_night.jpg',towa:'img/bg_towa.jpg',ice:'img/bg_ice.jpg',castle:'img/bg_castle.jpg',tokikasane:'img/bg_tokikasane.jpg',day:'img/bg_day.jpg',minamoto:'img/bg_minamoto.jpg',mistsea:'img/bg_mistsea.jpg',umi:'img/bg_umi.jpg',yakata:'img/bg_yakata.jpg',cave:'img/bg_cave.jpg'};
 const BG_ART={};
 function bgArtImg(th){
   const k=th&&th.art;if(!k)return null;
