@@ -940,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260815_1813'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260815_1856'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -22200,6 +22200,53 @@ function bgArtImg(th){
   if(!im){im=new Image();im.src=src;BG_ART[k]=im;}
   return (im.complete&&im.naturalWidth>0)?im:null;
 }
+// ── オープニング（プロローグ）の 一枚絵 ─────────────────────────
+// 発注者「これは何、恥ずかしくないのか」(2026-08-15)＝白い円と 三角の家の まま だった。
+// 3枚を 時間で 切りかえる。区間: ①〜3.4秒 ②3.4〜7.0秒 ③7.0秒〜（0.8秒で 重ねて 送る）
+// 絵の 無い 区間は いままでの コード描画に そのまま 落ちる。
+const PR_ART_SRC={pr1:'img/pr1.jpg',pr2:'img/pr2.jpg',pr3:'img/pr3.jpg'};
+const PR_ART={};
+function prImg(k){
+  const src=PR_ART_SRC[k];if(!src)return null;
+  let im=PR_ART[k];
+  if(!im){im=new Image();im.src=src;PR_ART[k]=im;}
+  return (im.complete&&im.naturalWidth>0)?im:null;
+}
+// ── エンディング（よあけ）の 一枚絵 ────────────────────────────
+// 通常エンディングだけ。最終章の 締め(endMode==='finale'・星空)は 絵が 別物なので コードの まま。
+const ED_ART_SRC='img/ed.jpg';
+let ED_ART=null;
+function edImg(){
+  if(!ED_ART){ED_ART=new Image();ED_ART.src=ED_ART_SRC;}
+  return (ED_ART.complete&&ED_ART.naturalWidth>0)?ED_ART:null;
+}
+function artCover(im,a){ // 画面を うめ、はみ出しは 中央で 切る
+  const sc=Math.max(W/im.naturalWidth,H/im.naturalHeight);
+  const dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;
+  if(a<1){ctx.save();ctx.globalAlpha=a;}
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.drawImage(im,(W-dw)/2,(H-dh)/2,dw,dh);
+  if(a<1)ctx.restore();
+}
+function prArtDraw(t){
+  const F=0.8,T1=3.4,T2=7.0;
+  const a=prImg('pr1'),b=prImg('pr2'),c=prImg('pr3');
+  let cur=null,nxt=null,k=0;
+  if(t<T1-F){cur=a;}
+  else if(t<T1){cur=a;nxt=b;k=(t-(T1-F))/F;}
+  else if(t<T2-F){cur=b;}
+  else if(t<T2){cur=b;nxt=c;k=(t-(T2-F))/F;}
+  else {cur=c;}
+  if(!cur)return false;
+  artCover(cur,1);
+  if(nxt&&k>0)artCover(nxt,Math.min(1,k));
+  return true;
+}
+function prNarration(t){ // ナレーション2まい＋スキップあんない（絵でも コードでも 同じ）
+  prText('ひかりのたまは、せかいの よるを てらしつづけていた。',Math.min((t-0.9)/0.6,(2.9-t)/0.6),H*0.62);
+  prText('―― その よる、ひかりは うばわれた。',Math.min((t-8.6)/0.6,(11.3-t)/0.6),H*0.5);
+  if(t>1.2&&t<11.0)prText('タップで とばす',0.28,H*0.94);
+}
 function bgArtWarm(){ // 場所に 入った ときに 先に 読む(戦いの 最初の 一瞬で 差しかわらない ように)
   try{const th=battleTheme({night:false});if(th&&th.art)bgArtImg(th);}catch(e){}
 }
@@ -29369,6 +29416,22 @@ function updateEnding(dt){
 function drawEndingScene(){
   const k=Math.min(1,Game.endT/16);
   const fin=Game.endMode==='finale'; // 最終章の締めは よぞら(ほしのうみ)版
+  if(!fin){ // よあけの 一枚絵（発注者が ChatGPT で 生成・2026-08-15）
+    const ei=edImg();
+    if(ei){
+      artCover(ei,1);
+      // 文が 乗る 帯だけ 弱く 落とす。実測: 3行目の 背景201.3・文字240.6＝差39.2 で 読みにくかった
+      // （1行目は 差85.3）。空の 上と 足もとの 草原は 触らない。
+      const eg=ctx.createLinearGradient(0,H*0.05,0,H*0.66);
+      eg.addColorStop(0,'rgba(10,8,26,0)');
+      eg.addColorStop(0.35,'rgba(10,8,26,0.30)');
+      eg.addColorStop(0.78,'rgba(10,8,26,0.30)');
+      eg.addColorStop(1,'rgba(10,8,26,0)');
+      ctx.fillStyle=eg;ctx.fillRect(0,H*0.05,W,H*0.61);
+      drawP();
+      return;
+    }
+  }
   const g=ctx.createLinearGradient(0,0,0,H);
   if(fin){
     g.addColorStop(0,mix('#070b1e','#111c48',k));
@@ -29478,6 +29541,7 @@ function prText(str,a,y){
 }
 function drawPrologueScene(){
   const t=Game.prT;
+  if(prArtDraw(t)){prNarration(t);return;} // 絵が ある 区間は 絵＋文だけ
   const dark=Math.min(1,Math.max(0,(t-7.6)/1.6));          // うばわれた あとの くらさ
   const storm=Math.min(1,Math.max(0,(t-2.6)/1.8))*(1-dark*0.4); // あかぐろい あらし
   // そら
@@ -29560,13 +29624,7 @@ function drawPrologueScene(){
   }
   // うばわれた あとの やみの まく（ぜんたいを しずめる）
   if(dark>0){ctx.fillStyle='rgba(4,2,8,'+(dark*0.82).toFixed(3)+')';ctx.fillRect(0,0,W,H);}
-  // ナレーション（2まい）
-  const a1=Math.min((t-0.9)/0.6,(2.9-t)/0.6);
-  prText('ひかりのたまは、せかいの よるを てらしつづけていた。',a1,H*0.62);
-  const a2=Math.min((t-8.6)/0.6,(11.3-t)/0.6);
-  prText('―― その よる、ひかりは うばわれた。',a2,H*0.5);
-  // スキップあんない
-  if(t>1.2&&t<11.0)prText('タップで とばす',0.28,H*0.94);
+  prNarration(t); // ナレーションと スキップあんない（絵の ときと 同じ 文）
 }
 // オープニング共通部（「はじめから」と「つよくてニューゲーム」の両方から呼ぶ）
 async function openingSequence(){
