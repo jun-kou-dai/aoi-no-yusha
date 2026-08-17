@@ -940,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260815_2250'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260817_1928'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -4799,7 +4799,15 @@ function sfxHit(tier){if(!actx)return;const t=actx.currentTime; // 4そう：ク
   if(d>=1){note('sine',40,t+0.01,0.26,0.30,sfxBus);noiseHit(t+0.02,0.20,0.30,420,1.1);}
   if(d>=2){note('sine',36,t+0.02,0.38,0.34,sfxBus);noiseHit(t+0.04,0.30,0.26,240,0.9);
     note('triangle',40,t+0.05,0.22,0.16,sfxBus);}}
-// 当たりの 段(SPEC_oto_iryoku 弾2)。物差しは「のこりの 何割を 持っていったか」ひとつ＝**勇者も 敵も 同じ**。
+// ── 打撃の 段は **向きで 問いが ちがう**(SPEC_hikari_iryoku_20260817)。1本に まとめては ならない ────────
+// 発注者は 同じ ひと息で 2つの ちがう 感覚を 言った(2026-08-15 の 生ログ):
+//   「これは きいた みたいな」    ＝ 勇者が 打つ 側。**この一撃は どれだけ 通ったか** → kikiDan
+//   「やられるかもしらない」      ＝ 打たれる 側。**のこりの 何割を 持っていかれたか** → atariDan
+// 1つの 物差しで 両方を 測ろうとして 失敗した のが 元の 設計。実測(360戦)で 裏が 取れている:
+//   勇者側に「のこりHP」を 使うと 第1部・第2部で 段0 が 0.0%・第1部の 段2 が 84.1%・とどめが 必ず 段2。
+//   敵側に「こうげき力」を 使うと ふつうの 一撃の 比が 0.38〜0.47 に つぶれ、ぬし戦の 段が 3つ→1つに 減る。
+
+// 敵→勇者。**配信済み(v20260815_2250)から 1バイトも 変えていない。**
 // hpBefore は 打つ前の のこり。乱数ゼロ。しきい 0.15/0.40。
 // ★とどめ(hpBefore<=d)は 段2に なるが duck は 出さない(呼び元で 出す/出さないを 決める＝sfxWin と 二重に 沈まない)。
 function atariDan(d,hpBefore){
@@ -4807,6 +4815,18 @@ function atariDan(d,hpBefore){
   if(!(h>0)||!(d>0))return 0;
   const r=d/h;
   return r>=0.40?2:(r>=0.15?1:0);
+}
+// 勇者→敵。「この一撃は 自分の 一撃として どれだけ 通ったか」＝まもりを 抜いたか・呪文が 効いたか。乱数ゼロ。
+// ★分母は **素の こうげき力**(p.atk)。ふり音 slashDan の ように 強化(バイキルト・へんげ)を 掛けては ならない
+//   ——掛けると 強化で d も 分母も 同じだけ 増えて 打ち消し、呪文が 耳にも 目にも 返らない。
+//   実測(2026-08-17): 強化込みの 分母だと ぬし戦の 比が 0.46〜0.77 に つぶれ、どの しきいでも 全帯 5〜80% に 入らなかった。
+// ★しきい 0.55/0.95 の 根拠(実測・6帯×60戦): 勇者側 全帯で 各段 10〜60%。
+// ★fatal(相手が 倒れる 一撃)は 段1で 頭打ち＝倒す 見せ場は sfxWin と 崩れの 光に ゆずる(二重に しない)。
+function kikiDan(d,atkBase,fatal){
+  const a=+atkBase;
+  if(!(a>0)||!(d>0))return 0;
+  const r=d/a, t=(r>=0.95?2:(r>=0.55?1:0));
+  return fatal?Math.min(t,1):t;
 }
 function sfxFire(){if(!actx)return;const t=actx.currentTime;
   const o=actx.createOscillator(),g=actx.createGain();o.type='sawtooth';
@@ -18615,14 +18635,17 @@ function enemyImpactFeedback(bt,result,heavy,physical,elemental,tier){
   // 弾2(SPEC_oto_iryoku): ふつうの こうげきも「のこりの 何割を 持っていったか」で 段が つく。
   // ★tier を 渡さない 呼び元(こども被弾 20648)は 段0＝従来と 一字一句 同じ。
   // ★ため一撃は これまでどおり sfxHeavyHit(専用の 地ひびき)＝段の 上に 別の 音が 立つ 構図は 変えない。
-  if(physical){if(heavy)sfxHeavyHit();else{const dn=tier|0;sfxHit(dn);if(dn>=2)duckMusic(0.25,0.25);}} // ため一撃・大技だけ ふかい 地ひびき(SPEC_oto_kanjo §2-4)
+  const dn=tier|0;
+  if(physical){if(heavy)sfxHeavyHit();else{sfxHit(dn);if(dn>=2)duckMusic(0.25,0.25);}} // ため一撃・大技だけ ふかい 地ひびき(SPEC_oto_kanjo §2-4)
   else if(heavy)duckMusic(0.5,0.6); // ほのお・せいこうの 大技は 固有の 音を 持つ=曲だけ さげる
-  uiShake();bt.hitStop=0.06;
+  // ★光も 段を 読む(SPEC_hikari_iryoku_20260817)。**段0・段1 は 現行と 一字一句 同じ＝基準点**。
+  //   属性・ため一撃・回避は 1バイトも 変えない(verify_enemy_strike が 0.36 / 20 / 18 / 9 / 0.35 を 固定している)。
+  uiShake();bt.hitStop=(elemental||heavy||dn<2)?0.06:0.09;
   // 炎・聖光は直前の固有shake(20/18)を維持する。ここで弱いshakeを上書きしない。メラ系は従来どおり通常shake。
-  if(!elemental)shakeBattle(heavy?12:9,heavy?0.45:0.35);
+  if(!elemental)shakeBattle(heavy?12:(dn>=2?12:9),heavy?0.45:(dn>=2?0.42:0.35));
   if(result==='guard')flash('#9fcfff',0.20,0.38);
   else if(result==='cover')flash('#b6a9ff',0.20,0.38);
-  else flash('#c83030',elemental||heavy?0.36:0.22,0.45);
+  else flash('#c83030',elemental||heavy?0.36:(dn>=2?0.30:0.22),0.45);
   if(result==='hit')bt.heroHit=1;
   else if(result==='guard')bt.heroGuardHit=1;
   else if(result==='cover')bt.mateHit=1;
@@ -19641,13 +19664,18 @@ async function playerAction(act){
       if(bt.horaHit){d=Math.round(d*2);bt.horaHit=0;bt.horaBig=1;}
       if(bt.kuseFoam>0)d=Math.max(1,Math.round(d*0.5)); // つつみ(章18): あわの まくで こうげきが 半分(ぼうぎょで はらえる)
       markHeroStrikeImpact(bt,'hit');
-      const hpB=bt.hp; // 打つ前の のこり(段の 物差し)
       bt.hp=Math.max(0,bt.hp-d);
-      const danH=atariDan(d,hpB); // 弾2: 押し込むほど 打つ音が 重い
+      const danH=kikiDan(d,p.atk,bt.hp<=0); // 効いたほど 重い(とどめは 段1で 頭打ち)
       sfxHit(danH);if(danH>=2&&bt.hp>0)duckMusic(0.25,0.25); // とどめ(hp0)では 沈めない＝sfxWin と 二重に ならない
-      bt.flash=1;bt.hitStop=0.08;bt.recoil=1;bt.blink=1;shakeBattle(10,0.3);
+      // ★光も 同じ 段を 読む(SPEC_hikari_iryoku_20260817)。**段1は 現行と 一字一句 同じ値＝基準点**。
+      //   走行帯は 2撃目(0.06/0.9/8)より 上・かいしん(0.16/1.35/18)より 下に 収める＝かいしんの 特別さを 減らさない。
+      bt.flash=1;bt.hitStop=danH>=2?0.11:(danH>=1?0.08:0.07);bt.recoil=danH>=2?1.15:(danH>=1?1:0.95);bt.blink=1;
+      shakeBattle(danH>=2?14:(danH>=1?10:9),danH>=2?0.38:(danH>=1?0.3:0.28));
       popup(ep.x,ep.y-ep.s*70,d);
-      puff(ep.x,ep.y-ep.s*40,'rgba(255,245,220,.9)',18,220,0.6,{s0:2,s1:5});
+      // ★粒の 数 18 は 段で 変えない。puff は 1粒あたり Math.random を 6回 使うので、数を 変えると
+      //   以後の かいしん・みかわし抽選が ずれる(verify_enemy_strike の 乱数契約は 余白ゼロ)。
+      //   段で 動かすのは 飛ぶ速さ・寿命・大きさ＝1粒あたりの 乱数回数を 変えない 引数だけ。
+      puff(ep.x,ep.y-ep.s*40,'rgba(255,245,220,.9)',18,danH>=2?280:(danH>=1?220:190),danH>=2?0.72:(danH>=1?0.6:0.5),{s0:2,s1:danH>=2?6:(danH>=1?5:4)});
     }
     await wait(crit?0.08:0.12);
     await say(bt.foe.name+'に '+d+'の ダメージ！');
