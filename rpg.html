@@ -940,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260818_0828'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260818_1158'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -20772,7 +20772,7 @@ async function enemyAction(){
    }}
   let defNow=bt.abreak>0?Math.round(p.def*0.5):p.def; // ぼうぎょくずし中は まもり半分（7割ではminFrac下限に沈んで体感ゼロ＝Lv16実測で確認）
   if(bt.defUp)defNow=Math.round(defNow*bt.defUp); // スカラ：まもりを かためる（minFrac下限は現行のまま＝無敵化しない）
-  let d=calcDmg(atk,defNow);
+  let d=calcDmg(atk,defNow); const dRoll=d; // つうこんの 下限で 同じ ふり幅(ri)を 使い回す＝乱数を 二度 引かない（20796行）
   {const Dc0=curDiff(),mf=foe.boss?(Dc0.bossMinFrac||Dc0.minFrac||0):(Dc0.minFrac||0);
    d=Math.max(d,Math.round(atk*mf));} // なんいど：被ダメ下限。ボスはbossMinFrac優先（ふつう帯ボスの被弾が空気になる対処・未定義はminFracへ＝でんせつ以上とざこ・中ボスは不変）
    // 2026-07-25: ぬしにも bossMinFrac(0.25)を効かせる案は撤回した。床は「こうげき×割合」なので よろいを通らず、
@@ -20792,6 +20792,18 @@ async function enemyAction(){
    // ここは ため一撃・つうこん・急降下・章20の三つの危険・章19のかねの影＝heavy が真の一撃すべてに掛かる。
   if(foe===FOES.kajiu)d=Math.max(1,Math.round(d*ch20DmgMul));
   if((fire||holy||heavy)&&kkOn('fuchi'))d=Math.max(1,Math.round(d*0.88)); // かかげ: ふちを こえしもの
+  if(ecrit){ // ★つうこんが ふつうの こうげきより 軽く ならない（2026-08-18・rireki/SPEC_tsuukon_gyaku_20260818.md）
+    // ぬしの ふつうの こうげきだけ ×1.45（20727行）が 掛かり、つうこんは atkPlain と 食い違うので 素通りする。
+    // そこへ critGuard（と heavyGuard・かかげ）が 乗ると 逆転した＝章16・よろい100 実測で つうこん50 / ふつう53。
+    // 倍率は 一つも 変えず、「同じ手番が ふつうの こうげき だったら いくつか」を 下限に 置く＝逆転する ときだけ 効く。
+    // ★乱数は 引かない（上で 引いた dRoll を 使い回す）。引くと 乱数順が ずれて 既存の 回帰が 全部 動く。
+    const atkP=foe.nushi?Math.round(atkPlain*1.45):atkPlain;
+    const Dc2=curDiff(),mf2=foe.boss?(Dc2.bossMinFrac||Dc2.minFrac||0):(Dc2.minFrac||0);
+    let dP=Math.max(1,dRoll-atk+atkP);                        // 同じ手番の ふり幅の まま こうげきだけ 差し替える
+    dP=Math.max(dP,Math.round(atkP*mf2));                      // なんいどの 被ダメ下限
+    dP=Math.min(dP,Math.max(1,Math.round(p.mhp*Dc2.capNorm))); // ふつうの こうげきの 天井（capHeavy では ない）
+    d=Math.max(d,dP);
+  }
   if(bt.guardT>0){d=Math.max(1,Math.round(d*0.6));bt.guardT--;} // とわのまもり: 3回ぶん4わり軽減
   let horaSoftHit=false;
   if(bt.horaSoft>0){d=Math.max(1,Math.round(d*0.65));bt.horaSoft--;horaSoftHit=true;} // ほらがいのこえ: きき入った てきの いちげきが にぶる
