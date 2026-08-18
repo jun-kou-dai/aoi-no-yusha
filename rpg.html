@@ -940,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260818_1338'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260818_1848'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -5865,14 +5865,20 @@ function fadeTo(o,dur=0.5){
 }
 function layoutFieldToast(){
   toastEl.style.top='';
-  if(Game.scene==='field'){
-    const fs=document.getElementById('fstat');
-    if(fs&&fs.getBoundingClientRect().height){
-      const sr=stage.getBoundingClientRect(),fr=fs.getBoundingClientRect();
-      const base=parseFloat(getComputedStyle(toastEl).top)||70;
-      toastEl.style.top=Math.ceil(Math.max(base,fr.bottom-sr.top+18))+'px';
-    }
-  }
+  if(Game.scene!=='field')return;
+  const sr=stage.getBoundingClientRect();
+  const base=parseFloat(getComputedStyle(toastEl).top)||70;
+  let want=base;
+  const fs=document.getElementById('fstat');
+  if(fs&&fs.getBoundingClientRect().height){const fr=fs.getBoundingClientRect();want=Math.max(want,fr.bottom-sr.top+18);}
+  // ★章19/20 の 金の帯（canvas 描画）も よける（SPEC_obi_toast_20260818）。
+  //   帯は canvas なので DOM からは 見えず、よけようが なかった＝案内の 76% が 隠れていた
+  //   （2026-08-18 実測: 帯 124〜164 に トースト 110〜155＝重なり 31px）。
+  //   置き場所の 式は 描画側（drawCh19Overlay / drawCh20Overlay）に 1つだけ 置き、
+  //   ここは 描いた 結果（Game.bandBottom・canvas px）だけを 読む＝二重管理に しない。
+  if(Game.bandBottom>0&&cv.height){const cr=cv.getBoundingClientRect();
+    want=Math.max(want,cr.top-sr.top+Game.bandBottom*(cr.height/cv.height)+12);}
+  if(want>base)toastEl.style.top=Math.ceil(want)+'px';
 }
 function toast(txt){
   layoutFieldToast();
@@ -12347,6 +12353,7 @@ function drawCh19Overlay(){
   ctx.beginPath();ctx.roundRect(W/2-tw/2,Math.max(72,H*0.115),tw,th,th/2);ctx.fill();
   ctx.strokeStyle=gold?'rgba(255,224,145,.82)':'rgba(190,205,238,.55)';ctx.lineWidth=1.5;ctx.stroke();
   ctx.fillStyle=gold?'#ffe7a0':'#e8edf8';ctx.fillText(label,W/2,Math.max(72,H*0.115)+th/2);
+  Game.bandBottom=Math.max(72,H*0.115)+th; // ★描いた 帯の 底を のこす(canvas px)。トーストが これを よける(layoutFieldToast)
   ctx.restore();
 }
 function drawCh20Overlay(){
@@ -12365,6 +12372,7 @@ function drawCh20Overlay(){
   const label=Game.hidden.ch20c?'☀ さいごの舟まで とどいた朝':(Game.hidden.ch20d?'金の綱を さいごの舟へ':'三艘すべてを おなじ港へ');
   ctx.font='bold '+Math.max(12,Math.round(Math.min(W,H)*0.022))+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';const tw=ctx.measureText(label).width+28,th=Math.max(29,Math.min(H*0.056,43)),yy=Math.max(72,H*0.115);
   ctx.fillStyle=Game.hidden.ch20d?'rgba(72,48,20,.80)':'rgba(7,26,45,.80)';ctx.beginPath();ctx.roundRect(W/2-tw/2,yy,tw,th,th/2);ctx.fill();ctx.strokeStyle=Game.hidden.ch20d?'rgba(255,224,145,.85)':'rgba(168,224,240,.60)';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle=Game.hidden.ch20d?'#ffe4a0':'#e8f6fb';ctx.fillText(label,W/2,yy+th/2);
+  Game.bandBottom=yy+th; // ★章19と 同じ: 描いた 帯の 底を のこす(canvas px)
   ctx.restore();
 }
 function drawFieldScene(){
@@ -12422,6 +12430,7 @@ function drawFieldScene(){
     if(Game.mapId!=='umi'&&Game.nkm&&Math.round(Game.nkm.px+Game.nkm.py)===d)drawNakamaField();
     if(pd===d){if(Game.mapId!=='umi')drawPopo();drawFieldHero();}
   }
+  Game.bandBottom=0; // ★帯を 描いた フレームだけ 下の 2つが 値を 入れる
   drawCh19Overlay();
   drawCh20Overlay();
   horaFxDraw(cam); // 章15 ほらが ほんとうに なる
