@@ -131,7 +131,8 @@ body{
 #fstat .lv{ white-space:nowrap; } /* 狭幅で難易度名が縦に潰れないよう＋次行に回す */
 #toast{ position:absolute; top:calc(max(12px, env(safe-area-inset-top)) + 58px); left:50%; transform:translateX(-50%); /* チップの下＝HP/なんいど表示を隠さない */
   padding:10px 22px; font-size:clamp(12px,2.1vmin,15px); letter-spacing:.06em; color:#f4eedb;
-  opacity:0; max-width:86vw; text-align:center; z-index:260; }
+  opacity:0; max-width:86vw; text-align:center; z-index:260;
+  word-break:keep-all; overflow-wrap:anywhere; } /* ★同上。実測: 「みえ/る。」で 割れていた */
 #toast.show{ animation:toast 4.6s ease forwards; }
 @keyframes toast{ 0%{opacity:0; transform:translate(-50%,-8px)} 10%,82%{opacity:1; transform:translate(-50%,0)} 100%{opacity:0; transform:translate(-50%,-6px)} }
 
@@ -172,7 +173,7 @@ body{
 }
 #msgwin{ flex:1; min-height:92px; pointer-events:auto; padding:16px 20px; position:relative; display:flex; gap:14px; align-items:flex-start;
   font-size:clamp(15px,2.4vmin,19px); line-height:1.75; letter-spacing:.04em; display:flex; align-items:flex-start; }
-#msgtext{ white-space:pre-wrap; flex:1; min-width:0; }
+#msgtext{ white-space:pre-wrap; flex:1; min-width:0; word-break:keep-all; overflow-wrap:anywhere; } /* ★同上。実測: 「同じ灯/の」で 割れていた */
 #mface{ width:64px; height:64px; flex:0 0 auto; display:none; border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.35), inset 0 0 0 1px rgba(232,220,180,.28); }
 #msgwin.hasface #mface{ display:block; }
 #msgwin .adv{ position:absolute; right:14px; bottom:8px; color:#d8cfae; font-size:.8em; opacity:0;
@@ -242,6 +243,7 @@ body{
 @keyframes vgl{ from{ transform:translateX(0); opacity:.2; } 50%{ opacity:1; } to{ transform:translateX(260%); opacity:.2; } }
 #quest{ position:absolute; bottom:max(10px, env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%);
   max-width:min(92vw,560px); white-space:normal; text-align:center; line-height:1.5;
+  word-break:keep-all; overflow-wrap:anywhere; /* ★わかち書きの 区切りで 折る(SPEC_orikaeshi_20260818)。実測: 「はなしか け/よ う」と 文節の 中で 割れていた */
   font-size:clamp(11px,1.8vmin,13px); letter-spacing:.12em; color:#f4ead0;
   background:rgba(34,26,10,.88); border:2px solid rgba(255,215,120,.8); border-radius:8px;
   box-shadow:0 0 14px rgba(255,215,120,.28); padding:5px 16px; pointer-events:auto; cursor:pointer; }
@@ -540,7 +542,8 @@ body{
 #convoywin.sea #convoylegend{ display:none; }
 #seanote{ position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:4; max-width:88%;
   background:rgba(5,8,18,.88); border:2px solid #ece5cf; border-radius:8px; box-shadow:0 0 0 3px rgba(5,8,18,.9),0 0 0 4.5px #ece5cf;
-  color:#f2ecd8; font-size:clamp(13px,2.1vmin,17px); letter-spacing:.08em; line-height:1.7; padding:9px 18px; text-align:center; pointer-events:none; white-space:pre-wrap; }
+  color:#f2ecd8; font-size:clamp(13px,2.1vmin,17px); letter-spacing:.08em; line-height:1.7; padding:9px 18px; text-align:center; pointer-events:none; white-space:pre-wrap;
+  word-break:keep-all; overflow-wrap:anywhere; } /* ★同上（章20の 海。実測は していない＝同じ 型として そろえた） */
 #convoywin.sea.run #seanote{ display:none; }
 #seaskip{ position:absolute; top:12px; right:12px; z-index:4; color:#ffe9b0; font-size:clamp(11px,1.8vmin,14px); letter-spacing:.16em;
   border:1.5px solid rgba(255,217,122,.65); border-radius:16px; padding:7px 15px; background:rgba(5,8,18,.72); cursor:pointer; pointer-events:auto; }
@@ -940,7 +943,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260818_1848'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260818_1925'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
