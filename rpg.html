@@ -940,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260817_2009'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260818_0828'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -12808,6 +12808,11 @@ function shimaGoldPilePt(){ // 山の たもと(ぬしの となり)。ぬしが
   const e=(Game.enemies||[]).find(x=>(x.sp&&x.sp.id)===id);if(!e)return null;
   return {x:e.px+0.9,y:e.py+0.35};
 }
+function shimaGoldNushiPt(){ // 山の ぬし本人の 足元。山は この となりに 立つ(SPEC_nushi_tap_kane_20260818)
+  const id=NUSHI_GOLD_ID[Game.mapId];if(!id)return null;
+  const e=(Game.enemies||[]).find(x=>(x.sp&&x.sp.id)===id);if(!e)return null;
+  return {x:e.px,y:e.py};
+}
 function drawGoldPile(cam,x,y,seed){ // まる・楕円のみ(勾配なし=描画負荷の掟)
   const s=cam.TW*0.42*(1+0.035*Math.sin(TM*2.1+seed*1.7)); // 呼吸=触ったら 零れそう(SPEC_gold_tap3 §7)
   ctx.save();ctx.translate(x,y-cam.TW*0.10);
@@ -13935,11 +13940,16 @@ function shimaPlayTap(lx,ly){ // tapMove の先頭で よぶ。true=タップを
   if(cam&&typeof shimaGoldPilePt==='function'&&(Game._goldPiles||0)>0){ // 金の山タップ=ぬしへの ちょっかい(SPEC_gold_tap3)。stの 無い たにでも 効く
     const pt=shimaGoldPilePt();
     if(pt){const tip=(st&&st.arm&&typeof shimaPlayArmTip==='function')?shimaPlayArmTip(cam):null; // うでの 先端は 譲る(本命の タップを 食わない)
+      // ★ぬし本人の 立ちマスも 譲る(SPEC_nushi_tap_kane_20260818)。山は ぬしの px+0.9,py+0.35 に 立つので
+      //   当たり判定 TW*0.55 が ぬしの 足元に かぶり、**もくてきバー**(questGuide は 足元の 点を 押す)が
+      //   7島 ぜんぶで 食われて 一歩も 動かなかった(2026-08-18 実測: 歩数0・案内トースト 出ず)。
+      //   譲る 半径は TW*0.34=実測の 死角(たて0〜5px・よこ±9px≒TW*0.19)を 覆い、山の 中心(TW*0.475 離れ)は 奪わない。
+      const nuP=(typeof shimaGoldNushiPt==='function')?shimaGoldNushiPt():null, nuQ=nuP?isoCtr(nuP.x,nuP.y):null;
       const mkOn=st&&st.map===Game.mapId&&!st.arm&&st.stealsLeft>0; // 看板が 出ている とき=看板ごと 押せる(発注者「タップできないでしょ」2026-08-09)
       for(let pi=0;pi<(Game._goldPiles||0);pi++){
         const q=isoCtr(pt.x+pi*0.55,pt.y+pi*0.28);
         const inLbl=mkOn&&pi===0&&Math.abs(lx-q.x)<=cam.TW*1.25&&ly>=q.y-cam.TW*0.95&&ly<=q.y+cam.TW*0.42; // 看板の 四角(印は 1つ目の 山の 上)
-        if((Math.hypot(lx-q.x,ly-(q.y-cam.TW*0.10))<=cam.TW*0.55||inLbl)&&!(tip&&Math.hypot(lx-tip.x,ly-tip.y)<cam.TW*0.7)){
+        if((Math.hypot(lx-q.x,ly-(q.y-cam.TW*0.10))<=cam.TW*0.55||inLbl)&&!(tip&&Math.hypot(lx-tip.x,ly-tip.y)<cam.TW*0.7)&&!(nuQ&&Math.hypot(lx-nuQ.x,ly-nuQ.y)<cam.TW*0.34)){
           Game._goldPoke={t0:TM}; // 山が ふるえる(0.45秒)
           if(st&&st.map===Game.mapId&&!st.arm&&st.stealsLeft>0&&typeof st.cool==='number')st.cool=Math.min(st.cool,0.15); // ぬしが すぐ うでを のばす=待ちを 消す(spawn本体・視界ゲートは 既存経路のまま)
           try{sfxCoinDrop(true);}catch(e){}
