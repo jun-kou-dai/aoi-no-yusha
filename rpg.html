@@ -165,6 +165,17 @@ body{
   16%{ transform:scale(1.45); box-shadow:0 0 20px 8px rgba(255,238,178,.95) }
   38%{ transform:scale(1.12); box-shadow:0 0 12px 4px rgba(255,238,178,.55) }
   100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(255,238,178,0) } }
+/* はずれた ときは その ふだが 小さく **左右に ゆれる**(SPEC_hazure_20260818)。
+   ★はじめ「沈む(scale .92)」に したが、**実画面では ほとんど 見えなかった**
+     (arc/shots_hazure_20260818/imahitotsu_02.jpg。当たりの 1.45 の 発光は 一目で わかるのに)。
+   ★「ゆれる」＝首を よこに ふる 動き＝**責めずに「ちがう」を つたえる**。
+     浅く(±4px)・みじかく(0.42秒)・**光らせない**。当たりの 1.45 の 折り返し(0.55)には しない。 */
+.ew.dull{ animation:ewdull .42s ease-out 1; }
+@keyframes ewdull{ 0%{ transform:translateX(0) scale(1); filter:none }
+  16%{ transform:translateX(-4px) scale(.96); filter:brightness(.74) }
+  42%{ transform:translateX(4px) scale(.96); filter:brightness(.74) }
+  68%{ transform:translateX(-2px) scale(.98); filter:brightness(.86) }
+  100%{ transform:translateX(0) scale(1); filter:none } }
 #weakrecord{ position:absolute; left:8px; top:calc(100% + 7px); z-index:8; opacity:0; transform:translateY(-4px);
   padding:5px 9px; border-radius:7px; background:rgba(255,226,150,.94); color:#171a2b; font-size:10px; font-weight:800; white-space:nowrap; pointer-events:none; }
 #weakrecord.show{ animation:weakrecord 2.2s ease forwards; }
@@ -950,7 +961,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260818_2213'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260819_0622'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -4859,6 +4870,13 @@ function sfxWeak(){ // じゃくてんに とどいた 音(SPEC_batsugun_2026081
   noiseHit(t,0.02,0.4,7200,4.5); // ぬけの ひとすじ(ごく細い 高音)
   [[93,0,0.09],[100,0.06,0.10],[105,0.13,0.16]].forEach(q=>note('triangle',q[0],t+q[1],q[2],0.26,sfxBus)); // のぼる 3音
   note('sine',69,t+0.02,0.30,0.20,sfxBus);} // 下でささえる 1音
+function sfxDull(deep){ // はずれた 音(SPEC_hazure_20260818)。じゃくてん=のぼる 3音 の **ちょうど 逆**＝さがる 2音。
+  // ★責めない。duckMusic を よばない(曲を さげると「ここぞ」に なる)。音量は sfxWeak の 0.26 に 対して 0.12台＝小さく みじかく。
+  // ★deep=きかない(0倍)。いまひとつ より 一段 ふかいだけ。乱数は 1つも ひかない。
+  if(!actx)return;const t=actx.currentTime;
+  const b=deep?60:64; // 「きかない」は 半音 4つ ぶん 下から
+  note('triangle',b,t,0.10,0.13,sfxBus);note('triangle',b-3,t+0.07,0.14,0.11,sfxBus); // さがる 2音
+  if(deep)note('sine',b-12,t+0.02,0.22,0.10,sfxBus);} // きかない だけ 下に 1音(にぶさ)
 function sfxCharge(tier){if(!actx)return;const t=actx.currentTime;
   // 弾3(SPEC_oto_iryoku)。★引数なし＝段0＝従来と 一字一句 同じ(フィールドの 4箇所は 不変)。
   // 段1=戦いの ため予告。**実測で 埋もれていた**——ピーク0.049・RMS0.0047 に対し
@@ -19576,6 +19594,17 @@ function weakBurst(kind){
   try{const el=document.querySelector('#eweak .ew[data-affinity="'+kind+'"]');
     if(el){el.classList.remove('hit');void el.offsetWidth;el.classList.add('hit');}}catch(e){}
 }
+// はずれた ときの へんじ(SPEC_hazure_20260818)。**当たりの ちょうど 逆を 小さく 返す。**
+// ★責めない——`flash`／`shakeBattle`／`bt.flash` を **1つも 呼ばない**。
+//   はずれを 光らせると 弾1の「光った＝当たり」が 読めなくなる（この弾で 壊れうるのは そこ）。
+//   静かに なる ことで つたえる: にぶい さがる 2音 ＋ その ふだが すこし 沈む だけ。
+// ★deep=true は「きかない」(0倍)。いまひとつ より 音が 一段 ふかいだけで、動きは 同じ。
+// ★wait() も 乱数も 1つも つかわない（weakBurst と 同じ 釣り合い）。
+function dullBurst(kind,deep){
+  sfxDull(!!deep);
+  try{const el=document.querySelector('#eweak .ew[data-affinity="'+kind+'"]');
+    if(el){el.classList.remove('dull');void el.offsetWidth;el.classList.add('dull');}}catch(e){}
+}
 // ダメージ表示＋ぞくせいの あいしょう（ばつぐん／いまひとつ／きかない）
 async function spellResult(foe,d,rawMul,kind,effectiveMul){
   if(Game.bt&&(Game.bt.foe===FOES.kiritoru||Game.bt.foe===FOES.kajiu))rawMul=battleAffinityMul(kind,rawMul);
@@ -19584,8 +19613,8 @@ async function spellResult(foe,d,rawMul,kind,effectiveMul){
   if(d>0&&BOSO){const bt=Game.bt;if(bt){bt.critShock={t:0};}sfxCrit();flash('#ffe9b0',0.35,0.5);await say('まほうが ぼうそうした！');}
   if(d>0) await say(foe.name+'に '+d+'の ダメージ！');
   if(rawMul>1){ weakBurst(kind); await say('こうかは ばつぐん！'); }
-  else if(rawMul<=0) await say(foe.name+'には きかない！');
-  else if(rawMul<1&&mul===rawMul) await say('こうかは いまひとつの ようだ…');
+  else if(rawMul<=0){ dullBurst(kind,true); await say(foe.name+'には きかない！'); }
+  else if(rawMul<1&&mul===rawMul){ dullBurst(kind,false); await say('こうかは いまひとつの ようだ…'); }
   await storyAffinityAfter(kind,d,rawMul);
 }
 // 通常攻撃の「振る→接触」を一か所で同期する。
