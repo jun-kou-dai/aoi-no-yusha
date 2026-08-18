@@ -940,7 +940,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260818_1158'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260818_1338'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -21214,7 +21214,7 @@ async function finishFinaleBattle(){
   bt.dying={t:0,dur:0.9,tier:2};sfxWin(2,true); // かちどきの階段: 大ボス段+さいごの一音(§12)／くずおれの階段の最上段(§15): 音は3.98秒なのに 絵の段が 抜けていた。durは 触らない=無音の頭0.8秒と 崩れ0.9秒の 重なりを 保つ
   flash('#fff2c0',0.6,1.4);
   for(let k=0;k<3;k++){if(P.length>420)break;puff(ep.x+rnd(-30,30),ep.y-ep.s*40+rnd(-30,30),'rgba(255,240,200,.95)',30,220,1.0,{s0:2,s1:6});}
-  await wait(0.9);
+  await wait(0.9*kvFB()); // はやさ×2 の 打ち消し（2026-08-18）
   await say(FOES.sukuwarenu.winMsg);
   Game.hidden.ch21d=true;
   await say('よぞらに、ほしが ひとつ、また ひとつ ともって いく——\nかぞえきれない ひかりが、うみの うえに ふりそそぐ。');
@@ -21230,7 +21230,7 @@ async function finishEchoBattle(won){ // 章17: ぶたいの けいこあいて(
   if(won){
     bt.dying={t:0,dur:0.48};sfxWin();
     puff(ep.x,ep.y-ep.s*35,'rgba(150,205,255,.9)',30,190,0.8,{s0:2,s1:6});
-    await wait(0.48);
+    await wait(0.48*kvFB()); // はやさ×2 の 打ち消し（2026-08-18）
     await say('ものがたりの こだまは、ぱっと ひかりの つぶに なって ぶたいに ちった。\n（けいこは おわり——きゃくせきから はくしゅ）');
   }else{
     sfxOver();flash('#5a1830',0.3,0.6);
@@ -21249,7 +21249,7 @@ async function finishStageBattle(won){
   if(won){
     bt.dying={t:0,dur:0.48};sfxWin();
     puff(ep.x,ep.y-ep.s*35,'rgba(255,225,150,.9)',30,190,0.8,{s0:2,s1:6});
-    await wait(0.48);
+    await wait(0.48*kvFB()); // はやさ×2 の 打ち消し（2026-08-18）
     await say('にせもの勇者は おおげさに くるりと まわり、\nあかい まくの うしろへ ころがりこんだ！');
   }else{
     sfxOver();flash('#5a1830',0.38,0.7);
@@ -21281,7 +21281,7 @@ async function victory(){
   if(isKV)await kageVolgaCrumble(ep); // 最終戦: 崩れの あいだに 5連の 光と 地鳴り(bossDefeat と 同じ 語彙)
   else{
     puff(ep.x,ep.y-ep.s*40,'rgba(236,229,207,.9)',24,160,0.9,{s0:2,s1:5});
-    await wait(dyD); // 崩れ切ってから 静寂へ=§4 の 無音の頭(0.4/0.8秒)を 自分で 埋めない
+    await wait(dyD*kvFB()); // 崩れ切ってから 静寂へ=§4 の 無音の頭(0.4/0.8秒)を 自分で 埋めない（*kvFB=はやさ×2 の 打ち消し・2026-08-18）
   }
   sfxWin(tW,tW>=2); // さいごの一音(§12): 大ボス級から 締めを 保留(ザコ・ぬし段は 従来どおり)
   if(isKV)KV_WIN_LEFT=KV_WIN_SEC; // 村の曲は これが 鳴り終わってから(§17 と 同じ 掟)
@@ -21728,7 +21728,7 @@ async function transformPhase2(){
     const a=rnd(Math.PI*2),v=rnd(80,420)*ep.s;
     P.push({x:ep.x+rnd(-30,30)*ep.s,y:ep.y-ep.s*30,vx:Math.cos(a)*v,vy:Math.sin(a)*v-rnd(40,120)*ep.s,life:rnd(0.6,1.3),t:0,size:rnd(3,10)*ep.s,col:'rgba(18,6,28,.95)',grav:680*ep.s,light:false,drag:0.97});
   }
-  await wait(1.3);
+  await wait(1.3*kvFB()); // はやさ×2 の 打ち消し（2026-08-18）＝崩れ切る前に dying を 消さない
   bt.dying=null;
   await say('ヴォルガの からだから やみが はがれおちていく…！');
   for(let k=0;k<3;k++){
@@ -21817,9 +21817,9 @@ async function bossDefeat(){
       const a=rnd(Math.PI*2),v=rnd(100,460)*ep.s;
       P.push({x:ep.x+rnd(-40,40)*ep.s,y:ep.y-ep.s*40+rnd(-50,50)*ep.s,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rnd(0.4,0.9),t:0,size:rnd(2,7)*ep.s,col:k%2?'rgba(255,250,235,.95)':'rgba(210,140,255,.9)',grav:0,light:true,drag:0.96});
     }
-    await wait(0.42);
+    await wait(0.42*kvFB()); // はやさ×2 の 打ち消し（2026-08-18）
   }
-  await wait(0.3);
+  await wait(0.3*kvFB());
   await say('ヴォルガ「わしは…… ただ しりたかっただけよ。\nなぜ ひかりは すべてを すくわぬのか と……。」');
   await say('ヴォルガ「こたえを もとめて やみに おちた。\nだが やみにも…… こたえは なかった……。」');
   if(Game.bt&&Game.bt.vKotae){ // 第3の答えを きいた 周回だけ、こたえが とどいて きえる
