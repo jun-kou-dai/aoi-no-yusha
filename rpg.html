@@ -961,7 +961,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260819_0622'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260819_0657'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -19828,7 +19828,19 @@ async function playerAction(act){
     }
     if(!crit&&physRaw<0.9&&physMul===physRaw&&!bt.hintP){
       bt.hintP=true;
-      await say((bt.foe.v==='bone'?'かたい ほねは':'いわの からだは')+' こうげきを はんぶんに してしまう…！');
+      // ★弾3(SPEC_katai_20260819): つるぎが はじかれた ことを **読まずに** かえす。
+      //   じゅもんの はずれ(dullBurst)と 同じ へんじ＝子どもが 覚える 決まりは 1つだけ。
+      //   ★頻度は ここ(bt.hintP＝その 戦いで 1回きり)の まま 変えない。つるぎは 毎ターンの 基本行動なので、
+      //     じゅもんと 同じ「毎回」に すると 責められている 手ざわりに なる(SPEC §2 却下1)。
+      //     2回目からの 答えは じゃくてん欄に 残る「⚔ △ いまひとつ」の ふだが 出す(recordWeakness が 初撃で 記録する)。
+      //   ★wait() も 乱数も 1つも ふえない(dullBurst は sfxDull と CSS だけ)＝テンポも 回帰576本も 動かない。
+      dullBurst('phys',false);
+      // ★文言から 嘘を 抜いた。旧＝(v==='bone'?'かたい ほねは':'いわの からだは')+' こうげきを はんぶんに してしまう…！'
+      //   physMul<0.9 は 31体・うち v==='bone' は 4体だけ＝**27体に「いわの からだは」と 出ていた**
+      //   (ふだの むれ／しおあらしの むれ／しおのうず／こおりの きょじん／ぶたいの にせもの ゆうしゃ ほか)。
+      //   「はんぶん」も 0.5 の 敵にしか 当たらない——実測で **0.85 の ふだの むれに「はんぶんに してしまう」が 出た**。
+      //   → 材質は bone だけ 名ざし、倍率は 主張しない(掟§1「画面の 文言は 実装から 導く」。主張しないのが いちばん 嘘から 遠い)。
+      await say((bt.foe.v==='bone'?'かたい ほねに はばまれた！':'かたい からだに はじかれた！')+' つるぎが とおりにくい…！');
     }
     await storyAffinityAfter('phys',d,physRaw);
     if(bt.hengeTurns>0){bt.hengeTurns--;updateBars(); // A案v2: へんげは じぶんの こうげき3回ぶん(SPEC_kagelevel_v2 §2-5)
