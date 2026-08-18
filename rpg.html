@@ -961,7 +961,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260819_0657'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260819_0816'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -19605,6 +19605,22 @@ function dullBurst(kind,deep){
   try{const el=document.querySelector('#eweak .ew[data-affinity="'+kind+'"]');
     if(el){el.classList.remove('dull');void el.offsetWidth;el.classList.add('dull');}}catch(e){}
 }
+// にげられなかった ときの へんじ(SPEC_nigeru_20260819・弾4)。
+// ★いままで「にげる」は **4つに 分かれる のに どの 枝にも 音も 光も ゆれも 無かった**
+//   ＝にげきれたのか まわりこまれたのかが 画面では 見分けられない(失敗の 確率は 40%)。
+// ★責めない——**光は 足さない**(弾1の「光った＝当たり」／弾2の「はずれは 光らせない」を 守る)。
+//   形は **みかわしの「ミス」と 同じ**＝ふきだしで 結果を 出す(この 作品の 決まり。新しい 言語を 作らない)。
+// ★乱数を 1つも ひかない(sfxDull・popup・shakeBattle の どれも Math.random を 使わない。
+//   puff は 1粒 6回 ひくので **使わない**)＝にげるの 抽選(Math.random()<0.6)の 順が 動かない＝回帰576本 不変。
+function runBlocked(){
+  sfxDull(true);
+  const ep=enemyPos();
+  // ★はじめ「とおせんぼ」(5文字)に したら、**実画面で 46px の まま 敵の 顔を まるごと 隠した**
+  //   （`.dmg.long` が つくのは **6文字以上**＝2026-08-05 の 裁定「46px だと 画面の 1/3を おおう」）。
+  //   数字は 全部 緑だったが 画面を 見て 捕まえた。→ 6文字に して 20〜30px の 帯へ 落とす。
+  popup(ep.x,ep.y-ep.s*70,'とおせんぼ！','sp');
+  shakeBattle(9,0.28); // ふつうの 当たりと 同じ いちばん 弱い 段。当たりより 強く しない
+}
 // ダメージ表示＋ぞくせいの あいしょう（ばつぐん／いまひとつ／きかない）
 async function spellResult(foe,d,rawMul,kind,effectiveMul){
   if(Game.bt&&(Game.bt.foe===FOES.kiritoru||Game.bt.foe===FOES.kajiu))rawMul=battleAffinityMul(kind,rawMul);
@@ -20458,9 +20474,10 @@ async function playerAction(act){
     }
     await say('ゆうしゃは にげだした！');
     sfxRun();
-    if(bt.foe.boss){await say('しかし にげられない！');return;}
+    if(bt.foe.boss){runBlocked();await say('しかし にげられない！');return;}
     if(kkOn('slcatch')){await say('にげあしの こころえで するりと にげきった！');return 'fled';}
     if(Math.random()<0.6){await say('うまく にげきれた！');return 'fled';}
+    runBlocked(); // ★にげきった 2つの 枝には 足さない＝戦いの 画面が 消えて フィールドへ 戻る こと 自体が 答え(SPEC §2 却下2)
     await say('しかし まわりこまれてしまった！');
   }
 }
