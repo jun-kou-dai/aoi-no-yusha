@@ -971,7 +971,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260819_1346'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260819_1916'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -6331,6 +6331,7 @@ window.addEventListener('keydown',e=>{
   if(Game.proofOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeProof(); return; }
   if(Game.statusOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeStatus(); return; }
   if(Game.bookOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeBook(); return; }
+  if(Game.gearOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeGearBook(); return; } // 📗そうびちょう(2026-08-19): これが 無いと 本を 開いたまま 歩けて、しかも まものに 当たらない
   if(Game.questOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeQuest(); return; }
   if(Game.menuOpen){ if(e.key==='Escape'||e.key==='x'||e.key==='X')closeFieldMenu(); return; }
   firstGesture();
@@ -11458,7 +11459,7 @@ function updateField(dt){
     }
   }
   // エンカウント
-  if(!Game.battling&&!Game.talking&&!Game.transiting&&!Game.bookOpen&&!Game.statusOpen&&!Game.questOpen&&!Game.jumonOpen&&!Game.inventoryOpen&&!Game.proofOpen&&Game.grace<=0){
+  if(!Game.battling&&!Game.talking&&!Game.transiting&&!Game.bookOpen&&!Game.gearOpen&&!Game.statusOpen&&!Game.questOpen&&!Game.jumonOpen&&!Game.inventoryOpen&&!Game.proofOpen&&Game.grace<=0){ // gearOpen=📗そうびちょう(2026-08-19): 本の 後ろで 戦いが 始まり、タップが ぜんぶ 本に 吸われて 止まっていた
     for(const e of Game.enemies){
       if(Game.invisible&&e.def&&!e.def.boss&&!e.def.mboss)continue; // とうめい中は つうじょうの てきが はんのうしない（ボス/中ボスは のぞく）
       {const rr2=(Game.mapId==='umi'&&Game.hidden.funautaOn&&e.def&&!e.def.hunter)?0.38:0.85; // ふなうたのふえ: まものが みちを あける
