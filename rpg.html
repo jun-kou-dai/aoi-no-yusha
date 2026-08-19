@@ -971,7 +971,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260819_1232'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260819_1346'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -2099,7 +2099,7 @@ icetown:{
  'WWGGGGGGGPPGGGGGGGWW',
  'WWWGGGGGGPPGGGGGGWWW',
  'WWWWWGGGGPPGGGGWWWWW',
- 'WWWWWWWWWGGGWWWWWWWW',
+ 'WWWWWWWWWEGGWWWWWWWW',
  'WWWWWWWWWWWWWWWWWWWW'],
  start:{x:10,y:11},
  npcs:[
@@ -2107,7 +2107,7 @@ icetown:{
   {x:15,y:6,kind:'rebuild',ch18Site:'Shelter',col:'#d9b47a',msg:[]},
   {x:8,y:9,kind:'rebuild',ch18Site:'Beacon',col:'#b7c7d8',msg:[]}],
  spawns:[{id:'shioarashi',x:10,y:5,need:'ch18Ready',gone:'ch18d'}],
- chests:[],spots:[],exits:[]},
+ chests:[],spots:[],exits:[{x:9,y:12,to:'kazemachi',tx:10,ty:11,msg:'あらしの そとへ ひきあげた——かぜまちじまへ もどった。'}]}, // 2026-08-19: でぐちが 1本も 無い 盤だった＝再戦で 入って 読み直すと 二度と 出られない(SPEC_arashi_deguchi_20260819)
  // 章19『つなげて みえる もの』: 同じ夜を三つの時点で自由に見比べる
  tokikasanedusk:{
  song:'umi',bg:['#b95f54','#f0b56b'],
@@ -18580,7 +18580,10 @@ function drawQuestBeacons(){
     ctx.save();
     ctx.font='bold '+Math.max(11,Math.round(TWc*0.28))+'px sans-serif';
     ctx.textAlign='center';ctx.textBaseline='alphabetic';
-    const ly=q.y-THc*3.4+Math.sin(TM*1.9+ex.x)*2.5;
+    // ★でぐちの ますに めあてが 立つと、でぐちの 名札と 字が かさなって どちらも 読めない
+    //   (2026-08-19 実測: 「かぜまちじま へ」＋「めあて」＝「かぜめあてま へ」)。めあてだけ 一段 上へ にがす。
+    const onExit=!!exitAt(ex.x,ex.y);
+    const ly=q.y-THc*3.4+Math.sin(TM*1.9+ex.x)*2.5-(onExit?Math.max(15,Math.round(TWc*0.34)):0);
     ctx.lineWidth=3;ctx.strokeStyle='rgba(38,26,6,0.85)';ctx.strokeText('めあて',q.x,ly);
     ctx.fillStyle='rgba(255,240,200,'+(0.8+0.18*Math.sin(TM*2.7+ex.x)).toFixed(2)+')';
     ctx.fillText('めあて',q.x,ly);
