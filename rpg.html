@@ -961,7 +961,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260819_0816'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260819_1047'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -10926,9 +10926,13 @@ function openChest(c){
       toast('はやぶさのつるぎを てにいれた！（そうびの ふくろへ。どうぐから そうびできる）');
     }
   }else{
-    Game.items[c.item]++;
+    // ★2026-08-19(SPEC_takara_20260819): ここだけ 囲いが 無く、ふくろに 無い キー(ITEMS 12種のうち 初期は 3種だけ)で
+    //   undefined++ = NaN → JSON で null → ロードの if(d.items[k]) が 捨てる ＝ 箱18個ぶんが 黙って 消えていた。
+    //   加算の 語は 他の 5箇所(8882/10472/11388/21729/かじ)と そろえる。
+    Game.items[c.item]=(Game.items[c.item]||0)+1;
     toast('たからばこを あけた！ '+ITEMS[c.item].name+'を てにいれた！');
   }
+  updateBars(); // おびの 数(🌿💧⭐)を その場で 直す。順は となりの かくしざいほう(11388-11390)と 同じ
   saveGame();
 }
 // たからばこの となり（8きんぼう）または うえで けってい＝あける
