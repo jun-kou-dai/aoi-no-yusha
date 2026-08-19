@@ -55,8 +55,9 @@ body{
 /* ---------- タイトル ---------- */
 #ui-title{ flex-direction:column; align-items:center; justify-content:center; gap:clamp(14px,3vh,26px); }
 #slotwin{ display:flex; flex-direction:column; align-items:center; gap:clamp(10px,2vh,16px); }
-#slot-head{ font-size:clamp(14px,2.4vmin,19px); letter-spacing:.10em; color:#cfd6ef; opacity:.85; max-width:92vw; text-align:center; }
-#slotwin .btn.slotbtn{ min-width:min(78vw,430px); font-size:clamp(13px,2.2vmin,17px); }
+#slot-head{ font-size:clamp(14px,2.4vmin,19px); letter-spacing:.10em; color:#cfd6ef; opacity:.85; max-width:92vw; text-align:center;
+  white-space:pre-line; word-break:keep-all; overflow-wrap:anywhere; } /* ★うわがきを きく 文は 2行。わかち書きの 区切りで 折る(SPEC_orikaeshi_20260818 と 同じ 手) */
+#slotwin .btn.slotbtn{ min-width:min(78vw,430px); font-size:clamp(13px,2.2vmin,17px); word-break:keep-all; overflow-wrap:anywhere; }
 #slotwin .btn.dis{ opacity:.4; pointer-events:none; }
 #logo-wrap{ display:flex; flex-direction:column; align-items:center; gap:6px; animation:lfloat 5.2s ease-in-out infinite; }
 #emblem{ width:clamp(120px,22vmin,190px); height:auto; filter:drop-shadow(0 0 22px rgba(236,229,207,.35)); }
@@ -961,7 +962,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260819_1047'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260819_1144'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -30057,7 +30058,10 @@ function updateTitleButtons(){
   newConfirmT=0;
 }
 // ぼうけんのしょ 冊えらび（load=つづきから／new=はじめから）
-let slotMode='load',slotConfirmT=0,slotConfirmN=0;
+// ★2026-08-19(SPEC_uwagaki_20260819): 旧 slotConfirmT/slotConfirmN(5秒の 窓)は 廃止。
+//   「5秒 以内なら 何ミリ秒でも 通る」＝**下限が 無い**ので 80ms の ダブルタップで 冊が 消えた(実測)。
+//   いまは おうさま(8589/8591)と 同じ 2択＝**安全側が 先頭・押す 場所が 別**。時間では 守らない。
+let slotMode='load',slotAsk=0;
 const SLOT_NAME=['','いち','に','さん'];
 function slotSummary(n){
   let d=null;try{d=JSON.parse(localStorage.getItem('aoYushaSave'+n));}catch(e){}
@@ -30066,16 +30070,25 @@ function slotSummary(n){
   return 'Lv'+d.lv+'　'+((DIFF[d.diff]||DIFF[2]).name)+'　'+(MAPNAME[d.mapId]||'そうげん')+'　'+mm+':'+ss;
 }
 function renderSlots(){
+  if(slotAsk){ // うわがきを きいている: 3行を そのまま 2択に つかう(DOMは 足さない)
+    const n=slotAsk,sm=slotSummary(n)||'';
+    $('#slot-head').textContent='【'+SLOT_NAME[n]+'】 '+sm+'\nこの ぼうけんは きえます。いいですか？';
+    $('#slot-1').textContent='やめておく';                 $('#slot-1').classList.remove('dis');
+    $('#slot-2').textContent='はい、【'+SLOT_NAME[n]+'】を けして はじめる'; $('#slot-2').classList.remove('dis');
+    $('#slot-3').textContent='';$('#slot-3').classList.add('dis');$('#slot-3').style.display='none';
+    return;
+  }
   for(let n=1;n<=3;n++){
     const el=$('#slot-'+n),sm=slotSummary(n);
+    el.style.display='';
     el.textContent='【'+SLOT_NAME[n]+'】 '+(sm||'──あたらしい ぼうけん──');
     el.classList.toggle('dis',slotMode==='load'&&!sm);
   }
+  $('#slot-head').textContent=slotMode==='load'?'どの ぼうけんのしょで つづける？':(slotMode==='jumon'?'どの ぼうけんのしょに かきこむ？':'どの ぼうけんのしょに きろくする？');
 }
 function showSlots(mode){
-  slotMode=mode;slotConfirmT=0;slotConfirmN=0;
-  renderSlots();
-  $('#slot-head').textContent=mode==='load'?'どの ぼうけんのしょで つづける？':(mode==='jumon'?'どの ぼうけんのしょに かきこむ？':'どの ぼうけんのしょに きろくする？');
+  slotMode=mode;slotAsk=0;
+  renderSlots(); // 見出しも renderSlots が 出す(きいている あいだは 別の 文に なる)
   $('#slotwin').style.display='flex';
   $('#title-release').style.display='none'; // 320px帯では冊一覧へ譲り、ロゴとの重なりを防ぐ
   $('#btn-continue').style.display='none';
@@ -30084,36 +30097,37 @@ function showSlots(mode){
   $('#title-hint').style.display='none';
   sfxSel();
 }
-function pickSlot(n){
-  if(Game.started||Game.scene!=='title')return;
-  const sm=slotSummary(n);
+// うわがきを 決めた あとの 実行(jumon=じゅもんを 書きこむ / new=はじめから)
+function slotCommit(n){
+  slotAsk=0;
   if(slotMode==='jumon'){
     if(!jumonJson)return;
-    if(sm&&!(slotConfirmN===n&&TM<slotConfirmT)){
-      slotConfirmN=n;slotConfirmT=TM+5;
-      $('#slot-'+n).textContent='【'+SLOT_NAME[n]+'】 ほんとうに うわがきする？';
-      sfxSel();
-      setTimeout(()=>{if(Game.scene==='title'&&!Game.started&&TM>=slotConfirmT&&$('#slotwin').style.display!=='none')renderSlots();},5200);
-      return;
-    }
     try{localStorage.setItem('aoYushaSave'+n,jumonJson);}catch(e){}
     jumonJson=null;
     curSlot=n;updateTitleButtons();continueGame();
     return;
   }
+  curSlot=n;updateTitleButtons();startGame(true);
+}
+function pickSlot(n){
+  if(Game.started||Game.scene!=='title')return;
+  // ★きいている あいだ: 1行目=やめておく(指が いま ある 場所) / 2行目=けす / 3行目=無効。
+  //   ＝2回目の タップは 指の 下に 破壊ボタンが 無い＝ダブルタップでも 連打でも 消えない(SPEC_uwagaki_20260819)。
+  if(slotAsk){
+    if(n===3)return;
+    if(n===1){slotAsk=0;sfxSel();renderSlots();return;}
+    slotCommit(slotAsk);
+    return;
+  }
+  const sm=slotSummary(n);
+  if(slotMode==='jumon'&&!jumonJson)return;
   if(slotMode==='load'){
     if(!sm)return;
     curSlot=n;updateTitleButtons();continueGame();
-  }else{
-    if(sm&&!(slotConfirmN===n&&TM<slotConfirmT)){
-      slotConfirmN=n;slotConfirmT=TM+5;
-      $('#slot-'+n).textContent='【'+SLOT_NAME[n]+'】 ほんとうに うわがきする？';
-      sfxSel();
-      setTimeout(()=>{if(Game.scene==='title'&&!Game.started&&TM>=slotConfirmT&&$('#slotwin').style.display!=='none')renderSlots();},5200);
-      return;
-    }
-    curSlot=n;updateTitleButtons();startGame(true);
+    return;
   }
+  if(sm){slotAsk=n;sfxSel();renderSlots();return;} // 中身が ある 冊は かならず きく
+  slotCommit(n);                                    // からの 冊は そのまま(消える ものが 無い)
 }
 
 // ============================================================
@@ -30209,7 +30223,7 @@ function loopBody(ts){
 $('#btn-start').addEventListener('pointerdown',e=>{e.stopPropagation();hasAnySave()?showSlots('new'):startGame();});
 $('#btn-continue').addEventListener('pointerdown',e=>{e.stopPropagation();showSlots('load');});
 for(const N of[1,2,3])$('#slot-'+N).addEventListener('pointerdown',e=>{e.stopPropagation();pickSlot(N);});
-$('#slot-back').addEventListener('pointerdown',e=>{e.stopPropagation();sfxSel();updateTitleButtons();});
+$('#slot-back').addEventListener('pointerdown',e=>{e.stopPropagation();slotAsk=0;sfxSel();updateTitleButtons();});
 $('#btn-title2').addEventListener('pointerdown',e=>{e.stopPropagation();toTitle();});
 $('#btn-ng').addEventListener('pointerdown',e=>{e.stopPropagation();ngNewGame();});
 $('#btn-cont').addEventListener('pointerdown',e=>{e.stopPropagation();endContinue();});
