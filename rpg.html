@@ -971,7 +971,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260819_1916'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260819_2334'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -20485,7 +20485,11 @@ async function playerAction(act){
     await wait(0.15);
     await say('ゆうしゃの こうげきりょくが あがった！');
   }else if(act.kind==='run'){
-    if(Game.cloak){
+    // ★とうめいマントは ボス・中ボスには 通じない(2026-08-19)。フィールドの エンカウントが
+    //   `!e.def.boss&&!e.def.mboss` で 同じ 除外を している。図鑑にも「とうめいマントも みやぶって
+    //   おいかけてくる」と 書いてある。ここが 抜けていて、180Gの マントを 買った 瞬間から
+    //   ラスボスも 中ボス33体も 1タップで にげられた（arc/shots_mant_20260819 で 実測）。
+    if(Game.cloak&&!bt.foe.boss&&!bt.foe.mboss){
       sfxRun();
       await say('とうめいマントで すがたを けして にげきった！');
       return 'fled';
