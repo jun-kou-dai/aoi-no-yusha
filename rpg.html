@@ -971,7 +971,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260819_2334'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260820_0715'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3594,6 +3594,11 @@ function storySpellById(id){return CHAPTER_PROOF.find(x=>x.id===id);}
 function storySpellWhy(s){
   const bt=Game.bt;
   if(s.id==='futarigatari'&&(!nkFollowing()||Game.nkHp<=0))return 'なかまが いない';
+  // 章20(2026-08-20 SPEC_koemawasu_rusu): こだま(ch20Echo)は「こどもが うしろの ふねへ こえを まわす」＝
+  // こどもが いない/たおれている と 1かいも ひびかない(ch20Echo を 読む 側が nkFollowing を 要求する)のに、
+  // ここに 枝が 無く **22MPだけ 消えていた**。ただし 章20ぬし(かじをうばうもの)は さんそうの こえ(ch20Signal)＝
+  // こども なしでも きく＝ここを 塞ぐと 章20が 詰む。言葉は 章10と 同じ ものを 使う(新しく 作らない)。
+  if(s.id==='koemawasu'&&bt&&bt.foe!==FOES.kajiu&&(!nkFollowing()||Game.nkHp<=0))return 'なかまが いない';
   if(s.id==='hitotsunoumi'&&bt&&bt.umiPath&&(bt.umiPath.mask||0)!==7)return 'みっつの みちが そろっていない';
   if(s.id==='tomoshibimichi'&&bt&&bt.tomoshibi>0)return 'いま きいている';
   if(s.id==='watashi'&&bt&&bt.watashiEcho)return 'いま きいている';
@@ -19487,7 +19492,7 @@ async function commandPhase(){
       const story=storySpellById(s);
       const cost=story?story.cost:{mera:3,gira:7,begirama:12,begiragon:20,merazoma:26,hyado:5,hyadaruko:12,mahyado:20,mahyadedos:28,hoimi:3,behoimi:8,behoma:22,kiari:2,baikiruto:6,rukani:4,sukara:4,rariho:8,gigadein:32,minadein:40,urahikari:50,kagenui:12,nokoribi:16,kagebarai:32,hikarituru:30}[s];
       const exhausted=story&&Game.bt&&((s==='satori'&&Game.bt.satoriUsed)||(s==='uketome'&&Game.bt.uketomeUsed)||(s==='minnanokoe'&&Game.bt.minnaUsed)||(s==='ashita'&&Game.bt.ashitaUsed)||(s==='koemawasu'&&Game.bt.ch20Used)||(s==='kodama'&&Game.bt.kodamaUsed)||(s==='horagai'&&Game.bt.horaUsed&&!(Game.bt.horaHit>0))||(s==='hajimari'&&Game.bt.hajimariUsed)||(s==='minmono'&&Game.bt.minmonoUsed)); // 使いおえた4本にも「もう つかえない」を出す(表示のみ・2026-07-29棚卸し)
-      if(story&&storySpellDisabled(story)){await say(s==='futarigatari'?'いまは こどもと いっしょに となえられない！':exhausted?'その じゅもんは この たたかいでは もう つかえない！':'その じゅもんの ちからは すでに はたらいている！');continue;}
+      if(story&&storySpellDisabled(story)){await say(storySpellWhy(story)==='なかまが いない'?'いまは こどもと いっしょに となえられない！':exhausted?'その じゅもんは この たたかいでは もう つかえない！':'その じゅもんの ちからは すでに はたらいている！');continue;}
       if(p.mp<cost){await say('MPが たりない！');continue;}
       if((s==='hoimi'||s==='behoimi'||s==='behoma')&&p.hp>=p.mhp){await say('HPは まんたんだ！');continue;}
       if(s==='kiari'&&!Game.p.poison){await say('どくに かかっていない！');continue;}
