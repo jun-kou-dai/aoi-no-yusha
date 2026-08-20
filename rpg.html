@@ -971,7 +971,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260820_0715'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260820_2103'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -20858,6 +20858,13 @@ async function enemyAction(){
   // こうげき側を上げて「こうげき−まもり」を生かす。大技・つうこん・章19の三つの姿・章20の三つの危険には重ねない
   // ＝atk を いじった分岐は atkPlain と食い違うので 素通りする)
   if(foe.nushi&&atk===atkPlain)atk=Math.round(atk*1.45);
+  // 二連ための2発目=ぼうぎょ貫通(bt.shinの戦いだけ・capHeavy天井とheavyGuardは生きる)。
+  // ★2026-08-20 SPEC_shinpierce_mochikoshi: この1行は もとは ダメージの 式の 直前に あった。
+  //   そこは **こどもが ねらわれた ときの return と、よろいで かわした ときの return より 後ろ**で、
+  //   その2本を 通ると 旗が 消えずに 次の ターンへ のこり、**関係の ない 大技が ぼうぎょを 素通り**した
+  //   (実測: ふかみ6階3戦120ターンで もちこし10回・うその「つらぬいた」2回)。
+  //   heavy が 決まった 直後＝どの 早がえりよりも 手前で 使い切る。bt.charge / bt.soar と 同じ 扱い。
+  const shinPierced=!!(heavy&&bt.shinPierce);bt.shinPierce=false;
   const tgtNk=nkFollowing()&&Game.nkHp>0&&Math.random()<0.35; // なかまが ねらわれる
   await say(label);
   const physical=!fire&&!holy&&!spel;
@@ -20914,7 +20921,6 @@ async function enemyAction(){
   {const afx=ARMORFX[Game.armorDef]||{};
    if(afx.elemGuard&&(fire||holy))d=Math.max(1,Math.round(d*afx.elemGuard));
    if(afx.critGuard&&ecrit)d=Math.max(1,Math.round(d*afx.critGuard));} // はがねのよろい：つうこんに つよい
-  const shinPierced=!!(heavy&&bt.shinPierce);bt.shinPierce=false; // 二連ための2発目=ぼうぎょ貫通(bt.shinの戦いだけ・capHeavy天井とheavyGuardは生きる)
   {const Dc=curDiff();d=Math.min(d,Math.max(1,Math.round(p.mhp*((fire||holy||heavy)?Dc.capHeavy:Dc.capNorm))));} // なんいど：被ダメ上限（即死防止・大技は高め天井）
   {const afx=ARMORFX[Game.armorDef]||{};
    if(afx.heavyGuard&&heavy)d=Math.max(1,Math.round(d*afx.heavyGuard));}
