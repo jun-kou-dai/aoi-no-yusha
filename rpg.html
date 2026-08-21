@@ -971,7 +971,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260820_2103'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260822_0037'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -10871,13 +10871,14 @@ function questTextCore(){
     if(Game.hidden.ch5a)return 'もくてき：むらはずれの ひとかげの こと、じいさんに そうだんしよう';
     if(Game.hidden.ch3d&&Game.hidden.towaDown&&!Game.hidden.ktold){const sr=(Game.spotsRead||[]).length;return sr<KATARIBE_NEED?'もくてき：こどもに きかせる「しまの おはなし」を あつめよう（'+sr+' / '+KATARIBE_NEED+'）':'もくてき：あつめた おはなしを、むらの こどもに かたろう';}
     if(Game.hidden.ktold&&!Game.hidden.ch4a)return 'もくてき：じいさんが「けいしょうの ぎしき」の はなしを したがっている';
+    if(Game.hidden.ch3d&&!Game.hidden.towaGate)return 'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている'; // 帯と柱を そろえる(SPEC_annai_obi_20260821): questDest 18226 が ここで edge を 指す
     if(Game.hidden.ch3d)return 'もくてき：こたえは むらに ひろがっていく——ものがたりは つづく';
     if(Game.hidden.nk2&&Game.hidden.ch3m&&(Game.purified||0)>=15&&!Game.hidden.ch3a)return 'もくてき：むらの じいさんが なにか しっている らしい';
     if(Game.hidden.nk2)return 'もくてき：ひかりを つないで いこう——ものがたりは つづく';
     if(Game.hidden.ch2end)return 'もくてき：「わすれの うみ」の こえと、しろの おくの ぬけがらへ';
     if(Game.hidden.sn2)return 'もくてき：むらの じいさんに しんじつを つたえよう';
     if(Game.hidden.ch2)return 'もくてき：どこでもドアで「しずみの さと」へ';
-    if(Game.hidden.elderTold)return 'もくてき：どこでもドアで「はての しま」へ──とわの といが まっている';
+    if(Game.hidden.elderTold)return 'もくてき：むらの じいさんの たのみを ききに いこう'; // 旧「はての しま」は 9段 先だった=柱(questDest 18217)へ そろえる(SPEC_annai_obi_20260821)
     {const st=['t1','t2','t3','t4','t5'].filter(k=>Game.hidden[k]).length;
      if(!Game.hidden.k3)return 'もくてき：むすめを すくいだそう（こおりの せかいの みぎうえの はて）';
      if(st<5)return 'もくてき：こだいの せきひを すべて よもう（'+st+'/5・のこりは メモで）';
