@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260823_1001'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260823_1148'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -19566,6 +19566,10 @@ async function ch19ShiftForm(){
   renderBattleWeakness();
   await say('われた もじばんが ずれ、'+f.icon+' '+f.name+'の かげへ きりかわった！\n'+f.tip+(bt.tokiLinked?'　つぎは '+nx.icon+' '+nx.name+'。':''));
 }
+// ★「みちが ちがう」と「とどかなかった」を 分ける(SPEC_ashita_todokazu_20260823)。
+//   えらんだ みちの とおりに 撃ったのに **かわされた／きかない** ときまで
+//   「えらんだ みちと いまの こうどうは つながらなかった」＝子どもの 選び方の せいに していた。
+const ASHITA_TODOKAZU='えらんだ かぜは とどかなかった——みちは あって いた。\n「あしたをえらぶ」の かぜは、この てばんで ほどけた。';
 async function storyAffinityAfter(kind,d,rawMul){
   const bt=Game.bt,p=Game.p;if(!bt||!kind)return;
   if(bt.foe===FOES.kiritoru||bt.foe===FOES.kajiu)rawMul=battleAffinityMul(kind,rawMul);
@@ -19576,9 +19580,10 @@ async function storyAffinityAfter(kind,d,rawMul){
     puff(ep.x,ep.y-ep.s*38,'rgba(255,225,150,.95)',32,230,0.75,{s0:2,s1:6});
     await say('みんなの こえが よわいところへ かさなった！'+String.fromCharCode(10)+'さらに '+md+'の ダメージ！');
   }
-  if(bt.ashitaPick===kind&&d>0){
+  if(bt.ashitaPick===kind){ // ★d>0 を 外した: きかない(0倍)でも **みちは あって いた**＝旗は ここで 下ろす
     bt.ashitaPick=null;
-    if(rawMul>1){const brokeCharge=!!bt.charge;bt.charge=false;const ad=Math.max(1,d),ep=enemyPos();bt.hp=Math.max(0,bt.hp-ad);
+    if(d<=0)await say(ASHITA_TODOKAZU); // ★きかない/とおらない: 選び方の せいに しない
+    else if(rawMul>1){const brokeCharge=!!bt.charge;bt.charge=false;const ad=Math.max(1,d),ep=enemyPos();bt.hp=Math.max(0,bt.hp-ad);
       sfxLevel();flash('#ffdca0',0.36,0.72);popup(ep.x,ep.y-ep.s*62,ad,'crit');
       puff(ep.x,ep.y-ep.s*40,'rgba(255,220,150,.95)',38,250,0.82,{s0:2,s1:6});
       await say('えらんだ あしたが、よわいところへ もういちど とどいた！'+String.fromCharCode(10)+'さらに '+ad+'の ダメージ！');
@@ -19778,6 +19783,7 @@ async function playerAction(act){
       await wait(0.12);
       if(bt.soar)await say(bt.foe.name+'は じょうくうに いる！ こうげきが とどかない！');
       else await say(bt.foe.name+'は ひらりと みをかわした！');
+      if(bt.ashitaPick==='phys'){bt.ashitaPick=null;await say(ASHITA_TODOKAZU);} // ★かわされた: ここで 早抜けするので storyAffinityAfter に 届かない＝旗を ここで 下ろす
       return;
     }
     if(muchiChase)await say(bt.foe.name+'は ひらりと みをかわした——だが むちは しなって おいついた！');
