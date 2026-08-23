@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260823_2201'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260824_0423'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -18172,6 +18172,9 @@ function questDestLateStory(){
 // 主線の「いま めざす しま」と ことばの せつめい（みちびき）
 function questDest(){
   const h=Game.hidden,p=Game.purified||0;
+  // たにの こだま（章14の あそび・クリア後も）: 帯（questTextCore 10626-10627）と 金柱（questBeaconTargets）が この しまの 石／こだまを 指すので、
+  //   押した 結果も 同じ ところへ 歩く（2026-08-24 §3-AX-6: むらへ ドアで 飛ばし、追っている こだまが 消えていた。正本=rireki/SPEC_tani_obi_20260824.md）
+  if(Game.mapId==='tani'&&h.ch14c&&!NUSHI_REPLAY)return {map:'tani',exp:Game.kodama?(Game.kodama.tired?'こだまは いきが きれて とまっている。いまの うちに ちかづいて つかまえよう。':'はねる こだまを おいかけよう。あと '+(3-Game.kodama.jumps)+'はね で いきが きれて とまる——そこを つかまえよう。'):'ひかる「こだまのいし」に ふれると、こえが こだまに なって とびだす。\nみたび はねさせると いきが きれて とまる——そこを つかまえよう。'};
   if(Game.qChild===1)return {map:'cave',exp:'まいごの ポポを どうくつで さがしてあげよう。ひだりの おくの ほうだ。'};
   if(Game.qChild===2)return {map:'grass',exp:'ポポを むらの おかあさんの ところへ つれていこう。'};
   if(h.k1&&!h.k2)return {map:'ice',exp:'さらわれた むすめを たすけよう。こおりの せかいの みぎうえの おくに いる。きんいろの はしらが めじるしだ。'};
