@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260822_0316'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260823_1001'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -19063,7 +19063,7 @@ async function runBattle(ref){
         const act=await commandPhase();
         const usingAshitaExtra=ashitaExtra;
         r=await playerAction(act);
-        if(usingAshitaExtra&&Game.bt&&Game.bt.ashitaPick){
+        if(usingAshitaExtra&&r!=='again'&&Game.bt&&Game.bt.ashitaPick){ // r==='again' の あいだは 手番が まだ 終わっていない(ときをつなぐ も again を 返す)＝ここで 裁定しない(2026-08-23)
           Game.bt.ashitaPick=null;
           await say('えらんだ みちと いまの こうどうは つながらなかった。\n「あしたをえらぶ」の かぜは、この てばんで ほどけた。');
         }
