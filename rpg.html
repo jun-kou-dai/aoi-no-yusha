@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260823_1701'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260823_2201'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -9771,8 +9771,8 @@ async function fukamiDefeat(){
   updateBars();
   Game.scene='field';Game.battling=false;Game.grace=2;
   showUI('ui-field');playSong(fieldSong());
+  startTalk(); // ★明ける前から 会話中に する（SPEC_defeat_fade_20260823）: フェードの 0.8秒に 一回きりの 自動場面が 割りこみ、王の 台詞に 食われていた
   await fadeTo(0,0.8);
-  startTalk();
   await say('フクロ「'+(FUKAMI_HINT[kidF]||'ふかみの かげは ようしゃせん。そなえて もどるのじゃ。')+'」');
   const cR=await ask([{id:'go',label:'🔥 もう いっかい！'},{id:'no',label:'こんかいは やめておく'}],
     'フクロ「ふくろ（'+lostG+'Gぶん・'+floorF+'かいめ）は うみに おちた。だが うでは のこっておる。」');
@@ -20801,7 +20801,9 @@ async function enemyAction(){
       return;}
     const second=bt.shin&&bt.shinVolley===1; // 二連ため(§2): 予告2回め→2発目は ぼうぎょ貫通(bt.shinの戦いだけ)
     bt.charge=true;
-    if(second)bt.shinVolley=2;
+    // ★二連の 旗は 予告の 文と 同じ 行で 決める（SPEC_shinvolley_toki_20260823）: 「ときをつなぐ」等で ためが ほどかれると
+    //   vol=2 の まま ふつうの ため（単発の 予告）に 入り、解放で ぼうぎょが 貫かれていた＝文と 旗の 食い違い。単発の 予告＝1発目。
+    if(second)bt.shinVolley=2;else if(bt.shin)bt.shinVolley=0;
     sfxCharge(tameDan());
     shakeBattle(4,0.4);
     if(nushiKuse(bt)==='usotame'&&!second){ // うそのため(章15): ほのおの 色で 見抜ける。はじめは かならず うそ=読みを おしえる
@@ -22129,8 +22131,8 @@ async function defeat(){
   Game.grace=2;
   showUI('ui-field');
   playSong(fieldSong());
+  startTalk(); // ★明ける前から 会話中に する（SPEC_defeat_fade_20260823）: フェードの 0.8秒に 一回きりの 自動場面が 割りこみ、王の 台詞に 食われていた
   await fadeTo(0,0.8);
-  startTalk();
   await say('おうさま「しんでしまうとは なさけない！'+(yoake?'\nよるの まものに やられたか——よが あけるまで やすませたぞ。':'')+'」');
   await say('おうさま「だが あきらめては ならぬ。'+(lost>0?'\nゴールドの はんぶんほど（'+lost+'G）を ついやして いきかえらせたぞ。':'\nもういちど たちあがるのだ。')+'」');
   {const d=questDest(); const rec=d.map?(RECLV[d.map]||1):null;
@@ -22173,8 +22175,8 @@ async function badEnd(){
   Game.grace=2;
   showUI('ui-field');
   playSong(fieldSong());
+  startTalk(); // ★明ける前から 会話中に する（SPEC_defeat_fade_20260823）: フェードの 0.8秒に 一回きりの 自動場面が 割りこみ、王の 台詞に 食われていた
   await fadeTo(0,0.8);
-  startTalk();
   await say('おうさま「ばかものーっ！！ まおうの あまいことばに\nのる やつが あるか！」');
   await say('おうさま「ゆめから ひきずりもどすのに'+(lost>0?'\nゴールドの はんぶん（'+lost+'G）も かかったのじゃぞ！':' ほねが おれたわい。')+'」');
   await say('おうさま「つぎは きっぱり『いいえ』と いうのじゃ。よいな！」');
