@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260824_0509'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260824_0601'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -20557,6 +20557,9 @@ async function ch18ShelterAid(){
   await say('かぜよけごやから、しまの こどもたちが くすりを とどけた！\nHP '+(p.hp-oldHp)+'・MP '+(p.mp-oldMp)+' かいふく'+(nkGain?'、こどもも '+nkGain+' かいふく！':'！'));
   return true;
 }
+async function abreakTick(){ // ぼうぎょくずし(abreak)の 戻り＝敵が 1回 こうげきするたび 1つ 減らす。こども被弾・かわし・勇者被弾の 3経路で 呼ぶ(2026-08-24 §3-AX-4: 勇者被弾の 経路だけで 数えていた。正本=rireki/SPEC_abreak_20260824.md)
+  const bt=Game.bt; if(bt&&bt.abreak>0){bt.abreak--; if(!bt.abreak){updateBadge(); await say('よろいの まもりが もとに もどった！');}}
+}
 async function enemyAction(){
   const p=Game.p,bt=Game.bt,foe=bt.foe;
   bt.turn++;
@@ -20941,6 +20944,7 @@ async function enemyAction(){
       await say('こどもは めを まわして しまった…！\n（たたかいが おわれば めを さます）');
     }
     await ch18ShelterAid();
+    if(bt.abreak>0)await abreakTick(); // こどもを 狙った 一撃も「敵の こうげき」＝abreak を 数える(§3-AX-4。abreak が ある戦いだけ await＝ふつうの 戦いの タイミングを 変えない)
     return;
   }
   {const afx=ARMORFX[Game.armorDef]||{};
@@ -20951,6 +20955,7 @@ async function enemyAction(){
      sfxRun();
      const c0=playerChipPos();popup(c0.x,c0.y,'ミス','sp');
      await say((ANAME[Game.armorDef]||'ころも')+'が ゆらめき、こうげきを かわした！');
+     if(bt.abreak>0)await abreakTick(); // かわした 一撃も「敵の こうげき」＝abreak を 数える(§3-AX-4)
      return;
    }}
   let defNow=bt.abreak>0?Math.round(p.def*0.5):p.def; // ぼうぎょくずし中は まもり半分（7割ではminFrac下限に沈んで体感ゼロ＝Lv16実測で確認）
@@ -21028,7 +21033,7 @@ async function enemyAction(){
       await say('うけた いたみが こだまに なって かえる！\n'+bt.foe.name+'に '+ed+'の ダメージ！');
     }
   }
-  if(bt.abreak>0){bt.abreak--;if(!bt.abreak){updateBadge();await say('よろいの まもりが もとに もどった！');}}
+  if(bt.abreak>0)await abreakTick(); // 勇者被弾の 一撃(§3-AX-4。元の if(bt.abreak>0) と 同じ＝abreak 0 の ときは await を 挟まない)
   if(p.hp>0&&bt.hp>0)await tryInflict(foe);
 }
 function restoreStageSnapshot(bt){
