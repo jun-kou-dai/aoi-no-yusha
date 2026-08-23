@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260824_0423'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260824_0509'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -19061,6 +19061,7 @@ async function runBattle(ref){
   else if(foe.mboss)await say('くろがねの きょたいが ゆくてを ふさいでいる…！');
   if(foe===FOES.sukuwarenu){await ch21Mondou();return;} // 最終章はコマンド窓を開かない(ほしのもんどう 2026-07-20)
   while(true){
+    if(Game.bt)Game.bt.guard=false; // 手番の 頭で 構えを 下ろす（2026-08-24 §3-AX-2: 眠り／まひで 飛ばすと playerAction を 通らず、前の 手番の ぼうぎょが 敵の 一撃に 残っていた。正本=rireki/SPEC_guard_sleep_20260824.md）
     const skip=await playerStatusTick();
     if(Game.p.hp<=0){await defeat();return;}
     if(!skip){
