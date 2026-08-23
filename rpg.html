@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260824_0601'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260824_0743'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -11080,6 +11080,19 @@ function tapMove(cx,cy){
   const w=WORLDS[Game.mapId];
   const questHit=questBeaconTapTarget(lx,ly,cam);
   if(questHit){tx=Math.round(questHit.x);ty=Math.round(questHit.y);}
+  // ★柱の 光（beam）と 足元は、その上に 立つ まものの 体への タップを 食わない（2026-08-24 §3-BC。
+  //   しろでは でぐちの 柱の 光が やみスライムに かさなり、戦おうと 押した 子が かざんへ 出されていた。
+  //   ラベル「めあて」は これまで どおり 柱が 絶対（via==='label' は 素通り）。NPC の 競合規則（2026-07-20・下の via==='body'）は 触らない。
+  //   正本=rireki/SPEC_beam_tap_20260824.md）
+  if(questHit&&questHit.via!=='label'&&Game.enemies&&Game.enemies.length){
+    const qb=questBeaconScreenPoint(questHit.x,questHit.y,cam);
+    const dq=Math.hypot(lx-qb.x,ly-(qb.y-cam.TH*0.45));
+    let bf=null,bfd=1e9;
+    for(const e of Game.enemies){const q2=isoCtr(Math.round(e.px),Math.round(e.py));
+      const dd2=Math.hypot(lx-q2.x,ly-(q2.y-cam.TH*0.45));
+      if(dd2<cam.TW*0.55&&dd2<bfd){bfd=dd2;bf=e;}}
+    if(bf&&bfd<dq){tx=Math.round(bf.px);ty=Math.round(bf.py);}
+  }
   // からだの どこを おしても その人: NPC/王/宿の スプライト中心(足元より上)との画面距離で吸着
   {const ents=[];
    if(w.npcs)for(const n of w.npcs)if(!npcGone(n)){const p=ch19NpcPos(n);ents.push({x:p.x,y:p.y});}
