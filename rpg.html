@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260824_0743'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260824_1203'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -20527,6 +20527,9 @@ async function playerAction(act){
       await say('ものがたりの ぬくもりが めぐる——HPが '+n+' かいふくした！');
     }
   }else if(act.kind==='baikiruto'){
+    // 重ねがけの 門(そろい4本=ルカニ/スカラ/かげぬい/ふみとどまり と 同型・§3-BD発見1)。
+    // >=curDiff().baiki: おうえん(1.3)の 上から 1.5へ 上げる 道は 通す。しんわ/しんぱん(1.3/1.25)は おうえん済みなら ことわる(下がる 再代入を ふせぐ)
+    if((bt.atkUp||0)>=(curDiff().baiki||1.5)){await say('こうげきは もう あがっている！');return;}
     p.mp-=6;updateBars();
     await say('ゆうしゃは バイキルトを となえた！');
     sfxHeal();bt.atkUp=(curDiff().baiki||1.5); // なんいど：しんぱんは×1.25
