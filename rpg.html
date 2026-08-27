@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260827_2117'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260827_2241'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3390,6 +3390,7 @@ function gearTag(kind,v){
   // 一点もの＝二度と手に入らない。うりねは 出すが、⚠を いっしょに 出す(2026-07-26)
   if(kind==='w'?SHITAKU_W.has(v):SHITAKU_A.has(v))return 'いちざの したく⚠ うりね '+(sell||0)+'G';
   if(kind==='w'?ISLAND_REWARD_W.has(v):ISLAND_REWARD_A.has(v))return 'しまの おくりもの⚠ うりね '+(sell||0)+'G';
+  if(kind==='w'?STORY_W.has(v):STORY_A.has(v))return 'ものがたりの あかし⚠ うりね '+(sell||0)+'G';
   if(sell==null)return 'ひとしなもの（うれない）'; // 旧: SELL表に無い品が「うりね 0G」と出ていた
   if(kind==='w'?WEAPONFX[v]:ARMORFX[v])return 'こせい・うりね '+sell+'G';
   if(v<eq)return 'うってOK・うりね '+sell+'G';
@@ -3427,7 +3428,7 @@ const ISLAND_REWARD_A=new Set(ISLAND_REWARDS.filter(r=>r.kind==='a').map(r=>r.va
 function islandReward(no){return ISLAND_REWARDS.find(r=>r.no===no)||null;}
 function islandRewardOwned(r){return !!r&&(r.kind==='w'?(Game.ownW||[]).includes(r.value):(Game.ownA||[]).includes(r.value));}
 function gainIslandReward(no,refresh=true){
-  const r=islandReward(no);if(!r||islandRewardOwned(r))return null;
+  const r=islandReward(no);if(!r||islandRewardOwned(r)||(Game.hidden&&Game.hidden[r.flag+'Sold']))return null; // わざと売った品は 補填でも 再演でも 戻さない=「にどと てに はいりません」(9219)を 真に する(SPEC_once_uso_20260827)
   let equipped=false;
   if(r.kind==='w'){gainWeapon(r.value,!refresh);if((Game.weaponAtk||0)<r.value){Game.weaponAtk=r.value;equipped=true;}}
   else{gainArmor(r.value,!refresh);if((Game.armorDef||0)<r.value){Game.armorDef=r.value;equipped=true;}} // refresh=false はロードの補填=てにいれのtoastを出さない(SPEC_iwai §8)
@@ -3455,6 +3456,8 @@ const KAJI_KAGE=[['kw1',142,'w',8000,2],['km1',144,'w',12000,3],['ky1',146,'w',1
 const GEAR_STORY={
   w:{16:'どうくつの おくの たからばこ',26:'まいごの ポポを おかあさんへ とどけると',44:'しずみのさとの さとぬしを ときはなつと',52:'くにを すくった あと おうさまから',56:'とわのふちの ぬしを しずめると'},
   a:{20:'かざんの ぬしの たおれた あとに',28:'ひかりのこだまの いのりを うけつぐと'}};
+// 物語さずかり=再入手の道が無い(SPEC_once_uso_20260827)。⚠と まとめ売り除外は ONCE_W/A(9140)経由で 効く
+const STORY_W=new Set(Object.keys(GEAR_STORY.w).map(Number)),STORY_A=new Set(Object.keys(GEAR_STORY.a).map(Number));
 function gearBookRows(){
   const w=new Map(),a=new Map(),tate=[],kid=[];
   const put=(m,v,name,src)=>{if(v&&!m.has(v))m.set(v,{v,name,src});};
@@ -9137,8 +9140,8 @@ const SELL_A={4:20,9:60,16:130,20:550,24:300,28:800,34:675,40:3200,46:2600,60:65
 // 一点もの(いちざの したく8点・しまの おくりもの8点)の うりね(2026-07-26)。
 // したくは 定価の半額、贈り物は 同じ段の したくより すこし下。**二度と手に入らない**ので
 // うるときは 専用の たしかめを 1枚 はさむ(irreversible-needs-guard: 守りは同じ変更の中で)。
-const ONCE_W=new Set([...SHITAKU_W,...ISLAND_REWARD_W]);
-const ONCE_A=new Set([...SHITAKU_A,...ISLAND_REWARD_A]);
+const ONCE_W=new Set([...SHITAKU_W,...ISLAND_REWARD_W,...STORY_W]);
+const ONCE_A=new Set([...SHITAKU_A,...ISLAND_REWARD_A,...STORY_A]);
 // 数が上の品ほど うりねも 上（並べたときに 順が くるわないように）
 Object.assign(SELL_W,{102:3000,104:3200,110:4000,112:4200,118:5500,120:6000,126:7500,128:8000});
 Object.assign(SELL_A,{80:3500,82:3600,86:4500,88:4600,92:6500,94:7000,98:9000,100:9500});
@@ -9163,8 +9166,8 @@ async function runSell(){
     if(Game.shield)list.push({id:'eq_s',label:'てつのたて'+(Game.shield2?'':'（そうびちゅう）')+'　+30G'});
     if(Game.shield2)list.push({id:'eq_s2',label:'ひかりのたて（そうびちゅう）　+1500G'});
     if(!list.length){await say('しょうにん「うれる ものは なさそうだね。\nまものを たおして どうぐを あつめて おいで。」');return;}
-    const bulkW=(Game.ownW||[]).filter(v=>v!==Game.weaponAtk&&v<Game.weaponAtk&&!WEAPONFX[v]&&SELL_W[v]!=null);
-    const bulkA=(Game.ownA||[]).filter(v=>v!==Game.armorDef&&v<(Game.armorDef||0)&&!ARMORFX[v]&&SELL_A[v]!=null);
+    const bulkW=(Game.ownW||[]).filter(v=>v!==Game.weaponAtk&&v<Game.weaponAtk&&!WEAPONFX[v]&&SELL_W[v]!=null&&!ONCE_W.has(v)); // ⚠品は まとめ売りに 混ぜない(⚔26が 個別確認なしで 売れていた・SPEC_once_uso_20260827)
+    const bulkA=(Game.ownA||[]).filter(v=>v!==Game.armorDef&&v<(Game.armorDef||0)&&!ARMORFX[v]&&SELL_A[v]!=null&&!ONCE_A.has(v));
     const bulkG=bulkW.reduce((a,v)=>a+SELL_W[v],0)+bulkA.reduce((a,v)=>a+SELL_A[v],0);
     if(bulkW.length+bulkA.length>=2)list.push({id:'bulk',label:'💰 よわい そうびを まとめて うる（'+(bulkW.length+bulkA.length)+'こ・+'+bulkG+'G）'});
     list.unshift({id:'eqinfo',label:'そうび ちゅう ⚔'+(WNAME[Game.weaponAtk]||'すで')+'　🛡'+(ANAME[Game.armorDef||0]||'ぬのの ふく'),dis:true});
@@ -9197,12 +9200,14 @@ async function runSell(){
       eq={lab:WNAME[v],price:SELL_W[v],once:ONCE_W.has(v),shitaku:SHITAKU_W.has(v),apply:()=>{
         Game.ownW=Game.ownW.filter(x=>x!==v);
         if(Game.weaponAtk===v)Game.weaponAtk=Game.ownW.length?Math.max(...Game.ownW):0;
+        const ir=ISLAND_REWARDS.find(q=>q.kind==='w'&&q.value===v);if(ir)Game.hidden[ir.flag+'Sold']=true; // 売却の印=ロード補填(3438)で 戻さない
       },equipped:v===Game.weaponAtk};
     }else if(c.startsWith('sa_')){
       const v=+c.slice(3);
       eq={lab:ANAME[v],price:SELL_A[v],once:ONCE_A.has(v),shitaku:SHITAKU_A.has(v),apply:()=>{
         Game.ownA=Game.ownA.filter(x=>x!==v);
         if(Game.armorDef===v)Game.armorDef=Game.ownA.length?Math.max(...Game.ownA):0;
+        const ir=ISLAND_REWARDS.find(q=>q.kind==='a'&&q.value===v);if(ir)Game.hidden[ir.flag+'Sold']=true; // 売却の印(同上)
       },equipped:v===Game.armorDef};
     }else if(c==='eq_s2'){
       eq={lab:'ひかりのたて',price:1500,apply:()=>{Game.shield2=false;},equipped:true};
