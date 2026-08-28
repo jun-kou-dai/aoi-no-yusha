@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260828_0028'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260829_0721'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -8084,9 +8084,14 @@ async function talkNpc(n){
       await say('ポポ「おかあさん！ ごめんなさい！」');
       await say('おかあさん「ゆうしゃさま、これは おとうさんの かたみの つるぎです。\nどうか うけとってください！」');
       Game.qChild=3;Game.popo=null;Game.popoT=null;
-      gainWeapon(26);if(Game.weaponAtk<26){Game.weaponAtk=26;recalcStats();}
-      sfxLevel();flash('#ffe9b0',0.32,0.7);
-      await say('ゆうしゃのつるぎを さずかった！\nこうげきりょくが おおきく あがった！');
+      gainWeapon(26);
+      if(Game.weaponAtk<26){
+        Game.weaponAtk=26;recalcStats();
+        sfxLevel();flash('#ffe9b0',0.32,0.7);
+        await say('ゆうしゃのつるぎを さずかった！\nこうげきりょくが おおきく あがった！');
+      }else{ // もう つよい ものを そうびして いる＝上がらないのに「あがった」と 言わない(SPEC_award_uso_20260829)
+        await say('ゆうしゃのつるぎを さずかった！（そうびの ふくろへ）');
+      }
       updateBars();
       saveGame();
     }else if(Game.hidden.ch21c){ // かんけつ後は 旅の むすびへ(旧: ポポの1行が 永久に リピート 2026-07-26)
@@ -21813,8 +21818,13 @@ async function victory(){
     Game.hidden.towaDown=true;
     sfxChest();flash('#c8b8f0',0.5,1.0);
     await say('ふちの そこから、ほしの ひかりを おびた つるぎが うかびあがる——');
-    gainWeapon(56),Game.weaponAtk=Math.max(Game.weaponAtk,56);recalcStats();updateBars();
-    await say('でんせつの「とわのつるぎ」を てにいれた！\nこうげきりょくが おおきく あがった！');
+    gainWeapon(56);
+    if(Game.weaponAtk<56){ // Math.max と 同じ＝上がる ときだけ そうびを 更新する
+      Game.weaponAtk=56;recalcStats();updateBars();
+      await say('でんせつの「とわのつるぎ」を てにいれた！\nこうげきりょくが おおきく あがった！');
+    }else{ // ちそこの みせで ⚔64/76/82 を 買えるので ここは ふつうに 起きる(SPEC_award_uso_20260829)
+      await say('とわのつるぎを てにいれた！（そうびの ふくろへ）');
+    }
     await say('しょうごう「ふちを こえしもの」を さずかった！');
   }
   if(foe.kage){const b4=Game.purified||0;Game.purified=b4+1; // じょうか: かげを ときはなった かず（雑魚ふくむ）
