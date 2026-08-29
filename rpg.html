@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260829_1854'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260829_2135'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3449,6 +3449,7 @@ function normalizeIslandRewards(){
 const FORGE_W={82:[88,2000,1],88:[94,5000,2],94:[100,9000,3]}; // forgeRun の FW/FA を持ち上げ(そうびちょうと共用・値は不変)
 const FORGE_A={60:[66,2000,1],66:[72,5000,2],72:[78,9000,3]};
 const KAJI_SEED=[2000,2]; // かげいし→たね の 代価(forgeRun と フクロの推しが ひく正本・2026-08-11)
+const TANE_DROP_P=0.08; // ちからのたねを まものが おとす わりあいの 正本(2026-08-29 §3-BZ)。victory の 判定と フクロ／レベル上限の 台詞が ここを ひく＝二重管理に しない
 const TANE_ATK=3, TANE_DEF=2; // たねの 効果幅の 正本(2026-08-12 台帳§V)。表示12箇所・適用8箇所が ここを ひく＝値を 変えれば ぜんぶ 動く。
 // ★別の器＝ここでは ない: レベルアップの ほうび(bonusAtk+=2/bonusDef+=2)・じいさんの いのりのおまもり(bonusDef+=3)。
 const TETSU_SEED=[2000,2]; // ほしのてつ→たね の 代価(forgeRun の 表示と 引き落としが ひく正本・2026-08-12 台帳§O)。KAJI_SEED とは 別の器=値が 同じなのは 偶然。片方だけ 変えられるように 分けてある
@@ -8042,13 +8043,15 @@ async function talkNpc(n){
     await say('ナギ「この ふねは もう、こばまれて いない。\nいつでも のせて いくよ、なまえの おんじん。」');
     endTalk();return;
   }
-  if(n.trial){ // こだまのしれん: たおした ぬしとの さいせん(ほうび=つうじょうの ぼうけんと おなじ)
+  if(n.trial){ // こだまのしれん: ★条件は Game.seen だけ＝「まみえた ぬし」(2026-08-29 §3-BZ で 台詞を 実装へ そろえた)
+    // markSeen は runBattle の 3行目で 立つ(勝敗の 前)。候補14体は 全部 mboss＝にげられる。ずかんで 100G 払っても 立つ。
+    // ＝「たおした」と 書くと 嘘に なる。ここを 撃破の 台帳に 変えるのは 遊びが 変わる(SPEC §2 却下1)
     const cand=[['koborebi','こぼれびの けしん'],['tozasu','とざすもの'],['nanomu','なまえをのむ もの'],['kobamu','おわりを こばむもの'],['miokure','みおくれぬもの'],['yamihori','やみをほるもの'],['kataranu','かたられぬもの'],['kotae','こたえなきもの'],['toikeshin','といの けしん'],['shimaikomu','しまいこむもの'],['mototadasu','もとをただすもの'],['makoto','まことをせまるもの'],['wasurare','わすれられしもの'],['hitorijime','ひとりじめのもの']].filter(c=>Game.seen&&Game.seen[c[0]]);
     if(!cand.length){
-      await say('こだまの せきひ「……たたかいの きおくが、まだ ここには ない。\nぬしを たおした もののみ、こだまと あいまみえる。」');
+      await say('こだまの せきひ「……たたかいの きおくが、まだ ここには ない。\nずかんに すがたの ある ぬしだけが、こだまと あいまみえる。」');
       endTalk();return;
     }
-    await say('こだまの せきひ「たおした ぬしの こだまと、もういちど たたかえる。\nかちどきは、ほうびと なって かえって くる。」');
+    await say('こだまの せきひ「ずかんに すがたの ある ぬしの こだまを、ここへ よべる。\nかちどきは、ほうびと なって かえって くる。」');
     const pick=await ask(cand.map(c=>({id:c[0],label:c[1]})).concat([{id:'no',label:'やめておく'}]),'どの こだまと たたかう？');
     if(pick&&pick!=='no'&&FOES[pick]){
       await say('せきひが ひかり、'+FOES[pick].name+'の こだまが たちあがる——！');
@@ -9403,10 +9406,14 @@ async function gunshiMoney(){
   if(!maxLv&&!(Game.hidden&&Game.hidden.ch21c))await say('フクロ「よるは まものが つよいが、けいけんちは 1.6ばい。\nやどだいを はらっても おつりが くる。」');
   else if(!maxLv&&Game.hidden&&Game.hidden.kageOpening)await say('フクロ「かせぎは 🔥のこりびの ふかみ——すすむほど おかねが 2ばい じゃ。」'); // かんけつ後の そうげんは よるも まものが湧かない(2026-07-29棚卸し)
   else{
-    await say('フクロ「そなたは レベル'+maxLvNow()+'——ここが うえじゃ。けいけんちは もう つもらぬ。\nこれから のびるのは みっつ だけ じゃ。」');
-    // ちからのたねは どの まものも おとさない(FOESの drop は やくそう/どくけしそう/せいすい/ほしのてつ の4種だけ)。
-    // 出どころは ⚒かじの うちだし(9061行)と 🔥ふかみの ふくろ(8738行)の二つ(2026-07-29 棚卸しの残り)。
-    await say('フクロ「ひとつ、⚔ちからのたね。⚒かじで ほしのてつと おかねから うちだす。'+((Game.hidden&&Game.hidden.kageOpening)?'\n🔥ふかみの ふくろにも はいっておる。':'')+'\nひとつ、おかね——⚒したくと、みせの さいごの しな '+SHOP.filter(s=>s.town==='grass'&&s.need==='ch21c').length+'つに かわる。\nひとつ、きょじんのこころ。こおり・かざん・まおうの しろを さまよう きょじんが まれに おとす（さいだい5つ・HPの うつわが 10 ふえる）。」');
+    // ★上限に とどいていない 旅人にも 出ていた(2026-08-29 §3-BZ)。かんけつ(ch21c)後・かげ編の 前は !maxLv でも この 枝に 落ちる
+    // ＝同じ 会話の 3行うえで「きたえる なら：…けいけんちN」と 言った 直後に「もう つもらぬ」と 言っていた。
+    if(maxLv)await say('フクロ「そなたは レベル'+maxLvNow()+'——ここが うえじゃ。けいけんちは もう つもらぬ。\nこれから のびるのは みっつ だけ じゃ。」');
+    else await say('フクロ「レベルの ほかにも、のびる みちが みっつ ある。」');
+    // ★2026-08-29 訂正(§3-BZ): 上の2行は まちがいだった。victory() に foe.drop とは 別の 無条件の 枝が あり、
+    // どの まものも TANE_DROP_P(=8%) で ちからのたねを おとす(2026-06-13 472599d から ずっと)。
+    // 2026-07-29 の 棚卸しが foe.drop の 4種しか 見ずに 結論を 出し、その うえに 台詞が 3本 書かれていた。
+    await say('フクロ「ひとつ、⚔ちからのたね。どの まものも たまに おとす（100かいに '+Math.round(TANE_DROP_P*100)+'かいほど）。⚒かじでも ほしのてつと おかねから うちだせる。'+((Game.hidden&&Game.hidden.kageOpening)?'\n🔥ふかみの ふくろにも はいっておる。':'')+'\nひとつ、おかね——⚒したくと、みせの さいごの しな '+SHOP.filter(s=>s.town==='grass'&&s.need==='ch21c').length+'つに かわる。\nひとつ、きょじんのこころ。'+giantMaps().join('・')+'を さまよう きょじんが まれに おとす（さいだい5つ・HPの うつわが 10 ふえる）。」');
   }
   if(foes.some(x=>x.f.gold))await say('フクロ「きんいろのスライムは にげあしが はやい。\nであったら さきに しとめよ。ラリホーで ねむらせる てもある。」');
   // メタルは spawns ではなく「よるの そうげん」に 時をおいて 湧く＝島の一覧からは 永久に 拾えなかった(2026-07-26)
@@ -9793,7 +9800,8 @@ async function fukamiDefeat(){
 // ── 最終戦『ななつのかげを まとう ヴォルガ』(場面5) ──
 async function volgaFight(){
   startTalk();
-  await say('そらの あかい かげが うずを まき、むらの うえに おりてきた——');
+  // ★フクロの 出迎え(gunshiGreetScene・つづきから)は どの 地図でも 起きる＝島の うえで 始まりうる(2026-08-29 §3-BZ)
+  await say('そらの あかい かげが うずを まき、'+(Game.mapId==='grass'?'むらの うえに':'まうえに')+' おりてきた——');
   endTalk();
   await startEncounter({def:FOES.kagevolga});
 }
@@ -10120,10 +10128,12 @@ async function gunshiTamesuRun(e){ // 行の 中身は 一枚のときと 同じ
   }
   if(e.kitaeru){ // つよくなる みち: そうび/たね/かせぎの3窓(各2行・2026-07-29)
     await say('フクロ「ひとつ、そうび。⚒ふねの「いちざの したく」(6000〜18000G)と、むらの みせの さいごの しな '+SHOP.filter(s=>s.town==='grass'&&s.need==='ch21c').length+'つ('+Math.min(...SHOP.filter(s=>s.town==='grass'&&s.need==='ch21c').map(s=>s.cost))+'〜'+Math.max(...SHOP.filter(s=>s.town==='grass'&&s.need==='ch21c').map(s=>s.cost))+'G)。\nかげの にはつめには 🛡したくの ころも(おおわざを へらす)が こたえじゃ。」');
-    await say('フクロ「ふたつ、たね と こころ。⚒かじで ほしのてつ2つ+2000Gが ちから+3/まもり+2 になる。\n🔥ふかみの ふくろにも たねと てつが はいっておる。」');
-    // きょじんは かげ編の島には おらん(giantは frostlord/magmalord/chaoslord の3体=こおり・かざん・しろ)。
+    await say('フクロ「ふたつ、たね と こころ。どの まものも 100かいに '+Math.round(TANE_DROP_P*100)+'かいほど ちからのたねを おとす。\n⚒かじで ほしのてつ2つ+2000Gが ちから+3/まもり+2 になる。\n🔥ふかみの ふくろにも たねと てつが はいっておる。」');
+    // きょじんは かげ編の島には おらん(giantは frostlord/magmalord/chaoslord の3体)。
     // 見出しに「こころ」と言いながら 居場所を告げていなかった=たねと同じ 案内の欠け(2026-07-29 15:10)
-    await say('フクロ「こころは かげの しまには おらぬ。こおり・かざん・まおうの しろの\nさまよう きょじんが まれに おとす——さいだい5つ、HPの うつわが 10 ずつ ふえる。」');
+    // ★2026-08-29(§3-BZ): 居場所を リテラルで 書いていたので 1しゅうめでも「まおうの しろ」と 言っていた
+    //   （城の chaoslord は {ng:1}＝2しゅうめから）。giantMaps() で 実装から ひく。
+    await say('フクロ「こころは かげの しまには おらぬ。'+giantMaps().join('・')+'の\nさまよう きょじんが まれに おとす——さいだい5つ、HPの うつわが 10 ずつ ふえる。」');
     await say('フクロ「みっつ、かせぎ。🔥ふかみは すすむほど おかねが 2ばい、かげぬしからも おかねが はいる。\nただで きたえるなら 🎭ぶたいの けいこ——きずは のこらん。」'); // よる稼ぎは かんけつ後の そうげんに まものが 湧かない=この客には死に助言(2026-07-29棚卸し)
     return;
   }
@@ -21511,7 +21521,7 @@ async function victory(){
     if(!Game.hidden.maxLvTold){
       Game.hidden.maxLvTold=true;
       await say('レベルは もう さいだい——けいけんちは つもらない。\nこれから のびるのは みっつ だけだ。');
-      await say('⚔ ちからのたね（⚒かじで うちだせる）\n🛡 まもりのたね（たからばこ／⚒かじで うちだせる）\n💛 きょじんのこころ（さまよう きょじんが まれに おとす）'); // たねは まものも おとさない=ちから側も同じ嘘だった(2026-07-29 棚卸しの残り)
+      await say('⚔ ちからのたね（どの まものも 100かいに '+Math.round(TANE_DROP_P*100)+'かいほど おとす／たからばこ／⚒かじで うちだせる）\n🛡 まもりのたね（たからばこ／⚒かじで うちだせる）\n💛 きょじんのこころ（さまよう きょじんが まれに おとす）'); // ★2026-08-29 訂正(§3-BZ): 「たねは まものも おとさない」は まちがい。victory() の TANE_DROP_P の 枝が どの まものにも 効く
       saveGame();
     }
   }else{
@@ -21833,7 +21843,7 @@ async function victory(){
     sfxChest();
     await say('きょじんのこころを てにいれた！！\nさいだいHPが 10 あがった！（'+Game.gheart+'／5）');
   }
-  if(Math.random()<0.08){
+  if(Math.random()<TANE_DROP_P){ // ★門は 1つも 無い＝どの まものも おとす(2026-06-13 472599d から)。台詞は TANE_DROP_P を ひく
     sfxChest();
     p.bonusAtk+=TANE_ATK;recalcStats();
     await say(foe.name+'は ちからのたねを おとした！\nこうげきりょくが '+TANE_ATK+' あがった！');
@@ -22118,6 +22128,18 @@ async function startMaouEnding(replay){
   playSong('ending');
   await fadeTo(0,1.8);
   fadeColor('#070b1e');
+}
+// きょじんが いま わく しま＝実装から ひく(2026-08-29 §3-BZ)。まおうのしろの chaoslord は {ng:1}＝2しゅうめから
+// ＝島の 名を 直書きすると 1しゅうめの 画面が 嘘に なる(3箇所で 実際に なっていた)
+function giantMaps(){
+  const out=[];
+  for(const m in WORLDS)for(const sp of (WORLDS[m].spawns||[])){
+    const f=FOES[sp.id]; if(!f||!f.giant)continue;
+    if(sp.ng&&!((Game.ng||0)>=sp.ng))continue;
+    if(!out.some(o=>o.m===m))out.push({m,nm:MAPNAME[m]||m});
+  }
+  out.sort((a,b)=>(RECLV[a.m]||99)-(RECLV[b.m]||99)); // たびの 順に ならべる(WORLDS の ならびは しろが こおりより 先)
+  return out.map(o=>o.nm);
 }
 // さまよう巨人のレア泥「きょじんのこころ」：20%・さいだい5こ・+10さいだいHP
 function grantGiantHeart(foe){
