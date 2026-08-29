@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260829_2135'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260829_2247'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -5691,7 +5691,7 @@ function renderStatus(){
    h+=row('せきひ',sk+' / 5');
    h+=row('きょじんのこころ',(Game.gheart||0)+' / 5');
    if(Game.hidden&&Game.hidden.ch2)h+=row('じょうか',(Game.purified||0)+'にん の かげを ときはなった');if(Game.hidden&&Game.hidden.mate1){const Mm=MATES[mateKind()];h+=row('みちづれ',Mm.name+'（'+Mm.act+'）');}
-   {const tt=[],H=Game.hidden||{};if(H.zkomp)tt.push('まものはかせ');if(H.slcatch||H.slcatchEver)tt.push('スライムキャッチャー');if(H.towaDown||H.fuchiEver)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal()||H.kataribeEver)tt.push('かたりべ');if(H.ch4b||H.wataseEver)tt.push('ひかりを わたせしもの');if(H.ch5c||H.ch5cEver)tt.push('となりびと');if(H.ch6c||H.ch6cEver)tt.push('なまえを よぶもの');if(H.ch7c||H.ch7cEver)tt.push('ものがたりを つぐもの');if(H.ch8c||H.ch8cEver)tt.push('みおくりびと');if(H.ch9c||H.ch9cEver)tt.push('ともしびを つぐもの');if(H.ch10c||H.ch10cEver)tt.push('ふたりの かたりべ');if(H.ch11c||H.ch11cEver)tt.push('うみを つなぐもの');if(H.meguriDown||H.meguriEver)tt.push('しんぱんを こえしもの');if(H.gearHakaseEver)tt.push('そうびはかせ');
+   {const tt=[],H=Game.hidden||{};if(H.zkomp)tt.push('まものはかせ');if(H.slcatch||H.slcatchEver)tt.push('スライムキャッチャー');if(H.towaDown||H.fuchiEver)tt.push('ふちを こえしもの');if((Game.spotsRead||[]).length>=spotTotal()||H.kataribeEver)tt.push('かたりべ');if(H.ch4b||H.wataseEver)tt.push('ひかりを わたせしもの');if(H.shinYusha||H.shinYushaEver)tt.push('しんのゆうしゃ');if(H.ch5c||H.ch5cEver)tt.push('となりびと');if(H.ch6c||H.ch6cEver)tt.push('なまえを よぶもの');if(H.ch7c||H.ch7cEver)tt.push('ものがたりを つぐもの');if(H.ch8c||H.ch8cEver)tt.push('みおくりびと');if(H.ch9c||H.ch9cEver)tt.push('ともしびを つぐもの');if(H.ch10c||H.ch10cEver)tt.push('ふたりの かたりべ');if(H.ch11c||H.ch11cEver)tt.push('うみを つなぐもの');if(H.meguriDown||H.meguriEver)tt.push('しんぱんを こえしもの');if(H.gearHakaseEver)tt.push('そうびはかせ');
     h+=row('しょうごう',tt.length?tt.join('　'):'──');}}
   if(Game.hidden&&Game.hidden.mate1){
     h+='<h3 class="bisle">みちづれを えらぶ<span class="stsub">　じょうかが すすむほど つよくなる</span></h3><div class="mateswap">';
@@ -7897,7 +7897,11 @@ async function talkNpc(n){
               ch17Fuda:['📄 はがされた しろい ふだ','しろい ふだを かかげると、くさりが はじかれたように ゆるんだ。'],
               ch17Score:['🎼 サヨの がくふ','がくふの うたいだしを くちずさむと、くさりが うたに ほどけた。']};
     if(Game.hidden[n.chainKey]){
-      await say('ほどけた くさりが、ゆかに しずかに よこたわっている。\nこの さきの みちは、もう ひらいている。');
+      // ★2026-08-29(§3-CA): みちを ひらくのは 出口の need に 立つ くさりだけ（cn1/cn2）。
+      //   yakata3 の cn3/cn4 は 出口を 持たない（4本 そろうと げんぽんの やまが もちあがる）＝実装から 引く。
+      const opensWay=((WORLDS[Game.mapId]&&WORLDS[Game.mapId].exits)||[]).some(e=>e.need===n.chainKey);
+      await say('ほどけた くさりが、ゆかに しずかに よこたわっている。\n'
+        +(opensWay?'この さきの みちは、もう ひらいている。':'この くさりは、もう とびらを しばって いない。'));
       endTalk();return;
     }
     const need=n.need17,inf=KN[need];
@@ -9003,11 +9007,16 @@ async function wazaCatchupScene(){
   Game.hidden.wazaCatchup=true;
   startTalk();
   const NEW5=['ルカニ','スカラ','ラリホー','ギガデイン','ミナデイン'];
+  const NEW5_ATK=['ギガデイン','ミナデイン']; // ★となりに 置く: ⚔こうげきの 一覧(19513〜)は 直書きの 積み上げで 参照できる 表が 無い(2026-08-29 §3-CA)
   const names=SPELL_LEARN.filter(sl=>sl[1]<=Game.p.lv&&NEW5.includes(sl[0])).map(sl=>sl[0]);
   await say('きたの おかの フクロウが はねを ひとふり、こえを とどけてきた——');
   if(names.length){
     await say('フクロ「そなたの なかに あたらしい じゅもんが めざめておるぞ——\n『'+names.join('』『')+'』じゃ。」');
-    await say('フクロ「たたかいで「じゅもん」を ひらけば、⚔こうげきと ✚かいふく・ほじょに\nくわわっておる。ためすが よい。」');
+    // ★2026-08-29(§3-CA): 発火は lv>=9＝その とき めざめているのは ルカニ 1本（補助）だけ。
+    //   ⚔こうげきに 入るのは ギガデイン(17)・ミナデイン(18) だけで、レベル9〜16 の 子が ⚔を 開いても 何も 無かった。
+    {const a=names.filter(x=>NEW5_ATK.includes(x)).length, b=names.length-a;
+     const where=(a&&b)?'⚔こうげきと ✚かいふく・ほじょに':(a?'⚔こうげきに':'✚かいふく・ほじょに');
+     await say('フクロ「たたかいで「じゅもん」を ひらけば、'+where+'\nくわわっておる。ためすが よい。」');}
   }
   await say('フクロ「あたらしい ぶきと よろいも、そうげん・ゆきのまち・ちそこの\nみせに ✦じるしで ならんでおる。」');
   await say('フクロ「なにを かうべきかは、きたの おかの わしが みたてて やろう。」'); // 2026-07-26: v1623で北東の丘へ移設済みなのに「ひろばの わし」と名乗っていた
@@ -10134,7 +10143,7 @@ async function gunshiTamesuRun(e){ // 行の 中身は 一枚のときと 同じ
     // ★2026-08-29(§3-BZ): 居場所を リテラルで 書いていたので 1しゅうめでも「まおうの しろ」と 言っていた
     //   （城の chaoslord は {ng:1}＝2しゅうめから）。giantMaps() で 実装から ひく。
     await say('フクロ「こころは かげの しまには おらぬ。'+giantMaps().join('・')+'の\nさまよう きょじんが まれに おとす——さいだい5つ、HPの うつわが 10 ずつ ふえる。」');
-    await say('フクロ「みっつ、かせぎ。🔥ふかみは すすむほど おかねが 2ばい、かげぬしからも おかねが はいる。\nただで きたえるなら 🎭ぶたいの けいこ——きずは のこらん。」'); // よる稼ぎは かんけつ後の そうげんに まものが 湧かない=この客には死に助言(2026-07-29棚卸し)
+    await say('フクロ「みっつ、かせぎ。🔥ふかみは すすむほど おかねが 2ばい、かげぬしからも おかねが はいる。\nただで ためすなら 🎭ぶたいの けいこ——きずは のこらん。」'); // よる稼ぎは かんけつ後の そうげんに まものが 湧かない=この客には死に助言(2026-07-29棚卸し)
     return;
   }
   if(e.kage){ // ななつへんげ: 台帳からも かげ狩りへ(推しと同じ入口)
@@ -19040,7 +19049,9 @@ async function runBattle(ref){
       await say('こども「……きかせて。 あなたの おはなし。\nわたし、かたりべだよ。ぜんぶ きくよ。」');
       await say('とじた ページが、かすかに ひらいた——！');
     }else{
-      await say('とじた ひょうしは かたく、つるぎが とおらない…！\n（かたりべの こえが あれば、ページは ひらくのだが——）');
+      // ★2026-08-29(§3-CA): physMul は 0.55＝55%は 通る。0倍の 相手には「とどかない」と 書き分けており、
+      //   同じ 戦いの 最初の 一撃で L19963 が「とおりにくい」と 言う（SPEC_katai_20260819 と 同じ型の 取りこぼし）。
+      await say('とじた ひょうしは かたく、つるぎが とおりにくい…！\n（かたりべの こえが あれば、ページは ひらくのだが——）');
     }
   }
   else if(foe===FOES.shioarashi){
@@ -19289,9 +19300,12 @@ async function jimeGate(){
     updateBars();
     for(const line of J.say)await say(line);
     if(bt.jimeP===4){ // はじまりを わすれる やみ=つかった 章じゅもんを ふうじる(はじまりのうたで もどせる)
-      bt.satoriUsed=true;bt.uketomeUsed=true;bt.minnaUsed=true;bt.kodamaUsed=true;bt.horaUsed=true;
+      // ★2026-08-29(§3-CA): 封じるのは この 表の 本数だけ（一回きりの 表 storySpellWhy は 10本・章じゅもんは 20本）。
+      //   もとの 文は「ぜんぶ」と 読める 書き方で 実装より 広かった＝数を 表から 出す（表を 増やせば 文も 動く）。
+      const JIME_SEAL=['satoriUsed','uketomeUsed','minnaUsed','kodamaUsed','horaUsed'];
+      for(const k of JIME_SEAL)bt[k]=true;
       bt.hajimariUsed=false;
-      await say('やみが ひろがり、これまでの 章じゅもんが\nひとつ ずつ、しずかに めを とじていく…！');
+      await say('やみが ひろがり、'+JIME_SEAL.length+'つの 章じゅもんが\nひとつ ずつ、しずかに めを とじていく…！');
     }
     await say('（'+J.tip+'）');
   }
@@ -21462,7 +21476,9 @@ async function finishEchoBattle(won){ // 章17: ぶたいの けいこあいて(
   restoreStageSnapshot(bt);
   await leaveBattle(false);
   startTalk();
-  if(won)await say('ざちょう「……みごとじゃ。17の ものがたりが、\nぜんぶ おぬしの ちからに なっとる。」');
+  // ★2026-08-29(§3-CA): 開幕 L18931 は 直書き17を 式へ 直したのに、この 結びを 取り残していた。
+  //   入口は「章17後は なんどでも」＝章20後に 呼ぶと 1回の 戦いで 開幕20・結び17 に なっていた。
+  if(won)await say('ざちょう「……みごとじゃ。'+CHAPTER_PROOF.filter(c=>hasChapterProof(c.no)).length+'の ものがたりが、\nぜんぶ おぬしの ちからに なっとる。」');
   else await say('ざちょう「なに、ぶたいの うえの こと。\nいつでも やりなおせるのが けいこじゃよ。」');
   endTalk();saveGame();
 }
@@ -30108,6 +30124,7 @@ async function ngNewGame(fromKing){
     door:Game.door,mkey:!!Game.mkey,cloak:Game.cloak,book:Game.book,talkOff:!!Game.talkOff,seen:JSON.parse(JSON.stringify(Game.seen||{})),
     zkomp:!!(Game.hidden&&Game.hidden.zkomp),ch3dEver:!!(Game.hidden&&(Game.hidden.ch3d||Game.hidden.ch3dEver)),
     fuchiEver:!!(Game.hidden&&(Game.hidden.towaDown||Game.hidden.fuchiEver)),slcatchEver:!!(Game.hidden&&(Game.hidden.slcatch||Game.hidden.slcatchEver)),wataseEver:!!(Game.hidden&&(Game.hidden.ch4b||Game.hidden.wataseEver)),ch4cEver:!!(Game.hidden&&(Game.hidden.ch4c||Game.hidden.ch4cEver)),ch5cEver:!!(Game.hidden&&(Game.hidden.ch5c||Game.hidden.ch5cEver)),ch6cEver:!!(Game.hidden&&(Game.hidden.ch6c||Game.hidden.ch6cEver)),ch7cEver:!!(Game.hidden&&(Game.hidden.ch7c||Game.hidden.ch7cEver)),ch8cEver:!!(Game.hidden&&(Game.hidden.ch8c||Game.hidden.ch8cEver)),ch9cEver:!!(Game.hidden&&(Game.hidden.ch9c||Game.hidden.ch9cEver)),ch10cEver:!!(Game.hidden&&(Game.hidden.ch10c||Game.hidden.ch10cEver)),ch11cEver:!!(Game.hidden&&(Game.hidden.ch11c||Game.hidden.ch11cEver)),meguriEver:!!(Game.hidden&&(Game.hidden.meguriDown||Game.hidden.meguriEver)),kataribeEver:!!(Game.hidden&&Game.hidden.kataribeEver),kakage:Game.kakage||'',nkW:Game.nkW||0,nkA:Game.nkA||0,bagMig:!!(Game.hidden&&Game.hidden.bagMig), // 称号と章の答えは周回で消えない(進行フラグ本体はリセット=再挑戦可)。bagMig=袋補填済み印(装備ごと持ち越すため)
+    shinYushaEver:!!(Game.hidden&&(Game.hidden.shinYusha||Game.hidden.shinYushaEver)), // ★2026-08-29(§3-CA): 旗は 立つのに どこからも 読まれず、しょうごうが 画面に 出ていなかった
     spotsRead:(Game.spotsRead||[]).slice(),ng:(Game.ng||0)+1};
   fadeColor('#070b1e');
   await fadeTo(1,0.8);
@@ -30119,7 +30136,7 @@ async function ngNewGame(fromKing){
   Game.door=keep.door;Game.mkey=keep.mkey;Game.cloak=keep.cloak;Game.book=keep.book;Game.talkOff=keep.talkOff;Game.seen=keep.seen;Game.spotsRead=keep.spotsRead;
   if(keep.zkomp)Game.hidden.zkomp=true;
   if(keep.ch3dEver)Game.hidden.ch3dEver=true; // 章3の こたえは 周回でも きえない(EDの ことばに かかる)
-  if(keep.fuchiEver)Game.hidden.fuchiEver=true;if(keep.slcatchEver)Game.hidden.slcatchEver=true;if(keep.wataseEver)Game.hidden.wataseEver=true;if(keep.ch4cEver)Game.hidden.ch4cEver=true;if(keep.ch5cEver)Game.hidden.ch5cEver=true;if(keep.ch6cEver)Game.hidden.ch6cEver=true;if(keep.ch7cEver)Game.hidden.ch7cEver=true;if(keep.ch8cEver)Game.hidden.ch8cEver=true;if(keep.ch9cEver)Game.hidden.ch9cEver=true;if(keep.ch10cEver)Game.hidden.ch10cEver=true;if(keep.ch11cEver)Game.hidden.ch11cEver=true;if(keep.meguriEver)Game.hidden.meguriEver=true;if(keep.kataribeEver)Game.hidden.kataribeEver=true;Game.kakage=keep.kakage||'';Game.nkW=keep.nkW||0;Game.nkA=keep.nkA||0;if(keep.bagMig)Game.hidden.bagMig=true;
+  if(keep.fuchiEver)Game.hidden.fuchiEver=true;if(keep.slcatchEver)Game.hidden.slcatchEver=true;if(keep.wataseEver)Game.hidden.wataseEver=true;if(keep.ch4cEver)Game.hidden.ch4cEver=true;if(keep.ch5cEver)Game.hidden.ch5cEver=true;if(keep.ch6cEver)Game.hidden.ch6cEver=true;if(keep.ch7cEver)Game.hidden.ch7cEver=true;if(keep.ch8cEver)Game.hidden.ch8cEver=true;if(keep.ch9cEver)Game.hidden.ch9cEver=true;if(keep.ch10cEver)Game.hidden.ch10cEver=true;if(keep.ch11cEver)Game.hidden.ch11cEver=true;if(keep.meguriEver)Game.hidden.meguriEver=true;if(keep.kataribeEver)Game.hidden.kataribeEver=true;if(keep.shinYushaEver)Game.hidden.shinYushaEver=true;Game.kakage=keep.kakage||'';Game.nkW=keep.nkW||0;Game.nkA=keep.nkA||0;if(keep.bagMig)Game.hidden.bagMig=true;
   Game.ng=keep.ng;
   const L=LEVELS[p.lv];p.mhp=L.hp+Game.bonusHp;p.mmp=L.mp+Game.bonusMp;recalcStats();p.hp=p.mhp;p.mp=p.mmp;
   updateBars();updateBadge();
