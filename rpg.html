@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260829_1510'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260829_1753'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -2454,7 +2454,7 @@ async function ch18Dawn(){
   await say('じゅうはちばんめの 蒼珠が ともった！\nさきに おぼえた「あしたをえらぶ」が、あたらしい あさの かぜに なった！');
   await awardIslandReward(18);
   await hoshiChainSay();await chapterExpBonus();
-  saveGame();toast('蒼珠 18 / 18　かぜまちじまの あさが はじまった');
+  saveGame();toast('蒼珠 18 / '+CHAPTER_PROOF.length+'　かぜまちじまの あさが はじまった');
 }
 const CH19_TIME={
  tokikasanedusk:{key:'ch19SeenDusk',name:'ゆうぐれ',icon:'🌇',note:'ルウは ぬれた よどりを とうへ。ハルは だれも のらない ふねを うみへ。'},
@@ -2531,7 +2531,7 @@ async function ch19Finish(){
   await say('じゅうくばんめの 蒼珠が ともった！\nさきに おぼえた「ときをつなぐ」が、あさの とけいの おとに なった！');
   await awardIslandReward(19);
   await hoshiChainSay();await chapterExpBonus();
-  saveGame();toast('蒼珠 19 / 19　ときかさねじまの あさが うごきだした');
+  saveGame();toast('蒼珠 19 / '+CHAPTER_PROOF.length+'　ときかさねじまの あさが うごきだした');
 }
 async function ch19TalkClock(){
   const h=Game.hidden;
@@ -2804,7 +2804,7 @@ async function ch20Finish(){
   await say('にじゅうばんめの 蒼珠が ともった！');
   await awardIslandReward(20);
   await hoshiChainSay();await chapterExpBonus();
-  toast('蒼珠 20 / 20　さいごの ふねまで');saveGame();
+  toast('蒼珠 20 / '+CHAPTER_PROOF.length+'　さいごの ふねまで');saveGame();
 }
 async function ch20TalkBoat(n){
   if(n.ch20Final&&Game.hidden.ch20d&&!Game.hidden.ch20c){await ch20Finish();return;}
@@ -6865,7 +6865,7 @@ function toggleCloak(){
 function toggleTalkOff(){
   if(Game.scene!=='field'||Game.talking||Game.battling||Game.transiting||Game.minigame)return;
   Game.talkOff=!Game.talkOff;sfxSel();updateTalkBtn();
-  toast(Game.talkOff?'はなしかけない モード。あるいても むらびとに はなしかけない（タップで えらべば はなせる）':'はなしかけ できるように もどした。');
+  toast(Game.talkOff?'はなしかけない モード。あるいても はなしかけない（めあての あいてと タップで えらんだ ときは はなす）':'はなしかけ できるように もどした。');
   saveGame();
 }
 (function(){ // たたかいの情報を タップで 畳む(SPEC_tatami_gold_20260809)。パネル自体がボタン=チップは 増やさない
@@ -7063,7 +7063,7 @@ async function talkTroupeLeader(){
     await say('いちざの はんけんを もらった。\nぶたいの みせで、おみやげを かえるように なった！');
     showChapter('だい 12 しょう','ものがたりは、だれの ものか');
     await chapterExpBonus();
-    toast('蒼珠 12 / 12　みんなのこえを おぼえた！');
+    toast('蒼珠 12 / '+CHAPTER_PROOF.length+'　みんなのこえを おぼえた！');
     endTalk();saveGame();return;
   }
   const copied=ch12CopiedTitle();
@@ -8419,7 +8419,7 @@ async function talkNpc(n){
       await say('じいさん「……いや。 そもそも、じゃ。\nすくわれたく ない ものは、すくえるのか のう。」');
       if(Game.cam){const q=isoCtr(n.x,n.y);puff(q.x,q.y-Game.cam.lift*0.2,'rgba(190,180,230,.9)',22,120,1.2,{up:true,s0:2,s1:4});}
       await say('あたらしい といが、しずかに むねに おちた。');
-      toast('もくてき：むらはずれの ひとかげに こえを かけて みよう');
+      toast('もくてき：むらはずれの ひとの こと、じいさんに そうだんしよう');
       endTalk();saveGame();return;
     }
     // 章5b: 助言『となりに おれ』(ch5aのあと一度きり)
@@ -11191,7 +11191,7 @@ function updateField(dt){
   if(!Game.hidden.spTold&&!Game.talking&&!Game.battling&&(Game.hidden.ch5c||Game.hidden.ch5cEver||Game.hidden.ch6c||Game.hidden.ch6cEver||Game.hidden.ch7c||Game.hidden.ch7cEver)){
     Game.hidden.spTold=true;toast('といの こたえが じゅもんに なった！ せんとうで「じゅもん」を ひらいて みよう');saveGame();}
   else if(!Game.hidden.ichiTold&&!Game.talking&&!Game.battling&&(Game.hidden.ch4c||Game.hidden.towaDown)){
-    Game.hidden.ichiTold=true;toast('ちそこの おくに「ほりびとの いち」が ひらいた…！ ほしの てつの そうびを あきなう らしい');saveGame();}
+    Game.hidden.ichiTold=true;toast('ちそこの おくに「ほりびとの いち」が ある…！ ほしの てつの そうびを あきなう らしい');saveGame();}
   if(Game.chCard){Game.chCard.t+=dt;if(Game.chCard.t>Game.chCard.dur)Game.chCard=null;}
   if(Game.mapId==='castle'&&Game.hidden.cleared&&!Game.hidden.cTip&&!Game.talking&&!Game.battling){
     Game.hidden.cTip=true;
