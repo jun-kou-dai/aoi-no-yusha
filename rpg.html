@@ -996,7 +996,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260830_1821'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260830_1904'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3587,7 +3587,7 @@ const HP_RECOVERY_ITEM_KEYS=['yakuso','iyakuso','tokusen','inochi'];
 // どうぐは「やくそう ×5」だけ だった。数は すべて playerAction の実装から(28+ri(0,6) など)。
 const ITEMUSE={yakuso:'HPが 28〜34 かいふく',iyakuso:'HPが 90〜110 かいふく',tokusen:'HPが 200〜240 かいふく',
   seisui:'MPが 14〜18 かいふく',dokukesi:'どくを なおす',inochi:'HPが ぜんぶ かいふく',hoshikake:'MPが ぜんぶ かいふく',
-  bakudan:'てきに 80（ボス・ぬしには 40・メタルには 1）',inazuma:'てきに 160（ボス・ぬしには 80・メタルには 1）'};
+  bakudan:'てきに 80（ボス・ぬし 40・メタル/きんスラ 1）',inazuma:'てきに 160（ボス・ぬし 80・メタル/きんスラ 1）'};
 // 章の結びが「蒼珠」と「物語呪文」へ同時につながる。珠は現行の章完了だけ、既存4呪文は従来の解禁条件をそのまま使う
 const CHAPTER_PROOF=[
   {no:1,title:'ひかりのたまを とりもどす',spell:'ひかりのさとり',id:'satori',cost:4,icon:'✦',desc:'いちばん とどきそうな こうげきを よそうする'},
