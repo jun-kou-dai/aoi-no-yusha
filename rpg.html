@@ -350,6 +350,15 @@ body{
 #ui-battle #mexit .mi{ margin-top:4px; } /* shop等の長メニュー：stretchを切りcmdwinのmax-height/overflowを効かせる(Safari対策) */
 /* 会話リストの見通し(2026-07-20 UI設計やり直し): 幅ひろげ(行折返し解消)+「▼つづく」ピル */
 @media (min-width:641px){ #ui-battle.talk #cmdwin{ width:min(440px,62vw); } }
+/* 会話の ask 窓は 横に ならぶ 版だと 画面の 右上に 来て、見出しの 1行目が 右上の🔊(#mute)の 絵の 下に 入る
+   (2026-08-30 §3-CH 実測: 930x1160 の E=11px／844x390 の E=19px・C=17px。真の 390x844 は 縦に ならぶので 0px)。
+   34px = #cmdwin の 内側の 右端 908 − #mute の 箱の 左端 876 = 32 に +2。絵だけでなく 当たり判定からも 外す。
+   左右 そろえるのは .mtitle が text-align:center だから(片側だけだと 見出しが 左へ ずれる)。
+   .talk で 絞るのは 戦いの #cmdwin が 🔊に 届かないから(実測: 上端 930で265・844で147／🔊は 12〜54)。
+   前例=.b-top{padding-right:48px}(L143「右上の🔊ボタンと…の重なり防止」)。 */
+@media (min-width:641px){ #ui-battle.talk .mtitle{ padding-left:34px; padding-right:34px;
+  word-break:keep-all; overflow-wrap:anywhere; } } /* ★せまくした ぶん、ことばの 途中で 割れた
+  (実測: 「か/たって」で 割れた)。#msgtext が 同じ ことを L197 で 解いている書き方に そろえる。 */
 #mscroll{ display:none; flex:none; gap:8px; padding:6px 2px 0; } /* ▲▼常設スクロールボタン(「スクロールボタンいるだろ」2026-07-20) */
 #mscroll.on{ display:flex; }
 #mscroll .msbtn{ flex:1; text-align:center; padding:17px 0; border-radius:12px; font-size:18px; font-weight:700; letter-spacing:.14em; color:#2a1c06; background:linear-gradient(180deg,#ffe9a8,#f0c96a); border:2px solid rgba(255,240,190,.95); box-shadow:0 2px 0 rgba(0,0,0,.35); cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:manipulation; } /* 指で押す前提の大きさへ(2026-07-26「ボタンをつけろと言っている」=小さくて一覧に紛れ、ボタンだと分からなかった) */
@@ -996,7 +1005,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260830_1949'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260830_2014'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
