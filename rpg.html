@@ -306,7 +306,13 @@ body{
   font-size:clamp(12px,2.0vmin,16px); line-height:1.7; color:#ffdf9e;
   text-align:center; white-space:pre-line; word-break:keep-all; overflow-wrap:anywhere; pointer-events:none;
   text-shadow:0 1px 4px rgba(10,12,40,.95), 0 2px 12px rgba(10,12,40,.85); }
-#ngask.on{ display:block; }
+/* ★2026-08-30(§3-CB): 板を よこ長だけで なく **どの 画面でも** 敷く。
+   もともと EDの せいせき・THE END の 字と 重なっていた（`arc/shots_ngkakage_20260830/2_kiku.jpg`＝修理前の 画面で
+   すでに「THE END」に かぶっている）。§3-CB で 文が 3行→4行に なり、せいせきの 行まで 届いた。
+   置き場は 変えない（ならびを 1px も 動かさない 掟）——うしろに 板を 敷いて 読めるように する。
+   ＝2026-08-22 `rireki/SPEC_ed_yoko_20260822.md` が よこ長で 採った 解を、そのまま 全サイズへ 広げる。 */
+#ngask.on{ display:block; background:rgba(6,10,28,.90); border:1px solid rgba(160,180,255,.22);
+  border-radius:10px; padding:8px 16px; width:min(94vw,620px); }
 /* ★よこ長（縦が みじかい）画面の ED: 3つの ボタンの うち 2つが 画面の そとへ 出て 押せなかった
    （2026-08-22 実測 844x303: btn-ng y=304 / btn-title2 y=370・はみ出し 121px・スクロールできる量 0px＝とどかない）。
    clamp の 下限に 全部 張りついていて vh/vmin では もう 縮まない＝ここで 明示の px で 詰める。
@@ -990,7 +996,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260830_0909'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260830_0917'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
