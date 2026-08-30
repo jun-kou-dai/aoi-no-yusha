@@ -996,7 +996,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260830_0917'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260830_1331'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -10173,9 +10173,18 @@ async function gunshiTamesuRun(e){ // 行の 中身は 一枚のときと 同じ
     if(!av.length){await say('フクロ「まだ ぬしを たおしておらぬ。\nまずは めの まえの たびじゃ。」');return;}
     const _kd=n=>!!Game.hidden['koe'+n.no];
     const _next=av.find(n=>!_kd(n));
+    // ★2026-08-30(§3-CB 発見4): 見出しが av(=ほどいた ぶんだけ)しか 見ておらず、1体でも「ななつの こえは すべて きいた」と
+    //   言い、章13〜19では ぜったいに 灯っていない ほしあかり(needKey:'uraTold')へ 送りだしていた。
+    //   同じ 窓の ボタンは tamesuList() が 正しく「（いま N/7）」と 出している=画面の 中で 食い違っていた。
+    //   母数は 兄弟(osusumeNow の こえ帯・戦闘直後の 通知)と 同じく koe旗で 数え、7は NUSHI_AGAIN の 表から ひく。
+    const _heard=NUSHI_AGAIN.filter(_kd).length;
     const head=_next
       ?'フクロ「つぎに きくべき こえは、章'+_next.no+'の '+String(_next.label).split(' ─ ')[0]+' じゃ。\nかちを しめせば、はじまりの ひとことを かたって くれる。」'
-      :'フクロ「ななつの こえは すべて きいた。\nはじまりの ほしあかりが、そなたを まっておる。」';
+      :_heard<NUSHI_AGAIN.length
+      ?'フクロ「こえは いま '+_heard+'／'+NUSHI_AGAIN.length+' じゃ。\nつぎの ぬしを ほどけば、また ひとこと ふえる。」'
+      :Game.hidden.uraTold
+      ?'フクロ「ななつの こえは すべて きいた。\nはじまりの ほしあかりが、そなたを まっておる。」'
+      :'フクロ「ななつの こえは すべて きいた。\nたびが かんけつ すれば、はじまりの ほしあかりが ともる。」';
     const p=await ask(av.map(n=>({id:n.id,label:(_kd(n)?'✓ ':(_next&&n.id===_next.id?'▶ ':''))+'章'+n.no+' '+n.label+(_kd(n)?'（きいた）':'')})).concat([{id:'no',label:'やめておく'}]),head);
     if(!p||p==='no')return;
     const n=NUSHI_AGAIN.find(x=>x.id===p);if(!n)return;
