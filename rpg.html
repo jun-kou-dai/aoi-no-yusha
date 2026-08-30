@@ -996,7 +996,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260830_1904'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260830_1949'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -19181,8 +19181,9 @@ async function runBattle(ref){
     if(Game.bt&&Game.bt.hp<=0){await victory();return;} // ついげきで たおした（ヴォルガは みちづれと構造上 非共存＝変身分岐 不要）
     {const afx=ARMORFX[Game.armorDef]||{}; // ひかりのよろい：ターンのおわりに しずかに 小かいふく
      if(afx.regen&&Game.p.hp>0&&Game.p.hp<Game.p.mhp&&Game.bt&&Game.bt.hp>0){
+       const rg0=Game.p.hp; // 満タン 手前で 名目値を 出さない(2026-08-30 §3-CG)。かいふくの 数字は かならず「実際に 入った ぶん」
        Game.p.hp=Math.min(Game.p.mhp,Game.p.hp+afx.regen);updateBars();
-       const rc=playerChipPos();popup(rc.x,rc.y,'+'+afx.regen,'heal');}}
+       const rc=playerChipPos();popup(rc.x,rc.y,'+'+(Game.p.hp-rg0),'heal');}}
   }
 }
 // みちづれ：かげの従者4種（じょうか数で解禁・つよさ画面で選択）
@@ -19943,7 +19944,7 @@ async function playerAction(act){
       else await say(bt.kuseStealVia==='cut'?'きりくちが なかばまで つながった——もう ひといき！':'ふくろが おおきく やぶれかけている——もう ひといき！');}
     if(bt.kuseEcho&&d>0&&p.hp>1){bt.kuseEcho=false;
       const reflE=Math.min(p.hp-1,Math.max(1,Math.round(d*0.4)));p.hp-=reflE;updateBars();
-      sfxHit();flash('#8fa8e8',0.3,0.5);const pcE=playerChipPos();popup(pcE.x,pcE.y,reflE);
+      sfxHit();flash('#8fa8e8',0.3,0.5);const pcE=playerChipPos();popup(pcE.x,pcE.y,reflE,'player'); // 勇者が 受けた 数字=うすい あか(2026-08-30 §3-CG。旧は 第4引数が 抜けて 敵に 与えた 数字と 同じ 白だった)
       await say('かまえた こだまが いちげきを うちかえした！\nゆうしゃに '+reflE+'の ダメージ！');}
     if(wfx.drain&&d>0&&p.hp>0&&p.hp<p.mhp){const dr=Math.min(p.mhp-p.hp,Math.max(1,Math.round(d*wfx.drain)));p.hp+=dr;updateBars();const dc=playerChipPos();popup(dc.x,dc.y,'+'+dr,'heal');} // ぶきの こせい：すいとり
     if(wfx.venom&&bt.hp>0&&!bt.foePoison&&!(bt.foe.boss||bt.foe.mboss)&&Math.random()<wfx.venom){bt.foePoison=true;flash('#b06ae8',0.2,0.4);await say(bt.foe.name+'は どくに おかされた！');} // ぶきの こせい：どく（ボス・ぬしには きかない。通常敵は勝利文の有無で除外しない）
