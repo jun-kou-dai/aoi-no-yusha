@@ -217,6 +217,10 @@ body{
   font-size:clamp(14px,2.3vmin,18px); letter-spacing:.1em; transition:background .12s; font-variant-numeric:tabular-nums; }
 .mi::before{ content:'▶'; color:#ffd97a; font-size:.72em; opacity:0; margin-right:10px; transition:opacity .1s; }
 .mi .mlabel{ flex:1; }
+/* メニューの 行も わかち書きの 区切りで 折る(2026-08-30 §3-CJ。先行=SPEC_orikaeshi_20260818 の 4器と 同じ 手)。
+   実測(真の390px): 「やまびこ/のたに」「ほらふき/じま」「わすれうたの/しま」「あつめのや/かた」＝13件 → 0件。
+   ★いままで 見えなかったのは --window-size だけでは 500px で 撮れていたから(§3-CI)。500px では 行が 短くて 折れない。 */
+.mi,.mi .mlabel{ word-break:keep-all; overflow-wrap:anywhere; }
 .mi .mcost{ font-size:.72em; color:#9fb0dd; letter-spacing:.04em; }
 .mi.cur{ background:rgba(255,217,122,.10); box-shadow:inset 0 0 0 1px rgba(255,217,122,.26), inset 0 0 14px rgba(255,217,122,.08); }
 .mi.cur::before{ opacity:1; }
@@ -1005,7 +1009,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260830_2014'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260830_2048'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
