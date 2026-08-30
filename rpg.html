@@ -990,7 +990,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260829_2247'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260830_0909'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -8639,7 +8639,9 @@ async function talkKing(){
       continue;
     }
     if(c==='ngp'){
-      const ok=await ask([{id:'no',label:'やめておく'},{id:'yes',label:'はじめる'}],'ものがたりの すすみ（しょうや クエスト）は ぜんぶ さいしょに もどる。つよさ・そうび・ずかん・しょうごうは のこる。よいか？');
+      // ★2026-08-30(§3-CB): レベルが 落ちる ことを 予告していなかった。ngNewGame の p.lv=Math.min(MAXLV,keep.lv) は
+      //   上限が 二段(18/25)に なる 前に 書かれた 1行で、かげ編後の 旅人だけ 黙って 7段 切られる。数は 実装から ひく。
+      const ok=await ask([{id:'no',label:'やめておく'},{id:'yes',label:'はじめる'}],'ものがたりの すすみ（しょうや クエスト）は ぜんぶ さいしょに もどる。\nそうび・おかね・ずかん・しょうごう・きたえた ちからは のこる。\nレベルだけは '+MAXLV+'に もどる（かげが ページを ひらけば また '+(LEVELS.length-1)+'まで のびる）。よいか？');
       if(ok!=='yes')continue;
       const ok2=await ask([{id:'no',label:'やっぱり やめる'},{id:'yes',label:'ほんとうに はじめる'}],'ほんとうに いいか？ いまの ぼうけんの つづきには もどれないぞ。');
       if(ok2!=='yes')continue;
@@ -30096,13 +30098,13 @@ function ngAskReset(){ // ラベルと 文を もどす（shown は さわらな
 function ngAskOpen(){
   ngAsk=true;
   const a=$('#ngask');
-  a.textContent='つよくて ニューゲーム\nものがたりの すすみは ぜんぶ さいしょに もどる。\nつよさ・そうび・ずかん・しょうごうは のこる。';
+  a.textContent='つよくて ニューゲーム\nものがたりの すすみは ぜんぶ さいしょに もどる。\nそうび・おかね・ずかん・しょうごう・きたえた ちからは のこる。\nレベルだけは '+MAXLV+'に もどる（かげが ページを ひらけば また '+(LEVELS.length-1)+'まで のびる）。' // ★2026-08-30(§3-CB): 王の 確認文と 同じ 予告に そろえる;
   a.classList.add('on');
   // ★浮かせて 置く＝ならびを 動かさない（offsetParent は position:absolute の #ui-ending）
   a.style.top=Math.max(4,$('#btn-cont').offsetTop-a.offsetHeight-10)+'px';
   $('#btn-cont').classList.remove('shown');           // opacity:0+pointer-events:none＝ならびは 動かない
   $('#btn-ng').textContent='やめておく';               // ★指が いま ある 場所＝安全側
-  $('#btn-title2').textContent='はい、つよさを もったまま はじめる'; // ★1行 下だけが 進む
+  $('#btn-title2').textContent='はい、そうびを もったまま はじめる'; // ★1行 下だけが 進む（2026-08-30 §3-CB: レベルは もどるので「つよさを もったまま」とは 言わない）
   sfxSel();
 }
 function ngAskClose(){
@@ -30125,6 +30127,13 @@ async function ngNewGame(fromKing){
     zkomp:!!(Game.hidden&&Game.hidden.zkomp),ch3dEver:!!(Game.hidden&&(Game.hidden.ch3d||Game.hidden.ch3dEver)),
     fuchiEver:!!(Game.hidden&&(Game.hidden.towaDown||Game.hidden.fuchiEver)),slcatchEver:!!(Game.hidden&&(Game.hidden.slcatch||Game.hidden.slcatchEver)),wataseEver:!!(Game.hidden&&(Game.hidden.ch4b||Game.hidden.wataseEver)),ch4cEver:!!(Game.hidden&&(Game.hidden.ch4c||Game.hidden.ch4cEver)),ch5cEver:!!(Game.hidden&&(Game.hidden.ch5c||Game.hidden.ch5cEver)),ch6cEver:!!(Game.hidden&&(Game.hidden.ch6c||Game.hidden.ch6cEver)),ch7cEver:!!(Game.hidden&&(Game.hidden.ch7c||Game.hidden.ch7cEver)),ch8cEver:!!(Game.hidden&&(Game.hidden.ch8c||Game.hidden.ch8cEver)),ch9cEver:!!(Game.hidden&&(Game.hidden.ch9c||Game.hidden.ch9cEver)),ch10cEver:!!(Game.hidden&&(Game.hidden.ch10c||Game.hidden.ch10cEver)),ch11cEver:!!(Game.hidden&&(Game.hidden.ch11c||Game.hidden.ch11cEver)),meguriEver:!!(Game.hidden&&(Game.hidden.meguriDown||Game.hidden.meguriEver)),kataribeEver:!!(Game.hidden&&Game.hidden.kataribeEver),kakage:Game.kakage||'',nkW:Game.nkW||0,nkA:Game.nkA||0,bagMig:!!(Game.hidden&&Game.hidden.bagMig), // 称号と章の答えは周回で消えない(進行フラグ本体はリセット=再挑戦可)。bagMig=袋補填済み印(装備ごと持ち越すため)
     shinYushaEver:!!(Game.hidden&&(Game.hidden.shinYusha||Game.hidden.shinYushaEver)), // ★2026-08-29(§3-CA): 旗は 立つのに どこからも 読まれず、しょうごうが 画面に 出ていなかった
+    // ★2026-08-30(§3-CB): しょうごう14本の うち この 1本だけ 旗が ここに 無く、周回で 消えていた。
+    //   そうび(ownW/ownA/shield/nkW/nkA)は 下で 復元するので、☰を 開いた 瞬間に gearBookCheck が 立て直し、
+    //   すでに 持っている しょうごうを「はじめて えた！」と もう一度 知らせていた（実測=SPEC_ngplus_yakusoku_20260830 §6）
+    gearHakaseEver:!!(Game.hidden&&Game.hidden.gearHakaseEver),gearHalfTold:!!(Game.hidden&&Game.hidden.gearHalfTold),
+    // ★2026-08-30(§3-CB): ずかんは 二つの 器。Game.seen(カードの 開閉)は 持ち越すのに、
+    //   よわいところの 記録は ここに 無く、resetGame で {} に 戻ったまま だった＝42体ぶんの ⚔🔥❄ が「?」へ
+    weakKnown:JSON.parse(JSON.stringify((Game.hidden&&Game.hidden.weakKnown)||{})),
     spotsRead:(Game.spotsRead||[]).slice(),ng:(Game.ng||0)+1};
   fadeColor('#070b1e');
   await fadeTo(1,0.8);
@@ -30136,7 +30145,7 @@ async function ngNewGame(fromKing){
   Game.door=keep.door;Game.mkey=keep.mkey;Game.cloak=keep.cloak;Game.book=keep.book;Game.talkOff=keep.talkOff;Game.seen=keep.seen;Game.spotsRead=keep.spotsRead;
   if(keep.zkomp)Game.hidden.zkomp=true;
   if(keep.ch3dEver)Game.hidden.ch3dEver=true; // 章3の こたえは 周回でも きえない(EDの ことばに かかる)
-  if(keep.fuchiEver)Game.hidden.fuchiEver=true;if(keep.slcatchEver)Game.hidden.slcatchEver=true;if(keep.wataseEver)Game.hidden.wataseEver=true;if(keep.ch4cEver)Game.hidden.ch4cEver=true;if(keep.ch5cEver)Game.hidden.ch5cEver=true;if(keep.ch6cEver)Game.hidden.ch6cEver=true;if(keep.ch7cEver)Game.hidden.ch7cEver=true;if(keep.ch8cEver)Game.hidden.ch8cEver=true;if(keep.ch9cEver)Game.hidden.ch9cEver=true;if(keep.ch10cEver)Game.hidden.ch10cEver=true;if(keep.ch11cEver)Game.hidden.ch11cEver=true;if(keep.meguriEver)Game.hidden.meguriEver=true;if(keep.kataribeEver)Game.hidden.kataribeEver=true;if(keep.shinYushaEver)Game.hidden.shinYushaEver=true;Game.kakage=keep.kakage||'';Game.nkW=keep.nkW||0;Game.nkA=keep.nkA||0;if(keep.bagMig)Game.hidden.bagMig=true;
+  if(keep.fuchiEver)Game.hidden.fuchiEver=true;if(keep.slcatchEver)Game.hidden.slcatchEver=true;if(keep.wataseEver)Game.hidden.wataseEver=true;if(keep.ch4cEver)Game.hidden.ch4cEver=true;if(keep.ch5cEver)Game.hidden.ch5cEver=true;if(keep.ch6cEver)Game.hidden.ch6cEver=true;if(keep.ch7cEver)Game.hidden.ch7cEver=true;if(keep.ch8cEver)Game.hidden.ch8cEver=true;if(keep.ch9cEver)Game.hidden.ch9cEver=true;if(keep.ch10cEver)Game.hidden.ch10cEver=true;if(keep.ch11cEver)Game.hidden.ch11cEver=true;if(keep.meguriEver)Game.hidden.meguriEver=true;if(keep.kataribeEver)Game.hidden.kataribeEver=true;if(keep.shinYushaEver)Game.hidden.shinYushaEver=true;if(keep.gearHakaseEver)Game.hidden.gearHakaseEver=true;if(keep.gearHalfTold)Game.hidden.gearHalfTold=true;Game.hidden.weakKnown=keep.weakKnown;Game.kakage=keep.kakage||'';Game.nkW=keep.nkW||0;Game.nkA=keep.nkA||0;if(keep.bagMig)Game.hidden.bagMig=true;
   Game.ng=keep.ng;
   const L=LEVELS[p.lv];p.mhp=L.hp+Game.bonusHp;p.mmp=L.mp+Game.bonusMp;recalcStats();p.hp=p.mhp;p.mp=p.mmp;
   updateBars();updateBadge();
