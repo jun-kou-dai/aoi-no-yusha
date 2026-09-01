@@ -330,6 +330,18 @@ body{
   #ui-ending #estats, #ui-ending #estats2{ font-size:11px; line-height:1.5; letter-spacing:.06em; }
   #ui-ending #eend{ font-size:11px; }
   #ui-ending .btn{ padding:9px 28px; }   /* たて 54px→44px。**44px より 下げない**＝指の あたる 大きさの 下限 */
+  /* 冊えらび中だけ 紋章と 題字を 小さくする。よこ長 844x390 では そのままだと「もどる」が 54px中 5px しか 見えず、
+     しかも showSlots() が 他の 戻り道(▶つづきから/はじめる/じゅもん/hint)を 全部 隠す＝画面から 戻る 手が 無くなる。
+     ★transform:scale では 直せない——#logo-wrap は lfloat の アニメで transform を 使っており、
+     アニメが 静的な transform を 上書きする(実測: 縮まず、題字が 冊の ボタンの 裏へ 回っただけ)。
+     ＝絵の 大きさそのものを 縮める(浮かぶ 動きは そのまま)。
+     ★ふだんの タイトルは 一字も 変えない＝.slotting の ときだけ。ボタンの 高さも 54/50px の まま。
+     正本=SPEC_yokonaga_deguchi_20260901 */
+  #ui-title.slotting{ gap:8px; }
+  #ui-title.slotting #emblem{ width:56px; }
+  #ui-title.slotting h1{ font-size:30px; }
+  #ui-title.slotting #sub-title{ display:none; }
+  #ui-title.slotting #slotwin{ gap:8px; }
   /* ここから 先を 削ると 押しにくくなる。足りない ぶんは 上の overflow-y:auto（スクロール）が 受ける */
   /* ★よこ長では 文が ボタンの すぐ上に 浮くので せいせきの 字と 重なる。
      「ものがたりの すすみは ぜんぶ さいしょに もどる」は 取り返しの つかない 操作の 警告＝読めないと 意味が ない。
@@ -822,6 +834,10 @@ body{
   #mface{ width:40px; height:40px; border-radius:9px; }
   #cmdwin{ width:min(260px,46vw); max-height:68vh; max-height:68dvh; padding:6px 7px 8px; }
   .mi{ padding:5px 9px; }
+  /* よこ長: ▲▼が 71px も 食うと 上の クランプで 一覧が 2行に 減る。53px まで 詰めて 3行を 保つ。
+     **44px（指の あたる 大きさの 下限・#ui-ending L332 の 裁定）は 割らない。** */
+  #mscroll{ padding:3px 2px 0; }
+  #mscroll .msbtn{ padding:11px 0; font-size:16px; }
 }
 </style>
 </head>
@@ -1009,7 +1025,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260901_1804'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260901_1950'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -6331,7 +6347,17 @@ function ask(items,title){
         // 2026-07-29: ▲▼のぶん(48px)を いつも 先に よけていたので、**ぜんぶ入るリストでも
         // 1行だけ はみ出して 隠れていた**(たたかいの「ぼうぎょ」が 常に 画面の外＝
         // 子どもは その手に 気づけない)。入るなら ▲▼は いらない＝1行も 隠さない。
-        mlistEl.style.maxHeight=Math.max(96,(mlistEl.scrollHeight<=room?room:room-48))+'px';};
+        mlistEl.style.maxHeight=Math.max(96,(mlistEl.scrollHeight<=room?room:room-48))+'px';
+        // 2026-09-01: 上の 下限96px は 空きより 大きい ことが ある(よこ長 844x390 で 実測=窓が 12px はみ出す)。
+        //   すると 出口の 行(にげる/もどる)が 画面の 下で 切れる。▲▼が 送るのは #mlist だけ＝出口は 1pxも 動かない。
+        //   ★但し書き「窓が画面から下へはみ出さない」を **窓の 底を 実測して** 守る(SPEC_yokonaga_deguchi_20260901)。
+        for(let k=0;k<4;k++){
+          const over=cmdwinEl.getBoundingClientRect().bottom-innerHeight;
+          if(over<=0)break;
+          const cur=parseFloat(mlistEl.style.maxHeight)||mlistEl.clientHeight;
+          const row=mlistEl.firstElementChild?mlistEl.firstElementChild.getBoundingClientRect().height:31;
+          mlistEl.style.maxHeight=Math.max(row,cur-over-2)+'px';
+        }};
       const upd=()=>{const over=mlistEl.scrollHeight-mlistEl.clientHeight>0;ms.classList.toggle('on',over); // 1pxでもはみ出せば出す(旧:14px超のときだけ=わずかに切れている幅でボタンが出ず、動かす手段が無くなった)
         mu.classList.toggle('dim',mlistEl.scrollTop<=4);
         md.classList.toggle('dim',mlistEl.scrollHeight-mlistEl.clientHeight-mlistEl.scrollTop<=4);};
@@ -30279,6 +30305,7 @@ function updateTitleButtons(){
    $('#title-ver').textContent=v?('はん: '+v):(location.protocol==='file:'?'はん: ローカル・さいしゅうしょうばん':'はん: ふめい（ふるい いりぐち。トップの みじかいURLから ひらくと つねに さいしん）');}
   autoLatest();
   $('#slotwin').style.display='none';
+  $('#ui-title').classList.remove('slotting'); // よこ長の 冊えらび用の 縮みを もどす
   $('#title-release').style.display='';
   $('#title-hint').style.display='';
   const has=hasAnySave();
@@ -30326,6 +30353,7 @@ function showSlots(mode){
   slotMode=mode;slotAsk=0;
   renderSlots(); // 見出しも renderSlots が 出す(きいている あいだは 別の 文に なる)
   $('#slotwin').style.display='flex';
+  $('#ui-title').classList.add('slotting'); // よこ長(高さ460px以下)では ロゴを 縮めて「もどる」を 画面に 入れる
   $('#title-release').style.display='none'; // 320px帯では冊一覧へ譲り、ロゴとの重なりを防ぐ
   $('#btn-continue').style.display='none';
   $('#btn-start').style.display='none';
