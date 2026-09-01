@@ -1009,7 +1009,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260831_2243'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260901_1804'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -10301,8 +10301,8 @@ async function forgeRun(atSea){
   while(true){
     const wr=FW[Game.weaponAtk],ar=FA[Game.armorDef];
     const list=[];
-    if(wr)list.push({id:'w',label:'⚔ '+(WNAME[Game.weaponAtk]||'')+'→＋'+(wr[0]===88?1:wr[0]===94?2:3)+'　'+wr[1]+'G・てつ'+wr[2],dis:Game.gold<wr[1]||(Game.items.hoshitetsu||0)<wr[2]});
-    if(ar)list.push({id:'a',label:'🛡 '+(ANAME[Game.armorDef]||'')+'→＋'+(ar[0]===66?1:ar[0]===72?2:3)+'　'+ar[1]+'G・てつ'+ar[2],dis:Game.gold<ar[1]||(Game.items.hoshitetsu||0)<ar[2]});
+    if(wr)list.push({id:'w',label:'⚔ '+(WNAME[Game.weaponAtk]||'')+'→＋'+(wr[0]-Game.weaponAtk)+'　'+wr[1]+'G・てつ'+wr[2],dis:Game.gold<wr[1]||(Game.items.hoshitetsu||0)<wr[2]});
+    if(ar)list.push({id:'a',label:'🛡 '+(ANAME[Game.armorDef]||'')+'→＋'+(ar[0]-Game.armorDef)+'　'+ar[1]+'G・てつ'+ar[2],dis:Game.gold<ar[1]||(Game.items.hoshitetsu||0)<ar[2]});
     // 2026-07-26: かじは ⚔100/🛡78 で 打ち止めで、第3部の旅人には ほしのてつの つかい道が
     // 「250Gで売る」しか なかった。たね を うちだす道を 常設にする＝レベル上限に とどいた
     // あとも のびる 三つ(たね・金・きょじんのこころ)の うち 二つが 手に入る。
