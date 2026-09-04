@@ -1025,7 +1025,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260904_1959'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260904_2123'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -22716,13 +22716,46 @@ function edImg(fin){
   const im=ED_ART[k];
   return (im.complete&&im.naturalWidth>0)?im:null;
 }
+// ★2026-09-04(SPEC_maku_omosa_20260904): 幕(プロローグ・結末)の 一枚絵も 毎コマ high で 引きのばしていた。
+//   実ループの 実測＝かさね 15.5ms／1枚 8.2ms／結末 8.4ms。戦い(bgArtDraw・角度39)と 同じ 形に 直す
+//   ＝下絵を **入るときの 1回だけ** 作り、実画素 1:1 で 貼る。作り方は もとと 同じ high＝**見た目は 変えない**。
+//   かさねは 2枚 同時に 出るので **2枚まで** 持ち、幕を 出た コマで 捨てる(iPad の 画布メモリ)。
+const ART_SCALED={a:null,b:null};                      // {key,cv} を 新しい 順に 2つまで
+function artScaled(im,w,h){                            // w,h＝実画素
+  const key=im.src+'|'+w+'x'+h;
+  if(ART_SCALED.a&&ART_SCALED.a.key===key)return ART_SCALED.a.cv;
+  if(ART_SCALED.b&&ART_SCALED.b.key===key){            // かさねは 2枚を 交互に 引く＝入れ替えるだけ
+    const t=ART_SCALED.a;ART_SCALED.a=ART_SCALED.b;ART_SCALED.b=t;return ART_SCALED.a.cv;
+  }
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const q=c.getContext('2d');
+  q.imageSmoothingEnabled=true;q.imageSmoothingQuality='high'; // もとと 同じ 補間で 1回だけ
+  q.drawImage(im,0,0,w,h);
+  ART_SCALED.b=ART_SCALED.a;ART_SCALED.a={key:key,cv:c};       // 古い 3枚目は 捨てる
+  return c;
+}
+function artScaledFree(){ART_SCALED.a=null;ART_SCALED.b=null;} // 幕を 出たら 手ばなす
 function artCover(im,a){ // 画面を うめ、はみ出しは 中央で 切る
   const sc=Math.max(W/im.naturalWidth,H/im.naturalHeight);
   const dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;
-  if(a<1){ctx.save();ctx.globalAlpha=a;}
-  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  ctx.drawImage(im,(W-dw)/2,(H-dh)/2,dw,dh);
-  if(a<1)ctx.restore();
+  const m=ctx.getTransform?ctx.getTransform():null;
+  if(!m){                                              // getTransform が 無い ブラウザは 元の 道(見た目 優先)
+    if(a<1){ctx.save();ctx.globalAlpha=a;}
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    ctx.drawImage(im,(W-dw)/2,(H-dh)/2,dw,dh);
+    if(a<1)ctx.restore();
+    return;
+  }
+  const S=cv.width/W;                                  // 目もり → 実画素
+  const w=Math.max(1,Math.round(dw*S)),h=Math.max(1,Math.round(dh*S));
+  const c=artScaled(im,w,h);
+  ctx.save();
+  // ★実画素 1:1 で 貼る＝拡縮が 起きない＝下絵を 作った ときの high の 絵が そのまま 出る。
+  ctx.setTransform(1,0,0,1,Math.round(m.e),Math.round(m.f));
+  ctx.imageSmoothingEnabled=false;
+  if(a<1)ctx.globalAlpha=a;                            // かさねの 濃さは いままでと 同じ
+  ctx.drawImage(c,Math.round((W-dw)/2*S),Math.round((H-dh)/2*S));
+  ctx.restore();
 }
 function prArtDraw(t){
   const F=0.8,T1=3.4,T2=7.0;
@@ -30509,6 +30542,7 @@ function loopBody(ts){
   else if(Game.scene==='battle')drawBattleScene();
   else if(Game.scene==='ending')drawEndingScene();
   else if(Game.scene==='prologue')drawPrologueScene();
+  if(ART_SCALED.a&&Game.scene!=='prologue'&&Game.scene!=='ending')artScaledFree(); // 幕の 下絵は 幕の あいだだけ 持つ
   if(Game.minigame&&Game.minigame.kind==='ch20')drawCh20Sea(dt); // こえのわたり(海峡シーン)
   drawGrade();
   requestAnimationFrame(loop);
