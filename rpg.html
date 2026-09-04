@@ -1025,7 +1025,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260901_1950'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260904_1959'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -22746,15 +22746,44 @@ function prNarration(t){ // ナレーション2まい＋スキップあんない
 function bgArtWarm(){ // 場所に 入った ときに 先に 読む(戦いの 最初の 一瞬で 差しかわらない ように)
   try{const th=battleTheme({night:false});if(th&&th.art)bgArtImg(th);}catch(e){}
 }
+// ★2026-09-04(SPEC_koma_omosa_20260904): 引きのばしは 入るときの 1回だけ にする。
+//   もとは 毎コマ 1672x941 を 2839x1598 へ high で 引きのばしていた
+//   ＝戦いの 1コマ 8.2ms → 52.7ms(約19fps・実測)。絵を 切ると 8.8ms に 戻る＝犯人は ここ 1行。
+//   下絵は **1枚だけ** 持つ(1枚 約18MB。31枚 ぜんぶ 持つと 560MB＝iPad が 落ちる)。
+//   作り方は もとと 同じ high の 引きのばし＝**見た目は 変えない**。
+const BG_SCALED={key:'',cv:null,w:0,h:0};
+function bgScaled(im,w,h){                             // w,h＝実画素。1枚だけ 持つ
+  const key=im.src+'|'+w+'x'+h;
+  if(BG_SCALED.key===key&&BG_SCALED.cv)return BG_SCALED.cv;
+  let c=BG_SCALED.cv;
+  if(!c){c=document.createElement('canvas');BG_SCALED.cv=c;}  // 入れものは 1枚を 使いまわす
+  c.width=w;c.height=h;                                        // 大きさを 変えると 中身は 消える
+  const q=c.getContext('2d');
+  q.imageSmoothingEnabled=true;q.imageSmoothingQuality='high'; // もとと 同じ 補間で 1回だけ
+  q.drawImage(im,0,0,w,h);
+  BG_SCALED.key=key;BG_SCALED.w=w;BG_SCALED.h=h;
+  return c;
+}
 function bgArtDraw(im,gt){
-  // ★iPad は canvas が 実2680x1580(dpr2)。絵は 1672x941 なので **1.68倍に 引きのばす**。
-  //   拡大の 補間を 既定(low)の ままに すると 目に みえて ぼやける ので high を 指定する。
-  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   const sc=Math.max(W/im.naturalWidth,H/im.naturalHeight); // cover=画面を うめ、はみ出しは 切る
   const dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;
   let y=gt-dh*0.50;                    // 絵の 50%(床の線)を ゲームの 地面の 線に あわせる
   y=Math.min(0,Math.max(H-dh,y));      // 画面の 外に すきまを 作らない
-  ctx.drawImage(im,(W-dw)/2,y,dw,dh);
+  const m=ctx.getTransform?ctx.getTransform():null;
+  if(!m){                              // getTransform が 無い ブラウザは 元の 道(見た目 優先)
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    ctx.drawImage(im,(W-dw)/2,y,dw,dh);return;
+  }
+  const S=cv.width/W;                                        // 目もり → 実画素
+  const w=Math.max(1,Math.round(dw*S)),h=Math.max(1,Math.round(dh*S));
+  const c=bgScaled(im,w,h);
+  ctx.save();
+  // ★実画素 1:1 で 貼る＝拡縮が 起きない＝下絵を 作った ときの high の 絵が そのまま 出る。
+  //   ゆれ(shake)は m.e/m.f に 入っているので 平行移動だけ 引きついで、拡大だけ 外す。
+  ctx.setTransform(1,0,0,1,Math.round(m.e),Math.round(m.f));
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(c,Math.round((W-dw)/2*S),Math.round(y*S));
+  ctx.restore();
 }
 function bgR(j){const h=Math.sin(j*12.9898+78.233)*43758.5453;return h-Math.floor(h);} // jの関数＝流してもつなぎ目が出ない
 function bgA(col,a){return mix(col,'#ffffff',0).replace('rgb(','rgba(').replace(')',','+a+')');} // 使わないが対称のため
