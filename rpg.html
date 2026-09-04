@@ -1025,7 +1025,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260905_0434'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260905_0458'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3658,6 +3658,11 @@ function hasStorySpell(no){
   return hasChapterProof(no);
 }
 function storySpellById(id){return CHAPTER_PROOF.find(x=>x.id===id);}
+// ★2026-09-05(SPEC_bun_no_uso_20260905 §8): 持続の 上限と「きかない 相手」の **正本**。
+//   効きの 側と menu の 門の 両方が ここを 読む＝数字を 2箇所に 書かない(memory measure-must-not-copy-implementation)。
+const STORY_HOLD={mamori:3,nagiuta:3};                 // とわのまもり・ナギのうた の 持続 回数
+const yobigoeCap=f=>((f&&(f.boss||f.mboss))?1:2);      // ソラのよびごえ の 足止め 上限(ボスは 1)
+const rarihoNoEffect=f=>!!(f&&(f.boss||f.mboss||f.giant||f.winMsg)); // ラリホーが 100% きかない 相手
 // つかえない わけ(2026-07-29): たたかいの メニューで 灰色の行に 理由を出すため。
 // storySpellDisabled は これを そのまま 使う＝「つかえない」と「その わけ」が ぜったいに 食い違わない。
 function storySpellWhy(s){
@@ -3673,6 +3678,11 @@ function storySpellWhy(s){
   if(s.id==='watashi'&&bt&&bt.watashiEcho)return 'いま きいている';
   if(s.id==='hiraku'&&bt&&bt.hirakuOn)return 'いま きいている';
   if(s.id==='kodama'&&bt&&bt.kodamaOn)return 'いま きいている';
+  // ★2026-09-05 §8: 効きめが 満タンの まま 唱え直すと MP だけ 減っていた 3本(C21)。
+  //   のこり1〜2回の 掛け直しは 残す＝**満タンの ときだけ** ことわる。
+  if(s.id==='mamori'&&bt&&(bt.guardT||0)>=STORY_HOLD.mamori)return 'いま きいている';
+  if(s.id==='yobigoe'&&bt&&(bt.foeBind||0)>=yobigoeCap(bt.foe))return 'いま きいている';
+  if(s.id==='nagiuta'&&bt&&bt.foeAtkDown&&(bt.foeAtkDown.t||0)>=STORY_HOLD.nagiuta)return 'いま きいている';
   const used={satori:'satoriUsed',uketome:'uketomeUsed',minnanokoe:'minnaUsed',kodama:'kodamaUsed',
     horagai:'horaUsed',hajimari:'hajimariUsed',minmono:'minmonoUsed',
     ashita:'ashitaUsed',toki:'tokiUsed',koemawasu:'ch20Used'}[s.id];
@@ -19646,6 +19656,8 @@ async function commandPhase(){
       if(p.mp<cost){await say('MPが たりない！');continue;}
       if((s==='hoimi'||s==='behoimi'||s==='behoma')&&p.hp>=p.mhp){await say('HPは まんたんだ！');continue;}
       if(s==='kiari'&&!Game.p.poison){await say('どくに かかっていない！');continue;}
+      // ★2026-09-05 §8(C20): 100% きかない 相手にも 8MP を 先に 取っていた。HPまんたんの ホイミと 同じ形で ことわる。
+      if(s==='rariho'&&Game.bt&&rarihoNoEffect(Game.bt.foe)){await say(Game.bt.foe.name+'には きかない！');continue;}
       return{kind:s};
     }
     const have=USABLE_ITEM_KEYS.filter(k=>(Game.items[k]||0)>0);
@@ -20347,7 +20359,7 @@ async function playerAction(act){
     await wait(0.12);
     bt.cast=null;
     flash('#e8b0ff',0.3,0.6);sfxHeal();
-    if(bt.foe.boss||bt.foe.mboss||bt.foe.giant||bt.foe.winMsg){await say(bt.foe.name+'には きかない！');}
+    if(rarihoNoEffect(bt.foe)){await say(bt.foe.name+'には きかない！');}
     else if(Math.random()<0.65){bt.foeSleep=2;popup(ep.x,ep.y-ep.s*70,'ねむり','sp');await say(bt.foe.name+'は すやすやと ねむって しまった！');}
     else await say(bt.foe.name+'は ねむらない！');
   }else if(act.kind==='item'){
@@ -20592,7 +20604,7 @@ async function playerAction(act){
   }else if(act.kind==='mamori'){
     p.mp-=10;updateBars();
     await say('ゆうしゃは とわのまもりを となえた！');
-    sfxHeal();bt.guardT=3;
+    sfxHeal();bt.guardT=STORY_HOLD.mamori;
     flash('#9fc8ff',0.3,0.7);
     {const c=playerChipPos();
      popup(c.x,c.y,'まもり','heal');
@@ -20605,7 +20617,7 @@ async function playerAction(act){
     sfxGira();
     flash('#cfe0f2',0.35,0.7);shakeBattle(8,0.35);
     {const epq=enemyPos();puff(epq.x,epq.y-epq.s*40,'rgba(207,224,242,.95)',30,220,0.9,{s0:2,s1:6});}
-    bt.foeBind=Math.max(bt.foeBind||0,(bt.foe.boss||bt.foe.mboss)?1:2);
+    bt.foeBind=Math.max(bt.foeBind||0,yobigoeCap(bt.foe));
     await wait(0.15);
     await say('よばれた なが こだまする——\n'+bt.foe.name+'は うごきを とめた！');
   }else if(act.kind==='nagiuta'){
@@ -20614,7 +20626,7 @@ async function playerAction(act){
     sfxHeal();
     flash('#d8c8f0',0.3,0.7);
     {const epq=enemyPos();puff(epq.x,epq.y-epq.s*40,'rgba(216,200,240,.9)',26,180,1.0,{s0:2,s1:5});}
-    bt.foeAtkDown={mul:0.7,t:3};
+    bt.foeAtkDown={mul:0.7,t:STORY_HOLD.nagiuta};
     await wait(0.15);
     await say('なぎの しらべが うみのように ひろがる——\n'+bt.foe.name+'の こうげきが よわまった！（3かい・3わりげん）');
   }else if(act.kind==='monogatari'){
