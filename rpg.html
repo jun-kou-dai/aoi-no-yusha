@@ -832,7 +832,10 @@ body{
   .b-bottom{ gap:8px; }
   #msgwin{ min-height:50px; padding:8px 12px; gap:8px; font-size:clamp(12px,2.2vmin,15px); line-height:1.45; }
   #mface{ width:40px; height:40px; border-radius:9px; }
-  #cmdwin{ width:min(260px,46vw); max-height:68vh; max-height:68dvh; padding:6px 7px 8px; }
+  /* ★2026-09-05(SPEC_bun_no_uso_20260905 §9・C27): 260px だと 行が 折り返して 115px に なり、
+     一覧の 見える 高さ 121px に 2行＋半分しか 入らず **3行目が ▲▼帯の 手前で 半分に なる**。
+     320px にすると 折り返しが 減り いちばん 高い 行が 94px＝**3行が 切れずに 読める**（実測 A/B）。 */
+  #cmdwin{ width:min(320px,46vw); max-height:68vh; max-height:68dvh; padding:6px 7px 8px; }
   .mi{ padding:5px 9px; }
   /* よこ長: ▲▼が 71px も 食うと 上の クランプで 一覧が 2行に 減る。53px まで 詰めて 3行を 保つ。
      **44px（指の あたる 大きさの 下限・#ui-ending L332 の 裁定）は 割らない。** */
@@ -1025,7 +1028,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260905_0458'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260905_0516'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
