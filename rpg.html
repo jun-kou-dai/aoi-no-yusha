@@ -1025,7 +1025,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260905_0411'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260905_0434'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -8564,6 +8564,9 @@ function pickNpcLinesBase(n){
     'こども「……ねえ。 もし あえたら、あの ことばを\nきかせて あげて。 『わたしても、へらない』って！」'];
   // 2026-07-26: さいしゅうしょう かんけつ後も 旧章の台詞を くりかえす人が 村に のこっていた。
   //   既存の行は 消さず、いちばん上に「旅の むすび」の さしかえを 足す。
+  // ★2026-09-05: よみもの全読了(53枚)の ことばは、章の さしかえ(msgCh4/5/6…)に 負けて **永久に 届かなかった**
+  //   ＝じいさんは 退場していない。順番だけの 話だった(SPEC_bun_no_uso_20260905 §7)。いちばん 上へ 移す。
+  if(n.msgKataribe&&(Game.spotsRead||[]).length>=spotTotal())return n.msgKataribe; // よみもの全読了の かたりべへ
   if(n.msgFinal&&Game.hidden.ch21c)return n.msgFinal;
   if(n.msgCh11&&Game.hidden.ch11c)return n.msgCh11; // 章11(うみ)後の さしかえ台詞
   if(n.msgCh10&&Game.hidden.ch10c)return n.msgCh10; // 章10(なかま)後の さしかえ台詞
@@ -8575,7 +8578,6 @@ function pickNpcLinesBase(n){
   if(n.msgCh4&&Game.hidden.ch4c)return n.msgCh4; // 章4(ぎしき)後の さしかえ台詞
   if(n.msgAnswered&&Game.hidden.ch3d)return n.msgAnswered; // 章3かんけつ後の さしかえ台詞
   if(n.msgHeir&&Game.hidden.ch3m)return n.msgHeir; // 章3ミニ後の さしかえ台詞
-  if(n.msgKataribe&&(Game.spotsRead||[]).length>=spotTotal())return n.msgKataribe; // よみもの全読了の かたりべへ
   if(n.msgCleared&&Game.hidden.cleared)return n.msgCleared; // クリア後=よあけの くに
   if(n.msgRescued&&Game.hidden.k3)return n.msgRescued; // 救出後は てがかりを 語る
   if(n.msgNight&&n.msgNight.length&&isNightNow())return n.msgNight;
