@@ -1028,7 +1028,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260905_0516'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260905_1321'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -20734,7 +20734,7 @@ async function enemyAction(){
   // なきかげの こえ：てきは 1ターン うごけない
   if(bt.foeBind>0){
     bt.foeBind--;
-    await say(foe.name+'は こえに とらわれて うごけない！');
+    await say(foe.name+'は こえに とらわれて うごけない！'+(bt.charge?'\n（ためは まだ ほどけていない…！）':'')); // ★ためは 持ち越す（ぬいとめ だけが ほどく）＝その旨を 文で 出す（SPEC_tame_matagi_20260905）
     return;
   }
   // まだらのやいば：どくは まいターン さいだいHPの6%（とどめも あり＝ループの bt.hp<=0 判定に のる）
@@ -20748,7 +20748,7 @@ async function enemyAction(){
   // ラリホー：ねむりの あいだ てきは うごけない
   if(bt.foeSleep>0){
     bt.foeSleep--;
-    await say(foe.name+'は すやすや ねむっている…');
+    await say(foe.name+'は すやすや ねむっている…'+(bt.charge?'\n（ためは まだ ほどけていない…！）':'')); // ★同上
     return;
   }
   if(foe===FOES.sukuwarenu){
@@ -20807,7 +20807,7 @@ async function enemyAction(){
     return;
   }
   // ぼうぎょくずし：きしけいは よろいの まもりを ゆるめてくる
-  if((foe===FOES.gskel||foe===FOES.kagekishi||foe===FOES.bonewarden||foe===FOES.icewarden)&&!(bt.abreak>0)&&bt.turn>=2&&Math.random()<0.22){
+  if((foe===FOES.gskel||foe===FOES.kagekishi||foe===FOES.bonewarden||foe===FOES.icewarden)&&!(bt.abreak>0)&&!bt.charge&&bt.turn>=2&&Math.random()<0.22){ // ★!bt.charge: ばんへい・きょへい は ためを 持つ（SPEC_tame_matagi_20260905）
     bt.abreak=3;
     sfxSlash();flash('#d8a24a',0.3,0.5);shakeBattle(8,0.35);
     const cq=playerChipPos();
@@ -20916,7 +20916,7 @@ async function enemyAction(){
   }
   }
   // まどうし系：ようすを みている（ターンスキップ＝ゆらぎ）
-  if(foe.watch&&Math.random()<0.18){
+  if(foe.watch&&!bt.charge&&Math.random()<0.18){ // ★ため中は 出さない＝予告の 翌手番に 大技が 来る 契約（SPEC_tame_matagi_20260905・C13）
     await say(foe.name+'は ようすを みている。');
     return;
   }
@@ -21014,6 +21014,8 @@ async function enemyAction(){
     if(bt.shin){if(bt.shinVolley===2){bt.shinVolley=0;bt.shinPierce=true;}else{bt.shinVolley=1;bt.shinPierce=false;}} // 二連ための進行
     // 島のぬしだけ ため一撃を ×3 へ(2026-07-25 実測: ×2では38〜47%で、予告を無視して殴りつづけて576戦0敗だった)。
     // ×3で 大技の上限 capHeavy に張りつく＝2発つづけて素で受けたら たおれる。予告は1ターン前に必ず出るので不意打ちにはならない。
+    // ★2026-09-05 SPEC_tame_matagi（C13）: 「1ターン前」を 守る 門＝ため中は「ようすを みている」「ぼうぎょくずし」を 出さない（enemyAction の !bt.charge）。
+    //   足止め・ねむりで 止めた ときだけ 持ち越し、その手番の 文で「ためは まだ ほどけていない」と 出す（ぬいとめ だけが ためを ほどく）。
     // 答えは全部すでに手の中にある: ぼうぎょ/とわのまもり/こだまがえし/ナギのうた/ほらがいのこえ/かげのきし。
     atk=atk*(foe.nushi?3:2);
     label=((bt.kage&&bt.kage.kname)||foe.name)+'の '+(foe.heavyName||'すさまじい いちげき')+'！'; // ぬし8体が 同じ「すさまじい いちげき」だったのを 島ごとの名へ(数値は不変)
