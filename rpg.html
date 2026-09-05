@@ -1028,7 +1028,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260905_1321'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260905_1849'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -22087,6 +22087,17 @@ async function transformPhase2(){
   }
   flash('#ffffff',0.95,1.0);
   bt.foe=FOES.boss2;markSeen('boss2');
+  // ★2026-09-05 SPEC_volga_henshin（C14）: 遊ぶ側が 第1形態に かけた 状態（敵の 側が 読む 旗）は、やみの 体と いっしょに はがれる＝真の姿は 別の 体。
+  //   何が 消えたかを その場で 数えて 1行 言う（手書きの 決め打ちを しない・何も 無ければ 言わない）。ゆうしゃ側の 状態（kodamaOn・guardT 等）は 触らない。
+  //   名は 効果から つける（出どころの 名では ない＝1つの 旗に 入口が 2つ 以上 ある）。
+  const gone=[];
+  if(bt.rukani){gone.push('ルカニの ひび');}bt.rukani=false;
+  if(bt.foeAtkDown&&bt.foeAtkDown.t>0){gone.push('こうげきの よわり');}bt.foeAtkDown=null;
+  if(bt.foeBind>0){gone.push('うごけない しばり');}bt.foeBind=0;
+  if(bt.foeSleep>0){gone.push('ねむり');}bt.foeSleep=0;
+  if(bt.foePoison){gone.push('どく');}bt.foePoison=false;
+  if(bt.hirakuOn){gone.push('ひらいた ほころび');}bt.hirakuOn=false;
+  if(bt.kagenui>0){gone.push('ぬいとめの いと');}bt.kagenui=0; // ★ぬいとめは「敵の ためを 1かい ぬく」＝敵に かかる 旗（消すのは enemyAction 側）
   {const b2hp=Math.round(FOES.boss2.hp*diffEnemyHP(FOES.boss2));bt.hp=b2hp;bt.mhp=b2hp;} // なんいど：第2形態HP係数（参照は生で保持）
   bt.half=false;bt.hintP=false;bt.hintF=false;bt.flash=0;bt.t=0;bt.transformed=true;bt.awakenT=0;bt.ghosts=null;
   enameEl.textContent=FOES.boss2.name;
@@ -22094,6 +22105,9 @@ async function transformPhase2(){
   playSong('boss2');
   await wait(0.3);
   await say('ひかりを すてた けいしょうしゃ……\nヴォルガが しんのすがたを あらわした！');
+  //   「かけなおせば きく」と 言えるのは、1戦1回の じゅもん（ときをつなぐ／ななつへんげ）を まだ 使っていない ときだけ。
+  //   使ったあとは 出どころを 二度と 唱えられない（storySpellWhy の used 表・hengeUsed が 正本）＝約束が 嘘に なる。
+  if(gone.length)await say('やみと いっしょに、'+gone.join('・')+'も はがれおちた。'+((bt.tokiUsed||bt.hengeUsed)?'':'\nかけなおせば きく。'));
 }
 // ── 最終戦『ななつのかげを まとう ヴォルガ』の 締め(SPEC_oto_finale_20260815) ──
 // 発注者「音は途中で切れて、すぐ、草原に行く仕様になっているよな。倒した画面で盛り上げるのが普通だろ」(2026-08-15)。
