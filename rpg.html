@@ -1028,7 +1028,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260905_2008'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260906_0111'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -3425,9 +3425,9 @@ function gearTag(kind,v){
   if(v===eq)return '● そうびちゅう';
   const sell=(kind==='w'?SELL_W:SELL_A)[v];
   // 一点もの＝二度と手に入らない。うりねは 出すが、⚠を いっしょに 出す(2026-07-26)
-  if(kind==='w'?SHITAKU_W.has(v):SHITAKU_A.has(v))return 'いちざの したく⚠ うりね '+(sell||0)+'G';
-  if(kind==='w'?ISLAND_REWARD_W.has(v):ISLAND_REWARD_A.has(v))return 'しまの おくりもの⚠ うりね '+(sell||0)+'G';
-  if(kind==='w'?STORY_W.has(v):STORY_A.has(v))return 'ものがたりの あかし⚠ うりね '+(sell||0)+'G';
+  if(kind==='w'?SHITAKU_W.has(v):SHITAKU_A.has(v))return 'いちざの したく⚠️ うりね '+(sell||0)+'G';
+  if(kind==='w'?ISLAND_REWARD_W.has(v):ISLAND_REWARD_A.has(v))return 'しまの おくりもの⚠️ うりね '+(sell||0)+'G';
+  if(kind==='w'?STORY_W.has(v):STORY_A.has(v))return 'ものがたりの あかし⚠️ うりね '+(sell||0)+'G';
   if(sell==null)return 'ひとしなもの（うれない）'; // 旧: SELL表に無い品が「うりね 0G」と出ていた
   if(kind==='w'?WEAPONFX[v]:ARMORFX[v])return 'こせい・うりね '+sell+'G';
   if(v<eq)return 'うってOK・うりね '+sell+'G';
@@ -9246,12 +9246,12 @@ async function runSell(){
     for(const v of Game.ownW){
       const pw=SELL_W[v];
       if(pw==null)continue;
-      list.push({id:'sw_'+v,label:(WNAME[v]||'ぶき')+(v===Game.weaponAtk?'（そうびちゅう）':(v<Game.weaponAtk&&!WEAPONFX[v]?'（↓よわい）':''))+'　+'+pw+'G'+(ONCE_W.has(v)?'　⚠ひとしなもの':'')});
+      list.push({id:'sw_'+v,label:(WNAME[v]||'ぶき')+(v===Game.weaponAtk?'（そうびちゅう）':(v<Game.weaponAtk&&!WEAPONFX[v]?'（↓よわい）':''))+'　+'+pw+'G'+(ONCE_W.has(v)?'　⚠️ひとしなもの':'')});
     }
     for(const v of Game.ownA){
       const pa=SELL_A[v];
       if(pa==null)continue;
-      list.push({id:'sa_'+v,label:(ANAME[v]||'よろい')+(v===Game.armorDef?'（そうびちゅう）':(v<(Game.armorDef||0)&&!ARMORFX[v]?'（↓よわい）':''))+'　+'+pa+'G'+(ONCE_A.has(v)?'　⚠ひとしなもの':'')});
+      list.push({id:'sa_'+v,label:(ANAME[v]||'よろい')+(v===Game.armorDef?'（そうびちゅう）':(v<(Game.armorDef||0)&&!ARMORFX[v]?'（↓よわい）':''))+'　+'+pa+'G'+(ONCE_A.has(v)?'　⚠️ひとしなもの':'')});
     }
     if(Game.shield)list.push({id:'eq_s',label:'てつのたて'+(Game.shield2?'':'（そうびちゅう）')+'　+30G'});
     if(Game.shield2)list.push({id:'eq_s2',label:'ひかりのたて（そうびちゅう）　+1500G'});
@@ -9312,7 +9312,7 @@ async function runSell(){
     }else if(eq.once){ // 島の贈り物＝手ばなすと 二度と 手に入らない。取り返しのつかない一手には 守りを添える
       await say('しょうにん「……これは ひとしなものだ。\nうちにも、どこの みせにも、おなじ ものは もう ならばない。」');
       const ok1=await ask([{id:'no',label:'やめておく'},{id:'yes',label:'それでも うる（'+eq.price+'G）'}],
-        '⚠ 『'+eq.lab+'』は にどと てに はいりません。うりますか？');
+        '⚠️ 『'+eq.lab+'』は にどと てに はいりません。うりますか？');
       if(ok1!=='yes')continue;
     }
     if(eq.equipped){
@@ -10574,7 +10574,7 @@ async function runShop(funamise,shitaku){
       else if(it.def)lines.push('🛡 しゅび ＋'+it.def);
       else if(it.def2)lines.push('🛡 しゅび ＋'+it.def2);
       else if(it.hint)lines.push(it.hint.split('\n')[0]);
-      if((it.atk&&ONCE_W.has(it.atk))||(it.armor&&ONCE_A.has(it.armor)))lines.push('⚠ ひとしなもの＝ここに 1つだけ（うっても、ここで かいなおせます）。'); // 売れば棚に戻る=「二度とならばない」は嘘だった(2026-07-29棚卸し)
+      if((it.atk&&ONCE_W.has(it.atk))||(it.armor&&ONCE_A.has(it.armor)))lines.push('⚠️ ひとしなもの＝ここに 1つだけ（うっても、ここで かいなおせます）。'); // 売れば棚に戻る=「二度とならばない」は嘘だった(2026-07-29棚卸し)
       else if((it.atk&&SELL_W[it.atk]==null)||(it.armor&&SELL_A[it.armor]==null))lines.push('※ この そうびは うれません。');
       // ほしのてつ を したくの 支払いに つかえる(2026-07-26)。
       // ⚔100/🛡78 を こえた旅人は かじの表から外れ、島の宝箱で拾う ほしのてつ の使い道が
@@ -19570,7 +19570,7 @@ async function commandPhase(){
       // (2026-07-29 発注者「間違って、逃げるを押しても、最初からになる。マジムカつく」)
       if(FUKAMI){
         const y=await ask([{id:'no',label:'もどって たたかう'},{id:'yes',label:'それでも ふかみを おりる'}],
-          '⚠ にげると ふくろは ふかみに おちる（'+fukamiBagStr()+'）');
+          '⚠️ にげると ふくろは ふかみに おちる（'+fukamiBagStr()+'）');
         if(y!=='yes')continue;
       }
       return{kind:'run'};
