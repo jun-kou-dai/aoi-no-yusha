@@ -793,7 +793,16 @@ body{
   #bproofhud .proof-orbs{ flex-wrap:nowrap; gap:1px; }
   #bproofhud .proof-orb{ width:9px; height:9px; flex:0 0 9px; font-size:5px; }
   #fstat{ max-width:calc(100vw - 205px); } /* 側面ボタン最長時(とうめい のこり60歩)の左端197pxに チップ右端が かからない幅 */
-  #fweap,#farm{ display:inline-block; max-width:min(162px,44vw); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:bottom; font-size:1.02em; } /* 長い装備名も省略されず1行で収まる字幅 */
+  #fweap,#farm{ display:inline-flex; align-items:baseline; max-width:min(162px,44vw); overflow:hidden; white-space:nowrap; vertical-align:bottom; font-size:1.02em; } /* 長い装備名も省略されず1行で収まる字幅 */
+  /* ★2026-09-06: 省略を **名前だけ**に かける。もとは 箱ごと ellipsis で 末尾の 数値が 消え、
+     ほしくだきのつるぎ＋1/＋2/＋3 が どれも「⚔ ほしくだきのつ…」に なっていた(実測 390×844)。
+     幅を 広げる 案は 却下＝#fstat の 右端 197px が 側面ボタン最長時の 左端と 同値(SPEC §2 却下A)。 */
+  #fweap .gic,#farm .gic,#fweap .gvl,#farm .gvl{ flex:none; }
+  /* flex の 箱の さかいでは 文字の 空白が つぶれる(実測: 「ころも80」と くっついた)＝余白で 空ける。
+     641px以上は inline の まま＝空白が そのまま 効くので、ここ(≤640px)だけに 置く。 */
+  #fweap .gic,#farm .gic{ margin-right:.14em; }
+  #fweap .gvl,#farm .gvl{ margin-left:.32em; }
+  #fweap .gnm,#farm .gnm{ overflow:hidden; text-overflow:ellipsis; min-width:0; }
   #bgear{ display:block; width:100%; margin-top:3px; font-size:11px; letter-spacing:.02em; color:#ffe9b0; opacity:.92; white-space:normal; } /* たたかい中の そうび表示(2026-07-26) */
   .bar{ width:clamp(46px,11vw,110px); }
   .num{ min-width:3.6em; }
@@ -1028,7 +1037,7 @@ const msgwinEl=$('#msgwin'), msgtextEl=$('#msgtext'), mfaceEl=$('#mface'), talks
 const enameEl=$('#ename'), toastEl=$('#toast'), battleUiEl=$('#ui-battle'), questEl=$('#quest');
 // 開きっぱなしの タブへ あたらしい 版を とどける(SPEC_gold_shuyaku §5・発注者「なんも変わらない」の根=タブは 勝手に 更新されない)
 // 強制リロードは しない(2026-07-11 進行破壊の 掟)。ゲームが 見つけて 知らせ、タップで きろくを 保存してから 入れ替える。
-const BUILD_V='20260906_0111'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
+const BUILD_V='20260906_1830'; // 配信の 版どり(§8)で この行を 実際の 版へ 書き換える
 let UPD_V=null;
 async function checkUpdate(){
   try{
@@ -5182,10 +5191,18 @@ function updateBars(){
   {const _fd=$('#fdiff');if(_fd)_fd.textContent=curDiff().name;}
   // 2026-07-26: 名前だけだと 旧装備と新装備が同名(⚔78も⚔128も「みつどきのこだち」)で見分けられない＝数値を そえる。
   //             戦闘中は そもそも 装備が どこにも出ていなかったので #bgear にも 同じものを出す。
-  {const wn=(WNAME[Game.weaponAtk]||(Game.weaponAtk?'ぶき':'すで'))+(Game.weaponAtk?' '+Game.weaponAtk:'');
-   const an=(ANAME[Game.armorDef||0]||((Game.armorDef||0)?'よろい':'ぬのの ふく'))+((Game.armorDef||0)?' '+Game.armorDef:'');
-   const _fw=$('#fweap');if(_fw)_fw.textContent='⚔️ '+wn;
-   const _fa=$('#farm');if(_fa)_fa.textContent='🛡 '+an;
+  {const wnm=(WNAME[Game.weaponAtk]||(Game.weaponAtk?'ぶき':'すで')), wvl=(Game.weaponAtk?String(Game.weaponAtk):'');
+   const anm=(ANAME[Game.armorDef||0]||((Game.armorDef||0)?'よろい':'ぬのの ふく')), avl=((Game.armorDef||0)?String(Game.armorDef):'');
+   // ★2026-09-06: 名前と 数値を **別の 箱**へ。せまい 画面(≤640px)は 162px で 省略が 効き、
+   //   末尾の 数値が 消えて ほしくだきのつるぎ＋1/＋2/＋3 が どれも「⚔ ほしくだきのつ…」に なっていた
+   //   (390×844 で ぶき48・よろい35 を 全数掃引＝4点が 該当)。すぐ上の「数値を そえる」(2026-07-26)が
+   //   打ち消されていた。名前だけ 縮ませ、数値は 縮まない。正本=rireki/SPEC_obi_kire_20260906.md
+   const gear=(el,icon,nm,vl)=>{ if(!el)return; el.textContent='';
+     const i=document.createElement('span'); i.className='gic'; i.textContent=icon+' '; el.appendChild(i);
+     const a=document.createElement('span'); a.className='gnm'; a.textContent=nm; el.appendChild(a);
+     if(vl){const b=document.createElement('span'); b.className='gvl'; b.textContent=' '+vl; el.appendChild(b);} };
+   gear($('#fweap'),'⚔️',wnm,wvl); gear($('#farm'),'🛡',anm,avl);
+   const wn=wnm+(wvl?' '+wvl:''), an=anm+(avl?' '+avl:'');  // ★#bgear(戦いの帯)は 従来のまま 1本の 文字列
    const _bg=$('#bgear');if(_bg)_bg.textContent=(typeof FUKAMI!=='undefined'&&FUKAMI?'🔥'+FUKAMI.floor+'かい ふくろ'+FUKAMI.bag.g+'G　':'')+(Game.bt&&Game.bt.henge?'👹へんげ『'+Game.bt.henge.name+'』'+(Game.bt.hengeTurns>0?' のこり'+Game.bt.hengeTurns+'かい':'')+'　':'')+'⚔️'+wn+'　🛡'+an;}
   setBar($('#fhp'),$('#fhpn'),p.hp,p.mhp);setBar($('#bhp'),$('#bhpn'),p.hp,p.mhp);
   setBar($('#fmp'),$('#fmpn'),p.mp,p.mmp);setBar($('#bmp'),$('#bmpn'),p.mp,p.mmp);
